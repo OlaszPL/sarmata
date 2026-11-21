@@ -102,3 +102,9 @@ export {
   evaluationVisibilitySchema,
   officeSettingsPatchSchema,
 } from './office-settings/office-settings';
+export {
+  type EvaluationResult,
+  type EvaluationResultInput,
+  evaluationResult,
+} from './statistics/evaluation-result';
+export { nationalBenchmark } from './statistics/national-benchmark';
