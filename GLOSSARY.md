@@ -4,24 +4,36 @@ Narzędzie dla urzędów służby cywilnej do prowadzenia ocen okresowych wedłu
 
 ## Organizacja i tożsamość
 
-**Urząd**:
+**Urząd** (`Office`):
 Jednostka, w której działa korpus służby cywilnej i która jest pracodawcą ocenianych. Wszystkie dane domenowe należą do dokładnie jednego urzędu.
 _Avoid_: tenant, organizacja, instytucja
 
-**Konto**:
+**Konto** (`Account`):
 Dostęp do aplikacji jednej osoby, używany do logowania i ustalania, kto wykonał czynność.
 _Avoid_: użytkownik (gdy chodzi o osobę z danych kadrowych)
 
-**Pracownik**:
+**Pracownik** (`Employee`):
 Osoba z danych kadrowych urzędu, której mogą dotyczyć oceny. Może istnieć bez konta.
 _Avoid_: użytkownik, konto
 
-**Członkostwo**:
-Przypisanie konta do urzędu z określoną rolą (np. kadry, administrator).
+**Członkostwo** (`Membership`):
+Przypisanie konta do urzędu z określoną rolą (administrator, kadry albo oceniający).
 _Avoid_: uprawnienie, przynależność
+
+**Administrator** (`admin`):
+Rola członka urzędu, który zarządza kontami i ustawieniami urzędu.
+_Avoid_: admin (w tekstach dla użytkownika), superużytkownik
+
+**Kadry** (`hr`):
+Rola członka urzędu, który prowadzi sprawy ocen okresowych od strony komórki kadrowej.
+_Avoid_: HR (w tekstach dla użytkownika), kadrowy
+
+**Oceniający** (`evaluator`):
+Rola członka urzędu, który ocenia podległych pracowników.
+_Avoid_: przełożony, ewaluator
 
 ## Przepisy
 
-**Wersja przepisów**:
+**Wersja przepisów** (`RegulationVersion`):
 Komplet reguł oceny (arkusze, kryteria, skala, terminy) obowiązujący od określonej daty. Każda ocena podlega jednej wersji przepisów, ustalonej w dniu jej rozpoczęcia.
 _Avoid_: konfiguracja, ustawienia, polityka

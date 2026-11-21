@@ -44,7 +44,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm --filter @sarmata/e2e exec playwright install chromium
        pnpm dev
 
-   `web:env` zapisuje `frontend/web/.env.local` z adresem i kluczem lokalnego Supabase (oraz wszystkie `SARMATA_AI_*` z `.env.ai.local`, jeśli istnieje). Przeglądarka Chromium służy testom e2e i skillowi `app-walkthrough`. Aplikacja działa na `http://localhost:3000`.
+   `web:env` zapisuje `frontend/web/.env.local` z adresem i kluczem lokalnego Supabase (oraz wszystkie `SARMATA_AI_*` z `.env.ai.local`, jeśli istnieje). Żeby aplikacja pracowała na zewnętrznej instancji Supabase, ustaw w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` przed `pnpm web:env`: skrypt użyje ich zamiast `supabase status`. Przeglądarka Chromium służy testom e2e i skillowi `app-walkthrough`. Aplikacja działa na `http://localhost:3000`.
 
 8. **Worker kolejki zadań** (opcjonalnie, potrzebny dopiero dla zadań w tle):
 
@@ -103,7 +103,7 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 
 | Skrypt | Co robi |
 |---|---|
-| `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase |
+| `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
 | `pnpm e2e` | testy Playwright: logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA) |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
@@ -118,7 +118,7 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 | Zmienna | Kto używa | Skąd w dev |
 |---|---|---|
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | testy integracyjne, worker | `scripts/with-supabase-env.mjs` czyta je z `supabase status`, chyba że `SUPABASE_URL` jest już ustawione (zewnętrzna instancja) |
-| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | aplikacja web | `frontend/web/.env.local`, zapisuje go `pnpm web:env` |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | aplikacja web | `frontend/web/.env.local`, zapisuje go `pnpm web:env` (z `supabase status` albo z ustawionych w powłoce zmiennych zewnętrznej instancji) |
 | `SITE_URL` | aplikacja web | domyślnie `http://localhost:3000`, `scripts/termic-run.sh` ustawia adres taska. Na razie nic go nie czyta (zaproszenia i reset hasła) |
 | `PORT` | `pnpm dev` | domyślnie 3000, `scripts/termic-run.sh` ustawia port taska |
 | `SARMATA_AI_ENABLED` | `@sarmata/ai` | domyślnie `false`, AI wyłączone |
@@ -127,6 +127,7 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 | `SARMATA_AI_DECISION_BASE_URL`, `SARMATA_AI_DECISION_MODEL` | `@sarmata/ai`, Bielik-One `/v1/systemone` | np. `http://127.0.0.1:8026/v1` i `decision`, bez nich decyzje są wyłączone |
 | `SARMATA_AI_TEXT_API_KEY`, `SARMATA_AI_DECISION_API_KEY` | `@sarmata/ai` | tylko gdy serwer modelu wymaga klucza. To sekret: dopisz go do `secrets/dev.enc.env` przez `sops secrets/dev.enc.env`, nigdy jawnie do repo |
 | `SARMATA_WORKER_IDLE_DELAY_MS` | worker | domyślnie `1000`, przerwa po pustym odczycie kolejki |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SENDER_EMAIL`, `SMTP_SENDER_NAME` | worker | opcjonalne i na razie nieużywane: kreator je przekazuje, worker tylko sprawdza ich poprawność do czasu powiadomień. `SMTP_HOST` wymaga też portu i adresu nadawcy |
 
 W instalacji urzędu te same zmienne ustawia kreator w `.env` katalogu instalacji. Kontener `web` dostaje `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SITE_URL` i `SARMATA_AI_*`, a `SUPABASE_SECRET_KEY` trafia wyłącznie do kontenera `worker` (ADR 0004).
 

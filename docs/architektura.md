@@ -41,6 +41,7 @@ flowchart LR
 ```
 
 - Supabase działa w kontenerach na Docker Engine (Linux natywnie, Windows przez WSL2). Kreator użyje też istniejącego silnika, np. Docker Desktop, jeśli urząd ma licencję. Można podłączyć zewnętrzną instancję Supabase przez zmienne środowiskowe.
+- Worker działa w osobnym kontenerze w każdym profilu, także w light. Tylko on dostaje klucz serwisowy (ADR 0004).
 - Runtime LLM działa natywnie, poza kontenerami, żeby miał dostęp do GPU. AI jest opcjonalne i domyślnie wyłączone w profilu light.
 - Aplikację web kreator buduje lokalnie ze źródeł. Aktualizacja: kopia bazy, nowy build, migracje, restart, wycofanie przy błędzie.
 

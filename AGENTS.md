@@ -1,5 +1,7 @@
 NEVER use em-dashes, slop words, semicolons etc.
 
+Generated files are exempt from these prose rules. Today that is `frontend/web/AGENTS.md`, which `next dev` writes and re-adds. Keep it in git as it is.
+
 ## Language
 
 Code is in English: identifiers, file names, comments, SQL tables, columns, enums, policies, JWT claims, developer-facing messages, test names. Only the application UI (user-facing strings) and docs (`docs/`, README) are in Polish. Domain terms keep their Polish name in `GLOSSARY.md` next to the English code name.
