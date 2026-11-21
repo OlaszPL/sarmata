@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(48);
+select plan(56);
 
 -- Office A: hr, two evaluators, admin, a boss above evaluator one, tops of a 40 and a 60 employee chain.
 -- Tree: boss (account boss) > mid (account evaluator one) > worker. Peer is evaluator two, outside that branch.
@@ -47,7 +47,11 @@ insert into public.employees (id, office_id, first_name, last_name) values
 -- Own code: the seed already holds regulation-2016 and codes are unique.
 insert into public.regulation_versions (id, code, office_id, is_official, effective_from, document) values
   ('aaaaaaaa-3333-4000-8000-000000000001', 'test-evaluations', null, true, '2016-04-23',
-   '{"id":"test-evaluations","effectiveFrom":"2016-04-23"}');
+   '{"id":"test-evaluations","effectiveFrom":"2016-04-23"}'),
+  ('aaaaaaaa-3333-4000-8000-000000000002', 'test-evaluations-a', 'aaaaaaaa-0000-4000-8000-000000000001', false, '2016-04-23',
+   '{"id":"test-evaluations-a","effectiveFrom":"2016-04-23"}'),
+  ('bbbbbbbb-3333-4000-8000-000000000001', 'test-evaluations-b', 'bbbbbbbb-0000-4000-8000-000000000002', false, '2016-04-23',
+   '{"id":"test-evaluations-b","effectiveFrom":"2016-04-23"}');
 
 -- E1 worker (criteria, draft sheet), E3 locked sheet, E4 period with a draft sheet, E40 and E60 bottoms of the chains.
 insert into public.evaluations (id, office_id, employee_id, evaluator_account_id, regulation_version_id, sheet_id, status, cycle_start, snapshot, created_by)
@@ -74,8 +78,9 @@ insert into public.evaluation_events (id, office_id, evaluation_id, kind, occurr
   ('99999999-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000040',
    'created', '2026-01-01', 'aaaaaaaa-1111-4000-8000-000000000001');
 
--- Grants are the complete Data API surface: no delete anywhere, the event log only grows.
-select table_privs_are('public', 'evaluations', 'authenticated', array['SELECT', 'INSERT', 'UPDATE']);
+-- Grants are the complete Data API surface: no delete anywhere, the event log only grows,
+-- evaluations change only through apply_evaluation_transition.
+select table_privs_are('public', 'evaluations', 'authenticated', array['SELECT', 'INSERT']);
 select table_privs_are('public', 'evaluation_sheets', 'authenticated', array['SELECT', 'INSERT', 'UPDATE']);
 select table_privs_are('public', 'evaluation_events', 'authenticated', array['SELECT', 'INSERT']);
 select table_privs_are('public', 'evaluation_deadlines', 'authenticated', array['SELECT', 'INSERT', 'UPDATE']);
@@ -92,6 +97,24 @@ select throws_ok(
 select throws_ok(
   $$delete from public.evaluation_events where id = '99999999-0000-4000-8000-000000000001'$$,
   'P0001', 'evaluation events are append-only', 'events are append-only: delete is refused'
+);
+
+-- Evaluation triggers hold on the owner path too (security definer functions, service role).
+select throws_ok(
+  $$update public.evaluations set snapshot = '{"forged":true}' where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  'P0001', 'evaluation identity is immutable', 'identity columns are immutable: snapshot'
+);
+select throws_ok(
+  $$update public.evaluations set employee_id = 'aaaaaaaa-2222-4000-8000-000000000003' where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  'P0001', 'evaluation identity is immutable', 'identity columns are immutable: employee'
+);
+select lives_ok(
+  $$update public.evaluations set evaluator_account_id = 'aaaaaaaa-1111-4000-8000-000000000003' where id = 'eeeeeeee-0000-4000-8000-000000000003'$$,
+  'the evaluator can still be changed on the owner path'
+);
+select throws_ok(
+  $$update public.evaluations set status = 'criteria' where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  'P0001', 'evaluation cannot return to criteria', 'an evaluation never reopens the criteria stage'
 );
 
 -- Evaluator one.
@@ -111,6 +134,23 @@ select results_eq(
   $$values (auth.uid())$$,
   'the author of an evaluation is the signed-in account, whatever the client sends'
 );
+select throws_ok(
+  $$update public.evaluations set status = 'closed' where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  '42501', null, 'evaluator cannot update evaluation columns directly'
+);
+select throws_ok(
+  $$insert into public.evaluations (office_id, employee_id, evaluator_account_id, regulation_version_id, sheet_id, cycle_start, snapshot)
+    values ('aaaaaaaa-0000-4000-8000-000000000001', 'aaaaaaaa-2222-4000-8000-000000000001', 'aaaaaaaa-1111-4000-8000-000000000002',
+            'bbbbbbbb-3333-4000-8000-000000000001', 'A', '2026-01-01', '{}')$$,
+  'P0001', 'regulation version must be official or belong to the office',
+  'regulation version from another office is rejected'
+);
+select lives_ok(
+  $$insert into public.evaluations (id, office_id, employee_id, evaluator_account_id, regulation_version_id, sheet_id, cycle_start, snapshot)
+    values ('eeeeeeee-0000-4000-8000-000000000006', 'aaaaaaaa-0000-4000-8000-000000000001', 'aaaaaaaa-2222-4000-8000-000000000001',
+            'aaaaaaaa-1111-4000-8000-000000000002', 'aaaaaaaa-3333-4000-8000-000000000002', 'A', '2026-01-01', '{}')$$,
+  'a local regulation version of the own office is accepted'
+);
 
 select throws_ok(
   $$update public.evaluation_sheets set content = '{"partOne":{"criteria":["b"]},"partTwo":{"score":null}}'
@@ -127,10 +167,6 @@ select throws_ok(
     values ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000004', 2,
             '{"partOne":{"criteria":["b"]},"partTwo":{"score":null}}', 'draft')$$,
   'P0001', 'part one is locked', 'a new sheet version cannot change a frozen part one'
-);
-select throws_ok(
-  $$update public.evaluations set status = 'criteria' where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
-  'P0001', 'evaluation cannot return to criteria', 'an evaluation never reopens the criteria stage'
 );
 
 select throws_ok(
@@ -205,12 +241,6 @@ select results_eq(
 -- Evaluator two: not the evaluator of E1.
 set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000003","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"evaluator"}';
 
-update public.evaluations set after_negative = true where id = 'eeeeeeee-0000-4000-8000-000000000004';
-select results_eq(
-  $$select after_negative from public.evaluations where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
-  $$values (false)$$,
-  'other evaluator cannot update evaluation'
-);
 select throws_ok(
   $$insert into public.evaluation_events (office_id, evaluation_id, kind, occurred_on)
     values ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000004', 'absence', '2026-03-02')$$,
@@ -224,7 +254,12 @@ select throws_ok(
 select throws_ok(
   $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000004', 'period', 'interview',
       'evaluation_interview_held', '2026-02-01', '{}', false)$$,
-  'P0001', 'stale_status', 'other evaluator cannot apply a transition'
+  '42501', 'insufficient_privilege', 'transition rpc rejects other evaluator'
+);
+select results_eq(
+  $$select status::text from public.evaluations where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  $$values ('period')$$,
+  'a rejected transition leaves the status as it was'
 );
 
 -- Admin.
@@ -245,11 +280,21 @@ select results_eq(
 -- HR.
 set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000001","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"hr"}';
 
-update public.evaluations set after_negative = true where id = 'eeeeeeee-0000-4000-8000-000000000004';
+select throws_ok(
+  $$update public.evaluations set after_negative = true where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  '42501', null, 'hr cannot update evaluation columns directly either'
+);
+select lives_ok(
+  $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000004', 'period', 'interview',
+      'evaluation_interview_held', '2026-02-01', '{}', false)$$,
+  'hr applies a transition to any evaluation of the office'
+);
 select results_eq(
-  $$select after_negative from public.evaluations where id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
-  $$values (true)$$,
-  'hr updates any evaluation'
+  $$select e.status::text, v.recorded_by from public.evaluations e
+      join public.evaluation_events v on v.evaluation_id = e.id and v.kind = 'evaluation_interview_held'
+     where e.id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  $$values ('interview', auth.uid())$$,
+  'hr updates any evaluation through the transition, recorded as hr'
 );
 
 select throws_ok(
@@ -305,7 +350,7 @@ select throws_ok(
 select throws_ok(
   $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000004', 'period', 'interview',
       'evaluation_interview_held', '2026-02-01', '{}', false)$$,
-  'P0001', 'stale_status', 'hr of another office cannot apply a transition'
+  '42501', 'insufficient_privilege', 'hr of another office cannot apply a transition'
 );
 
 -- Tree visibility.
@@ -345,13 +390,13 @@ select results_eq(
 set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000004","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"admin"}';
 select is(
   (select count(*) from public.evaluations),
-  7::bigint,
+  8::bigint,
   'tree visibility keeps admin reading all'
 );
 set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000001","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"hr"}';
 select is(
   (select count(*) from public.evaluations),
-  7::bigint,
+  8::bigint,
   'tree visibility keeps hr reading all'
 );
 

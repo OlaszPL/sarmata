@@ -261,6 +261,54 @@ create trigger evaluations_criteria_not_reopened
   before update of status on public.evaluations
   for each row execute function public.evaluations_criteria_not_reopened();
 
+-- What an evaluation is about never changes after it is opened, for every role including the owner.
+-- Only status (through apply_evaluation_transition) and evaluator_account_id (through future RPCs) move.
+create function public.evaluations_identity_immutable()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if (new.office_id, new.employee_id, new.regulation_version_id, new.sheet_id, new.cycle_start,
+      new.after_negative, new.previous_evaluation_id, new.snapshot, new.created_by)
+     is distinct from
+     (old.office_id, old.employee_id, old.regulation_version_id, old.sheet_id, old.cycle_start,
+      old.after_negative, old.previous_evaluation_id, old.snapshot, old.created_by) then
+    raise exception 'evaluation identity is immutable';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger evaluations_identity_immutable
+  before update on public.evaluations
+  for each row execute function public.evaluations_identity_immutable();
+
+-- The rules document is official (global) or a local version of the same office. The foreign key only
+-- checks existence. Security definer: the same answer for every caller, whatever versions it may read.
+create function public.evaluations_regulation_version_in_office()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (
+    select 1
+      from public.regulation_versions r
+     where r.id = new.regulation_version_id
+       and (r.office_id is null or r.office_id = new.office_id)
+  ) then
+    raise exception 'regulation version must be official or belong to the office';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger evaluations_regulation_version_in_office
+  before insert on public.evaluations
+  for each row execute function public.evaluations_regulation_version_in_office();
+
 -- The log only grows, for everyone including the database owner.
 create function public.evaluation_events_append_only()
 returns trigger
@@ -349,9 +397,10 @@ alter table public.evaluation_events enable row level security;
 alter table public.evaluation_deadlines enable row level security;
 
 -- Later migrations start without Data API grants (plan 2), so this is the complete surface.
--- No delete anywhere, and the event log takes no updates either.
-grant select, insert, update on public.evaluations, public.evaluation_sheets, public.evaluation_deadlines to authenticated;
-grant select, insert on public.evaluation_events to authenticated;
+-- No delete anywhere, and the event log takes no updates either. Evaluations take no direct updates:
+-- apply_evaluation_transition is the only writer of status. Sheet drafts are updated through RLS.
+grant select, insert on public.evaluations, public.evaluation_events to authenticated;
+grant select, insert, update on public.evaluation_sheets, public.evaluation_deadlines to authenticated;
 
 create policy "read evaluations" on public.evaluations
   for select to authenticated
@@ -360,11 +409,6 @@ create policy "read evaluations" on public.evaluations
 create policy "create evaluations" on public.evaluations
   for insert to authenticated
   with check (access.can('create', 'evaluation', office_id, id));
-
-create policy "update evaluations" on public.evaluations
-  for update to authenticated
-  using (access.can('update', 'evaluation', office_id, id))
-  with check (access.can('update', 'evaluation', office_id, id));
 
 create policy "read evaluation sheets" on public.evaluation_sheets
   for select to authenticated
@@ -402,8 +446,9 @@ create policy "update evaluation deadlines" on public.evaluation_deadlines
 
 -- One transition, atomically: status (compare and set), optional lock of the current sheet version,
 -- and the event. The event payload carries the sheet version and the sha256 of its content, the record
--- of what was approved (ADR 0007). Security invoker: RLS decides, a caller who may not update the
--- evaluation gets stale_status like a lost race.
+-- of what was approved (ADR 0007). Security definer, because authenticated has no update privilege on
+-- evaluations: the access decision is made explicitly at the top through access.can, the same rule as
+-- everywhere else. Triggers still fire, and stamp_author records the caller from the JWT.
 create function public.apply_evaluation_transition(
   p_evaluation_id uuid,
   p_expected_status public.evaluation_status,
@@ -415,7 +460,7 @@ create function public.apply_evaluation_transition(
 )
 returns uuid
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
@@ -424,12 +469,20 @@ declare
   event_payload jsonb := coalesce(p_payload, '{}'::jsonb);
   event_id uuid;
 begin
+  -- A missing evaluation and one the caller may not write look the same: no oracle across offices.
+  select e.office_id into evaluation_office_id
+    from public.evaluations e
+   where e.id = p_evaluation_id;
+  if not found
+     or not coalesce(access.can('update', 'evaluation', evaluation_office_id, p_evaluation_id), false) then
+    raise exception 'insufficient_privilege' using errcode = '42501';
+  end if;
+
   -- The row lock serializes concurrent transitions: the loser re-checks the status and finds none.
   update public.evaluations
      set status = p_next_status
    where id = p_evaluation_id
-     and status = p_expected_status
-  returning office_id into evaluation_office_id;
+     and status = p_expected_status;
   if not found then
     raise exception 'stale_status' using errcode = 'P0001';
   end if;
