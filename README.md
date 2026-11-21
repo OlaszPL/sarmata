@@ -191,6 +191,8 @@ Skrypt setup po starcie wspólnej bazy synchronizuje oficjalne wersje przepisów
 
 Instrukcja dla działu IT urzędu. Instalacja nie używa SOPS ani kont w usługach zewnętrznych: kreator generuje hasła i klucze lokalnie i zapisuje je tylko w pliku `.env` katalogu instalacji. Katalog instalacji jest dostępny tylko dla konta, które instalowało (Linux `0750`, macOS `0700`, Windows z Docker Desktop: lista ACL tylko dla tego konta, SYSTEM i Administratorów). Potrzebny jest dostęp do internetu w czasie instalacji (obrazy Dockera, pakiety npm do budowy aplikacji, opcjonalnie modele AI).
 
+Obrazy aplikacji budują się na Debianie, a worker ma wbudowane wyszukiwanie przepisów (semble) razem z modelem embeddingów, który pobiera przy budowaniu z Hugging Face. W sieci z proxy podmieniającym certyfikaty TLS ustaw przed instalacją `SARMATA_BUILD_CA_FILE` na ścieżkę do pliku PEM z certyfikatem proxy (np. `export SARMATA_BUILD_CA_FILE=/etc/ssl/proxy.pem`). Instalator przekazuje go budowaniu jako sekret BuildKit `ca`. W zwykłej sieci zmienna nie jest potrzebna.
+
 ### Wybór profilu
 
 | Profil | Dla kogo | Orientacyjny sprzęt | Dostęp |

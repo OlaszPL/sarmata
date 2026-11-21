@@ -107,6 +107,7 @@ export function macEnvironment(overrides: Partial<Environment> = {}): Environmen
     dockerCliConfig: null,
     conflictingPackages: [],
     engineTools: { unzip: true, git: true },
+    buildCaFile: null,
     ...overrides,
   };
 }
@@ -134,6 +135,7 @@ export function linuxEnvironment(overrides: Partial<Environment> = {}): Environm
     dockerCliConfig: null,
     conflictingPackages: [],
     engineTools: { unzip: true, git: true },
+    buildCaFile: null,
     ...overrides,
   };
 }
@@ -161,6 +163,7 @@ export function windowsEnvironment(overrides: Partial<Environment> = {}): Enviro
     dockerCliConfig: null,
     conflictingPackages: [],
     engineTools: { unzip: true, git: true },
+    buildCaFile: null,
     ...overrides,
   };
 }

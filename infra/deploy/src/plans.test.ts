@@ -106,6 +106,26 @@ describe('planInstall', () => {
     expect(build?.action).toMatchObject({ kind: 'run', interactive: true });
   });
 
+  it('build image passes the host CA as a build secret', () => {
+    const build = byTitle(
+      install(macEnvironment({ buildCaFile: '/etc/ssl/proxy.pem' })),
+      'Budowanie obrazu sarmata/web:current ze źródeł (kilka minut)',
+    );
+    const argv = argvOf(build);
+    const secret = argv.indexOf('--secret');
+    expect(secret).toBeGreaterThan(-1);
+    expect(argv[secret + 1]).toBe('id=ca,src=/etc/ssl/proxy.pem');
+    expect(secret).toBeLessThan(argv.length - 1);
+  });
+
+  it('build image without a CA has no secret', () => {
+    const build = byTitle(
+      install(macEnvironment()),
+      'Budowanie obrazu sarmata/web:current ze źródeł (kilka minut)',
+    );
+    expect(argvOf(build)).not.toContain('--secret');
+  });
+
   it('writes AI as off: the native runtime is set up after the stack, then enabled', () => {
     const plan = install(macEnvironment(), PROFILES.withAi);
     const envFile = byTitle(plan, 'Zapis sekretów i ustawień usług (.env)');

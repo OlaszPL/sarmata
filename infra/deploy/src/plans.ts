@@ -72,6 +72,8 @@ interface Stack {
   readonly compose: readonly string[];
   readonly docker: readonly string[];
   readonly local: boolean;
+  /** CA bundle of a TLS-inspecting proxy, as the engine host sees it, null when not set. */
+  readonly buildCaFile: string | null;
 }
 
 function stack(env: Environment, config: InstallConfig, dockerPrefix: readonly string[]): Stack {
@@ -89,6 +91,7 @@ function stack(env: Environment, config: InstallConfig, dockerPrefix: readonly s
     ],
     docker: [...dockerPrefix, 'docker'],
     local: config.supabase.mode === 'local',
+    buildCaFile: env.buildCaFile === null ? null : toEnginePath(env, env.buildCaFile),
   };
 }
 
@@ -122,6 +125,7 @@ function buildImage(
         image.target,
         '--tag',
         `${image.repository}:${tag}`,
+        ...(s.buildCaFile === null ? [] : ['--secret', `id=ca,src=${s.buildCaFile}`]),
         context,
       ],
       { interactive: true },
