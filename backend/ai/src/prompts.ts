@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 export const PROMPT_VERSIONS = {
   'sheet-draft': 3,
   'quality-check': 1,
-  'sensitive-data': 1,
+  'sensitive-data': 2,
   'conversation-prep': 2,
   'criteria-proposals': 2,
   'appreciation-moments': 2,

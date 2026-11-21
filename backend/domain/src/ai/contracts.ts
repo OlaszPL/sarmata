@@ -213,7 +213,10 @@ export const aiOutputSchemas = {
       }),
     ),
   }),
-  sensitive_data: z.strictObject({ warnings: z.array(sensitiveDataWarningSchema) }),
+  sensitive_data: z.strictObject({
+    warnings: z.array(sensitiveDataWarningSchema),
+    rewrite: z.string().nullable().default(null),
+  }),
   conversation_prep: z.strictObject({
     goal: z.string(),
     plan: z.array(z.string()),
@@ -309,7 +312,10 @@ export function aiFragmentPaths<K extends AiRunKind>(kind: K, output: AiOutput<K
     case 'quality_check':
       return indexed('issue', typed.output.issues);
     case 'sensitive_data':
-      return indexed('warning', typed.output.warnings);
+      return [
+        ...indexed('warning', typed.output.warnings),
+        ...(typed.output.rewrite === null ? [] : ['rewrite']),
+      ];
     case 'conversation_prep':
       return [
         'goal',

@@ -109,7 +109,7 @@ Okres nieobecności ocenianego albo oceniającego wpisany jako zdarzenie boczne 
 _Avoid_: urlop, zwolnienie lekarskie
 
 **Strażnik danych wrażliwych** (`sensitiveDataWarnings`, usługa AI `sensitive_data`):
-Kontrola treści notatki pod kątem zdrowia, rodziny, religii i diagnoz. Zapis notatki używa deterministycznej listy słów kluczowych i wymaga potwierdzenia ostrzeżenia (`sensitive_data`). Wariant AI to osobny przebieg.
+Kontrola treści notatki pod kątem zdrowia, rodziny, religii i diagnoz. Przed zapisem front woła `notes.check`: słownik słów kluczowych odpowiada od razu, a przebieg AI zwraca ostrzeżenia i propozycję przeformułowania całej notatki, którą autor przyjmuje, edytuje albo odrzuca. Sam zapis blokuje tylko słownik (`sensitive_data`, potwierdzenie przez `acceptWarnings`).
 _Avoid_: cenzura, filtr
 
 

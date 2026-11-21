@@ -11,7 +11,7 @@ Każda usługa AI (szkic arkusza, kontrola jakości, strażnik danych wrażliwyc
 
 ## Konsekwencje
 
-- Krótkie kontrole (jakość tekstu, strażnik) czekają na wolny worker (`SARMATA_WORKER_IDLE_DELAY_MS`). Deterministyczny strażnik słów kluczowych działa dalej od razu przy zapisie notatki.
+- Krótkie kontrole (jakość tekstu, strażnik) czekają na wolny worker (`SARMATA_WORKER_IDLE_DELAY_MS`). Deterministyczny strażnik słów kluczowych działa dalej od razu przy zapisie notatki, a strażnik AI to osobna kontrola przed zapisem (`notes.check`), której brak wyniku nie blokuje zapisu.
 - Wdrożenie ma jedną instancję workera, więc przebiegi idą po kolei, a drugi slot llama-servera zostaje na razie niewykorzystany. `claim` chroni przed podwójnym dostarczeniem po ponowieniu i po restarcie workera: przebieg `running` starszy niż 3 minuty, którego worker tak samo długo nie zapisał postępu, przejmuje kolejne dostarczenie.
 - Porażka modelu kończy przebieg jako `failed` bez ponowień, użytkownik prosi od nowa. Błąd bazy rzuca wyjątek, więc pgmq dostarcza zadanie ponownie.
 - Przebieg czekający w kolejce, gdy admin wyłączył AI, kończy się porażką `disabled` bez wywołania modelu.
