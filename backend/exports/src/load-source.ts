@@ -19,10 +19,11 @@ export function loadExportSource(db: Db): (evaluationId: string) => Promise<Expo
   return async (evaluationId) => {
     const view = await services.evaluations.get(evaluationId);
     if (view === null) return null;
-    const regulation = await repositories.regulationVersions.findOfficialById(view.regulationId);
-    if (regulation === null) {
+    const storedRegulation = await repositories.regulationVersions.findByCode(view.regulationId);
+    if (storedRegulation === null) {
       throw new ExportError('unsupported_regulation', `Regulation ${view.regulationId} not found`);
     }
+    const regulation = storedRegulation.document;
     const [officeName, employees, history, sheetVersions, settings] = await Promise.all([
       findOfficeName(db, officeIdSchema.parse(view.officeId)),
       services.employees.list(),

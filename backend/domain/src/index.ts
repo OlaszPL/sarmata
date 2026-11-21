@@ -20,7 +20,34 @@ export {
   parseRegulationDocument,
   regulationDocumentSchema,
 } from './regulations/regulation-document';
-export { versionInForce } from './regulations/version-in-force';
+export { officeVersionInForce, versionInForce } from './regulations/version-in-force';
+export {
+  type RegulationCase,
+  type RegulationCaseResult,
+  regulationCaseSchema,
+  regulationCasesSchema,
+  runRegulationCases,
+} from './regulations/regulation-cases';
+export {
+  type GraphEdge,
+  type GraphNode,
+  type RegulationGraph,
+  regulationGraph,
+} from './regulations/regulation-graph';
+export {
+  type TrainingChannel,
+  type TrainingItem,
+  trainingCatalogSchema,
+  trainingItemSchema,
+} from './development/training-catalog';
+export {
+  type DevelopmentAction,
+  type DevelopmentRecommendation,
+  type FocusCriterion,
+  type RecommendedTraining,
+  type RecommendInput,
+  recommendDevelopment,
+} from './development/recommend';
 export {
   type EmploymentBasis,
   type NewEmployeeInput,

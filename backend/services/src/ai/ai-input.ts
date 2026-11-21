@@ -8,7 +8,7 @@ import {
   type RegulationDocument,
   fitNotesToBudget,
   sensitiveDataWarnings,
-  versionInForce,
+  officeVersionInForce,
 } from '@sarmata/domain';
 import {
   type AiRunRepository,
@@ -64,11 +64,11 @@ export function buildAiInput(request: AiRequest, sources: AiInputSources): Promi
   }
 
   async function regulationOf(id: string): Promise<RegulationDocument> {
-    const regulation = await sources.regulations.findOfficialById(id);
-    if (regulation === null) {
+    const stored = await sources.regulations.findByCode(id);
+    if (stored === null) {
       throw new ServiceError('unknown_regulation', `Unknown regulation version ${id}`);
     }
-    return regulation;
+    return stored.document;
   }
 
   /** Notes of the employee within the budget: the newest stay, the ids of the rest are listed. */
@@ -228,7 +228,14 @@ export function buildAiInput(request: AiRequest, sources: AiInputSources): Promi
       case 'procedure_question': {
         let regulation: RegulationDocument | null;
         if (request.evaluationId === undefined) {
-          regulation = versionInForce(await sources.regulations.listOfficial(), request.today);
+          regulation =
+            officeVersionInForce(
+              (await sources.regulations.listInForceCandidates()).map((candidate) => ({
+                ...candidate,
+                effectiveFrom: candidate.document.effectiveFrom,
+              })),
+              request.today,
+            )?.document ?? null;
         } else {
           regulation = await regulationOf((await evaluation(request.evaluationId)).regulationId);
         }

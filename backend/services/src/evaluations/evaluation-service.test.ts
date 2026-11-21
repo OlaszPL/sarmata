@@ -13,6 +13,7 @@ import {
   type OfficeSettings,
   type OfficeSettingsRepository,
   type Repositories,
+  type StoredRegulationVersion,
   RepositoryError,
 } from '@sarmata/repositories';
 import { describe, expect, it } from 'vitest';
@@ -23,6 +24,9 @@ if (regulation === undefined) throw new Error('The official regulation catalog i
 const reg: RegulationDocument = regulation;
 
 const date = calendarDate;
+
+/** Document id by version row id, filled by `setup` so a created evaluation pins the chosen version. */
+const codeByRow = new Map<string, string>();
 
 function fakeEvaluations(
   seed: EvaluationDetail[] = [],
@@ -48,7 +52,7 @@ function fakeEvaluations(
         officeId: 'o1',
         employeeId: input.employeeId,
         evaluatorAccountId: input.evaluatorAccountId,
-        regulationId: reg.id,
+        regulationId: codeByRow.get(input.regulationVersionId) ?? reg.id,
         sheetId: input.sheetId,
         status: 'criteria',
         cycleStart: input.cycleStart,
@@ -178,7 +182,12 @@ function setup(
   history: HistoryEntry[] = [],
   override: Partial<EvaluationRepository> = {},
   officeSettings?: OfficeSettingsRepository,
+  versions: StoredRegulationVersion[] = [
+    { rowId: 'row-1', code: reg.id, isOfficial: true, document: reg },
+  ],
 ) {
+  codeByRow.clear();
+  for (const version of versions) codeByRow.set(version.rowId, version.code);
   const { repository, store } = fakeEvaluations(seed, history, override);
   const repositories: Repositories = {
     employees: {
@@ -192,6 +201,8 @@ function setup(
       listOfficial: () => Promise.resolve([reg]),
       findOfficialById: (id) => Promise.resolve(id === reg.id ? reg : null),
       findOfficialRowId: (id) => Promise.resolve(id === reg.id ? 'row-1' : null),
+      listInForceCandidates: () => Promise.resolve(versions),
+      findByCode: (code) => Promise.resolve(versions.find((v) => v.code === code) ?? null),
     },
     evaluations: repository,
     archivedEvaluations: {
@@ -1112,5 +1123,57 @@ describe('fix wave 1: staffing review findings', () => {
       expect(sheetC.objectionAddressee).toBe(rules('C'));
       expect(rules('C')).not.toBeNull();
     });
+  });
+});
+
+describe('office regulation versions', () => {
+  const localDocument = (effectiveFrom: string): RegulationDocument => ({
+    ...reg,
+    id: 'regulation-2016-local-1',
+    effectiveFrom: date(effectiveFrom),
+    sheets: reg.sheets.map((sheet) =>
+      sheet.id === 'C' ? { ...sheet, objectionAddressee: 'Dyrektor lokalny' } : sheet,
+    ),
+  });
+  const officeVersion = (effectiveFrom: string): StoredRegulationVersion => ({
+    rowId: 'row-office',
+    code: 'regulation-2016-local-1',
+    isOfficial: false,
+    document: localDocument(effectiveFrom),
+  });
+  const official: StoredRegulationVersion = {
+    rowId: 'row-1',
+    code: reg.id,
+    isOfficial: true,
+    document: reg,
+  };
+
+  it('start pins the published office version', async () => {
+    const { services } = setup([employee()], [], [], {}, undefined, [
+      official,
+      officeVersion('2026-11-01'),
+    ]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.regulationId).toBe('regulation-2016-local-1');
+  });
+
+  it('start before the effective date keeps the official version', async () => {
+    const { services } = setup([employee()], [], [], {}, undefined, [
+      official,
+      officeVersion('2026-11-22'),
+    ]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.regulationId).toBe(reg.id);
+  });
+
+  it('get of an evaluation on an office version scores with its document', async () => {
+    const { services } = setup([employee()], [], [], {}, undefined, [
+      official,
+      officeVersion('2026-11-01'),
+    ]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const detail = await services.evaluations.get(started.id);
+    expect(detail?.regulationId).toBe('regulation-2016-local-1');
+    expect(detail?.objectionAddressee).toBe('Dyrektor lokalny');
   });
 });

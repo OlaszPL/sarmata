@@ -33,9 +33,15 @@ export {
 export {
   type OfficialRegulationWriter,
   type RegulationVersionRepository,
+  type StoredRegulationVersion,
   createOfficialRegulationWriter,
   createRegulationVersionRepository,
 } from './regulation-versions';
+export {
+  type LocalRegulationVersion,
+  type RegulationDraftRepository,
+  createRegulationDraftRepository,
+} from './regulation-drafts';
 export {
   type SheetVersion,
   type SheetVersionRepository,

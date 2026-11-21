@@ -38,6 +38,18 @@ _Avoid_: przełożony, ewaluator, kierownik
 Komplet reguł oceny (arkusze, kryteria, skala, terminy) obowiązujący od określonej daty. Każda ocena podlega jednej wersji przepisów, ustalonej w dniu jej rozpoczęcia.
 _Avoid_: konfiguracja, ustawienia, polityka
 
+**Szkic przepisów** (`status 'draft'` w `regulation_versions`):
+Lokalna wersja przepisów urzędu w edycji. Admin klonuje do niego opublikowaną wersję, zmienia parametry i publikuje z datą obowiązywania. Szkic nie może być przypięty do oceny. Po publikacji wersja jest niezmienna.
+_Avoid_: kopia robocza, wersja testowa
+
+**Przypadek testowy przepisów** (`RegulationCase`):
+Przykład z oczekiwanym wynikiem, na którym sprawdzamy wersję przepisów: termin do policzenia albo arkusz do oceny. Oficjalne przypadki żyją w `backend/regulations/<wersja>/cases.json`, a szkic urzędu jest sprawdzany przypadkami oficjalnego korzenia.
+_Avoid_: test jednostkowy, scenariusz
+
+**Katalog szkoleń** (`trainingCatalog`):
+Lista 249 szkoleń i działań rozwojowych służby cywilnej przypisanych do kryteriów oceny. Służy do podpowiedzi do IPRZ. Urząd nie dodaje własnych pozycji.
+_Avoid_: oferta szkoleniowa, baza szkoleń
+
 ## Ocena
 
 **Ocena** (`Evaluation`, `evaluation`):

@@ -473,14 +473,14 @@ isOneToOne: true
                   ]
                 },"regulation_versions": {
                   Row: {
-                    "based_on": string | null,"code": string,"created_at": string,"document": NonNullable<Json>,"effective_from": string,"id": string,"is_official": boolean,"office_id": string | null
+                    "accepted_failing_cases": Json | null,"based_on": string | null,"code": string,"created_at": string,"created_by": string | null,"document": NonNullable<Json>,"effective_from": string,"id": string,"is_official": boolean,"office_id": string | null,"published_at": string | null,"status": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "based_on"?: string | null,"code": string,"created_at"?: string,"document": NonNullable<Json>,"effective_from": string,"id"?: string,"is_official": boolean,"office_id"?: string | null
+                    "accepted_failing_cases"?: Json | null,"based_on"?: string | null,"code": string,"created_at"?: string,"created_by"?: string | null,"document": NonNullable<Json>,"effective_from": string,"id"?: string,"is_official": boolean,"office_id"?: string | null,"published_at"?: string | null,"status"?: string
                   }
                   Update: {
-                    "based_on"?: string | null,"code"?: string,"created_at"?: string,"document"?: NonNullable<Json>,"effective_from"?: string,"id"?: string,"is_official"?: boolean,"office_id"?: string | null
+                    "accepted_failing_cases"?: Json | null,"based_on"?: string | null,"code"?: string,"created_at"?: string,"created_by"?: string | null,"document"?: NonNullable<Json>,"effective_from"?: string,"id"?: string,"is_official"?: boolean,"office_id"?: string | null,"published_at"?: string | null,"status"?: string
                   }
                   Relationships: [
                     {
