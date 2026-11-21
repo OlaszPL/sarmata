@@ -4,14 +4,14 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 
 ## Stan realizacji
 
-Backend jest zaimplementowany w zakresie planów B1 do B9: dostęp i role (RLS, `access.can`), pracownicy i oceny ze stanami i terminami, zdarzenia boczne, notatki i ustawienia urzędu, powiadomienia z zamknięciem automatycznym, statystyki i rejestr kadr, eksporty, usługi AI przez kolejkę, edytor reguł i katalog szkoleń, ustanie zatrudnienia z retencją i anonimizacją. Tekst poniżej opisuje to, co działa. Czego nie ma w kodzie, jest oznaczone jako „nie zaimplementowane”. Zbiorcza lista:
+Backend jest zaimplementowany w zakresie planów B1 do B10: dostęp i role (RLS, `access.can`), pracownicy i oceny ze stanami i terminami, zdarzenia boczne, notatki i ustawienia urzędu, powiadomienia z zamknięciem automatycznym, statystyki i rejestr kadr, eksporty, usługi AI przez kolejkę, edytor reguł i katalog szkoleń, ustanie zatrudnienia z retencją i anonimizacją, konta i import CSV, ostrzeżenia z przepisów. Tekst poniżej opisuje to, co działa. Czego nie ma w kodzie, jest oznaczone jako „nie zaimplementowane”. Zbiorcza lista:
 
 - **Ekrany.** Frontend ma tylko logowanie, stronę `/brak-urzedu`, stronę startową z powitaniem i route handler eksportu. Reszta ekranów, w tym obsługa decyzji o fragmentach AI i graf reguł, jest przed nami.
-- **Konta.** Nie zaimplementowane: zaproszenia kont i nadawanie ról w aplikacji. Konta zakłada kreator i seed funkcją `access.create_account`. SSO i AD/LDAP poza MVP.
-- **Import CSV pracowników**: nie zaimplementowany.
+- **Konta.** Backend jest (`services.accounts`: zaproszenie, zmiana roli, koniec członkostwa). Brakuje ekranu i podpięcia usługi systemowej do frontu, bo zaproszenie wymaga klucza serwisowego, którego front nie tworzy (ESLint). Do wyboru: route handler z kluczem tylko w tym jednym miejscu albo zadanie w kolejce dla workera. SSO i AD/LDAP poza MVP.
+- **Import CSV pracowników.** Backend jest (`services.employeeImport`), nie ma ekranu. Tylko CSV, bez XLSX.
 - **Strażnik danych wrażliwych oparty o AI przy zapisie notatki**: nie podpięty. Zapis notatki używa listy słów kluczowych, a usługa AI `sensitive_data` istnieje jako osobny przebieg do wywołania przez front.
-- **Ostrzeżenia z przepisów**: o stopniu, który przysługuje z mocy prawa mimo wniosku, i o konflikcie ról, gdy oceniającym jest DG rozpatrujący sprzeciw, nie są zaimplementowane.
-- **Pobieranie archiwum teczek pracownika**: jest serwis (`archiveFor(db).exportEmployeeArchive`), nie ma jeszcze route handlera ani przycisku.
+- **Ostrzeżenia z przepisów.** Jest ostrzeżenie o stopniu, który przysługuje z mocy prawa mimo wniosku. Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG rozpatrujący sprzeciw, jest niemożliwe, dopóki w aplikacji nie ma roli DG.
+- **Pobieranie archiwum teczek pracownika**: jest route handler `GET /api/pracownicy/[id]/archiwum`, nie ma jeszcze przycisku w ekranie kadr.
 - **Udostępnianie oceny ocenianemu**: poza zakresem.
 
 ## Użytkownicy i role
@@ -39,7 +39,11 @@ Backend jest zaimplementowany w zakresie planów B1 do B9: dostęp i role (RLS, 
 - Oceniający wpisuje dane ocenianego: imię, nazwisko, stanowisko, komórkę (komórka jako tekst, bez struktury organizacyjnej). Bez PESEL.
 - Backend szuka podobnych rekordów pracowników (pg_trgm) i proponuje połączenie. Decyzję o połączeniu podejmuje człowiek.
 - Stanowisko i komórka zapisują się w ocenie jako migawka z dnia oceny, bo z czasem się zmieniają.
-- Import CSV pracowników przez kadry miał być dodatkiem. Nie zaimplementowany.
+- Import CSV pracowników przez kadry (`services.employeeImport`, tylko rola `hr`). CSV w UTF-8 z separatorem średnik albo przecinek (rozpoznawany automatycznie, cudzysłowy jak w RFC 4180). Trzy kroki:
+  - `proposeMapping(csv)`: propozycja kolumn z nagłówków (polskie i angielskie nazwy). Przełożony nigdy nie jest proponowany. Kadry mogą zmapować go jawnie (kolumna z identyfikatorem pracownika), inaczej import nie rusza drzewa przełożonych.
+  - `dryRun(csv, mapping)`: wiersze z wartościami po konwersji (daty `RRRR-MM-DD` i `DD.MM.RRRR`, stopień arabski albo rzymski, polskie nazwy statusu, stosunku i rodzaju stanowiska), błędami walidacji i dopasowaniem: ten sam e-mail oznacza aktualizację, podobne imię i nazwisko (`find_similar_employees`) oznacza `needs_decision`, brak dopasowania oznacza utworzenie. Nic nie zapisuje.
+  - `commit(csv, mapping, decisions)`: każdy wiersz zapisuje osobno (bez „wszystko albo nic”), błędne wiersze trafiają do `failed`. Wiersze z podobnymi nazwiskami czekają na decyzję kadr (`create`, `skip` albo `{ updateEmployeeId }`), bez decyzji trafiają do `undecided`. Aktualizacja nadpisuje tylko zmapowane, niepuste komórki.
+  - XLSX nie jest obsługiwany.
 
 ## Zdarzenia oceny
 
@@ -258,7 +262,10 @@ Retencja: treść przebiegów AI (wejście, wynik, komunikat porażki, tekst po 
 
 ## Konta i logowanie
 
-- Supabase Auth, e-mail i hasło. Docelowo admin zaprasza konto e-mailem i nadaje rolę, a bez SMTP ustawia hasło tymczasowe. Nie zaimplementowane: dziś konto zakłada funkcja `access.create_account` (kreator i seed).
+- Supabase Auth, e-mail i hasło. Admin zaprasza konto e-mailem i nadaje rolę (`services.accounts`, tylko rola `admin`):
+  - `invite({ email, role, firstName, lastName })`: usługa systemowa (`createSystemServices(db).accounts`, klucz serwisowy) wysyła zaproszenie Supabase Auth. Gdy zaproszenia nie da się wysłać (brak SMTP), zakłada konto z hasłem tymczasowym, które admin przekazuje osobie (zwracane raz w `temporaryPassword`). Potem `access.add_membership` dodaje członkostwo i łączy rekord pracownika o tym samym e-mailu albo zakłada nowy. Ta sama funkcja stoi w `access.create_account` (kreator i seed). Gdy członkostwo się nie uda, świeżo założone konto jest usuwane. Osoba z kontem bez urzędu dostaje członkostwo bez wysyłki (`existing_account`).
+  - `changeRole(accountId, role)` i `endMembership(accountId)` (SQL `change_member_role`, `end_membership`, z JWT admina): rola trafia do tokena przy najbliższym odświeżeniu, koniec członkostwa to `ended_on` z dzisiejszą datą, a wiersz zostaje. Serwis zwraca liczbę otwartych ocen, które konto prowadzi, bo zmianę oceniającego robią kadry. Jedyny aktywny admin urzędu nie może zostać zdegradowany ani zakończony (`last_admin`). Ponowne zaproszenie zakończonego konta przywraca członkostwo.
+  - Front dostaje usługę systemową przez `servicesFor(db, { accountAdministration })`. Bez niej `invite` kończy się błędem.
 - Pierwsze konto admina tworzy kreator instalacji.
 - AD/LDAP i SSO to dalszy krok, poza MVP.
 
@@ -280,7 +287,7 @@ Retencja: treść przebiegów AI (wejście, wynik, komunikat porażki, tekst po 
 - Anonimizacja (jedna transakcja): usuwa oceny z arkuszami, terminami, wynikami i powiadomieniami, dziennik zdarzeń, wpisy `grade_grants`, wszystkie notatki i treść przebiegów AI pracownika, imię, nazwisko, e-mail, stanowisko, komórkę, stopień i daty (zostaje rok rozpoczęcia pracy jako 1 stycznia) oraz konto Auth. Zostają: `id`, relacja przełożonego, data ustania, wiersz rejestru, oceny archiwalne i fakty zachowane.
 - Fakty zachowane: `retained_evaluation_facts` (rok, komórka, status, poziom, wynik, liczba punktów cząstkowych, sprzeciw, rok odwołania, konto oceniającego) i `retained_grade_grants` (podstawa, rok, stopień). Raporty roczne statystyk sumują je z danymi bieżącymi, więc liczby zostają bez zmian.
 - Droga systemowa usuwania: dziennik zdarzeń jest append-only także dla właściciela bazy. Wyjątek to transakcja ze znacznikiem w `lifecycle.purge_marker`. Wpisuje go tylko `anonymize_employee` (wykonanie tylko dla roli serwisowej) i usuwa przed zwróceniem. Każdy nowy trigger blokujący `delete` musi respektować ten znacznik.
-- Przed usunięciem kadry pobierają archiwum teczek (`archiveFor(db).exportEmployeeArchive`): ZIP z folderem teczki sprawy na każdą ocenę i `manifest.json` ze skrótami. Potwierdzenie pobrania zapisuje się dopiero po złożeniu pliku.
+- Przed usunięciem kadry pobierają archiwum teczek (`GET /api/pracownicy/[id]/archiwum`, pod spodem `archiveFor(db).exportEmployeeArchive`): ZIP z folderem teczki sprawy na każdą ocenę i `manifest.json` ze skrótami. Potwierdzenie pobrania zapisuje się dopiero po złożeniu pliku.
 
 ## Z przepisów (bez osobnej decyzji)
 
@@ -290,7 +297,7 @@ Te funkcje wynikają wprost z prawa i materiałów KPRM, więc wchodzą bez dysk
 - Silnik terminów: Kodeks cywilny (koniec miesiąca, przesunięcie z soboty i dnia wolnego na następny dzień roboczy), kalendarz świąt z Wigilią od 2025, testy z `liczenie terminów.docx`. Termin sporządzenia jest wyliczany, a oceniający może go tylko skrócić.
 - Ścieżka negatywna: rozmowa rozpoczynająca w 7 dni, ponowna ocena po 6 miesiącach, nieobecność nie przedłuża tych 6 miesięcy (art. 81 ust. 9).
 - Zmiana terminu przez oceniającego tylko z jednej z 4 przyczyn i po 6 miesiącach (art. 81 ust. 8, § 8). Backend generuje pisemne zawiadomienie (PDF) z kopią do arkusza.
-- Część III (wniosek o stopień) tylko dla urzędnika przy ocenie pozytywnej, z umotywowaniem. Przy IX stopniu wniosek zablokowany (bramka `grade_request_max_grade`), wniosek tylko o stopień o jeden wyższy. Ostrzeżenie, gdy stopień i tak przysługuje z mocy prawa, nie jest zaimplementowane.
+- Część III (wniosek o stopień) tylko dla urzędnika przy ocenie pozytywnej, z umotywowaniem. Przy IX stopniu wniosek zablokowany (bramka `grade_request_max_grade`), wniosek tylko o stopień o jeden wyższy. Ostrzeżenie `grade_due_by_law` w `EvaluationView.warnings`, gdy arkusz zawiera wniosek, a stopień i tak przysługuje z mocy prawa (art. 89 ust. 2). Drugi kod, `second_consecutive_negative`, powtarza sygnał z art. 71. Ostrzeżenia nic nie blokują.
 - Sygnał dla kadr o drugiej kolejnej ocenie negatywnej (art. 71).
-- Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG, który rozpatruje sprzeciw. Nie zaimplementowane.
+- Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG, który rozpatruje sprzeciw. Niemożliwe bez roli DG w aplikacji, więc nie zaimplementowane.
 - Odmowa podpisu przy zapoznaniu jest zdarzeniem z datą i adnotacją na arkuszu („oceniany odmówił podpisania”), uruchamia te same terminy co zapoznanie.

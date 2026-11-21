@@ -603,7 +603,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "anonymize_employee":
+            "admit_account":
+{ Args: { "p_account_id": string,"p_first_name": string,"p_last_name": string,"p_office_id": string,"p_role": Database["public"]['Enums']["office_role"] }; Returns: string
+                           },
+"anonymize_employee":
 { Args: { "p_employee_id": string,"p_facts": Json,"p_today": string }; Returns: undefined
                            },
 "apply_evaluation_transition":
@@ -614,6 +617,9 @@ isOneToOne: false
                            },
 "change_evaluator":
 { Args: { "p_evaluation_id": string,"p_new_evaluator_account_id": string,"p_occurred_on": string,"p_reason": string }; Returns: string
+                           },
+"change_member_role":
+{ Args: { "p_account_id": string,"p_role": Database["public"]['Enums']["office_role"] }; Returns: undefined
                            },
 "close_unobjected_evaluations":
 { Args: { "p_today": string }; Returns: {
@@ -635,6 +641,9 @@ isOneToOne: false
 { Args: { "p_employee_id": string,"p_ended_on": string,"p_purge_due_on": string,"p_reason": string }; Returns: {
               "interrupted_evaluation_id": string
             }[]
+                           },
+"end_membership":
+{ Args: { "p_account_id": string }; Returns: number
                            },
 "evaluation_transitions":
 { Args: Record<PropertyKey, never>; Returns: {

@@ -28,7 +28,14 @@ import {
   createNotesRetentionPreviewRepository,
   createOfficeSettingsRepository,
   createRepositories,
+  createAccountRepository,
 } from '@sarmata/repositories';
+import { type AccountAdministration } from './accounts/account-administration';
+import { type AccountsService, createAccountsService } from './accounts/accounts-service';
+import {
+  type EmployeeImportService,
+  createEmployeeImportService,
+} from './employee-import/employee-import-service';
 import { ServiceError } from './errors';
 import { type EmploymentService, createEmploymentService } from './employment/employment-service';
 import { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
@@ -169,10 +176,17 @@ export type AppServices = Services & {
   readonly regulationEditor: RegulationEditorService;
   readonly development: DevelopmentService;
   readonly employment: EmploymentService;
+  readonly accounts: AccountsService;
+  readonly employeeImport: EmployeeImportService;
 };
 
+export interface ServicesForOptions {
+  /** From `createSystemServices(...).accounts`. Without it the invitation of an account fails. */
+  readonly accountAdministration?: AccountAdministration;
+}
+
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
-export const servicesFor = (db: Db): AppServices => {
+export const servicesFor = (db: Db, options: ServicesForOptions = {}): AppServices => {
   const officeSettings = createOfficeSettingsRepository(db);
   const repositories = createRepositories(db);
   const notes = createNoteRepository(db);
@@ -220,6 +234,25 @@ export const servicesFor = (db: Db): AppServices => {
       regulations: repositories.regulationVersions,
       catalog: trainingCatalog,
       today: todayUtc,
+    }),
+    accounts: createAccountsService({
+      repository: createAccountRepository(db),
+      current: async () => {
+        const account = await getCurrentAccount(db);
+        return account.status === 'member'
+          ? { officeId: account.office.id, role: account.role }
+          : null;
+      },
+      ...(options.accountAdministration === undefined
+        ? {}
+        : { administration: options.accountAdministration }),
+    }),
+    employeeImport: createEmployeeImportService({
+      employees: repositories.employees,
+      role: async () => {
+        const account = await getCurrentAccount(db);
+        return account.status === 'member' ? account.role : null;
+      },
     }),
     employment: createEmploymentService({
       employment: createEmploymentRepository(db),

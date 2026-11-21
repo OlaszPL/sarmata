@@ -73,7 +73,30 @@ export type EvaluationView = EvaluationDetail & {
     readonly gradeByLaw: { readonly dueOn: CalendarDate } | null;
     readonly secondConsecutiveNegative: boolean;
   };
+  /** Hints for the evaluator from the rules. They never block anything. */
+  readonly warnings: EvaluationWarning[];
 };
+
+/**
+ * `grade_due_by_law`: the sheet requests a grade although it is already due by law (art. 89 ust. 2),
+ * so the request is pointless. `second_consecutive_negative`: the second negative evaluation in a row (art. 71).
+ * A warning about the evaluator being the DG who decides the objection is not possible: there is no DG role.
+ */
+export type EvaluationWarning =
+  | { readonly code: 'grade_due_by_law'; readonly dueOn: CalendarDate }
+  | { readonly code: 'second_consecutive_negative' };
+
+export function warningsOf(
+  content: SheetContent,
+  signals: EvaluationView['signals'],
+): EvaluationWarning[] {
+  const warnings: EvaluationWarning[] = [];
+  if (content.partTwo.gradeRequest !== null && signals.gradeByLaw !== null) {
+    warnings.push({ code: 'grade_due_by_law', dueOn: signals.gradeByLaw.dueOn });
+  }
+  if (signals.secondConsecutiveNegative) warnings.push({ code: 'second_consecutive_negative' });
+  return warnings;
+}
 
 export interface AbsenceInput {
   /** Pass the id of an earlier entry to complete it, e.g. with the return date. */
@@ -242,13 +265,15 @@ export function createEvaluationService(
   async function view(detail: EvaluationDetail): Promise<EvaluationView> {
     const regulation = await regulationOf(detail);
     const { criteria, score } = scoreOf(regulation, detail, detail.sheet.content);
+    const signals = await signalsOf(detail, regulation, score);
     return {
       ...detail,
       criteria,
       score,
       currentPosition: currentPositionOf(detail),
       objectionAddressee: await objectionAddresseeOf(detail, regulation),
-      signals: await signalsOf(detail, regulation, score),
+      signals,
+      warnings: warningsOf(detail.sheet.content, signals),
     };
   }
 

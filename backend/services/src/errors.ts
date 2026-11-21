@@ -26,7 +26,11 @@ export type ServiceErrorCode =
   | 'regulation_not_draft'
   | 'already_ended'
   | 'not_ended'
-  | 'invalid_end_date';
+  | 'invalid_end_date'
+  | 'invalid_csv'
+  | 'account_exists'
+  | 'last_admin'
+  | 'invalid_account';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */
 export class ServiceError extends Error {

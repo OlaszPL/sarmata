@@ -738,6 +738,49 @@ describe('staffing situations and objection flow', () => {
     expect(started.signals.secondConsecutiveNegative).toBe(false);
   });
 
+  it('warns when the draft requests a grade that is already due by law', async () => {
+    const qualifying = reg.gradeByLaw.qualifyingLevels[0] ?? 'x';
+    const history: HistoryEntry[] = Array.from(
+      { length: reg.gradeByLaw.consecutiveEvaluations },
+      (_, index) => ({
+        drafted: date(`${String(2020 + index)}-03-01`),
+        levelCode: qualifying,
+        outcome: 'positive' as const,
+        acquaintedOn: date(`${String(2020 + index)}-03-10`),
+      }),
+    );
+    const { services } = setup(
+      [employee({ serviceStatus: 'civil_servant', gradeGrantedOn: date('2018-01-01') })],
+      [],
+      history,
+    );
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.warnings).toEqual([]);
+    const saved = await services.evaluations.saveDraft(started.id, {
+      ...started.sheet.content,
+      partTwo: {
+        ...started.sheet.content.partTwo,
+        gradeRequest: { requestedGrade: 5, motivation: 'Well done' },
+      },
+    });
+    expect(saved.warnings).toEqual([
+      { code: 'grade_due_by_law', dueOn: saved.signals.gradeByLaw?.dueOn },
+    ]);
+  });
+
+  it('does not warn about a grade request when no grade is due by law', async () => {
+    const { services } = setup([employee({ serviceStatus: 'civil_servant' })]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const saved = await services.evaluations.saveDraft(started.id, {
+      ...started.sheet.content,
+      partTwo: {
+        ...started.sheet.content.partTwo,
+        gradeRequest: { requestedGrade: 5, motivation: 'Well done' },
+      },
+    });
+    expect(saved.warnings).toEqual([]);
+  });
+
   it('a new evaluation shows the grade by law signal but stores no slot', async () => {
     const qualifying = reg.gradeByLaw.qualifyingLevels[0] ?? 'x';
     const history: HistoryEntry[] = Array.from(
