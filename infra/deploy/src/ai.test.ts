@@ -138,6 +138,7 @@ describe('aiSettings and aiUnsupportedReason', () => {
     bielikOne: bielikOne
       ? { engine: 'mlx', package: BIELIK_ONE_PACKAGES['bielik-one-4b-r1-adapter'] }
       : null,
+    decisionReason: '',
     server: { contextSize: 8192, parallel: 2 },
     reason: '',
   });

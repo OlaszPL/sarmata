@@ -215,6 +215,8 @@ export async function askAi(
   );
   const choice = proposal.choices.find((candidate) => candidate.model?.id === chosen);
   if (choice === undefined) return { enabled: false };
+  // The note above explains the recommended model. Another model may change the Bielik-One answer.
+  if (choice !== recommended) note(choice.decisionReason, 'Bielik-One');
   const decisions =
     choice.bielikOne !== null &&
     answer(

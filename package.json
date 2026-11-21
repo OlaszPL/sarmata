@@ -37,7 +37,8 @@
     "ai:setup": "pnpm --filter @sarmata/ai-runtime ai:setup",
     "ai:env": "pnpm --filter @sarmata/ai-runtime ai:env",
     "ai:start": "pnpm --filter @sarmata/ai-runtime ai:start",
-    "ai:stop": "pnpm --filter @sarmata/ai-runtime ai:stop"
+    "ai:stop": "pnpm --filter @sarmata/ai-runtime ai:stop",
+    "ai:smoke": "pnpm --filter @sarmata/ai-runtime ai:smoke"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

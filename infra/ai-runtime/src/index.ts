@@ -9,8 +9,19 @@ export type {
 } from './models.ts';
 export { LLAMA_CPP_RELEASE } from './llama-cpp-release.ts';
 export type { LlamaBackend, LlamaCppBundle } from './llama-cpp-release.ts';
-export { INSTALL_PROFILES, recommendRuntime, runtimeChoices } from './recommend.ts';
-export type { InstallProfile, RecommendOptions, RuntimeRecommendation } from './recommend.ts';
+export {
+  appleGpuBudgetMiB,
+  bielikOneAlone,
+  INSTALL_PROFILES,
+  recommendRuntime,
+  runtimeChoices,
+} from './recommend.ts';
+export type {
+  BielikOneChoice,
+  InstallProfile,
+  RecommendOptions,
+  RuntimeRecommendation,
+} from './recommend.ts';
 export { installLlamaCpp } from './llama-cpp-install.ts';
 export type { LlamaCpp } from './llama-cpp-install.ts';
 export { defaultDataDir } from './data-dir.ts';
@@ -34,6 +45,7 @@ export {
   bielikOneCommands,
   installBielikOne,
   isBielikOneReady,
+  prefetchBielikOne,
   startBielikOne,
 } from './bielik-one.ts';
 export type {
@@ -42,6 +54,8 @@ export type {
   BielikOneServer,
   InstallBielikOneOptions,
 } from './bielik-one.ts';
+export { smokeDecision, smokeText } from './smoke.ts';
+export type { SmokeResult } from './smoke.ts';
 export { detectHardware } from './hardware.ts';
 export type { ComputeDevice, Hardware, NvidiaGpu } from './hardware.ts';
 export { architectureOf, fakeMachine, localMachine, operatingSystemOf } from './machine.ts';

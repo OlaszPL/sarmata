@@ -9,6 +9,7 @@ import {
   fakeMachine,
   installBielikOne,
   isBielikOneReady,
+  prefetchBielikOne,
 } from './index.ts';
 import { freePort, listen } from './test-helpers.ts';
 
@@ -176,5 +177,44 @@ describe('bielikOneCommands', () => {
       '--revision',
       pkg.revision,
     ]);
+  });
+});
+
+describe('prefetchBielikOne', () => {
+  it('downloads the package and its base model into the shared Hugging Face cache', async () => {
+    const machine = fakeMachine({
+      os: 'macos',
+      arch: 'arm64',
+      totalMemoryGiB: 16,
+      commands: { env: { exitCode: 0, stdout: '', stderr: '' } },
+    });
+    const pkg = BIELIK_ONE_PACKAGES['bielik-one-4b-r1-adapter'];
+    const install = { engine: 'mlx' as const, executable: '/data/bielik-one/mlx/bin/bielik-one' };
+    await prefetchBielikOne(install, pkg, { machine, dataDir: '/data' });
+    const [call] = machine.calls;
+    expect(call?.command).toBe('env');
+    expect(call?.args.slice(0, 3)).toEqual([
+      'HF_HOME=/data/huggingface',
+      '/data/bielik-one/mlx/bin/python',
+      '-c',
+    ]);
+    expect(call?.args.slice(4)).toEqual([pkg.repo, pkg.revision]);
+    expect(call?.args[3]).toContain('allow_patterns=mlx_backend.BASE_FILES');
+  });
+
+  it('points to the Hugging Face login when a gated base model fails to download', async () => {
+    const machine = fakeMachine({
+      os: 'macos',
+      arch: 'arm64',
+      totalMemoryGiB: 64,
+      commands: { env: { exitCode: 1, stdout: '', stderr: '' } },
+    });
+    const install = { engine: 'mlx' as const, executable: '/data/bielik-one/mlx/bin/bielik-one' };
+    await expect(
+      prefetchBielikOne(install, BIELIK_ONE_PACKAGES['bielik-one-11b-v3.1-r1-adapter'], {
+        machine,
+        dataDir: '/data',
+      }),
+    ).rejects.toThrow(/gated/);
   });
 });

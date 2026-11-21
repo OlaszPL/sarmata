@@ -107,25 +107,44 @@ export interface BielikOnePackage {
   revision: string;
   /** Port of `bielik-one frontend`, fixed by the launcher per package (backend runs one below). */
   port: number;
+  /** Short name for installer messages. */
+  label: string;
   /** GPU memory (vLLM, bfloat16) or unified memory (MLX) for base weights, adapter and cache. */
   requiredMiB: Readonly<Record<BielikOneEngine, number>>;
+  /** First download: the package repository plus its base model (Hugging Face API sizes). */
+  downloadBytes: number;
+  /** The base model repository needs a Hugging Face account that accepted its terms. */
+  gatedBase: boolean;
 }
 
-/** Revisions from https://huggingface.co/api/models/<repo>, 21.11.2026. Both repos are ungated. */
+/**
+ * Revisions and sizes from https://huggingface.co/api/models/<repo>, 21.11.2026. Both adapter repos
+ * are ungated. The 4B base (Qwen/Qwen3.5-4B) is ungated, the 11B base
+ * (speakleash/Bielik-11B-v3.1-Instruct) is gated with automatic approval, so it needs a token in
+ * `<dataDir>/huggingface` (ADR 0005). requiredMiB follows the bielik-one README: about 30 GB in
+ * bfloat16 for the 11B model on vLLM, 12 GB for the 4B model, and on MLX the bfloat16 weights (8.2
+ * GiB for 4B, 20.8 GiB for 11B) with the LoRA and the MLX buffer cache.
+ */
 export const BIELIK_ONE_PACKAGES: Readonly<Record<BielikOnePackageId, BielikOnePackage>> = {
   'bielik-one-11b-v3.1-r1-adapter': {
     id: 'bielik-one-11b-v3.1-r1-adapter',
     repo: 'speakleash/Bielik-One-11B-v3.1-r1-Adapter',
     revision: 'e8ded5d3b6076ec82ca23d173e6e9460a7650580',
     port: 8026,
+    label: 'Bielik-One 11B',
     requiredMiB: { vllm: 31 * 1024, mlx: 26 * 1024 },
+    downloadBytes: 1_057_279_806 + 22_340_130_855,
+    gatedBase: true,
   },
   'bielik-one-4b-r1-adapter': {
     id: 'bielik-one-4b-r1-adapter',
     repo: 'speakleash/Bielik-One-4B-r1-Adapter',
     revision: '9b543720409e112985bf977fb17a3dc91d845656',
     port: 8012,
+    label: 'Bielik-One 4B',
     requiredMiB: { vllm: 13 * 1024, mlx: 9 * 1024 },
+    downloadBytes: 766_633_209 + 9_342_907_469,
+    gatedBase: false,
   },
 };
 

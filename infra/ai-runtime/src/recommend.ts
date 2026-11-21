@@ -13,6 +13,12 @@ import {
 export const INSTALL_PROFILES = ['light', 'standard', 'server'] as const;
 export type InstallProfile = (typeof INSTALL_PROFILES)[number];
 
+/** A Bielik-One package and the engine that runs it. */
+export interface BielikOneChoice {
+  engine: BielikOneEngine;
+  package: BielikOnePackage;
+}
+
 export interface RuntimeRecommendation {
   /** AI is on by default in every profile except light (ADR 0003, ADR 0005). */
   enabledByDefault: boolean;
@@ -20,10 +26,15 @@ export interface RuntimeRecommendation {
   /** Null when the machine is too weak even for Bielik-4.5B. */
   model: ModelFile | null;
   /** Only on vLLM (Linux, NVIDIA) or MLX (Apple silicon), and only when it fits next to the text model. */
-  bielikOne: { engine: BielikOneEngine; package: BielikOnePackage } | null;
+  bielikOne: BielikOneChoice | null;
+  /**
+   * Why Bielik-One is or is not installed next to the text model, with the fallback and the memory
+   * it would need. In Polish, for the installer screen. Never empty.
+   */
+  decisionReason: string;
   /** llama-server settings for the profile. */
   server: { contextSize: number; parallel: number };
-  /** One sentence for the installer screen, in Polish. */
+  /** The text model and the Bielik-One decision, for the installer screen, in Polish. */
   reason: string;
 }
 
@@ -38,14 +49,19 @@ const GiB_IN_MiB = 1024;
 const MIN_RAM_MiB = 7 * GiB_IN_MiB;
 const MIN_GPU_MiB = 7.5 * GiB_IN_MiB;
 const MIN_MAC_RAM_MiB = 15 * GiB_IN_MiB;
-// Metal may use about three quarters of unified memory.
-const METAL_SHARE = 0.75;
 // KV cache for a 16k context and compute buffers next to the weights on a server.
 const SERVER_HEADROOM_MiB = 4 * GiB_IN_MiB;
 // Compute buffers next to the weights on a workstation: an 8 GB card still takes Q4_K_M.
 const DESKTOP_HEADROOM_MiB = 1 * GiB_IN_MiB;
-// Memory left free when Bielik-One runs next to the text model.
+// KV cache and compute buffers of the text model next to Bielik-One on a workstation: the 8k context
+// of Bielik-11B (50 layers, 8 KV heads of 128) takes 1.6 GiB in f16.
 const BIELIK_ONE_HEADROOM_MiB = 2 * GiB_IN_MiB;
+// Memory sizes the minimum in a message is rounded up to.
+const MAC_MEMORY_GB = [16, 18, 24, 32, 36, 48, 64, 96, 128, 192, 256, 512] as const;
+const GPU_MEMORY_GB = [8, 12, 16, 20, 24, 32, 40, 48, 80, 96, 141, 192] as const;
+// An NVIDIA card reports a little less than its nominal size (24564 MiB for 24 GB).
+const GPU_REPORTED_SLACK_MiB = 128;
+const DECISION_FALLBACK = 'Decyzje podejmuje model tekstowy z wymuszonym formatem JSON.';
 const SERVER_QUANTS: readonly ModelId[] = [
   'bielik-11b-v3.1-q8_0',
   'bielik-11b-v3.1-q6_k',
@@ -68,18 +84,19 @@ export function recommendRuntime(
   options: RecommendOptions = {},
 ): RuntimeRecommendation {
   const { model, reason } = chooseModel(hardware, profile, options);
-  const bielikOne = model ? chooseBielikOne(hardware, profile, model) : null;
-  const engineName = bielikOne?.engine === 'vllm' ? 'vLLM' : 'MLX';
+  const decision = model
+    ? chooseBielikOne(hardware, profile, model)
+    : { bielikOne: null, decisionReason: 'Bez modelu tekstowego Bielik-One nie jest instalowany.' };
   return {
     enabledByDefault: profile !== 'light' && model !== null,
     llamaCpp: llamaCppBundle(hardware.os, hardware.arch, hardware.nvidia),
     model,
-    bielikOne,
+    ...decision,
     server:
       profile === 'server'
         ? { contextSize: 16_384, parallel: 4 }
         : { contextSize: 8192, parallel: 2 },
-    reason: bielikOne ? `${reason} Obok zmieści się Bielik-One (${engineName}).` : reason,
+    reason: model ? `${reason} ${decision.decisionReason}` : reason,
   };
 }
 
@@ -111,7 +128,7 @@ function fits(hardware: Hardware, profile: InstallProfile, id: ModelId): boolean
   const model = MODEL_FILES[id];
   if (id === 'bielik-4.5b-v3.0-q8_0') return hardware.memoryMiB >= MIN_RAM_MiB;
   const apple = isAppleSilicon(hardware);
-  const budget = apple ? hardware.memoryMiB * METAL_SHARE : dedicatedGpuMiB(hardware);
+  const budget = apple ? appleGpuBudgetMiB(hardware.memoryMiB) : dedicatedGpuMiB(hardware);
   const headroom = profile === 'server' ? SERVER_HEADROOM_MiB : DESKTOP_HEADROOM_MiB;
   return sizeMiB(model) + headroom <= budget;
 }
@@ -120,6 +137,16 @@ const isAppleSilicon = (hardware: Hardware): boolean =>
   hardware.os === 'macos' && hardware.arch === 'arm64';
 const sizeMiB = (model: ModelFile): number => model.sizeBytes / MiB;
 const gb = (mib: number): number => Math.round(mib / GiB_IN_MiB);
+const gbOneDecimal = (mib: number): string => (mib / GiB_IN_MiB).toFixed(1).replace('.', ',');
+
+/**
+ * Unified memory the GPU of a Mac may use: macOS reports about two thirds of it as
+ * recommendedMaxWorkingSetSize up to 32 GB and three quarters above (10.7 GiB on a 16 GB M2). The
+ * rest stays for macOS, the browser and Docker.
+ */
+export function appleGpuBudgetMiB(memoryMiB: number): number {
+  return memoryMiB * (memoryMiB > 32 * GiB_IN_MiB ? 0.75 : 2 / 3);
+}
 
 function dedicatedGpuMiB(hardware: Hardware): number {
   return Math.max(
@@ -141,7 +168,7 @@ function chooseModel(
   const apple = isAppleSilicon(hardware);
   const gpuMiB = dedicatedGpuMiB(hardware);
   if (apple ? hardware.memoryMiB >= MIN_MAC_RAM_MiB : gpuMiB >= MIN_GPU_MiB) {
-    const budget = apple ? hardware.memoryMiB * METAL_SHARE : gpuMiB;
+    const budget = apple ? appleGpuBudgetMiB(hardware.memoryMiB) : gpuMiB;
     const model =
       profile === 'server' ? largestFitting(budget) : MODEL_FILES['bielik-11b-v3.1-q4_k_m'];
     const where = apple
@@ -169,12 +196,9 @@ function largestFitting(budgetMiB: number): ModelFile {
   return fitting ?? MODEL_FILES['bielik-11b-v3.1-q4_k_m'];
 }
 
-function chooseBielikOne(
-  hardware: Hardware,
-  profile: InstallProfile,
-  model: ModelFile,
-): RuntimeRecommendation['bielikOne'] {
-  if (profile === 'light') return null;
+/** The engine that can run Bielik-One here, if any (ADR 0005). */
+function bielikOneEngine(hardware: Hardware): BielikOneEngine | null {
+  if (isAppleSilicon(hardware)) return 'mlx';
   const nvidia = largestNvidia(hardware.nvidia);
   // vLLM runs on Linux, and bfloat16 (the calibrated precision) needs compute capability 8.0.
   const vllm =
@@ -182,10 +206,84 @@ function chooseBielikOne(
     hardware.arch === 'x64' &&
     nvidia !== undefined &&
     nvidia.computeCapability >= 8;
-  const engine: BielikOneEngine | null = isAppleSilicon(hardware) ? 'mlx' : vllm ? 'vllm' : null;
+  return vllm ? 'vllm' : null;
+}
+
+/** Memory Bielik-One and the text model share: the Mac's GPU budget, or the largest NVIDIA card. */
+function bielikOneBudgetMiB(hardware: Hardware, engine: BielikOneEngine): number {
+  return engine === 'mlx'
+    ? appleGpuBudgetMiB(hardware.memoryMiB)
+    : (largestNvidia(hardware.nvidia)?.memoryMiB ?? 0);
+}
+
+const engineName = (engine: BielikOneEngine): string => (engine === 'vllm' ? 'vLLM' : 'MLX');
+
+/** The smallest common memory size (in GB) that holds `needMiB` on this engine. */
+function minimumMemoryGb(engine: BielikOneEngine, needMiB: number): number | null {
+  const sizes = engine === 'mlx' ? MAC_MEMORY_GB : GPU_MEMORY_GB;
+  const fits = (size: number): boolean =>
+    engine === 'mlx'
+      ? appleGpuBudgetMiB(size * GiB_IN_MiB) >= needMiB
+      : size * GiB_IN_MiB - GPU_REPORTED_SLACK_MiB >= needMiB;
+  return sizes.find(fits) ?? null;
+}
+
+function chooseBielikOne(
+  hardware: Hardware,
+  profile: InstallProfile,
+  model: ModelFile,
+): Pick<RuntimeRecommendation, 'bielikOne' | 'decisionReason'> {
+  if (profile === 'light') {
+    return {
+      bielikOne: null,
+      decisionReason: `W profilu light Bielik-One nie jest instalowany. ${DECISION_FALLBACK}`,
+    };
+  }
+  const engine = bielikOneEngine(hardware);
+  if (!engine) {
+    return {
+      bielikOne: null,
+      decisionReason: `Bielik-One działa tylko na Macu z procesorem Apple (MLX) albo na Linuksie z kartą NVIDIA o compute capability co najmniej 8.0 (vLLM). ${DECISION_FALLBACK}`,
+    };
+  }
+  const budget = bielikOneBudgetMiB(hardware, engine);
+  const text =
+    sizeMiB(model) + (profile === 'server' ? SERVER_HEADROOM_MiB : BIELIK_ONE_HEADROOM_MiB);
+  const where = engine === 'mlx' ? 'GPU tego Maca może użyć' : 'karta graficzna ma';
+  const pkg = BIELIK_ONE_BY_SIZE.find(
+    (candidate) => text + candidate.requiredMiB[engine] <= budget,
+  );
+  if (pkg) {
+    const gated = pkg.gatedBase
+      ? ' Jego model bazowy wymaga konta Hugging Face z zaakceptowaną licencją (ADR 0005).'
+      : '';
+    return {
+      bielikOne: { engine, package: pkg },
+      decisionReason: `Obok modelu tekstowego zmieści się ${pkg.label} (${engineName(engine)}): razem około ${gbOneDecimal(text + pkg.requiredMiB[engine])} GB, a ${where} ${gbOneDecimal(budget)} GB.${gated}`,
+    };
+  }
+  const smallest = BIELIK_ONE_BY_SIZE[BIELIK_ONE_BY_SIZE.length - 1];
+  if (!smallest) throw new Error('No Bielik-One package defined');
+  const need = text + smallest.requiredMiB[engine];
+  const minimum = minimumMemoryGb(engine, need);
+  const threshold =
+    minimum === null
+      ? ''
+      : ` Oba modele naraz mieszczą się od ${minimum} GB ${engine === 'mlx' ? 'pamięci Maca' : 'pamięci karty NVIDIA'}.`;
+  return {
+    bielikOne: null,
+    decisionReason: `Bielik-One nie zmieści się na stałe obok modelu tekstowego: ${smallest.label} (${engineName(engine)}) z modelem ${model.label} ${model.quantization} potrzebuje około ${gbOneDecimal(need)} GB, a ${where} ${gbOneDecimal(budget)} GB. ${DECISION_FALLBACK}${threshold}`,
+  };
+}
+
+/**
+ * The largest Bielik-One package that fits here on its own, with the text model stopped. Dev
+ * testing on a machine where the two do not fit together (pnpm ai:setup --with-bielik-one).
+ */
+export function bielikOneAlone(hardware: Hardware): BielikOneChoice | null {
+  const engine = bielikOneEngine(hardware);
   if (!engine) return null;
-  const memory = engine === 'mlx' ? hardware.memoryMiB * METAL_SHARE : (nvidia?.memoryMiB ?? 0);
-  const budget = memory - sizeMiB(model) - BIELIK_ONE_HEADROOM_MiB;
+  const budget = bielikOneBudgetMiB(hardware, engine);
   const pkg = BIELIK_ONE_BY_SIZE.find((candidate) => candidate.requiredMiB[engine] <= budget);
   return pkg ? { engine, package: pkg } : null;
 }

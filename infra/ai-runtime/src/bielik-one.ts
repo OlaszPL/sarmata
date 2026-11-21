@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { RuntimeContext } from './context.ts';
 import { readTextOrNull } from './download.ts';
 import { BIELIK_ONE_SOURCE, type BielikOneEngine, type BielikOnePackage } from './models.ts';
@@ -13,6 +13,8 @@ export interface BielikOneInstall {
 export interface BielikOneServer {
   /** Frontend base URL: `/v1/systemone` for decisions, `/health` for readiness. */
   url: string;
+  /** Process ids of the backend and the frontend, for a later stop from another process. */
+  pids: number[];
   stop(): Promise<void>;
 }
 
@@ -24,7 +26,8 @@ export interface InstallBielikOneOptions {
 const INSTALL_TIMEOUT_MS = 60 * 60 * 1000;
 const READY_TIMEOUT_MS = 60 * 60 * 1000;
 
-const SMOKE_DECISION = {
+/** One yes/no question: the readiness check and `pnpm ai:smoke` send it. */
+export const SMOKE_DECISION = {
   model: 'decision',
   state: 'Wniosek o ocenę okresową złożono 3 marca 2026 r.',
   questions: {
@@ -88,6 +91,52 @@ export async function installBielikOne(
   await mkdir(venv, { recursive: true });
   await writeFile(marker, BIELIK_ONE_SOURCE.commit);
   return install;
+}
+
+// Downloads the package and the base model files the backend loads, as the backend itself would
+// (bielik_one.mlx_backend.resolve_base), so the first start does not download tens of GB unseen.
+// huggingface_hub keeps finished files by etag and resumes .incomplete ones.
+const PREFETCH_SCRIPT = `
+import sys
+from pathlib import Path
+from huggingface_hub import snapshot_download
+from bielik_one import launch, mlx_backend
+repo, revision = sys.argv[1], sys.argv[2]
+root = Path(snapshot_download(repo, revision=revision))
+info = mlx_backend.adapter_package(root, launch.detect(root))
+snapshot_download(info["repo"], revision=info["revision"], allow_patterns=mlx_backend.BASE_FILES)
+print(f"Bielik-One: {repo} and {info['repo']}@{info['revision'][:7]} are in the cache", flush=True)
+`;
+
+/**
+ * Downloads an adapter package and its base model into `<dataDir>/huggingface`, the cache the
+ * services use, with the progress bars of huggingface_hub on the terminal. Files already in the
+ * cache are not downloaded again.
+ */
+export async function prefetchBielikOne(
+  install: BielikOneInstall,
+  pkg: BielikOnePackage,
+  ctx: RuntimeContext,
+): Promise<void> {
+  const python = join(dirname(install.executable), 'python');
+  const result = await ctx.machine.run(
+    'env',
+    [
+      `HF_HOME=${join(ctx.dataDir, 'huggingface')}`,
+      python,
+      '-c',
+      PREFETCH_SCRIPT,
+      pkg.repo,
+      pkg.revision,
+    ],
+    { interactive: true, timeoutMs: null },
+  );
+  if (result.exitCode !== 0) {
+    const login = pkg.gatedBase
+      ? ' The base model is gated: accept its terms on huggingface.co and log in with HF_HOME set to the AI data directory (README).'
+      : '';
+    throw new Error(`Downloading ${pkg.repo} failed (exit code ${result.exitCode}).${login}`);
+  }
 }
 
 /** A Bielik-One process as a command line: started by startBielikOne, or registered as a system service. */
@@ -166,7 +215,7 @@ export async function startBielikOne(
     await stop();
     throw error;
   }
-  return { url, stop };
+  return { url, pids: [backend.pid, frontend.pid], stop };
 }
 
 /** True when the frontend is calibrated and answers a one-question decision. */

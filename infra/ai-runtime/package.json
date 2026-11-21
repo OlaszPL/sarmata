@@ -12,7 +12,8 @@
     "ai:setup": "node scripts/ai-setup.ts",
     "ai:env": "node scripts/ai-env.ts",
     "ai:start": "node scripts/ai-start.ts",
-    "ai:stop": "node scripts/ai-stop.ts"
+    "ai:stop": "node scripts/ai-stop.ts",
+    "ai:smoke": "node scripts/ai-smoke.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
