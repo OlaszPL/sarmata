@@ -10,6 +10,10 @@ export interface OfficeSettings {
   readonly notesRetentionMonths: number;
   readonly reminderLeadDays: number[];
   readonly evaluationVisibility: EvaluationVisibility;
+  /** Default place (miejscowość) of evaluation events. */
+  readonly defaultPlace: string | null;
+  /** Office override of the objection addressee on sheet A, `null` means the rules text. */
+  readonly objectionAddresseeSheetA: string | null;
   readonly smtp: {
     readonly host: string | null;
     readonly port: number | null;
@@ -29,7 +33,7 @@ export interface OfficeSettingsRepository {
 }
 
 const COLUMNS =
-  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, offices(evaluation_visibility)' as const;
+  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, default_place, objection_addressee_sheet_a, offices(evaluation_visibility)' as const;
 
 const asVisibility = (value: string | undefined): EvaluationVisibility =>
   value === 'tree' ? 'tree' : 'office';
@@ -44,6 +48,8 @@ interface SettingsRow {
   smtp_user: string | null;
   smtp_from: string | null;
   smtp_password_set: boolean | null;
+  default_place: string | null;
+  objection_addressee_sheet_a: string | null;
   offices: { evaluation_visibility: string } | null;
 }
 
@@ -53,6 +59,8 @@ const toSettings = (row: SettingsRow): OfficeSettings => ({
   notesRetentionMonths: row.notes_retention_months,
   reminderLeadDays: row.reminder_lead_days,
   evaluationVisibility: asVisibility(row.offices?.evaluation_visibility),
+  defaultPlace: row.default_place,
+  objectionAddresseeSheetA: row.objection_addressee_sheet_a,
   smtp: {
     host: row.smtp_host,
     port: row.smtp_port,
@@ -70,6 +78,8 @@ interface SettingsColumns {
   smtp_port?: number | null;
   smtp_user?: string | null;
   smtp_from?: string | null;
+  default_place?: string | null;
+  objection_addressee_sheet_a?: string | null;
 }
 
 function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
@@ -83,6 +93,10 @@ function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
   if (patch.smtp?.port !== undefined) columns.smtp_port = patch.smtp.port;
   if (patch.smtp?.user !== undefined) columns.smtp_user = patch.smtp.user;
   if (patch.smtp?.from !== undefined) columns.smtp_from = patch.smtp.from;
+  if (patch.defaultPlace !== undefined) columns.default_place = patch.defaultPlace;
+  if (patch.objectionAddresseeSheetA !== undefined) {
+    columns.objection_addressee_sheet_a = patch.objectionAddresseeSheetA;
+  }
   return columns;
 }
 

@@ -81,5 +81,5 @@ Poprzednia treść notatki zachowana po edycji. Czas wpisu notatki się nie zmie
 _Avoid_: kopia notatki
 
 **Ustawienia urzędu** (`OfficeSettings`, `office_settings`):
-Jeden wiersz na urząd: przełącznik AI, okres przechowywania notatek, wyprzedzenie przypomnień i SMTP. Zmienia je admin. Hasło SMTP leży w Supabase Vault i nie wraca do klienta.
+Jeden wiersz na urząd: przełącznik AI, okres przechowywania notatek, wyprzedzenie przypomnień, SMTP, domyślna miejscowość i adresat sprzeciwu na arkuszu A. Zmienia je admin. Hasło SMTP leży w Supabase Vault i nie wraca do klienta.
 _Avoid_: konfiguracja

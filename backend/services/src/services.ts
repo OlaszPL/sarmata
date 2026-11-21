@@ -15,6 +15,7 @@ import {
   type ArchivedEvaluation,
   type Employee,
   type NewArchivedEvaluation,
+  type OfficeSettingsRepository,
   type Repositories,
   type SimilarEmployee,
   createNoteRepository,
@@ -34,6 +35,8 @@ export interface ServiceDependencies {
   readonly repositories: Repositories;
   /** Id of the signed-in account, needed to start an evaluation without a named evaluator. */
   readonly currentAccountId?: () => Promise<string>;
+  /** Default place and sheet A objection addressee. Without it the rules text applies. */
+  readonly officeSettings?: OfficeSettingsRepository;
 }
 
 export interface DeadlineRequest {
@@ -65,7 +68,7 @@ export interface Services {
 }
 
 export function createServices(dependencies: ServiceDependencies): Services {
-  const { repositories, currentAccountId } = dependencies;
+  const { repositories, currentAccountId, officeSettings } = dependencies;
 
   const regulations: Services['regulations'] = {
     async inForceOn(on) {
@@ -94,6 +97,7 @@ export function createServices(dependencies: ServiceDependencies): Services {
       repositories,
       regulationInForceOn: (on) => regulations.inForceOn(on),
       ...(currentAccountId === undefined ? {} : { currentAccountId }),
+      ...(officeSettings === undefined ? {} : { officeSettings }),
     }),
     archivedEvaluations: {
       create: (input) => repositories.archivedEvaluations.create(input),
@@ -128,17 +132,21 @@ export type AppServices = Services & {
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
-export const servicesFor = (db: Db): AppServices => ({
-  ...createServices({
-    repositories: createRepositories(db),
-    currentAccountId: async () => {
-      const account = await getCurrentAccount(db);
-      if (account.status === 'signed-out') {
-        throw new ServiceError('not_found', 'Nobody is signed in');
-      }
-      return account.userId;
-    },
-  }),
-  notes: createNoteService(createNoteRepository(db)),
-  officeSettings: createOfficeSettingsService(createOfficeSettingsRepository(db)),
-});
+export const servicesFor = (db: Db): AppServices => {
+  const officeSettings = createOfficeSettingsRepository(db);
+  return {
+    ...createServices({
+      repositories: createRepositories(db),
+      officeSettings,
+      currentAccountId: async () => {
+        const account = await getCurrentAccount(db);
+        if (account.status === 'signed-out') {
+          throw new ServiceError('not_found', 'Nobody is signed in');
+        }
+        return account.userId;
+      },
+    }),
+    notes: createNoteService(createNoteRepository(db)),
+    officeSettings: createOfficeSettingsService(officeSettings),
+  };
+};

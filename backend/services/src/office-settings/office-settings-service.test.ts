@@ -15,6 +15,8 @@ const settings: OfficeSettings = {
   notesRetentionMonths: 36,
   reminderLeadDays: [14, 3],
   evaluationVisibility: 'office',
+  defaultPlace: null,
+  objectionAddresseeSheetA: null,
   smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
 };
 

@@ -22,6 +22,8 @@ export const officeSettingsPatchSchema = z.strictObject({
   notesRetentionMonths: z.number().int().min(1).max(120).optional(),
   reminderLeadDays: reminderLeadDaysSchema.optional(),
   evaluationVisibility: evaluationVisibilitySchema.optional(),
+  defaultPlace: z.string().trim().min(1).nullable().optional(),
+  objectionAddresseeSheetA: z.string().trim().min(1).nullable().optional(),
   smtp: smtpPatchSchema.optional(),
 });
 export type OfficeSettingsPatchInput = z.input<typeof officeSettingsPatchSchema>;

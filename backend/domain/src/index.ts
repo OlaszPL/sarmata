@@ -50,7 +50,9 @@ export {
   type EvaluationStatus,
   type EvaluationTransition,
   type TransitionPlan,
+  DEFAULT_REFUSAL_NOTE,
   TransitionError,
+  commandPayload,
   evaluationTransitions,
   planTransition,
 } from './evaluations/state-machine';

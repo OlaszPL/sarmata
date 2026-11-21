@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { calendarDate } from '../deadlines/calendar-date';
 import {
+  DEFAULT_REFUSAL_NOTE,
   type EvaluationCommand,
   type EvaluationStatus,
+  commandPayload,
   planTransition,
   TransitionError,
 } from './state-machine';
@@ -110,4 +112,38 @@ describe('planTransition', () => {
       expect(run).toThrow(expect.objectContaining({ code: 'invalid_transition' }));
     },
   );
+});
+
+describe('commandPayload', () => {
+  const refused: EvaluationCommand = {
+    type: 'record_acquaintance',
+    acquaintedOn: day,
+    signatureRefused: true,
+  };
+
+  it('defaults the refusal note and ignores a note when the signature is not refused', () => {
+    expect(commandPayload(refused, null)).toEqual({ refusalNote: DEFAULT_REFUSAL_NOTE });
+    expect(commandPayload({ ...refused, signatureRefused: false, refusalNote: 'x' }, null)).toEqual(
+      {},
+    );
+  });
+
+  it('keeps a given note, trims witnesses and drops empty ones', () => {
+    expect(
+      commandPayload({ ...refused, refusalNote: ' Odmowa ', witnesses: [' Ala ', ' '] }, null),
+    ).toEqual({ refusalNote: 'Odmowa', witnesses: ['Ala'] });
+  });
+
+  it('takes the place from the command, else from the default', () => {
+    const approve: EvaluationCommand = { type: 'approve_sheet', draftedOn: day };
+    expect(commandPayload(approve, 'Warszawa')).toEqual({ place: 'Warszawa' });
+    expect(commandPayload({ ...approve, place: 'Łódź' }, 'Warszawa')).toEqual({ place: 'Łódź' });
+    expect(commandPayload(approve, null)).toEqual({});
+  });
+
+  it('keeps the interrupt reason', () => {
+    expect(
+      commandPayload({ type: 'interrupt', interruptedOn: day, reason: 'Left' }, 'Warszawa'),
+    ).toEqual({ reason: 'Left' });
+  });
 });

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(38);
 
 -- Office A: hr, two evaluators, admin and a boss above evaluator one. Ewa works under evaluator one.
 insert into public.offices (id, name) values
@@ -33,6 +33,14 @@ insert into public.evaluations (id, office_id, employee_id, evaluator_account_id
   ('eeeeeeee-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'aaaaaaaa-2222-4000-8000-000000000001',
    'aaaaaaaa-1111-4000-8000-000000000002', 'aaaaaaaa-3333-4000-8000-000000000001', 'A', 'period', '2026-01-01', '{}',
    'aaaaaaaa-1111-4000-8000-000000000001');
+
+-- The new columns exist, nullable, and are null by default.
+select results_eq(
+  $$select default_place, objection_addressee_sheet_a from public.office_settings
+     where office_id = 'bbbbbbbb-0000-4000-8000-000000000002'$$,
+  $$values (null::text, null::text)$$,
+  'default place and sheet A addressee are null for a new office'
+);
 
 -- Settings exist for every office, with defaults.
 select results_eq(
@@ -217,6 +225,12 @@ select results_eq(
   $$values (0::bigint)$$,
   'only admin changes evaluation visibility: hr changes nothing'
 );
+select results_eq(
+  $$with u as (update public.office_settings set default_place = 'Gdańsk' where office_id = 'aaaaaaaa-0000-4000-8000-000000000001' returning 1)
+    select count(*) from u$$,
+  $$values (0::bigint)$$,
+  'hr cannot update default place'
+);
 select throws_ok(
   $$select public.set_smtp_password('secret')$$,
   '42501', null, 'hr cannot set smtp password'
@@ -229,6 +243,19 @@ select results_eq(
     select count(*) from u$$,
   $$values (1::bigint)$$,
   'admin updates settings'
+);
+select results_eq(
+  $$with u as (update public.office_settings set default_place = 'Warszawa', objection_addressee_sheet_a = 'Wojewoda'
+                where office_id = 'aaaaaaaa-0000-4000-8000-000000000001' returning 1)
+    select count(*) from u$$,
+  $$values (1::bigint)$$,
+  'admin updates default place and sheet A addressee'
+);
+select results_eq(
+  $$select default_place, objection_addressee_sheet_a from public.office_settings
+     where office_id = 'aaaaaaaa-0000-4000-8000-000000000001'$$,
+  $$values ('Warszawa', 'Wojewoda')$$,
+  'the new settings are readable'
 );
 select throws_ok(
   $$update public.office_settings set reminder_lead_days = '{91}' where office_id = 'aaaaaaaa-0000-4000-8000-000000000001'$$,

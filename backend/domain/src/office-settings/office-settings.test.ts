@@ -23,6 +23,16 @@ describe('officeSettingsPatchSchema', () => {
     });
   });
 
+  it('accepts the default place and the sheet A addressee, null clears them', () => {
+    expect(
+      officeSettingsPatchSchema.parse({
+        defaultPlace: ' Warszawa ',
+        objectionAddresseeSheetA: null,
+      }),
+    ).toEqual({ defaultPlace: 'Warszawa', objectionAddresseeSheetA: null });
+    expect(officeSettingsPatchSchema.safeParse({ defaultPlace: '  ' }).success).toBe(false);
+  });
+
   it('rejects an invalid sender address', () => {
     expect(officeSettingsPatchSchema.safeParse({ smtp: { from: 'nope' } }).success).toBe(false);
   });

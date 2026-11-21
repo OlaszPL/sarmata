@@ -10,6 +10,8 @@ import {
   type EvaluationDetail,
   type EvaluationEvent,
   type EvaluationRepository,
+  type OfficeSettings,
+  type OfficeSettingsRepository,
   type Repositories,
   RepositoryError,
 } from '@sarmata/repositories';
@@ -175,6 +177,7 @@ function setup(
   seed: EvaluationDetail[] = [],
   history: HistoryEntry[] = [],
   override: Partial<EvaluationRepository> = {},
+  officeSettings?: OfficeSettingsRepository,
 ) {
   const { repository, store } = fakeEvaluations(seed, history, override);
   const repositories: Repositories = {
@@ -199,6 +202,7 @@ function setup(
   const services = createServices({
     repositories,
     currentAccountId: () => Promise.resolve('acc-current'),
+    ...(officeSettings === undefined ? {} : { officeSettings }),
   });
   return { services, store };
 }
@@ -896,5 +900,144 @@ describe('fix wave 1: staffing review findings', () => {
       reason: 'Left',
     });
     expect(interrupted.signals.secondConsecutiveNegative).toBe(false);
+  });
+
+  describe('refusal note, place and objection addressee', () => {
+    const settingsWith = (patch: Partial<OfficeSettings>): OfficeSettingsRepository => ({
+      get: () =>
+        Promise.resolve({
+          officeId: 'o1',
+          aiEnabled: true,
+          notesRetentionMonths: 36,
+          reminderLeadDays: [14, 3],
+          evaluationVisibility: 'office',
+          defaultPlace: null,
+          objectionAddresseeSheetA: null,
+          smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
+          ...patch,
+        }),
+      update: () => Promise.reject(new Error('unused')),
+      setSmtpPassword: () => Promise.reject(new Error('unused')),
+    });
+
+    async function toDrafted(
+      services: ReturnType<typeof setup>['services'],
+      sheetId?: string,
+      place?: string,
+    ) {
+      const started = await services.evaluations.start({
+        employeeId: 'emp1',
+        today,
+        ...(sheetId === undefined ? {} : { sheetId }),
+      });
+      const id = started.id;
+      const run = (command: Parameters<typeof services.evaluations.transition>[1]) =>
+        services.evaluations.transition(id, command);
+      await run({
+        type: 'approve_part_one',
+        startingInterviewOn: date('2024-09-20'),
+        ...(place === undefined ? {} : { place }),
+      });
+      await run({ type: 'record_part_one_signature', signedOn: date('2024-09-21') });
+      await run({ type: 'record_evaluation_interview', heldOn: date('2026-05-20') });
+      await services.evaluations.saveDraft(id, completeContent(started.sheetId, points('meets')));
+      await run({ type: 'approve_sheet', draftedOn: date('2026-05-25') });
+      return { id, run };
+    }
+
+    const payloadOf = (store: ReturnType<typeof setup>['store'], id: string, kind: string) =>
+      store.get(id)?.events.find((event) => event.kind === kind)?.payload;
+
+    it('a refused signature gets the default note, a given note and witnesses are kept', async () => {
+      const first = setup([employee()]);
+      const a = await toDrafted(first.services);
+      await a.run({
+        type: 'record_acquaintance',
+        acquaintedOn: date('2026-06-15'),
+        signatureRefused: true,
+      });
+      expect(payloadOf(first.store, a.id, 'signature_refused')).toEqual({
+        refusalNote: 'oceniany odmówił podpisania zapoznania się z oceną',
+      });
+
+      const second = setup([employee()]);
+      const b = await toDrafted(second.services);
+      await b.run({
+        type: 'record_acquaintance',
+        acquaintedOn: date('2026-06-15'),
+        signatureRefused: true,
+        refusalNote: 'Odmowa po rozmowie',
+        witnesses: ['Anna Nowak', 'Jan Kowalski'],
+      });
+      expect(payloadOf(second.store, b.id, 'signature_refused')).toEqual({
+        refusalNote: 'Odmowa po rozmowie',
+        witnesses: ['Anna Nowak', 'Jan Kowalski'],
+      });
+    });
+
+    it('place defaults to the office setting and an explicit place wins', async () => {
+      const { services, store } = setup(
+        [employee()],
+        [],
+        [],
+        {},
+        settingsWith({ defaultPlace: 'Warszawa' }),
+      );
+      const a = await toDrafted(services, undefined, 'Kraków');
+      await a.run({
+        type: 'record_acquaintance',
+        acquaintedOn: date('2026-06-15'),
+        signatureRefused: false,
+      });
+      expect(payloadOf(store, a.id, 'part_one_approved')).toEqual({ place: 'Kraków' });
+      expect(payloadOf(store, a.id, 'sheet_approved')).toEqual({ place: 'Warszawa' });
+      expect(payloadOf(store, a.id, 'acquainted')).toEqual({ place: 'Warszawa' });
+    });
+
+    it('no place is stored when nothing is given and no default is set', async () => {
+      const { services, store } = setup([employee()], [], [], {}, settingsWith({}));
+      const a = await toDrafted(services);
+      expect(payloadOf(store, a.id, 'sheet_approved')).toEqual({});
+    });
+
+    it('objectionAddressee: office override for sheet A, rules text for A without override and for C', async () => {
+      const rules = (id: string) => reg.sheets.find((s) => s.id === id)?.objectionAddressee ?? null;
+      const override = setup(
+        [employee()],
+        [],
+        [],
+        {},
+        settingsWith({ objectionAddresseeSheetA: 'Wojewoda' }),
+      );
+      const withOverride = await override.services.evaluations.start({
+        employeeId: 'emp1',
+        today,
+        sheetId: 'A',
+      });
+      expect(withOverride.objectionAddressee).toBe('Wojewoda');
+
+      const plain = setup([employee()], [], [], {}, settingsWith({}));
+      const sheetA = await plain.services.evaluations.start({
+        employeeId: 'emp1',
+        today,
+        sheetId: 'A',
+      });
+      expect(sheetA.objectionAddressee).toBe(rules('A'));
+
+      const other = setup(
+        [employee()],
+        [],
+        [],
+        {},
+        settingsWith({ objectionAddresseeSheetA: 'Wojewoda' }),
+      );
+      const sheetC = await other.services.evaluations.start({
+        employeeId: 'emp1',
+        today,
+        sheetId: 'C',
+      });
+      expect(sheetC.objectionAddressee).toBe(rules('C'));
+      expect(rules('C')).not.toBeNull();
+    });
   });
 });

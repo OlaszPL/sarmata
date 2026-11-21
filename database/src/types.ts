@@ -235,14 +235,14 @@ isOneToOne: false
                   ]
                 },"office_settings": {
                   Row: {
-                    "ai_enabled": boolean,"notes_retention_months": number,"office_id": string,"reminder_lead_days": (number)[],"smtp_from": string | null,"smtp_host": string | null,"smtp_password_secret_id": string | null,"smtp_password_set": boolean | null,"smtp_port": number | null,"smtp_user": string | null
+                    "ai_enabled": boolean,"default_place": string | null,"notes_retention_months": number,"objection_addressee_sheet_a": string | null,"office_id": string,"reminder_lead_days": (number)[],"smtp_from": string | null,"smtp_host": string | null,"smtp_password_secret_id": string | null,"smtp_password_set": boolean | null,"smtp_port": number | null,"smtp_user": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "ai_enabled"?: boolean,"notes_retention_months"?: number,"office_id": string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
+                    "ai_enabled"?: boolean,"default_place"?: string | null,"notes_retention_months"?: number,"objection_addressee_sheet_a"?: string | null,"office_id": string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
                   }
                   Update: {
-                    "ai_enabled"?: boolean,"notes_retention_months"?: number,"office_id"?: string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
+                    "ai_enabled"?: boolean,"default_place"?: string | null,"notes_retention_months"?: number,"objection_addressee_sheet_a"?: string | null,"office_id"?: string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
                   }
                   Relationships: [
                     {

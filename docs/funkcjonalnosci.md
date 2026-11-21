@@ -36,6 +36,8 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 - Silnik terminów liczy kolejne kroki od dat faktycznych.
 - Podpis to zatwierdzenie w systemie (potwierdzone przez mentorów KPRM 21.11.2026). Zatwierdza oceniający: zalogowane konto, znacznik czasu i wpis w dzienniku. Potwierdzenie ocenianego (podpis części I, zapoznanie, odmowa) oceniający odnotowuje z datą, bo oceniany nie ma konta. Wydruk PDF zostaje jako opcja dla urzędu.
 
+- Do zdarzeń oceny wchodzą pola z wzorów arkuszy KPRM, zapisane w payloadzie zdarzenia. `record_acquaintance` przyjmuje opcjonalne `refusalNote` i `witnesses`, a przy odmowie podpisu notatka domyślnie brzmi „oceniany odmówił podpisania zapoznania się z oceną”. `approve_part_one`, `approve_sheet` i `record_acquaintance` przyjmują opcjonalne `place` (miejscowość), domyślnie z `OfficeSettings.defaultPlace`.
+
 ## Notatki
 
 - Jedna tabela notatek o pracowniku. Pola: typ (`obserwacja`, `rozmowa_biezaca`, `docenienie`, `fakt_obciazenia`), data zdarzenia, opcjonalne kryterium, znak (plus albo minus), flaga „czy zakomunikowano”.
@@ -141,6 +143,7 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
 - pg_cron raz dziennie zbiera terminy i wrzuca zadania do pgmq. Worker wysyła jeden zbiorczy mail na konto, z ponowieniami i dziennikiem wysyłek.
 - Skrzynka powiadomień w aplikacji działa zawsze, także bez SMTP. W demo maile widać w Mailpit z lokalnego Supabase.
 - Przypomnienia domyślnie 14 i 3 dni przed terminem (admin zmienia w `OfficeSettings.reminderLeadDays`: 1 do 5 wartości z zakresu 1 do 90). Po terminie eskalacja do kadr.
+- Admin ustawia też domyślną miejscowość (`defaultPlace`) i adresata sprzeciwu na arkuszu A (`objectionAddresseeSheetA`). Gdy adresat jest pusty, obowiązuje tekst z `rules.json`. `EvaluationView.objectionAddressee` podaje adresata obowiązującego dla arkusza: dla A nadpisanie urzędu albo tekst z reguł, dla B i C tekst z reguł.
 - Ustawienia SMTP są w `office_settings`. Hasło zapisuje wyłącznie funkcja `set_smtp_password` (admin, Supabase Vault), klient widzi tylko `passwordSet`. Odczyt hasła przez workera wysyłki należy do B4.
 - Kadry dostają zadania: stopień z mocy prawa (30 dni), 14 dni DG na sprzeciw, oceny po terminie.
 

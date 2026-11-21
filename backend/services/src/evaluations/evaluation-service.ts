@@ -13,6 +13,7 @@ import {
   type PositionChangePayload,
   TransitionError,
   absencePayloadSchema,
+  commandPayload,
   gradeByLawDue,
   objectionFilingIssue,
   outcomeLowered,
@@ -34,6 +35,7 @@ import {
   type Evaluation,
   type EvaluationDetail,
   type EvaluationEventKind,
+  type OfficeSettingsRepository,
   type Repositories,
   RepositoryError,
 } from '@sarmata/repositories';
@@ -64,6 +66,8 @@ export type EvaluationView = EvaluationDetail & {
     readonly positionTitle: string | null;
     readonly orgUnit: string | null;
   };
+  /** Who receives the objection: the office override (sheet A) or the text from the rules. */
+  readonly objectionAddressee: string | null;
   readonly signals: {
     /** Grade by law (art. 89 ust. 2) is due, counted from the last acquaintance. */
     readonly gradeByLaw: { readonly dueOn: CalendarDate } | null;
@@ -129,6 +133,8 @@ export interface EvaluationServiceDependencies {
   readonly regulationInForceOn: (on: CalendarDate) => Promise<RegulationDocument>;
   /** Id of the signed-in account. Used when neither the input nor a supervisor names an evaluator. */
   readonly currentAccountId?: () => Promise<string>;
+  /** Source of `defaultPlace` and the sheet A addressee override. Without it the rules text applies. */
+  readonly officeSettings?: OfficeSettingsRepository;
 }
 
 const notFound = (id: string) => new ServiceError('not_found', `Evaluation ${id} not found`);
@@ -139,7 +145,7 @@ const eventDate = (detail: EvaluationDetail, kinds: readonly string[]): Calendar
 export function createEvaluationService(
   dependencies: EvaluationServiceDependencies,
 ): EvaluationService {
-  const { repositories, regulationInForceOn, currentAccountId } = dependencies;
+  const { repositories, regulationInForceOn, currentAccountId, officeSettings } = dependencies;
 
   async function regulationOf(detail: EvaluationDetail): Promise<RegulationDocument> {
     const regulation = await repositories.regulationVersions.findOfficialById(detail.regulationId);
@@ -205,6 +211,16 @@ export function createEvaluationService(
     };
   }
 
+  async function objectionAddresseeOf(
+    detail: EvaluationDetail,
+    regulation: RegulationDocument,
+  ): Promise<string | null> {
+    const rulesText =
+      regulation.sheets.find((sheet) => sheet.id === detail.sheetId)?.objectionAddressee ?? null;
+    if (detail.sheetId !== 'A' || officeSettings === undefined) return rulesText;
+    return (await officeSettings.get())?.objectionAddresseeSheetA ?? rulesText;
+  }
+
   async function view(detail: EvaluationDetail): Promise<EvaluationView> {
     const regulation = await regulationOf(detail);
     const { criteria, score } = scoreOf(regulation, detail, detail.sheet.content);
@@ -213,6 +229,7 @@ export function createEvaluationService(
       criteria,
       score,
       currentPosition: currentPositionOf(detail),
+      objectionAddressee: await objectionAddresseeOf(detail, regulation),
       signals: await signalsOf(detail, regulation, score),
     };
   }
@@ -445,6 +462,7 @@ export function createEvaluationService(
         }
       }
 
+      const defaultPlace = (await officeSettings?.get())?.defaultPlace ?? null;
       try {
         await repositories.evaluations.applyTransition({
           evaluationId: id,
@@ -452,7 +470,7 @@ export function createEvaluationService(
           nextStatus: plan.next,
           eventKind: plan.eventKind as EvaluationEventKind,
           occurredOn: plan.occurredOn,
-          payload: command.type === 'interrupt' ? { reason: command.reason } : {},
+          payload: commandPayload(command, defaultPlace),
           lockSheet: plan.lockSheet,
         });
       } catch (error) {

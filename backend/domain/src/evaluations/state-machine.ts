@@ -12,11 +12,19 @@ export type EvaluationStatus =
   | 'interrupted';
 
 export type EvaluationCommand =
-  | { type: 'approve_part_one'; startingInterviewOn: CalendarDate }
+  | { type: 'approve_part_one'; startingInterviewOn: CalendarDate; place?: string }
   | { type: 'record_part_one_signature'; signedOn: CalendarDate }
   | { type: 'record_evaluation_interview'; heldOn: CalendarDate }
-  | { type: 'approve_sheet'; draftedOn: CalendarDate }
-  | { type: 'record_acquaintance'; acquaintedOn: CalendarDate; signatureRefused: boolean }
+  | { type: 'approve_sheet'; draftedOn: CalendarDate; place?: string }
+  | {
+      type: 'record_acquaintance';
+      acquaintedOn: CalendarDate;
+      signatureRefused: boolean;
+      /** Note of the refusal to sign. Defaults to `DEFAULT_REFUSAL_NOTE` when the signature is refused. */
+      refusalNote?: string;
+      witnesses?: string[];
+      place?: string;
+    }
   | { type: 'close_after_objection_window'; closedOn: CalendarDate }
   | { type: 'file_objection'; filedOn: CalendarDate }
   | { type: 'interrupt'; interruptedOn: CalendarDate; reason: string };
@@ -139,4 +147,42 @@ export function planTransition(
     occurredOn: facts.occurredOn,
     lockSheet: row.lockSheet,
   };
+}
+
+export const DEFAULT_REFUSAL_NOTE = 'oceniany odmówił podpisania zapoznania się z oceną';
+
+/**
+ * The event payload of a command: interrupt reason, place and, for a refused signature, the note and
+ * witnesses. `defaultPlace` (office settings) fills in a missing place.
+ */
+export function commandPayload(
+  command: EvaluationCommand,
+  defaultPlace: string | null,
+): Record<string, unknown> {
+  const filled = (text: string | null | undefined): string | undefined => {
+    const trimmed = text?.trim();
+    return trimmed === undefined || trimmed === '' ? undefined : trimmed;
+  };
+  const placeOf = (given: string | undefined): { place?: string } => {
+    const place = filled(given) ?? filled(defaultPlace);
+    return place === undefined ? {} : { place };
+  };
+  switch (command.type) {
+    case 'interrupt':
+      return { reason: command.reason };
+    case 'approve_part_one':
+    case 'approve_sheet':
+      return placeOf(command.place);
+    case 'record_acquaintance': {
+      const payload: Record<string, unknown> = placeOf(command.place);
+      if (command.signatureRefused) {
+        payload.refusalNote = filled(command.refusalNote) ?? DEFAULT_REFUSAL_NOTE;
+      }
+      const witnesses = (command.witnesses ?? []).map((name) => name.trim()).filter(Boolean);
+      if (witnesses.length > 0) payload.witnesses = witnesses;
+      return payload;
+    }
+    default:
+      return {};
+  }
 }
