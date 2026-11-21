@@ -9,7 +9,7 @@ export default defineConfig({
   outputDir: 'test-results',
   forbidOnly: ci,
   retries: ci ? 1 : 0,
-  workers: ci ? 2 : undefined,
+  ...(ci ? { workers: 2 } : {}),
   reporter: ci
     ? [['github'], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'never' }]],

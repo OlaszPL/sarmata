@@ -7,7 +7,7 @@ import { createSupabase } from '@/lib/supabase';
 
 export interface SignInState {
   values: { email: string };
-  fieldErrors: { email?: string; password?: string };
+  fieldErrors: { email?: string | undefined; password?: string | undefined };
   formError?: string;
 }
 
