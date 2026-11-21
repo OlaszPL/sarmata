@@ -111,3 +111,15 @@ _Avoid_: pozew, skarga
 **Przyznanie stopnia** (`GradeGrant`, `grade_grants`):
 Wpis kadr o przyznaniu urzędnikowi kolejnego stopnia służbowego. Podstawa `on_request` to art. 89 ust. 1 ustawy (na wniosek), `by_law` to art. 89 ust. 2 (z mocy prawa, po kolejnych ocenach na wymaganym poziomie). Zmienia stopień pracownika i zamyka zadanie kadr.
 _Avoid_: awans, podwyżka
+
+**Przebieg AI** (`AiRun`, `ai_runs`):
+Jedno wywołanie usługi AI (szkic arkusza, kontrola jakości, strażnik danych wrażliwych, przygotowanie rozmowy, propozycje kryteriów, momenty docenienia, sygnały HR partnera, asystent procedury). Naraz wpis dziennika użycia AI i stan zadania w kolejce: kto prosił, kiedy, migawka wejścia, wynik albo przyczyna porażki, wersja promptu. Wynik to sugestia.
+_Avoid_: zapytanie AI, log AI
+
+**Decyzja o fragmencie AI** (`AiFragmentDecision`, `ai_fragment_decisions`):
+Przyjęcie, edycja albo odrzucenie jednego fragmentu wyniku przebiegu AI przez człowieka, z tekstem po edycji. Ostatnia decyzja o fragmencie wygrywa.
+_Avoid_: akceptacja AI
+
+**Sygnał HR partnera** (`hr_signals`):
+Sugestia dla oceniającego o sentymencie, przeciążeniu, spadku zaangażowania albo ryzyku wypalenia, z prawdopodobieństwem i fragmentami notatek źródłowych. Nigdy diagnoza. Decyduje człowiek.
+_Avoid_: diagnoza, ocena stanu pracownika

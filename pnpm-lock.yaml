@@ -403,6 +403,9 @@ importers:
 
   backend/worker:
     dependencies:
+      '@sarmata/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@sarmata/domain':
         specifier: workspace:*
         version: link:../domain

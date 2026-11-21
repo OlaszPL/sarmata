@@ -18,6 +18,7 @@ const settings: OfficeSettings = {
   defaultPlace: null,
   objectionAddresseeSheetA: null,
   evaluatorFlags: { minEvaluations: 5, centralShare: 0.8, leniencyPoints: 1 },
+  appreciationGapDays: 30,
   smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
 };
 
@@ -59,6 +60,17 @@ describe('office settings service', () => {
       fakeRepository({ update: () => Promise.resolve(null) }),
     );
     await expect(service.update({ aiEnabled: false })).rejects.toMatchObject({ code: 'forbidden' });
+  });
+
+  it('admin updates appreciation gap days through office settings', async () => {
+    const repository = fakeRepository({
+      update: vi.fn(() => Promise.resolve({ ...settings, appreciationGapDays: 14 })),
+    });
+    const updated = await createOfficeSettingsService(repository).update({
+      appreciationGapDays: 14,
+    });
+    expect(repository.update).toHaveBeenCalledWith({ appreciationGapDays: 14 });
+    expect(updated.appreciationGapDays).toBe(14);
   });
 
   it('setSmtpPassword maps 42501 to forbidden', async () => {

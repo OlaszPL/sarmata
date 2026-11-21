@@ -950,6 +950,7 @@ describe('fix wave 1: staffing review findings', () => {
           defaultPlace: null,
           objectionAddresseeSheetA: null,
           evaluatorFlags: { minEvaluations: 5, centralShare: 0.8, leniencyPoints: 1 },
+          appreciationGapDays: 30,
           smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
           ...patch,
         }),

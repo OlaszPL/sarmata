@@ -66,14 +66,16 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 - Każde zdanie szkicu wskazuje notatkę źródłową. Bez notatek usługa zwraca „za mało danych” i pytania do rozmowy.
 - Kontrola jakości tekstu: przykład z datą, brak opisu osobowości i sfery prywatnej, zgodność z kryterium.
 - Każde wywołanie AI i każda sugestia trafiają do dziennika użycia AI (fragment, czy zmieniony, kto zatwierdził). Fragmenty z AI są oznaczone.
+- Dziennik to tabela `ai_runs` (przebieg AI): rodzaj usługi, kto i kiedy prosił, migawka wejścia, wynik, wersja promptu, porażka. Decyzje o fragmentach (`accepted`, `edited`, `rejected`, tekst po edycji) leżą w `ai_fragment_decisions`, ostatnia decyzja o fragmencie wygrywa. Fragmenty mają ścieżki, np. `rating.communication`, `justification.0`, `question.1`.
+- Szkic: propozycja poziomu kryterium bez żadnego zdania z notatką źródłową nie powstaje (`points: null`). Zdanie, które wskazuje notatkę spoza migawki wejścia, odpada.
 
 ## Moduł HR partnera
 
 - Wejście: strukturalne fakty obciążenia od oceniającego (notatki typu `fakt_obciazenia`), tekst notatek oceniającego i oceny cząstkowe z poprzednich cykli. Importu z systemu kadrowego nie robimy.
 - Bielik-One daje sygnały (sentyment, przeciążenie, spadek zaangażowania, ryzyko wypalenia) z prawdopodobieństwem i fragmentami źródłowymi. Nie konfigurujemy progów pewności: o tym, co jest sygnałem, decyduje Bielik-One, a wynik pokazujemy jako sugestię.
 - Wynik to sugestia: sygnały, pytania do rozmowy, działania według JD-R i HSE. Nigdy diagnoza. Decyduje oceniający (ustalenie z KPRM w `AGENTS.md`).
-- Wynik czyta autor analizy i kadry. Nie trafia do arkusza.
-- Rozbieżność odbiorców wyniku (autor analizy czy kadry) zostaje do rozstrzygnięcia w B7.
+- Wynik nie trafia do arkusza. Odbiorcy wyniku są ci sami co przy notatkach (rozstrzygnięte w B7): autor przebiegu, kadry, bieżący oceniający otwartej oceny pracownika, a w trybie `tree` przełożeni w górę drzewa. Jedna funkcja SQL `access.reads_employee_private_data` opisuje tych odbiorców dla notatek i wyników AI.
+- Obecność sygnału to argmaks Bielik-One (dla sentymentu odpowiedź „negatywny”), prawdopodobieństwo to prawdopodobieństwo obecności. Bez Bielik-One sygnały daje model tekstowy przez schemat `decision_answers` (ADR 0005). Cytat musi być dosłownym fragmentem wskazanej notatki. Pytanie albo działanie, które strażnik danych wrażliwych uznaje za diagnozę, odpada.
 
 ## Statystyki i raporty (rola kadry)
 
@@ -210,7 +212,13 @@ Ustalimy przy frontendzie.
 
 ## Usługi AI (pełna lista)
 
-Wszystkie działają tylko przy włączonym przełączniku AI urzędu, a każde wywołanie trafia do dziennika użycia AI.
+Wszystkie działają tylko przy włączonym przełączniku AI urzędu, a każde wywołanie trafia do dziennika użycia AI. Prosi oceniający albo kadry (admin nie).
+
+Wszystkie wywołania idą przez kolejkę (ADR 0008): serwis `ai` zbiera migawkę wejścia w kontekście użytkownika (RLS), zapisuje przebieg `queued`, trigger wysyła zadanie `ai.run`, worker woła model i zapisuje wynik, a front odpytuje `ai.get(id)`. Notatki w migawce mieszczą się w 6000 znaków, najnowsze zostają, pominięte są wymienione w `inputRefs.droppedNoteIds`. Przebieg czekający w kolejce, gdy admin wyłączył AI, kończy się porażką `disabled`.
+
+Nazwy kodowe usług (`AiRunKind`): `sheet_draft`, `quality_check`, `sensitive_data`, `conversation_prep`, `criteria_proposals`, `appreciation_moments`, `hr_signals`, `procedure_question`.
+
+Retencja: treść przebiegów AI (wejście, wynik, komunikat porażki, tekst po edycji fragmentu) usuwa zadanie retencji razem z notatkami (`notesRetentionMonths`, B9) i ustawia `content_deleted_at`. Metadane zostają: kto, kiedy, jaka usługa, status, wersja promptu i identyfikatory wejścia.
 
 - Szkic arkusza z propozycjami poziomów (sekcja „AI przy treści oceny”).
 - Kontrola jakości tekstu i strażnik danych wrażliwych.
@@ -218,10 +226,12 @@ Wszystkie działają tylko przy włączonym przełączniku AI urzędu, a każde 
 - Propozycje kryteriów dodatkowych (z opisu obowiązków i poprzedniego cyklu) oraz wskaźników behawioralnych oczekiwań do rozmowy rozpoczynającej.
 - Sygnały HR partnera (Bielik-One).
 - Momenty docenienia: wskazanie, kiedy warto docenić (pozytywne notatki, długo bez uznania), z szablonem informacji zwrotnej SBI.
+  - „Długo bez uznania” liczy się od ostatniej notatki typu docenienie. Próg ustawia admin w ustawieniach urzędu (`OfficeSettings.appreciationGapDays`, 1 do 365, domyślnie 30 dni). Brak docenienia w notatkach to sygnał od razu.
 - Asystent procedury (RAG): odpowiedzi na pytania o przepisy z cytatem z ustawy, rozporządzenia, zarządzenia nr 6 i FAQ DSC.
   - Wyszukiwanie: semble (indeks na CPU, bez osobnej bazy wektorowej) po katalogu tekstów prawnych w Markdown, dzielonych po nagłówkach artykułów i paragrafów. Model tekstowy dostaje top 5 fragmentów i odpowiada z cytatem (artykuł, ustęp).
   - Test 21.11.2026 na `docs/legal/`: pytanie o termin sprzeciwu daje art. 83 na pierwszym miejscu. Pytanie „czy urlop przedłuża termin” daje art. 81 ust. 7 dopiero na piątym miejscu (wyżej art. 105 o urlopie), więc bierzemy top 5 i zostawiamy wybór modelowi.
-  - Teksty prawne do indeksu leżą w katalogu wersji przepisów, więc aktualizują się razem z regułami.
+  - Teksty prawne do indeksu leżą w katalogu wersji przepisów, więc aktualizują się razem z regułami: korpus to pliki z `sources` wersji, czytane z `backend/regulations/<wersja>/sources/`. `docs/legal/` zostaje materiałem badawczym i kod go nie czyta. Pytanie bez oceny korzysta z wersji obowiązującej w danym dniu, pytanie przy ocenie z wersji przypiętej do oceny.
+  - Odpowiedź cytuje numery znalezionych fragmentów. Bez żadnego cytatu odpowiedź jest oznaczona jako nieoparta na przepisach (`grounded: false`).
 
 ## Konta i logowanie
 

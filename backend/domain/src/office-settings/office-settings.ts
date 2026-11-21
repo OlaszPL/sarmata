@@ -48,6 +48,8 @@ export const officeSettingsPatchSchema = z.strictObject({
   defaultPlace: z.string().trim().min(1).nullable().optional(),
   objectionAddresseeSheetA: z.string().trim().min(1).nullable().optional(),
   evaluatorFlags: evaluatorFlagsPatchSchema.optional(),
+  /** Days without an appreciation after which the evaluator gets the overdue signal (B7). */
+  appreciationGapDays: z.number().int().min(1).max(365).optional(),
   smtp: smtpPatchSchema.optional(),
 });
 export type OfficeSettingsPatchInput = z.input<typeof officeSettingsPatchSchema>;

@@ -20,6 +20,8 @@ export interface OfficeSettings {
   readonly objectionAddresseeSheetA: string | null;
   /** Thresholds of the evaluator flags in the statistics. */
   readonly evaluatorFlags: EvaluatorFlagThresholds;
+  /** Days without an appreciation after which the evaluator gets the overdue signal. */
+  readonly appreciationGapDays: number;
   readonly smtp: {
     readonly host: string | null;
     readonly port: number | null;
@@ -39,7 +41,7 @@ export interface OfficeSettingsRepository {
 }
 
 const COLUMNS =
-  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, default_place, objection_addressee_sheet_a, evaluator_flag_min_evaluations, evaluator_flag_central_share, evaluator_flag_leniency_points, offices(evaluation_visibility)' as const;
+  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, default_place, objection_addressee_sheet_a, evaluator_flag_min_evaluations, evaluator_flag_central_share, evaluator_flag_leniency_points, appreciation_gap_days, offices(evaluation_visibility)' as const;
 
 const asVisibility = (value: string | undefined): EvaluationVisibility =>
   value === 'tree' ? 'tree' : 'office';
@@ -59,6 +61,7 @@ interface SettingsRow {
   evaluator_flag_min_evaluations: number;
   evaluator_flag_central_share: number;
   evaluator_flag_leniency_points: number;
+  appreciation_gap_days: number;
   offices: { evaluation_visibility: string } | null;
 }
 
@@ -75,6 +78,7 @@ const toSettings = (row: SettingsRow): OfficeSettings => ({
     centralShare: row.evaluator_flag_central_share,
     leniencyPoints: row.evaluator_flag_leniency_points,
   },
+  appreciationGapDays: row.appreciation_gap_days,
   smtp: {
     host: row.smtp_host,
     port: row.smtp_port,
@@ -97,6 +101,7 @@ interface SettingsColumns {
   evaluator_flag_min_evaluations?: number;
   evaluator_flag_central_share?: number;
   evaluator_flag_leniency_points?: number;
+  appreciation_gap_days?: number;
 }
 
 function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
@@ -121,6 +126,9 @@ function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
   if (flags?.centralShare !== undefined) columns.evaluator_flag_central_share = flags.centralShare;
   if (flags?.leniencyPoints !== undefined) {
     columns.evaluator_flag_leniency_points = flags.leniencyPoints;
+  }
+  if (patch.appreciationGapDays !== undefined) {
+    columns.appreciation_gap_days = patch.appreciationGapDays;
   }
   return columns;
 }

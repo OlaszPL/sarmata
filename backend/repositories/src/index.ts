@@ -83,3 +83,14 @@ export {
   type StatisticsRepository,
   createStatisticsRepository,
 } from './statistics';
+export {
+  type AiFragmentDecision,
+  type AiFragmentDecisionKind,
+  type AiRun,
+  type AiRunFilter,
+  type AiRunQueueStore,
+  type AiRunRepository,
+  type NewAiFragmentDecision,
+  createAiRunQueueStore,
+  createAiRunRepository,
+} from './ai-runs';

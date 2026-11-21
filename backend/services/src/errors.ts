@@ -17,7 +17,10 @@ export type ServiceErrorCode =
   | 'no_locked_sheet'
   | 'not_found'
   | 'sensitive_data'
-  | 'hr_entry_rejected';
+  | 'hr_entry_rejected'
+  | 'ai_disabled'
+  | 'ai_run_not_done'
+  | 'ai_fragment_unknown';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */
 export class ServiceError extends Error {

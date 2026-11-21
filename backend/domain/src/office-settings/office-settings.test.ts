@@ -48,6 +48,17 @@ describe('officeSettingsPatchSchema', () => {
     });
   });
 
+  it('office settings patch accepts appreciation gap days', () => {
+    expect(officeSettingsPatchSchema.parse({ appreciationGapDays: 14 })).toEqual({
+      appreciationGapDays: 14,
+    });
+  });
+
+  it('rejects gap days over 365', () => {
+    expect(officeSettingsPatchSchema.safeParse({ appreciationGapDays: 366 }).success).toBe(false);
+    expect(officeSettingsPatchSchema.safeParse({ appreciationGapDays: 0 }).success).toBe(false);
+  });
+
   it('rejects an invalid sender address', () => {
     expect(officeSettingsPatchSchema.safeParse({ smtp: { from: 'nope' } }).success).toBe(false);
   });

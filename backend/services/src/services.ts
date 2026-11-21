@@ -19,6 +19,7 @@ import {
   type Repositories,
   type SimilarEmployee,
   createHrRegisterRepository,
+  createAiRunRepository,
   createNoteRepository,
   createNotificationRepository,
   createStatisticsRepository,
@@ -39,6 +40,7 @@ import {
 } from './office-settings/office-settings-service';
 import { type EvaluationService, createEvaluationService } from './evaluations/evaluation-service';
 import { getCurrentAccount } from './account/current-account';
+import { type AiService, createAiService } from './ai/ai-service';
 
 export interface ServiceDependencies {
   readonly repositories: Repositories;
@@ -141,12 +143,14 @@ export type AppServices = Services & {
   readonly notifications: NotificationService;
   readonly hrRegister: HrRegisterService;
   readonly statistics: StatisticsService;
+  readonly ai: AiService;
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
 export const servicesFor = (db: Db): AppServices => {
   const officeSettings = createOfficeSettingsRepository(db);
   const repositories = createRepositories(db);
+  const notes = createNoteRepository(db);
   const services = createServices({
     repositories,
     officeSettings,
@@ -160,7 +164,7 @@ export const servicesFor = (db: Db): AppServices => {
   });
   return {
     ...services,
-    notes: createNoteService(createNoteRepository(db)),
+    notes: createNoteService(notes),
     officeSettings: createOfficeSettingsService(officeSettings),
     notifications: createNotificationService(createNotificationRepository(db)),
     hrRegister: createHrRegisterService({ repository: createHrRegisterRepository(db) }),
@@ -169,6 +173,13 @@ export const servicesFor = (db: Db): AppServices => {
       settings: officeSettings,
       history: (employeeId) => repositories.evaluations.history(employeeId),
       regulationInForceOn: (on) => services.regulations.inForceOn(on),
+    }),
+    ai: createAiService({
+      runs: createAiRunRepository(db),
+      notes,
+      settings: officeSettings,
+      evaluations: services.evaluations,
+      regulations: repositories.regulationVersions,
     }),
   };
 };
