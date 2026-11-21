@@ -61,3 +61,15 @@ export {
   type UpdateInput,
   type UpdateSource,
 } from './plans.ts';
+
+export {
+  aiDataDir,
+  aiServicePlan,
+  aiServiceRemovalPlan,
+  aiSettings,
+  installAiRuntime,
+  proposeAi,
+  type AiServiceId,
+  type EnabledAi,
+  type ServiceCommand,
+} from './ai.ts';
