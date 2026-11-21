@@ -148,6 +148,7 @@ export function makeSource(spec: SourceSpec = {}): ExportSource {
         ? (regulation2016.sheets.find((sheet) => sheet.id === sheetId)?.objectionAddressee ?? null)
         : spec.objectionAddressee,
     signals: { gradeByLaw: null, secondConsecutiveNegative: false },
+    warnings: [],
   };
   return {
     view,

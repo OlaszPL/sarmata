@@ -5,7 +5,12 @@ import {
   createOfficialRegulationWriter,
   createRegulationVersionRepository,
   createRetentionStore,
+  createAccountAdminStore,
 } from '@sarmata/repositories';
+import {
+  type AccountAdministration,
+  createAccountAdministration,
+} from './accounts/account-administration';
 import { type EvaluationClosing, createEvaluationClosing } from './evaluations/evaluation-closing';
 import { type RetentionService, createRetentionService } from './retention/retention-service';
 import { type SyncReport, syncOfficialRegulations } from './sync-official';
@@ -18,6 +23,8 @@ export interface SystemServices {
   };
   readonly evaluationClosing: EvaluationClosing;
   readonly retention: RetentionService;
+  /** Invites accounts (Supabase Auth admin). The frontend gets it only through `servicesFor(db, { accountAdministration })`. */
+  readonly accounts: AccountAdministration;
 }
 
 /** Needs the service client (`ServiceDb`), so only the worker and scripts can build it. */
@@ -32,6 +39,7 @@ export function createSystemServices(db: ServiceDb): SystemServices {
         }),
     },
     evaluationClosing: createEvaluationClosing(createEvaluationClosingStore(db)),
+    accounts: createAccountAdministration({ store: createAccountAdminStore(db) }),
     retention: createRetentionService({
       store: createRetentionStore(db),
       log: (message) => {
