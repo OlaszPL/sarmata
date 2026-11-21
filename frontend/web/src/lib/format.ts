@@ -36,9 +36,10 @@ export function formatDate(d: CalendarDate): string {
   return `${day}.${month}.${year}`;
 }
 
-export function formatShortDate(d: CalendarDate): string {
-  const [, month, day] = d.split('-');
-  return `${day}.${month}`;
+/** `dd.mm` within the year of `today`, the full `dd.mm.rrrr` for any other year. */
+export function formatShortDate(d: CalendarDate, today: CalendarDate): string {
+  const [year, month, day] = d.split('-');
+  return year === today.slice(0, 4) ? `${day}.${month}` : `${day}.${month}.${year}`;
 }
 
 /** Polish plural: returns the form only, the caller adds the number. */

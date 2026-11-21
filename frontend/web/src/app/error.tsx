@@ -14,7 +14,7 @@ export default function ErrorPage({ reset }: { error: Error; reset: () => void }
           Nie udało się wyświetlić tej strony. Spróbuj ponownie. Jeśli błąd się powtarza, zgłoś go
           administratorowi.
         </p>
-        <Button type="button" className="mt-6 h-11 text-base" onClick={reset}>
+        <Button type="button" className="font-heading mt-6 h-11 text-base" onClick={reset}>
           Spróbuj ponownie
         </Button>
       </div>

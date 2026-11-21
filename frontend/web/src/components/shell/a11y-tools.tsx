@@ -2,17 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Contrast } from 'lucide-react';
-
-const TEXT_SIZE_KEY = 'sarmata.textSize';
-const CONTRAST_KEY = 'sarmata.contrast';
-
-function readFlag(key: string, on: string): boolean {
-  try {
-    return window.localStorage.getItem(key) === on;
-  } catch {
-    return false;
-  }
-}
+import { CONTRAST_KEY, TEXT_SIZE_KEY } from '@/lib/a11y-settings';
 
 function writeFlag(key: string, value: string | null): void {
   try {
@@ -23,18 +13,18 @@ function writeFlag(key: string, value: string | null): void {
   }
 }
 
-/** Header tools: larger text and high contrast, both remembered in the browser. */
+/**
+ * Header tools: larger text and high contrast, both remembered in the browser. The saved values are
+ * applied by a head script before the first paint, this component reads them back from the page.
+ */
 export function A11yTools() {
   const [large, setLarge] = useState(false);
   const [high, setHigh] = useState(false);
 
   useEffect(() => {
-    const savedLarge = readFlag(TEXT_SIZE_KEY, 'large');
-    const savedHigh = readFlag(CONTRAST_KEY, 'high');
-    if (savedLarge) document.documentElement.dataset.textSize = 'large';
-    if (savedHigh) document.documentElement.dataset.contrast = 'high';
-    setLarge(savedLarge);
-    setHigh(savedHigh);
+    const root = document.documentElement;
+    setLarge(root.dataset.textSize === 'large');
+    setHigh(root.dataset.contrast === 'high');
   }, []);
 
   function toggleTextSize() {
@@ -53,8 +43,9 @@ export function A11yTools() {
     setHigh(next);
   }
 
-  const base = 'flex min-h-16 items-center px-4';
-  const on = 'bg-band';
+  // Pressed is a full navy fill with white text: a strong cue that stays in high contrast mode.
+  const base = 'flex min-h-16 items-center px-3';
+  const state = (pressed: boolean) => (pressed ? 'bg-navy text-white' : 'text-ink hover:bg-band');
 
   return (
     <div className="border-rule flex border-l">
@@ -62,17 +53,16 @@ export function A11yTools() {
         type="button"
         aria-pressed={large}
         onClick={toggleTextSize}
-        className={`${base} font-heading text-base font-bold ${large ? on : ''}`}
+        className={`${base} font-heading text-base font-bold ${state(large)}`}
       >
-        <span aria-hidden>A+</span>
-        <span className="sr-only">Powiększ tekst</span>
+        A+<span className="sr-only"> Powiększ tekst</span>
       </button>
       <button
         type="button"
         aria-pressed={high}
         aria-label="Wysoki kontrast"
         onClick={toggleContrast}
-        className={`${base} ${high ? on : ''}`}
+        className={`${base} ${state(high)}`}
       >
         <Contrast className="size-5" aria-hidden />
       </button>

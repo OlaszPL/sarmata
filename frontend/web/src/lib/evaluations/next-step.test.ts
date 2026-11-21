@@ -123,6 +123,22 @@ describe('nextStep', () => {
       );
       expect(step?.action).toBe('Sprawdź i zatwierdź ocenę');
     });
+
+    it('keeps the deadlines of the period, by the same priority', () => {
+      const deadlines = {
+        evaluationDeadline: '2027-03-01',
+        reevaluationAfterNegative: '2027-02-01',
+        evaluationOnPositionChange: '2027-01-01',
+      };
+      expect(nextStep(view({ status: 'interview', criteria, deadlines }))?.dueOn).toBe(
+        '2027-01-01',
+      );
+      expect(
+        nextStep(view({ status: 'interview', deadlines: { evaluationDeadline: '2027-03-01' } }))
+          ?.dueOn,
+      ).toBe('2027-03-01');
+      expect(nextStep(view({ status: 'interview' }))?.dueOn).toBeNull();
+    });
   });
 
   it('asks to note the acquaintance for a drafted evaluation', () => {

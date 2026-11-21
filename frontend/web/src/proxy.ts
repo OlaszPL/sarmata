@@ -30,12 +30,14 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const signedIn = Boolean(data?.claims);
   const onSignInPage = request.nextUrl.pathname === routes.signIn;
+  // The accessibility statement must be readable before signing in.
+  const publicPage = onSignInPage || request.nextUrl.pathname === routes.accessibility;
 
   // A download or fetch from code gets a status, not the HTML of the sign-in page.
   if (!signedIn && request.nextUrl.pathname.startsWith('/api/')) {
     return new NextResponse(null, { status: 401 });
   }
-  if (!signedIn && !onSignInPage) return redirectKeepingSession(request, routes.signIn, response);
+  if (!signedIn && !publicPage) return redirectKeepingSession(request, routes.signIn, response);
   if (signedIn && onSignInPage) return redirectKeepingSession(request, routes.home, response);
   return response;
 }

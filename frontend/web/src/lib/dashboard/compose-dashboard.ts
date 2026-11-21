@@ -1,9 +1,4 @@
-import {
-  type AiRun,
-  type CalendarDate,
-  type Employee,
-  type EvaluationView,
-} from '@sarmata/services';
+import { type AiRun, type CalendarDate, type EvaluationView } from '@sarmata/services';
 import { daysUntil, pluralPl } from '../format';
 import { type NextStep, nextStep } from '../evaluations/next-step';
 
@@ -11,7 +6,6 @@ export interface DashboardSources {
   /** Evaluations in progress led by the account. */
   readonly views: readonly EvaluationView[];
   readonly closedCount: number;
-  readonly employees: readonly Employee[];
   readonly aiEnabled: boolean;
   /** Null when the fetch failed. */
   readonly hrRuns: readonly AiRun[] | null;
@@ -77,6 +71,12 @@ const SIGNAL_LABELS = {
 
 const DEFAULT_APPRECIATION_REASON = 'Od dawna brak notatki z docenieniem';
 
+/**
+ * A draft requested longer ago than this is treated as stuck (no worker, or the worker died), so
+ * the panel and its polling stop instead of waiting forever.
+ */
+const DRAFT_STALE_MS = 30 * 60 * 1000;
+
 function toRow(view: EvaluationView, today: CalendarDate): DashboardRow | null {
   const step = nextStep(view);
   if (!step) return null;
@@ -105,19 +105,27 @@ function headlineFor(todoCount: number): string {
   return `Masz ${todoCount} ${pluralPl(todoCount, 'sprawę', 'sprawy', 'spraw')} do zrobienia.`;
 }
 
+type DoneRun<K extends AiRun['kind']> = Extract<AiRun, { kind: K }> & {
+  output: NonNullable<Extract<AiRun, { kind: K }>['output']>;
+};
+
+function isDoneRunOf<K extends AiRun['kind']>(run: AiRun, kind: K): run is DoneRun<K> {
+  return run.kind === kind && run.status === 'done' && run.output !== null;
+}
+
 /** The newest done run of each employee in `names`, for one kind. */
 function latestDoneByEmployee<K extends AiRun['kind']>(
   runs: readonly AiRun[] | null,
   kind: K,
   names: ReadonlyMap<string, string>,
-): { employeeId: string; run: Extract<AiRun, { kind: K }> & { output: object } }[] {
-  const newest = new Map<string, Extract<AiRun, { kind: K }> & { output: object }>();
+): { employeeId: string; run: DoneRun<K> }[] {
+  const newest = new Map<string, DoneRun<K>>();
   for (const run of runs ?? []) {
-    if (run.kind !== kind || run.status !== 'done' || !run.output || !run.employeeId) continue;
+    if (!isDoneRunOf(run, kind) || !run.employeeId) continue;
     if (!names.has(run.employeeId)) continue;
     const current = newest.get(run.employeeId);
     if (!current || (run.finishedAt ?? '') > (current.finishedAt ?? '')) {
-      newest.set(run.employeeId, run as never);
+      newest.set(run.employeeId, run);
     }
   }
   return [...newest].map(([employeeId, run]) => ({ employeeId, run }));
@@ -166,18 +174,28 @@ function pickAppreciation(
 function pickRunningDrafts(
   runs: readonly AiRun[] | null,
   names: ReadonlyMap<string, string>,
+  now: Date,
 ): DashboardData['runningDrafts'] {
   return (runs ?? []).flatMap((run) => {
     if (run.kind !== 'sheet_draft') return [];
     if (run.status !== 'queued' && run.status !== 'running') return [];
+    const requestedAt = Date.parse(run.requestedAt);
+    if (!(now.getTime() - requestedAt <= DRAFT_STALE_MS)) return [];
     const employeeName = run.employeeId ? names.get(run.employeeId) : undefined;
     if (employeeName === undefined) return [];
     return [{ runId: run.id, employeeName, partialText: run.partialText }];
   });
 }
 
-/** Everything the dashboard shows, computed from fetched data so the page stays a thin view. */
-export function composeDashboard(sources: DashboardSources, today: CalendarDate): DashboardData {
+/**
+ * Everything the dashboard shows, computed from fetched data so the page stays a thin view.
+ * `today` is the calendar day in Warsaw, `now` the instant used to drop stuck AI drafts.
+ */
+export function composeDashboard(
+  sources: DashboardSources,
+  today: CalendarDate,
+  now: Date = new Date(),
+): DashboardData {
   const rows = sources.views
     .map((view) => toRow(view, today))
     .filter((row): row is DashboardRow => row !== null)
@@ -204,7 +222,8 @@ export function composeDashboard(sources: DashboardSources, today: CalendarDate)
     others: rows.slice(Math.min(TODO_LIMIT, mine.length)),
     summary: {
       todo: mine.length,
-      overdue: rows.filter((row) => row.daysLeft !== null && row.daysLeft < 0).length,
+      // Only the evaluator's own late steps: HR and the closing job are not the evaluator's to chase.
+      overdue: mine.filter((row) => row.daysLeft !== null && row.daysLeft < 0).length,
       waiting: rows.length - mine.length,
       closed: sources.closedCount,
       nearestDueOn,
@@ -212,6 +231,6 @@ export function composeDashboard(sources: DashboardSources, today: CalendarDate)
     aiEnabled: ai,
     hrSignal: ai ? pickHrSignal(sources.hrRuns, names) : null,
     appreciation: ai ? pickAppreciation(sources.appreciationRuns, names) : null,
-    runningDrafts: ai ? pickRunningDrafts(sources.draftRuns, names) : [],
+    runningDrafts: ai ? pickRunningDrafts(sources.draftRuns, names, now) : [],
   };
 }

@@ -36,13 +36,32 @@ test.describe('evaluator dashboard', () => {
     expect(results.violations).toEqual([]);
   });
 
-  test('does not scroll sideways on a narrow screen', async ({ page }) => {
+  test('does not scroll sideways on a narrow screen, also with larger text', async ({ page }) => {
     await page.setViewportSize({ width: 400, height: 900 });
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Dzień dobry.');
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    const overflow = () =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+    expect(await overflow()).toBeLessThanOrEqual(0);
+
+    await page.getByRole('button', { name: 'A+ Powiększ tekst' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-text-size', 'large');
+    expect(await overflow()).toBeLessThanOrEqual(0);
+  });
+
+  test('keeps the header on one line at 1280px', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const header = page.getByRole('banner');
+    await expect(header.getByRole('link', { name: 'Pulpit' })).toBeVisible();
+    const box = await header.boundingBox();
+    // One row of 4rem cells plus the bottom line.
+    expect(box?.height).toBeLessThanOrEqual(66);
+  });
+
+  test('shows the year for a deadline in another year', async ({ page }) => {
+    const todo = page.getByRole('region', { name: 'Zrób teraz' });
+    await expect(todo).toContainText('21.11.2028');
   });
 });
 

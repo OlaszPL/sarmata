@@ -10,6 +10,13 @@ export interface NextStep {
 }
 
 /** The first of the given slots that has a date, in the order given. */
+/** Slots that bind until the evaluation is drawn up, in order of priority. */
+const EVALUATION_SLOTS: readonly DeadlineSlot[] = [
+  'evaluationOnPositionChange',
+  'reevaluationAfterNegative',
+  'evaluationDeadline',
+];
+
 function firstDue(view: EvaluationView, slots: readonly DeadlineSlot[]): CalendarDate | null {
   for (const slot of slots) {
     const dueOn = view.deadlines.find((deadline) => deadline.slot === slot)?.dueOn;
@@ -49,18 +56,15 @@ export function nextStep(view: EvaluationView): NextStep | null {
         stage: 'Okres oceny',
         action: 'Odnotuj rozmowę oceniającą',
         owner: 'evaluator',
-        dueOn: firstDue(view, [
-          'evaluationOnPositionChange',
-          'reevaluationAfterNegative',
-          'evaluationDeadline',
-        ]),
+        dueOn: firstDue(view, EVALUATION_SLOTS),
       };
     case 'interview':
       return {
         stage: 'Część II',
         action: interviewAction(view),
         owner: 'evaluator',
-        dueOn: null,
+        // The evaluation is not drawn up yet, so the deadlines of the period still bind.
+        dueOn: firstDue(view, EVALUATION_SLOTS),
       };
     case 'drafted':
       return {

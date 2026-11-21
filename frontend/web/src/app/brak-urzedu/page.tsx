@@ -15,7 +15,7 @@ export default async function NoOfficePage() {
   if (account.status === 'member') redirect(routes.home);
 
   return (
-    <AppShell product={product} footer={<SiteFooter />}>
+    <AppShell product={product} footer={<SiteFooter publicOnly />}>
       <div className="px-8 py-10">
         <h1 className="font-heading text-[2.75rem] font-semibold">Konto bez przypisanego urzędu</h1>
         <p className="mt-4 max-w-prose">
@@ -23,7 +23,7 @@ export default async function NoOfficePage() {
           nadanie dostępu, a potem zaloguj się ponownie.
         </p>
         <form action={signOut} className="mt-6">
-          <Button type="submit" variant="outline" className="h-11 text-base">
+          <Button type="submit" variant="outline" className="font-heading h-11 text-base">
             Wyloguj się
           </Button>
         </form>

@@ -1,7 +1,24 @@
 import Link from 'next/link';
+import { TriangleAlert } from 'lucide-react';
 import { type DashboardRow } from '@/lib/dashboard/compose-dashboard';
-import { formatDate } from '@/lib/format';
+import { formatDate, relativeDays } from '@/lib/format';
 import { routes } from '@/lib/routes';
+
+/** Due date. A late step of the evaluator carries color, icon and text, as in "Zrób teraz". */
+function DueText({ row }: { row: DashboardRow }) {
+  const { dueOn } = row.step;
+  if (!dueOn) return 'Brak terminu';
+  const { daysLeft } = row;
+  if (row.step.owner !== 'evaluator' || daysLeft === null || daysLeft >= 0) {
+    return formatDate(dueOn);
+  }
+  return (
+    <span className="text-error inline-flex items-center gap-1">
+      <TriangleAlert className="size-4 shrink-0" aria-hidden />
+      {formatDate(dueOn)}, {relativeDays(daysLeft)}
+    </span>
+  );
+}
 
 /** Cases in progress that are not on the "Zrób teraz" list. Hidden when there are none. */
 export function InProgressTable({ rows }: { rows: readonly DashboardRow[] }) {
@@ -17,7 +34,8 @@ export function InProgressTable({ rows }: { rows: readonly DashboardRow[] }) {
           Otwórz listę ocen
         </Link>
       </div>
-      <div className="mt-4 overflow-x-auto">
+      {/* Side padding keeps the focus ring of the first column inside the scrolling box. */}
+      <div className="-mx-2 mt-4 overflow-x-auto px-2">
         <table className="w-full border-collapse text-left text-sm">
           <caption className="sr-only">Wszystkie oceny w toku</caption>
           <thead>
@@ -49,7 +67,7 @@ export function InProgressTable({ rows }: { rows: readonly DashboardRow[] }) {
                   {row.step.stage}. {row.step.action}
                 </td>
                 <td className="py-3 whitespace-nowrap">
-                  {row.step.dueOn ? formatDate(row.step.dueOn) : 'Brak terminu'}
+                  <DueText row={row} />
                 </td>
               </tr>
             ))}

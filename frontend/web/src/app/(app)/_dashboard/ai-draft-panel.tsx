@@ -23,7 +23,8 @@ export function AiDraftPanel({ drafts }: { drafts: DashboardData['runningDrafts'
             />
             {draft.partialText ? (
               <p className="text-ink-muted mt-2 text-sm break-words">
-                …{draft.partialText.slice(-PREVIEW_CHARS)}
+                {draft.partialText.length > PREVIEW_CHARS ? '…' : ''}
+                {draft.partialText.slice(-PREVIEW_CHARS)}
               </p>
             ) : null}
           </li>

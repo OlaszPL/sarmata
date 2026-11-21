@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AppShell, Card, CardContent, CardDescription, CardHeader } from '@sarmata/ui';
+import { SiteFooter } from '@/components/shell/site-footer';
 import { product } from '@/lib/product';
 import { LoginForm } from './login-form';
 
@@ -7,7 +8,7 @@ export const metadata: Metadata = { title: 'Logowanie' };
 
 export default function SignInPage() {
   return (
-    <AppShell product={product}>
+    <AppShell product={product} footer={<SiteFooter publicOnly />}>
       <div className="mx-auto max-w-md">
         <Card>
           <CardHeader>

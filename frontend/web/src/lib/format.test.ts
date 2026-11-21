@@ -30,6 +30,11 @@ describe('dates', () => {
     expect(todayInWarsaw(new Date('2026-11-21T23:30:00Z'))).toBe('2026-11-22');
   });
 
+  it('rolls over at midnight in Warsaw in summer time', () => {
+    expect(todayInWarsaw(new Date('2026-06-30T22:30:00Z'))).toBe('2026-07-01');
+    expect(todayInWarsaw(new Date('2026-06-30T21:30:00Z'))).toBe('2026-06-30');
+  });
+
   it('counts days between dates', () => {
     expect(daysUntil(d('2026-11-21'), d('2026-12-04'))).toBe(13);
     expect(daysUntil(d('2026-11-21'), d('2026-11-18'))).toBe(-3);
@@ -37,8 +42,14 @@ describe('dates', () => {
 
   it('formats dates', () => {
     expect(formatDate(d('2026-12-04'))).toBe('04.12.2026');
-    expect(formatShortDate(d('2026-12-04'))).toBe('04.12');
+    expect(formatShortDate(d('2026-12-04'), d('2026-11-21'))).toBe('04.12');
     expect(longDate(d('2026-11-21'))).toBe('Sobota, 21 listopada 2026');
+  });
+
+  it('adds the year to a short date outside the current year', () => {
+    expect(formatShortDate(d('2028-11-21'), d('2026-11-21'))).toBe('21.11.2028');
+    expect(formatShortDate(d('2025-12-30'), d('2026-01-02'))).toBe('30.12.2025');
+    expect(formatShortDate(d('2026-01-05'), d('2026-12-30'))).toBe('05.01');
   });
 
   it.each([

@@ -2,23 +2,26 @@ import Link from 'next/link';
 import { routes } from '@/lib/routes';
 
 const links = [
-  { href: routes.accessibility, label: 'Deklaracja dostępności' },
-  { href: routes.help, label: 'Pomoc' },
-  { href: routes.aiLog, label: 'Dziennik użycia AI' },
+  { href: routes.accessibility, label: 'Deklaracja dostępności', public: true },
+  { href: routes.help, label: 'Pomoc', public: false },
+  { href: routes.aiLog, label: 'Dziennik użycia AI', public: false },
 ] as const;
 
-export function SiteFooter() {
+/** `publicOnly` hides links to pages that need an office membership (sign-in, no-office pages). */
+export function SiteFooter({ publicOnly = false }: { publicOnly?: boolean }) {
   return (
     <footer className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-8 py-8">
       <div>
         <ul className="flex flex-wrap gap-x-7 gap-y-2">
-          {links.map((link) => (
-            <li key={link.href}>
-              <Link href={link.href} className="font-heading font-medium text-white underline">
-                {link.label}
-              </Link>
-            </li>
-          ))}
+          {links
+            .filter((link) => link.public || !publicOnly)
+            .map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="font-heading font-medium text-white underline">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
         </ul>
       </div>
       <p className="text-on-navy-muted text-sm">

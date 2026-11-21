@@ -19,7 +19,7 @@ export default async function DashboardPage() {
       <Hero data={data} />
       <div className="flex flex-1 flex-col lg:flex-row">
         <div className="min-w-0 flex-1">
-          <TodoList rows={data.todo} />
+          <TodoList rows={data.todo} today={data.today} />
           <InProgressTable rows={data.others} />
         </div>
         <aside

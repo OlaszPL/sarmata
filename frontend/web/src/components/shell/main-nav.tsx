@@ -23,7 +23,7 @@ export function MainNav({ items }: { items: readonly NavItem[] }) {
               <Link
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`font-heading relative flex min-h-16 items-center px-7 text-[1.0625rem] font-medium ${
+                className={`font-heading relative flex min-h-16 items-center px-5 text-[1.0625rem] font-medium whitespace-nowrap ${
                   active ? 'text-navy underline' : 'text-ink no-underline hover:underline'
                 }`}
               >

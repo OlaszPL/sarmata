@@ -1,11 +1,18 @@
 import Link from 'next/link';
 import { ArrowRight, TriangleAlert } from 'lucide-react';
+import { type CalendarDate } from '@sarmata/services';
 import { type DashboardRow } from '@/lib/dashboard/compose-dashboard';
 import { formatDate, formatShortDate, relativeDays } from '@/lib/format';
 import { routes } from '@/lib/routes';
 
+interface DateColumn {
+  readonly today: CalendarDate;
+  /** Some date of the list is in another year, so the column is wider to fit `dd.mm.rrrr`. */
+  readonly withYear: boolean;
+}
+
 /** Visible date column. Hidden from assistive technology, `dueText` says the same in the link. */
-function DueCell({ row }: { row: DashboardRow }) {
+function DueCell({ row, column }: { row: DashboardRow; column: DateColumn }) {
   const { dueOn } = row.step;
   if (!dueOn || row.daysLeft === null) {
     return <p className="font-heading text-ink-muted text-lg font-semibold">Brak terminu</p>;
@@ -13,11 +20,15 @@ function DueCell({ row }: { row: DashboardRow }) {
   const overdue = row.daysLeft < 0;
   return (
     <p className={overdue ? 'text-error flex flex-col' : 'flex flex-col'}>
-      <span className="font-heading text-[1.75rem] leading-tight font-semibold">
-        {formatShortDate(dueOn)}
+      <span
+        className={`font-heading leading-tight font-semibold whitespace-nowrap ${
+          column.withYear ? 'text-lg sm:text-[1.75rem]' : 'text-[1.75rem]'
+        }`}
+      >
+        {formatShortDate(dueOn, column.today)}
       </span>
       <span className={`flex items-center gap-1 text-sm ${overdue ? '' : 'text-ink-muted'}`}>
-        {overdue ? <TriangleAlert className="size-4 shrink-0" /> : null}
+        {overdue ? <TriangleAlert className="size-4 shrink-0" aria-hidden /> : null}
         {relativeDays(row.daysLeft)}
       </span>
     </p>
@@ -30,15 +41,28 @@ function dueText(row: DashboardRow): string {
   return `Termin ${formatDate(dueOn)}, ${relativeDays(row.daysLeft)}.`;
 }
 
-function TodoRow({ row, first }: { row: DashboardRow; first: boolean }) {
+function TodoRow({
+  row,
+  first,
+  column,
+}: {
+  row: DashboardRow;
+  first: boolean;
+  column: DateColumn;
+}) {
   return (
     <li className="border-rule border-t">
       <Link
         href={routes.evaluation(row.evaluationId)}
         className="hover:bg-band flex items-stretch no-underline"
       >
-        <div className="w-32 shrink-0 py-6 pl-6 sm:w-[8.75rem] sm:pl-10" aria-hidden>
-          <DueCell row={row} />
+        <div
+          className={`w-32 shrink-0 py-6 pr-3 pl-6 sm:pl-10 ${
+            column.withYear ? 'sm:w-[12.5rem]' : 'sm:w-[8.75rem]'
+          }`}
+          aria-hidden
+        >
+          <DueCell row={row} column={column} />
         </div>
         <div className="min-w-0 flex-1 py-6 pr-4">
           <p className="font-heading text-navy text-[1.375rem] leading-tight font-semibold underline">
@@ -63,7 +87,13 @@ function TodoRow({ row, first }: { row: DashboardRow; first: boolean }) {
 }
 
 /** "Zrób teraz": the evaluator's next steps, nearest deadline first. Each row is one link. */
-export function TodoList({ rows }: { rows: readonly DashboardRow[] }) {
+export function TodoList({ rows, today }: { rows: readonly DashboardRow[]; today: CalendarDate }) {
+  const year = today.slice(0, 4);
+  const column: DateColumn = {
+    today,
+    withYear: rows.some((row) => row.step.dueOn !== null && row.step.dueOn.slice(0, 4) !== year),
+  };
+
   return (
     <section aria-labelledby="todo-heading">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1 px-6 py-8 sm:px-10">
@@ -75,7 +105,7 @@ export function TodoList({ rows }: { rows: readonly DashboardRow[] }) {
       {rows.length > 0 ? (
         <ul className="border-rule border-b">
           {rows.map((row, index) => (
-            <TodoRow key={row.evaluationId} row={row} first={index === 0} />
+            <TodoRow key={row.evaluationId} row={row} first={index === 0} column={column} />
           ))}
         </ul>
       ) : (

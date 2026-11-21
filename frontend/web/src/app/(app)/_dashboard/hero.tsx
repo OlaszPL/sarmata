@@ -5,6 +5,11 @@ import { formatDate, longDate } from '@/lib/format';
 /** Greeting with the headline on the left and the 2 by 2 grid of numbers on the right. */
 export function Hero({ data }: { data: DashboardData }) {
   const { summary } = data;
+  const nearestHint = !summary.nearestDueOn
+    ? 'Brak terminów'
+    : summary.nearestDueOn < data.today
+      ? `Najstarszy zaległy termin ${formatDate(summary.nearestDueOn)}`
+      : `Najbliższy termin ${formatDate(summary.nearestDueOn)}`;
 
   return (
     <section
@@ -17,21 +22,11 @@ export function Hero({ data }: { data: DashboardData }) {
           id="dashboard-heading"
           className="font-heading mt-4 text-[2.25rem] leading-tight font-semibold tracking-tight sm:text-[2.75rem]"
         >
-          Dzień dobry.
-          <span className="block">{data.headline}</span>
+          Dzień dobry. <span className="block">{data.headline}</span>
         </h1>
       </div>
       <div className="border-rule grid grid-cols-1 border-t sm:grid-cols-2 lg:w-[40rem] lg:shrink-0 lg:border-t-0 lg:border-l [&>*]:border-rule [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l">
-        <StatTile
-          label="Do zrobienia"
-          value={String(summary.todo)}
-          hint={
-            summary.nearestDueOn
-              ? `Najbliższy termin ${formatDate(summary.nearestDueOn)}`
-              : 'Brak terminów'
-          }
-          emphasis
-        />
+        <StatTile label="Do zrobienia" value={String(summary.todo)} hint={nearestHint} emphasis />
         <StatTile
           label="Po terminie"
           value={String(summary.overdue)}

@@ -27,7 +27,7 @@ export function SubmitButton({ children, pendingLabel, className }: SubmitButton
       type="submit"
       aria-disabled={pending}
       onClick={ignoreWhilePending}
-      className={['h-11 px-5 text-base', className].filter(Boolean).join(' ')}
+      className={['font-heading h-11 px-5 text-base', className].filter(Boolean).join(' ')}
     >
       {pending ? (
         <>

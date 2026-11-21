@@ -1,7 +1,7 @@
 import type { MemberAccount } from '@sarmata/services';
 import { officeEmployees } from '@/lib/account';
-import { signOut } from '@/lib/auth-actions';
 import { roleLabels } from '@/lib/role-labels';
+import { AccountMenu } from './account-menu';
 
 async function displayName(account: MemberAccount): Promise<string> {
   try {
@@ -13,26 +13,10 @@ async function displayName(account: MemberAccount): Promise<string> {
   return account.email;
 }
 
-/** Name, role and office of the signed-in account with the sign-out button. */
+/** Name, role and office of the signed-in account, with sign-out in its menu. */
 export async function AccountCell({ account }: { account: MemberAccount }) {
   const name = await displayName(account);
-
   return (
-    <div className="border-rule flex min-w-0 items-center gap-4 border-l px-5">
-      <div className="hidden max-w-72 min-w-0 py-2 md:block">
-        <p className="font-heading truncate font-medium">{name}</p>
-        <p className="text-ink-muted truncate text-sm">
-          {roleLabels[account.role]}, {account.office.name}
-        </p>
-      </div>
-      <form action={signOut}>
-        <button
-          type="submit"
-          className="font-heading text-link hover:text-navy-dark text-sm font-medium underline"
-        >
-          Wyloguj się
-        </button>
-      </form>
-    </div>
+    <AccountMenu name={name} details={`${roleLabels[account.role]}, ${account.office.name}`} />
   );
 }

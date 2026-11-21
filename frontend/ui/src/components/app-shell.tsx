@@ -4,7 +4,7 @@ import { BrandMark } from '#components/brand-mark';
 interface AppShellProps {
   product: { readonly name: string; readonly tagline: string };
   homeHref?: string;
-  /** Main navigation. Shown in the header row from `lg`, in its own scrolling row below. */
+  /** Main navigation. Shown in the header row from `xl`, in its own scrolling row below. */
   nav?: ReactNode;
   /** Header cells between the filler and the primary action: search, accessibility tools, account. */
   tools?: ReactNode;
@@ -35,13 +35,15 @@ export function AppShell({
       </a>
       <header className="border-rule border-b">
         {/*
-          Cells wrap onto a second line when they do not fit. Cells of the first line draw the line
-          between the two, the row overlaps the header border by 1px so a single line stays single.
+          From `xl` (1280px) everything sits on one line and the tools shrink (the account cell
+          truncates). Below, cells wrap onto a second line when they do not fit. Cells of the first
+          line draw the line between the two, the row overlaps the header border by 1px so a single
+          line stays single.
         */}
-        <div className="-mb-px flex flex-wrap items-stretch">
+        <div className="-mb-px flex flex-wrap items-stretch xl:flex-nowrap">
           <a
             href={homeHref}
-            className="bg-navy border-rule flex min-h-16 shrink-0 items-center gap-3 border-b px-6 text-white no-underline"
+            className="bg-navy border-rule flex min-h-16 shrink-0 items-center gap-3 border-b px-5 text-white no-underline"
           >
             <span className="flex size-10 items-center justify-center bg-white">
               <BrandMark className="size-8" />
@@ -49,7 +51,7 @@ export function AppShell({
             <span className="font-heading text-2xl font-bold">{product.name}</span>
             <span className="sr-only">: {product.tagline}</span>
           </a>
-          {nav ? <div className="border-rule hidden border-b lg:flex">{nav}</div> : null}
+          {nav ? <div className="border-rule hidden shrink-0 border-b xl:flex">{nav}</div> : null}
           <div className="border-rule flex-1 border-b" />
           <div className="flex min-h-16 min-w-0 grow items-stretch justify-end">
             {tools}
@@ -57,7 +59,7 @@ export function AppShell({
           </div>
         </div>
         {nav ? (
-          <div className="border-rule overflow-x-auto border-t lg:hidden">
+          <div className="border-rule focus-inset overflow-x-auto border-t xl:hidden">
             <div className="flex min-w-max">{nav}</div>
           </div>
         ) : null}

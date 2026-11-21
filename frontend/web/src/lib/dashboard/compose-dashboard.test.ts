@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { type DashboardSources, composeDashboard } from './compose-dashboard';
 
 const today = calendarDate('2026-11-21');
+const now = new Date('2026-11-21T10:00:00Z');
 
 interface ViewOptions {
   id: string;
@@ -42,6 +43,7 @@ function run(fields: Record<string, unknown>): AiRun {
     id: `run-${Math.random()}`,
     status: 'done',
     employeeId: 'emp-1',
+    requestedAt: '2026-11-21T09:50:00Z',
     finishedAt: '2026-11-20T10:00:00Z',
     output: null,
     partialText: null,
@@ -92,7 +94,6 @@ function sources(overrides: Partial<DashboardSources> = {}): DashboardSources {
   return {
     views: [],
     closedCount: 0,
-    employees: [],
     aiEnabled: true,
     hrRuns: [],
     appreciationRuns: [],
@@ -172,11 +173,11 @@ describe('composeDashboard', () => {
       view({ id: 'e', status: 'delivered', dueOn: '2026-11-30' }),
     ];
 
-    it('counts todo, overdue, waiting and closed', () => {
+    it('counts todo, overdue (own steps only), waiting and closed', () => {
       const data = composeDashboard(sources({ views, closedCount: 7 }), today);
       expect(data.summary).toEqual({
         todo: 3,
-        overdue: 2,
+        overdue: 1,
         waiting: 2,
         closed: 7,
         nearestDueOn: '2026-11-18',
@@ -404,11 +405,43 @@ describe('composeDashboard', () => {
           ],
         }),
         today,
+        now,
       );
       expect(data.runningDrafts).toEqual([
         { runId: 'r1', employeeName: 'Anna Nowak', partialText: 'Anna ' },
         { runId: 'r2', employeeName: 'Anna Nowak', partialText: null },
       ]);
+    });
+
+    it('drops drafts stuck for more than 30 minutes', () => {
+      const data = composeDashboard(
+        sources({
+          views,
+          draftRuns: [
+            run({
+              id: 'fresh',
+              kind: 'sheet_draft',
+              status: 'running',
+              requestedAt: '2026-11-21T09:31:00Z',
+            }),
+            run({
+              id: 'stuck',
+              kind: 'sheet_draft',
+              status: 'queued',
+              requestedAt: '2026-11-21T09:29:00Z',
+            }),
+            run({
+              id: 'dead',
+              kind: 'sheet_draft',
+              status: 'running',
+              requestedAt: '2026-11-20T08:00:00Z',
+            }),
+          ],
+        }),
+        today,
+        now,
+      );
+      expect(data.runningDrafts.map((draft) => draft.runId)).toEqual(['fresh']);
     });
   });
 

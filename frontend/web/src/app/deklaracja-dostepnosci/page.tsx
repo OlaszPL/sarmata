@@ -1,8 +1,13 @@
 import type { Metadata } from 'next';
+import { AppShell } from '@sarmata/ui';
+import { MemberShell } from '@/components/shell/member-shell';
+import { SiteFooter } from '@/components/shell/site-footer';
+import { currentAccount } from '@/lib/account';
+import { product } from '@/lib/product';
 
 export const metadata: Metadata = { title: 'Deklaracja dostępności' };
 
-export default function AccessibilityStatementPage() {
+function Statement() {
   return (
     <article className="px-8 py-10">
       <h1 className="font-heading text-[2.75rem] font-semibold">Deklaracja dostępności</h1>
@@ -21,5 +26,25 @@ export default function AccessibilityStatementPage() {
         </p>
       </div>
     </article>
+  );
+}
+
+/**
+ * Public on purpose: people who hit a barrier before signing in must be able to read it. Members
+ * see it in their full shell, everyone else in the plain one.
+ */
+export default async function AccessibilityStatementPage() {
+  const account = await currentAccount();
+  if (account.status === 'member') {
+    return (
+      <MemberShell account={account}>
+        <Statement />
+      </MemberShell>
+    );
+  }
+  return (
+    <AppShell product={product} footer={<SiteFooter publicOnly />}>
+      <Statement />
+    </AppShell>
   );
 }

@@ -63,8 +63,9 @@
   --band: #f2f2ee;
   --rule: #1b1b1b;
   --on-navy-muted: #c5d0e6;
+  --pixel-empty: #dcdcd6; /* empty cell of the AI pixel loader */
 
-  --radius: 0;
+  --radius: 0px; /* a length, so calc(var(--radius) - 2px) in shadcn stays valid */
   --background: #ffffff;
   --foreground: var(--ink);
   --card: #ffffff;
@@ -134,6 +135,12 @@
   box-shadow: 0 0 0 2px #fff; /* triple ring: visible on white and on navy */
 }
 
+/* Inside a scrolling box the outer ring would be clipped, so the ring is drawn inside the element. */
+.focus-inset :focus-visible {
+  outline-offset: -5px;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
 /* PixelLoader: cells fill one after another. Unlayered like the focus ring, so it is never purged or overridden. */
 .pixel-loader-cell {
   background-color: var(--cell);
@@ -142,14 +149,14 @@
 
 @keyframes pixel-fill {
   0% {
-    background-color: #dcdcd6;
+    background-color: var(--pixel-empty);
   }
   10%,
   80% {
     background-color: var(--cell);
   }
   100% {
-    background-color: #dcdcd6;
+    background-color: var(--pixel-empty);
   }
 }
 
