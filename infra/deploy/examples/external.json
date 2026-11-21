@@ -1,0 +1,22 @@
+{
+  "config": {
+    "schemaVersion": 1,
+    "profile": "light",
+    "exposure": "localhost",
+    "host": "localhost",
+    "tls": { "mode": "none" },
+    "supabase": { "mode": "external", "url": "https://abcdefghijklmnopqrst.supabase.co" },
+    "smtp": { "enabled": false },
+    "ai": { "enabled": false },
+    "office": { "name": "Urząd Ministerstwa Testowego w Kropce Wielkopolskiej" },
+    "admin": { "email": "admin@kropka.test", "firstName": "Anna", "lastName": "Administracyjna" },
+    "shortcut": false
+  },
+  "adminPassword": "Haslo-Demo-2026",
+  "smtpPassword": "",
+  "external": {
+    "publishableKey": "sb_publishable_demo",
+    "secretKey": "sb_secret_demo",
+    "databaseUrl": "postgresql://postgres:demo@db.abcdefghijklmnopqrst.supabase.co:5432/postgres"
+  }
+}

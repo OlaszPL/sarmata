@@ -1,0 +1,25 @@
+{
+  "config": {
+    "schemaVersion": 1,
+    "profile": "standard",
+    "exposure": "lan",
+    "host": "oceny-pc.kropka.test",
+    "tls": { "mode": "internal" },
+    "supabase": { "mode": "local" },
+    "smtp": {
+      "enabled": true,
+      "host": "smtp.kropka.test",
+      "port": 587,
+      "user": "oceny@kropka.test",
+      "senderEmail": "oceny@kropka.test",
+      "senderName": "Oceny okresowe"
+    },
+    "ai": { "enabled": false },
+    "office": { "name": "Urząd Ministerstwa Testowego w Kropce Wielkopolskiej" },
+    "admin": { "email": "admin@kropka.test", "firstName": "Anna", "lastName": "Administracyjna" },
+    "shortcut": true
+  },
+  "adminPassword": "Haslo-Demo-2026",
+  "smtpPassword": "Smtp-Demo-2026",
+  "external": null
+}

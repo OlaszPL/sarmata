@@ -1,0 +1,17 @@
+# Shell scripts run inside Linux containers and WSL, batch files in cmd.exe.
+*.sh text eol=lf
+*.bat text eol=crlf
+infra/deploy/supabase/** linguist-vendored
+
+# Left out of the office release archive (git archive in infra/deploy/scripts/release.sh): team
+# secrets, agent and editor tooling, internal plans and research, tests the build does not need.
+secrets/ export-ignore
+.sops.yaml export-ignore
+.mcp.json export-ignore
+.claude/ export-ignore
+.agents/ export-ignore
+.codex/ export-ignore
+.termic/ export-ignore
+docs/superpowers/ export-ignore
+archive/ export-ignore
+e2e/ export-ignore

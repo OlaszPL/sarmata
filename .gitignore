@@ -1,7 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -202,7 +201,6 @@ activemq-data/
 
 # Environments
 .env
-.envrc
 .venv
 env/
 venv/
@@ -280,3 +278,24 @@ archive/
 
 # local browser tool snapshots
 .playwright-mcp/
+
+# sarmata
+secrets/*.env
+!secrets/*.enc.env
+
+node_modules/
+
+
+# Working implementation plans, not part of the repo (decisions go to docs/adr)
+docs/superpowers/
+# frontend and e2e
+.next/
+e2e/test-results/
+e2e/playwright-report/
+e2e/.screenshots/
+
+# the generic "lib/" rule above must not hide source folders
+!frontend/web/src/lib/
+
+# installer release archives (infra/deploy/dist is covered by dist/)
+infra/deploy/release/

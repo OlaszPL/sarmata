@@ -1,0 +1,27 @@
+savePrefix: ''
+
+packages:
+  - frontend/*
+  - backend/*
+  - database
+  - infra/*
+  - e2e
+
+catalog:
+  typescript: 6.0.3
+  vitest: 5.1.1
+  '@types/node': 24.19.2
+  '@supabase/supabase-js': 2.119.2
+  '@types/react': 19.3.0
+  '@types/react-dom': 19.3.0
+  lucide-react: 1.77.0
+  react: 19.3.1
+  react-dom: 19.3.1
+  tailwindcss: 4.3.5
+  zod: 4.6.7
+
+# pnpm 12 blocks dependency build scripts unless listed here.
+allowBuilds:
+  esbuild: true
+  supabase: true
+  bun: true

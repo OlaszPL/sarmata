@@ -1,0 +1,4 @@
+@import '@sarmata/ui/globals.css';
+
+/* Class sources of the app (relative to this file). The shared ones come with @sarmata/ui. */
+@source '../';

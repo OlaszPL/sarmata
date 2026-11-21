@@ -1,0 +1,2 @@
+Available devices:
+  Vulkan0: Intel(R) Iris(R) Xe Graphics (RPL-P) (7854 MiB, 7854 MiB free)

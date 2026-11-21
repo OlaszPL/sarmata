@@ -1,0 +1,23 @@
+{
+  "name": "@sarmata/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "supabase start",
+    "stop": "supabase stop",
+    "status": "supabase status",
+    "reset": "supabase db reset",
+    "types": "supabase gen types typescript --schema public > src/types.ts",
+    "test:db": "supabase test db",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "supabase": "3.2.0",
+    "typescript": "catalog:"
+  }
+}

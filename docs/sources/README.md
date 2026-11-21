@@ -14,6 +14,7 @@ Dokument zbiorczy: [../wymagania-i-kontekst.md](../wymagania-i-kontekst.md). Akt
 | [it-administracji/](it-administracji/) | EZD RP, podpisy i tożsamość, infrastruktura państwa, open source, polskie modele AI (PLLuM, Bielik), systemy kadrowe |
 | [hr-metodyka/](hr-metodyka/) | informacja zwrotna, błędy oceniania, pytania do rozmów per kryterium, rozwój, wypalenie i dobrostan, docenianie |
 | [szkolenia-katalog/](szkolenia-katalog/) | plany szkoleń centralnych, KSAP, e-learning, otwarte zasoby, katalog per kryterium (z CSV) |
+| [ai-lokalne/](ai-lokalne/) | runtime LLM (llama.cpp i alternatywy, backendy GPU), rodzina Bielik i Bielik-One, progi sprzętowe |
 | [hackathon/](hackathon/) | strona i regulamin hackathonu, zasoby organizatora, poprzednie edycje |
 | [benchmarki-zagraniczne/](benchmarki-zagraniczne/) | OECD, UK, Kanada, Australia, Estonia, Niemcy, Francja, Irlandia, Singapur, USA, Holandia |
 | [rynek-narzedzi/](rynek-narzedzi/) | Lattice, Leapsome, 15Five, Culture Amp, Workday, SAP, Viva i polskie narzędzia, pułapki AI w ocenach |

@@ -1,0 +1,28 @@
+{
+  "name": "@sarmata/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "dev": "tsx watch src/main.ts",
+    "sync-regulations": "tsx src/sync-regulations.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@sarmata/domain": "workspace:*",
+    "@sarmata/repositories": "workspace:*",
+    "@sarmata/services": "workspace:*",
+    "tsx": "4.23.15",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

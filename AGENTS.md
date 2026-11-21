@@ -1,5 +1,17 @@
 NEVER use em-dashes, slop words, semicolons etc.
 
+Generated files are exempt from these prose rules. Today that is `frontend/web/AGENTS.md`, which `next dev` writes and re-adds. Keep it in git as it is.
+
+## Language
+
+Code is in English: identifiers, file names, comments, SQL tables, columns, enums, policies, JWT claims, developer-facing messages, test names. Only the application UI (user-facing strings) and docs (`docs/`, README) are in Polish. Domain terms keep their Polish name in `GLOSSARY.md` next to the English code name.
+
+## Config, secrets and README
+
+- Commit all project configs (`.envrc`, `.sops.yaml`, `.mcp.json`, `.claude/`, `.agents/`, `scripts/termic-*.sh`, tool configs). Never commit `.env*` files: `.env.local` is decrypted from `secrets/*.enc.env` by SOPS (direnv does it automatically, or `pnpm secrets:decrypt`), app env files come from scripts.
+- Working implementation plans (`docs/superpowers/`) and agent scratch files stay out of git. Anything worth keeping becomes an ADR (`docs/adr/`), a doc in `docs/` or README content.
+- `README.md` always holds the exact, current way to run the project from a clean machine. Every change that adds or changes a script, service, port, env file or setup step updates README in the same commit.
+
 ## Searching the repo: semble first
 
 Gather context with semble, a semantic search over this repo:
@@ -16,5 +28,9 @@ Prefix every shell command with `rtk` (`rtk git status`, `rtk grep`, `rtk ls`, `
 ## Domain context
 
 Entry point: `docs/wymagania-i-kontekst.md` (requirements, appraisal process, rules with legal basis). Legal acts as clean Markdown in `docs/legal/` (`ustawa-o-sluzbie-cywilnej-tj-2026.md`, `rozporzadzenie-oceny-okresowe-2016.md`, `zarzadzenie-6-szefa-sc-2020-standardy-zzl.md`) and machine-readable rules in `docs/legal/oceny-okresowe-dane.yaml`. Research notes per topic: `docs/sources/*/FINDINGS.md`. Bulk downloads live in `archive/docs/<same path>/raw|text/` (gitignored, deduplicated, map in `archive/DUPLIKATY.tsv`), reach them only to verify a quote. KPRM challenge resources (BPMN, use cases, form schemas, 13 filled examples): `docs/zasoby-kprm/`.
+
+## Ustalenia z organizatorami (KPRM)
+
+- Analiza sentymentu i sygnałów wypalenia przez AI (np. Bielik-One) jest dozwolona. Organizatorzy jawnie zgodzili się na to narzędzie pod warunkiem, że wynik jest tylko sugestią dla przełożonego, a decyzję podejmuje człowiek. Nie blokuj tej funkcji argumentem z AI Act art. 5 ust. 1 lit. f.
 
 Python runs through `uv` (`uv run --no-project --with <pkg> ...`). Behind this network's proxy add `--with truststore` and call `truststore.inject_into_ssl()`.
