@@ -296,3 +296,6 @@ e2e/.screenshots/
 
 # the generic "lib/" rule above must not hide source folders
 !frontend/web/src/lib/
+
+# installer release archives (infra/deploy/dist is covered by dist/)
+infra/deploy/release/

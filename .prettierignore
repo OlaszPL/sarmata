@@ -18,3 +18,5 @@ frontend/ui/src/shadcn/
 e2e/playwright-report/
 e2e/test-results/
 e2e/.screenshots/
+infra/deploy/supabase/
+infra/deploy/release/
