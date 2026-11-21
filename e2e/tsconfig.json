@@ -2,7 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM"],
-    "allowJs": true
+    "allowJs": true,
+    "exactOptionalPropertyTypes": false
   },
   "include": ["playwright.config.ts", "src", "tests", "walk"]
 }
