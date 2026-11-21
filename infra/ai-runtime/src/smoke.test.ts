@@ -66,7 +66,7 @@ describe('smoke checks', () => {
     });
     expect(await smokeDecision(url)).toMatchObject({
       status: 'ok',
-      detail: '„Czy wniosek został złożony?” tak z p=0.970 (skalibrowane)',
+      detail: '„Czy wniosek został złożony?” tak z p=0.970',
     });
   });
 

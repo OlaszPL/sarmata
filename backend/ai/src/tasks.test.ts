@@ -309,7 +309,7 @@ describe('hr signals', () => {
     expect(output).toMatchObject({
       signals: [
         { signal: 'sentiment', present: false, probability: 0.3 },
-        { signal: 'overload', present: true, probability: 0.8, calibrated: true },
+        { signal: 'overload', present: true, probability: 0.8 },
         { signal: 'engagement_drop', present: false },
         { signal: 'burnout_risk', present: false },
       ],
@@ -411,13 +411,13 @@ describe('hr signals', () => {
     );
     const output = await executeOk(runner, 'hr_signals', input);
     expect(schemaOf(fake, 0)).toContain('"name":"decision_answers"');
-    // The fallback is not calibrated: the probability is the confidence the model reported.
+    // The fallback probability is not its own: the probability is the confidence the model reported.
     expect(output).toMatchObject({
       signals: [
-        { signal: 'sentiment', present: true, probability: 0.7, calibrated: false },
-        { signal: 'overload', present: true, probability: 0.9, calibrated: false },
-        { signal: 'engagement_drop', present: false, calibrated: false },
-        { signal: 'burnout_risk', present: false, calibrated: false },
+        { signal: 'sentiment', present: true, probability: 0.7 },
+        { signal: 'overload', present: true, probability: 0.9 },
+        { signal: 'engagement_drop', present: false },
+        { signal: 'burnout_risk', present: false },
       ],
     });
     const signals = (output as { signals: { probability: number }[] }).signals;

@@ -49,11 +49,11 @@ type Signal = AiOutput<'hr_signals'>['signals'][number];
 /**
  * Presence is the argmax of the model, the probability is that of the signal being present. The text
  * model fallback gives one-hot probabilities, so there the probability comes from the confidence the
- * model reports (present: confidence, absent: 1 - confidence) and the signal is marked not calibrated.
+ * model reports (present: confidence, absent: 1 - confidence).
  */
 function signalOf(name: HrSignalName, answer: DecisionAnswer | undefined): Signal {
   const clamp = (value: number | undefined): number => Math.min(Math.max(value ?? 0, 0), 1);
-  const calibrated = answer?.calibrated !== false;
+  const own = answer?.fallback !== true;
   const declared = (present: boolean): number =>
     clamp(present ? answer?.confidence : 1 - (answer?.confidence ?? 1));
   if (answer?.type === 'choice') {
@@ -61,8 +61,7 @@ function signalOf(name: HrSignalName, answer: DecisionAnswer | undefined): Signa
     return {
       signal: name,
       present,
-      probability: calibrated ? clamp(answer.probabilities.negative) : declared(present),
-      calibrated,
+      probability: own ? clamp(answer.probabilities.negative) : declared(present),
       fragments: [],
     };
   }
@@ -71,12 +70,11 @@ function signalOf(name: HrSignalName, answer: DecisionAnswer | undefined): Signa
     return {
       signal: name,
       present,
-      probability: calibrated ? clamp(answer.probabilities.true) : declared(present),
-      calibrated,
+      probability: own ? clamp(answer.probabilities.true) : declared(present),
       fragments: [],
     };
   }
-  return { signal: name, present: false, probability: 0, calibrated: true, fragments: [] };
+  return { signal: name, present: false, probability: 0, fragments: [] };
 }
 
 function describeRatings(pastRatings: AiInput<'hr_signals'>['pastRatings']): string {

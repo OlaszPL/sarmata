@@ -88,11 +88,10 @@ export async function smokeDecision(url: string): Promise<SmokeResult> {
     if (typeof yes !== 'number') {
       return { status: 'failed', detail: 'odpowiedź bez prawdopodobieństwa dla pytania filed' };
     }
-    const calibrated = state.calibrated === true ? 'skalibrowane' : 'bez kalibracji';
     return {
       status: 'ok',
       latencyMs,
-      detail: `„${SMOKE_DECISION.questions.filed.instructions}” tak z p=${yes.toFixed(3)} (${calibrated})`,
+      detail: `„${SMOKE_DECISION.questions.filed.instructions}” tak z p=${yes.toFixed(3)}`,
     };
   } catch (error) {
     return { status: 'failed', detail: describeError(error) };

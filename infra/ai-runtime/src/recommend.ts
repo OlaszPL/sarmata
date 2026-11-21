@@ -20,15 +20,12 @@ export interface BielikOneChoice {
 }
 
 /**
- * How Bielik-One runs on the machine. `concurrent`: next to the text model. `switching`: it fits only
- * alone, so one model is in memory at a time and a host-side switcher swaps them (not built yet, the
- * installer may already offer it as "tryb przełączany"). `text-only`: no Bielik-One, decisions come
- * from the text model with forced JSON.
+ * How Bielik-One runs on the machine. `concurrent`: permanently next to the text model. `text-only`: no
+ * Bielik-One, decisions come from the text model with forced JSON. Where the two do not fit together
+ * there is no switching: measured on an M2 with 16 GB, a decision took 94 to 119 s with Bielik-One
+ * against 13 s through the text model, with heavy swap.
  */
-export type BielikOnePlan =
-  | { mode: 'concurrent'; choice: BielikOneChoice }
-  | { mode: 'switching'; choice: BielikOneChoice }
-  | { mode: 'text-only' };
+export type BielikOnePlan = { mode: 'concurrent'; choice: BielikOneChoice } | { mode: 'text-only' };
 
 export interface RuntimeRecommendation {
   /** AI is on by default in every profile except light (ADR 0003, ADR 0005). */
@@ -38,7 +35,7 @@ export interface RuntimeRecommendation {
   model: ModelFile | null;
   /** Only on vLLM (Linux, NVIDIA) or MLX (Apple silicon), and only when it fits next to the text model. */
   bielikOne: BielikOneChoice | null;
-  /** Concurrent (the same choice as `bielikOne`), switching, or text only. */
+  /** Concurrent (the same choice as `bielikOne`) or text only. */
   bielikOnePlan: BielikOnePlan;
   /**
    * Why Bielik-One is or is not installed next to the text model, with the fallback and the memory
@@ -309,21 +306,16 @@ function chooseBielikOne(
     minimum === null
       ? ''
       : ` Oba modele naraz mieszczą się od ${minimum} GB ${engine === 'mlx' ? 'pamięci Maca' : 'pamięci karty NVIDIA'}.`;
-  const alone = bielikOneAlone(hardware);
-  const switching =
-    alone === null
-      ? ''
-      : ` W trybie przełączanym (jeden model w pamięci naraz) może działać ${alone.package.label} (${engineName(alone.engine)}).`;
   return {
     bielikOne: null,
-    bielikOnePlan: alone === null ? { mode: 'text-only' } : { mode: 'switching', choice: alone },
-    decisionReason: `Bielik-One nie zmieści się na stałe obok modelu tekstowego: ${smallest.label} (${engineName(engine)}) z modelem ${model.label} ${model.quantization} potrzebuje około ${gbOneDecimal(need)} GB, a ${where} ${gbOneDecimal(budget)} GB. ${DECISION_FALLBACK}${threshold}${switching}`,
+    bielikOnePlan: { mode: 'text-only' },
+    decisionReason: `Bielik-One nie zmieści się na stałe obok modelu tekstowego: ${smallest.label} (${engineName(engine)}) z modelem ${model.label} ${model.quantization} potrzebuje około ${gbOneDecimal(need)} GB, a ${where} ${gbOneDecimal(budget)} GB. ${DECISION_FALLBACK}${threshold}`,
   };
 }
 
 /**
- * The largest Bielik-One package that fits here on its own, with the text model stopped: the
- * switching mode, and dev testing where the two do not fit together (pnpm ai:setup --with-bielik-one).
+ * The largest Bielik-One package that fits here on its own, with the text model stopped: dev
+ * testing where the two do not fit together (pnpm ai:setup --with-bielik-one).
  */
 export function bielikOneAlone(hardware: Hardware): BielikOneChoice | null {
   const engine = bielikOneEngine(hardware);

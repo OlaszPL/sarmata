@@ -336,14 +336,14 @@ describe('decide without Bielik-One (text model fallback)', () => {
           noul: 1,
           probabilities: { true: 1, false: 0 },
           confidence: 0.8,
-          calibrated: false,
+          fallback: true,
         },
         tone: {
           type: 'choice',
           choice: 'positive',
           probabilities: { positive: 1, negative: 0 },
           confidence: 0.6,
-          calibrated: false,
+          fallback: true,
         },
         engagement: {
           type: 'score',
@@ -351,14 +351,14 @@ describe('decide without Bielik-One (text model fallback)', () => {
           legend: { '0': 'niskie', '1': 'średnie', '2': 'wysokie' },
           probabilities: { '0': 0, '1': 0, '2': 1 },
           confidence: 0.5,
-          calibrated: false,
+          fallback: true,
         },
         signals: {
           type: 'labels',
           selected: ['overtime'],
           probabilities: { overtime: 1, conflict: 0 },
           confidence: 0.7,
-          calibrated: false,
+          fallback: true,
         },
       },
     });

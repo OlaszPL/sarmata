@@ -7,7 +7,7 @@ import { generateObject } from './text-model';
 /**
  * Decisions of a text model where Bielik-One cannot run (ADR 0005). The text model answers a forced
  * JSON schema with a simple shape per question, and this module turns it into the same
- * `DecisionAnswers` that Bielik-One returns. The model gives no calibrated probabilities: they are
+ * `DecisionAnswers` that Bielik-One returns. The model gives no probabilities of its own: they are
  * one-hot on its own answer, and `confidence` is the value it reports itself.
  */
 
@@ -38,7 +38,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
         choice: raw.choice,
         probabilities: Object.fromEntries(keys.map((key) => [key, key === raw.choice ? 1 : 0])),
         confidence: raw.confidence,
-        calibrated: false,
+        fallback: true,
       }));
     }
     case 'noul':
@@ -47,7 +47,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
         noul: raw.value ? 1 : 0,
         probabilities: { true: raw.value ? 1 : 0, false: raw.value ? 0 : 1 },
         confidence: raw.confidence,
-        calibrated: false,
+        fallback: true,
       }));
     case 'score': {
       const top = Math.max(spec.criteria.length - 1, 0);
@@ -59,7 +59,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
           spec.criteria.map((_, index) => [String(index), index === Math.round(raw.score) ? 1 : 0]),
         ),
         confidence: raw.confidence,
-        calibrated: false,
+        fallback: true,
       }));
     }
     case 'labels': {
@@ -71,7 +71,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
           keys.map((key) => [key, raw.selected.includes(key) ? 1 : 0]),
         ),
         confidence: raw.confidence,
-        calibrated: false,
+        fallback: true,
       }));
     }
   }

@@ -140,9 +140,7 @@ describe('aiSettings and aiUnsupportedReason', () => {
     llamaCpp: { key: 'macos-arm64', backend: 'metal', assets: [] },
     model: MODEL_FILES['bielik-11b-v3.1-q4_k_m'],
     bielikOne: bielikOne ? fourB : null,
-    bielikOnePlan: bielikOne
-      ? { mode: 'concurrent', choice: fourB }
-      : { mode: 'switching', choice: fourB },
+    bielikOnePlan: bielikOne ? { mode: 'concurrent', choice: fourB } : { mode: 'text-only' },
     decisionReason: '',
     server: { contextSize: 8192, parallel: 2 },
     reason: '',

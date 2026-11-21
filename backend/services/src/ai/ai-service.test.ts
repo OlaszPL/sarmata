@@ -88,9 +88,7 @@ const signalsRun: AiRun = {
   kind: 'hr_signals',
   status: 'done',
   output: {
-    signals: [
-      { signal: 'overload', present: true, probability: 0.8, calibrated: true, fragments: [] },
-    ],
+    signals: [{ signal: 'overload', present: true, probability: 0.8, fragments: [] }],
     questions: ['Które zadania można przesunąć?'],
     actions: [],
   },

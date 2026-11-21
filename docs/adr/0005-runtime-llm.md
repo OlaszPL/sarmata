@@ -20,17 +20,17 @@ Bielik-One instaluje się tylko wtedy, gdy na stałe mieści się w tym budżeci
 
 | Sprzęt | Model tekstowy | Bielik-One |
 | --- | --- | --- |
-| Mac 16 GB (np. M2) | Bielik-4.5B Q4_K_M | nie naraz: 2,7 + 2 + 9 = 13,7 GB przy budżecie 10,7 GB, tryb przełączany 4B |
-| Mac 24 GB | Bielik-11B Q4_K_M | nie naraz: 6,3 + 2 + 9 = 17,3 GB przy budżecie 16 GB, tryb przełączany 4B |
+| Mac 16 GB (np. M2) | Bielik-4.5B Q4_K_M | nie naraz: 2,7 + 2 + 9 = 13,7 GB przy budżecie 10,7 GB, decyzje przez model tekstowy |
+| Mac 24 GB | Bielik-11B Q4_K_M | nie naraz: 6,3 + 2 + 9 = 17,3 GB przy budżecie 16 GB, decyzje przez model tekstowy |
 | Mac 32 i 36 GB | Bielik-11B Q4_K_M | 4B na MLX (budżet 21,3 i 27 GB) |
 | Mac od 48 GB | Bielik-11B Q4_K_M | 11B na MLX (34,3 GB przy budżecie 36 GB) |
 | NVIDIA 8 GB | Bielik-4.5B Q4_K_M | brak, 4B na vLLM sam potrzebuje 13 GB |
 | NVIDIA 12 GB | Bielik-11B Q4_K_M | brak, próg to karta 24 GB |
-| NVIDIA 16 GB | Bielik-11B Q4_K_M | nie naraz, tryb przełączany 4B |
+| NVIDIA 16 GB | Bielik-11B Q4_K_M | nie naraz, decyzje przez model tekstowy |
 | NVIDIA 24 GB | Bielik-11B Q4_K_M | 4B na vLLM (21,3 GB) |
 | NVIDIA 48 GB, profil server | Bielik-11B Q8_0 | 11B na vLLM (11,1 + 4 + 31 = 46,1 GB) |
 
-Rekomendacja (`recommendRuntime`) podaje sposób działania Bielik-One w polu `bielikOnePlan`: `concurrent` (obok modelu tekstowego, to samo co `bielikOne`), `switching` (mieści się tylko sam, więc w pamięci jest naraz jeden model, a przełącznik po stronie hosta zamienia je na żądanie) albo `text-only`. Przełącznika jeszcze nie ma (osobne zadanie), więc kreator dalej instaluje Bielik-One tylko w trybie `concurrent`, a `switching` może już pokazać jako „tryb przełączany”.
+Rekomendacja (`recommendRuntime`) podaje sposób działania Bielik-One w polu `bielikOnePlan`: `concurrent` (na stałe obok modelu tekstowego, to samo co `bielikOne`) albo `text-only`. Bielik-One działa tylko tam, gdzie mieści się równocześnie z modelem tekstowym. Trybu przełączanego nie ma: pomiar na M2 pokazał decyzję w 94 do 119 s przez Bielik-One wobec 13 s przez model tekstowy, przy silnym swapie. `--with-bielik-one` zostaje jawnym wyborem do testów.
 
 Na Macu z 16 GB instaluje się więc tylko model tekstowy (Bielik-4.5B Q4_K_M), a decyzje podejmuje on z wymuszonym schematem JSON (`@sarmata/ai`). Kreator i `pnpm ai:setup` zawsze piszą po polsku, który wariant wybrały i dlaczego, z potrzebną pamięcią, dostępnym budżetem i progiem, od którego oba modele mieszczą się naraz. Bielik-One nigdy nie znika po cichu. W profilu server na Macu 16 GB obowiązuje ten sam tier szybki (Bielik-4.5B Q4_K_M).
 

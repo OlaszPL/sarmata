@@ -227,16 +227,13 @@ describe('recommendRuntime: Bielik-One', () => {
     expect(recommendation.model?.id).toBe('bielik-4.5b-v3.0-q4_k_m');
     expect(recommendation.bielikOne).toBeNull();
     expect(recommendation.decisionReason).toBe(
-      'Bielik-One nie zmieści się na stałe obok modelu tekstowego: Bielik-One 4B (MLX) z modelem Bielik-4.5B-v3.0-Instruct Q4_K_M potrzebuje około 13,7 GB, a GPU tego Maca może użyć 10,7 GB. Decyzje podejmuje model tekstowy z wymuszonym formatem JSON. Oba modele naraz mieszczą się od 24 GB pamięci Maca. W trybie przełączanym (jeden model w pamięci naraz) może działać Bielik-One 4B (MLX).',
+      'Bielik-One nie zmieści się na stałe obok modelu tekstowego: Bielik-One 4B (MLX) z modelem Bielik-4.5B-v3.0-Instruct Q4_K_M potrzebuje około 13,7 GB, a GPU tego Maca może użyć 10,7 GB. Decyzje podejmuje model tekstowy z wymuszonym formatem JSON. Oba modele naraz mieszczą się od 24 GB pamięci Maca.',
     );
     expect(recommendation.reason).toContain(recommendation.decisionReason);
   });
 
-  it('plans the switching mode for Bielik-One on an M2 with 16 GB', () => {
-    expect(recommendRuntime(mac(16), 'standard').bielikOnePlan).toMatchObject({
-      mode: 'switching',
-      choice: { engine: 'mlx', package: { id: 'bielik-one-4b-r1-adapter' } },
-    });
+  it('plans text only for Bielik-One on an M2 with 16 GB, no switching', () => {
+    expect(recommendRuntime(mac(16), 'standard').bielikOnePlan).toEqual({ mode: 'text-only' });
   });
 
   it.each<[string, Hardware, InstallProfile, string]>([
@@ -248,7 +245,7 @@ describe('recommendRuntime: Bielik-One', () => {
       'a 16 GB card on Linux',
       withNvidia('linux', nvidia('NVIDIA GeForce RTX 4080', 16376, 580, 8.9)),
       'standard',
-      'switching',
+      'text-only',
     ],
   ])('plans Bielik-One on %s', (_name, hardware, profile, mode) => {
     const recommendation = recommendRuntime(hardware, profile);
