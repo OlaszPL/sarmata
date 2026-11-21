@@ -14,6 +14,7 @@ backend/
   services/       logika, woła repositories, jedyne API dla frontend/web
   ai/             klient API zgodnego z OpenAI, prompty, endpoint decyzyjny Bielik-One
   worker/         proces Node: zadania z kolejki pgmq
+  regulations/    oficjalne wersje przepisów: <wersja>/rules.json, strategie, testy (ADR 0006)
 database/         supabase: config.toml, migracje, seed, testy pgTAP, wygenerowane typy
 infra/
   deploy/         kreator TUI (Bun, jeden plik), install.bat, install.sh, compose z profilami, Caddy

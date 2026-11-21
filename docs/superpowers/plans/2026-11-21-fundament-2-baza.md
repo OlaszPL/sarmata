@@ -6,7 +6,7 @@
 
 **Architektura:** workspace `database/` (pakiet `@sarmata/database`) z katalogiem `database/supabase/` dla Supabase CLI. Wszystkie polityki RLS pytają jedną funkcję `access.can(action, resource, office_id)` (ustalenie wątku funkcjonalnego), a ta bierze urząd konta z `access.current_office_id()`. Cała logika dostępu żyje w schemacie `access`. Hook `public.custom_access_token_hook` kopiuje członkostwo do JWT, więc polityki nie robią joinów. Pakiet eksportuje tylko typ `Database`.
 
-**Stack:** Supabase CLI 3.2.0 (z brew lokalnie, `supabase/setup-cli@v3` w CI), Postgres 17, pg_cron, pgmq, pgTAP.
+**Stack:** Supabase CLI 3.2.0 (devDependency `@sarmata/database`, ta sama wersja lokalnie i w CI), Postgres 17, pg_cron, pgmq, pgTAP.
 
 **Kontekst dla wykonawcy:**
 - Decyzje: `docs/adr/0001-office-id-od-poczatku.md`, `docs/adr/0002-uklad-repo-i-runtime.md`, `docs/adr/0004-repozytoria-supabase-js.md`, `docs/architektura.md`. Pojęcia: `GLOSSARY.md` (Urząd, Konto, Pracownik, Członkostwo).
@@ -21,7 +21,7 @@
 |---|---|
 | `database/package.json`, `database/tsconfig.json` | pakiet `@sarmata/database`, skrypty CLI |
 | `database/supabase/config.toml` | konfiguracja lokalnego stacka (porty, hook, wyłączone usługi) |
-| `database/supabase/migrations/20261121120000_extensions.sql` | pg_cron, pgmq, pg_trgm |
+| `database/supabase/migrations/20261121120000_extensions.sql` | pg_cron, pgmq, pg_trgm, supabase_vault |
 | `database/supabase/migrations/20261121120100_offices_memberships_employees.sql` | tabele bazowe |
 | `database/supabase/migrations/20261121120200_jwt_and_rls.sql` | hook JWT, schemat `access` (`current_office_id`, `can`), RLS, granty |
 | `database/supabase/seed.sql` | fikcyjny urząd i konta demo |
