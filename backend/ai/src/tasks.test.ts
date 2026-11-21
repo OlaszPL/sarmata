@@ -280,15 +280,12 @@ describe('hr signals', () => {
     },
   });
   const explanation = {
-    signals: [
-      {
-        signal: 'overload',
-        fragments: [
-          { noteId: 'N1', quote: 'zostaje po godzinach' },
-          { noteId: 'N2', quote: 'zostaje po godzinach' },
-        ],
-      },
-    ],
+    evidence: {
+      overload: [
+        { noteId: 'N1', quote: 'zostaje po godzinach' },
+        { noteId: 'N2', quote: 'zostaje po godzinach' },
+      ],
+    },
     questions: ['Które zadania można przesunąć?', 'Czy leczy Pan depresję?'],
     actions: [
       { framework: 'jd_r', signal: 'overload', text: 'Przegląd priorytetów zadań.' },
@@ -329,8 +326,8 @@ describe('hr signals', () => {
     const schema = schemaOf(fake, 1);
     expect(schema).toContain('"minItems":1');
     expect(schema.match(/"minItems":2/g)).toHaveLength(2);
-    expect(schema).toContain('"prefixItems"');
-    expect(schema).toContain('"const":"overload"');
+    expect(schema).toContain('"evidence"');
+    expect(schema).toContain('"required":["overload"]');
   });
 
   it('asks the text model only about signals above the minimum probability', async () => {
@@ -427,7 +424,7 @@ describe('hr signals', () => {
             engagement_drop: { value: false, confidence: 0.8 },
             burnout_risk: { value: false, confidence: 0.6 },
           },
-          hr_signals: { ...explanation, signals: [] },
+          hr_signals: { ...explanation, evidence: { overload: [] } },
         },
       },
       { decision: null },

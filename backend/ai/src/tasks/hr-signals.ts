@@ -143,18 +143,18 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system, progres
   const outputOf = (raw: unknown): AiOutput<'hr_signals'> => {
     const fields = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
     const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
-    const found = list(fields.signals).flatMap((entry) => {
-      const parsed = z
-        .object({ signal: z.string(), fragments: z.array(fragmentSchema) })
-        .safeParse(entry);
-      return parsed.success ? [parsed.data] : [];
-    });
+    const evidence =
+      typeof fields.evidence === 'object' && fields.evidence !== null
+        ? (fields.evidence as Record<string, unknown>)
+        : {};
     return {
       signals: signals.map((entry) => ({
         ...entry,
-        fragments: found
-          .filter((item) => item.signal === entry.signal)
-          .flatMap((item) => item.fragments)
+        fragments: list(evidence[entry.signal])
+          .flatMap((item) => {
+            const parsed = fragmentSchema.safeParse(item);
+            return parsed.success ? [parsed.data] : [];
+          })
           .flatMap((fragment) => {
             const noteId = notes.toNoteId(fragment.noteId);
             const quote = quoteIn(bodies.get(noteId) ?? '', fragment.quote);
@@ -179,19 +179,20 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system, progres
   const result = await ai.generateObject({
     schemaName: 'hr_signals',
     schema: z.object({
-      // One entry per signal in a fixed order: no duplicates, no missing signal.
-      signals: z.tuple(
-        evidenced.map((name) =>
-          z.object({
-            signal: z.literal(name),
-            fragments: z
+      // An object keyed by signal: every evidenced signal appears exactly once (llama-server does not
+      // accept a tuple schema).
+      evidence: z.object(
+        Object.fromEntries(
+          evidenced.map((name) => [
+            name,
+            z
               .array(
                 z.object({ noteId: oneOf(notes.aliases), quote: z.string().max(MAX_QUOTE_LENGTH) }),
               )
               .min(1)
               .max(MAX_FRAGMENTS),
-          }),
-        ) as unknown as [z.ZodType, ...z.ZodType[]],
+          ]),
+        ),
       ),
       questions: z.array(z.string()).min(MIN_QUESTIONS).max(MAX_QUESTIONS),
       actions: z
