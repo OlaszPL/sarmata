@@ -44,6 +44,23 @@ function inMemoryRepositories(seed: { employees?: Employee[]; official?: Regulat
         Promise.resolve(official.find((document) => document.id === id) ?? null),
       findOfficialRowId: (id) =>
         Promise.resolve(official.some((document) => document.id === id) ? `row-${id}` : null),
+      listInForceCandidates: () =>
+        Promise.resolve(
+          official.map((document) => ({
+            rowId: `row-${document.id}`,
+            code: document.id,
+            isOfficial: true,
+            document,
+          })),
+        ),
+      findByCode: (code) => {
+        const document = official.find((candidate) => candidate.id === code);
+        return Promise.resolve(
+          document === undefined
+            ? null
+            : { rowId: `row-${code}`, code, isOfficial: true, document },
+        );
+      },
     },
     evaluations: {
       create: unavailable,

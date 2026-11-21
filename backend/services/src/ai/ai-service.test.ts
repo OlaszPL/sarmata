@@ -123,6 +123,21 @@ function setup(
     findOfficialById: (id) =>
       Promise.resolve(officialRegulations.find((version) => version.id === id) ?? null),
     findOfficialRowId: () => Promise.resolve(null),
+    listInForceCandidates: () =>
+      Promise.resolve(
+        officialRegulations.map((document) => ({
+          rowId: `row-${document.id}`,
+          code: document.id,
+          isOfficial: true,
+          document,
+        })),
+      ),
+    findByCode: (code) => {
+      const document = officialRegulations.find((version) => version.id === code);
+      return Promise.resolve(
+        document === undefined ? null : { rowId: `row-${code}`, code, isOfficial: true, document },
+      );
+    },
   };
   const service = createAiService({
     runs,

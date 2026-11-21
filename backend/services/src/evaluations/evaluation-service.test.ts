@@ -192,6 +192,12 @@ function setup(
       listOfficial: () => Promise.resolve([reg]),
       findOfficialById: (id) => Promise.resolve(id === reg.id ? reg : null),
       findOfficialRowId: (id) => Promise.resolve(id === reg.id ? 'row-1' : null),
+      listInForceCandidates: () =>
+        Promise.resolve([{ rowId: 'row-1', code: reg.id, isOfficial: true, document: reg }]),
+      findByCode: (code) =>
+        Promise.resolve(
+          code === reg.id ? { rowId: 'row-1', code, isOfficial: true, document: reg } : null,
+        ),
     },
     evaluations: repository,
     archivedEvaluations: {
