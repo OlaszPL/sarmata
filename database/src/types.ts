@@ -567,6 +567,9 @@ isOneToOne: false
               "first_name": string,"id": string,"last_name": string,"org_unit": string,"position_title": string,"score": number
             }[]
                            },
+"grade_granted_since_evaluation":
+{ Args: { "p_evaluation_id": string }; Returns: boolean
+                           },
 "job_queue_archive":
 { Args: { "message_id": number }; Returns: boolean
                            },
