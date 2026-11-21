@@ -285,3 +285,6 @@ secrets/*.env
 
 node_modules/
 
+
+# Working implementation plans, not part of the repo (decisions go to docs/adr)
+docs/superpowers/

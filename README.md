@@ -62,4 +62,4 @@ W ustawieniach projektu sarmata w Termic ustaw skrypt setup na `./scripts/termic
 
 ## Dokumentacja
 
-Architektura: `docs/architektura.md`, decyzje: `docs/adr/`, słownik: `GLOSSARY.md`, wymagania: `docs/wymagania-i-kontekst.md`, plany implementacji: `docs/superpowers/plans/`, znak i logo: `docs/brand/`.
+Architektura: `docs/architektura.md`, decyzje: `docs/adr/`, słownik: `GLOSSARY.md`, wymagania: `docs/wymagania-i-kontekst.md`, znak i logo: `docs/brand/`.
