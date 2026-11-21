@@ -9,8 +9,8 @@ export const PROMPT_VERSIONS = {
   'quality-check': 1,
   'sensitive-data': 1,
   'conversation-prep': 2,
-  'criteria-proposals': 1,
-  'appreciation-moments': 1,
+  'criteria-proposals': 2,
+  'appreciation-moments': 2,
   'hr-signals': 2,
   'procedure-question': 1,
 } as const;

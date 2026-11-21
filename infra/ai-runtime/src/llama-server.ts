@@ -136,7 +136,13 @@ export function llamaServerCommand(config: LlamaServerConfig): {
       '--parallel',
       String(config.parallel),
       '--kv-unified',
-      '--jinja',
+      // The built-in ChatML template, not the Jinja one of the GGUF. Bielik v3 is ChatML, and its
+      // Jinja template breaks forced JSON in b12359: every `response_format` fails with "Failed to
+      // initialize samplers" (the grammar starts with the generation prompt). It also adds a
+      // provider prompt of about 1000 tokens to every call.
+      '--no-jinja',
+      '--chat-template',
+      'chatml',
       '--no-webui',
       '--device',
       config.device,

@@ -75,6 +75,26 @@ describe('generateObject', () => {
     expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
   });
 
+  it('names the token limit when the completion was cut', async () => {
+    const fake = await serve(() => ({
+      status: 200,
+      body: {
+        choices: [
+          { message: { role: 'assistant', content: '{"summary":"Termi' }, finish_reason: 'length' },
+        ],
+      },
+    }));
+    const result = await createAi(config(fake.baseUrl)).generateObject({
+      ...request,
+      maxTokens: 64,
+    });
+    expect(result).toEqual({
+      ok: false,
+      reason: 'invalid_response',
+      message: 'The completion hit the limit of 64 tokens',
+    });
+  });
+
   it.each([
     [503, 'unavailable'],
     [400, 'rejected'],
@@ -149,7 +169,7 @@ describe('generateObject with streaming', () => {
       onProgress: () => undefined,
     });
     expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
-    expect(!result.ok && result.message).toContain('max_tokens');
+    expect(!result.ok && result.message).toContain('hit the limit');
   });
 
   it('fails as unavailable on an error event mid-stream', async () => {

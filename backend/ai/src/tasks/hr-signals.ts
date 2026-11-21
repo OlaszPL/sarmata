@@ -199,6 +199,11 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system, progres
     onProgress: call.onProgress,
     ...withSignal(signal),
   });
+  // Where only Bielik-One runs (a 16 GB Mac holds one model at a time), the signals it decided stay,
+  // without questions and actions. Other failures of the text model fail the run.
+  if (!result.ok && (result.reason === 'disabled' || result.reason === 'unavailable')) {
+    return ok({ signals, questions: [], actions: [] });
+  }
   if (!result.ok && result.reason !== 'invalid_response') return result;
   return ok(outputOf(result.ok ? result.value : call.prefix()));
 };

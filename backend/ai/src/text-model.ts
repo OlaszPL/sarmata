@@ -28,7 +28,14 @@ export interface ObjectRequest<S extends z.ZodType> {
 }
 
 const chatResponseSchema = z.object({
-  choices: z.array(z.object({ message: z.object({ content: z.string().nullable() }) })).min(1),
+  choices: z
+    .array(
+      z.object({
+        message: z.object({ content: z.string().nullable() }),
+        finish_reason: z.string().nullish(),
+      }),
+    )
+    .min(1),
 });
 
 const chatChunkSchema = z.object({
@@ -48,6 +55,7 @@ export async function generateObject<S extends z.ZodType>(
   timeoutMs: number,
   request: ObjectRequest<S>,
 ): Promise<AiResult<z.output<S>>> {
+  const maxTokens = request.maxTokens ?? 2048;
   const body = {
     model: endpoint.model,
     messages: [
@@ -62,7 +70,7 @@ export async function generateObject<S extends z.ZodType>(
         schema: z.toJSONSchema(request.schema),
       },
     },
-    max_tokens: request.maxTokens ?? 2048,
+    max_tokens: maxTokens,
     temperature: 0,
   };
   const completion = request.onProgress
@@ -78,7 +86,7 @@ export async function generateObject<S extends z.ZodType>(
     return failure(
       'invalid_response',
       finishReason === 'length'
-        ? 'The completion stopped at max_tokens before the JSON was complete'
+        ? `The completion hit the limit of ${maxTokens} tokens`
         : 'The completion is not JSON',
     );
   }
@@ -104,7 +112,10 @@ async function completeOnce(
   if (!chat.success) return failure('invalid_response', 'Unexpected chat completion shape');
   return {
     ok: true,
-    value: { content: chat.data.choices[0]?.message.content ?? null, finishReason: null },
+    value: {
+      content: chat.data.choices[0]?.message.content ?? null,
+      finishReason: chat.data.choices[0]?.finish_reason ?? null,
+    },
   };
 }
 
