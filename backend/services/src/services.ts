@@ -47,7 +47,11 @@ import {
   createRegulationEditorService,
   todayUtc,
 } from './regulations/regulation-editor-service';
-import { officialCases } from '@sarmata/regulations';
+import { officialCases, trainingCatalog } from '@sarmata/regulations';
+import {
+  type DevelopmentService,
+  createDevelopmentService,
+} from './development/development-service';
 
 export interface ServiceDependencies {
   readonly repositories: Repositories;
@@ -160,6 +164,7 @@ export type AppServices = Services & {
   readonly statistics: StatisticsService;
   readonly ai: AiService;
   readonly regulationEditor: RegulationEditorService;
+  readonly development: DevelopmentService;
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
@@ -201,6 +206,12 @@ export const servicesFor = (db: Db): AppServices => {
       versions: repositories.regulationVersions,
       drafts: createRegulationDraftRepository(db),
       officialCases,
+      today: todayUtc,
+    }),
+    development: createDevelopmentService({
+      evaluations: services.evaluations,
+      regulations: repositories.regulationVersions,
+      catalog: trainingCatalog,
       today: todayUtc,
     }),
   };

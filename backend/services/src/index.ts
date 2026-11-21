@@ -15,6 +15,11 @@ export {
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
 export {
+  type DevelopmentService,
+  type DevelopmentServiceDependencies,
+  createDevelopmentService,
+} from './development/development-service';
+export {
   type PublishInput,
   type RegulationCheck,
   type RegulationEditorDependencies,
