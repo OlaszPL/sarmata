@@ -32,6 +32,24 @@ export {
   createOfficeSettingsService,
 } from './office-settings/office-settings-service';
 export { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
+export {
+  type StatisticsService,
+  type StatisticsServiceDependencies,
+  createStatisticsService,
+} from './statistics/statistics-service';
+export { dscOckCsv } from './statistics/dsc-ock-csv';
+export type {
+  DevelopmentNeed,
+  DscOckAnswer,
+  EvaluatorFlag,
+  EvaluatorReport,
+  EvaluatorSummary,
+  LevelShare,
+  OfficeReport,
+  ScheduleItem,
+  ScheduleReport,
+  UnitDistribution,
+} from './statistics/reports';
 export type { GradeGrant, Note, NoteVersion, OfficeSettings } from '@sarmata/repositories';
 export type {
   NewNoteInput,

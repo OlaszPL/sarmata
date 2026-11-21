@@ -49,3 +49,15 @@ export {
   type OfficeSettingsRepository,
   createOfficeSettingsRepository,
 } from './office-settings';
+export {
+  type CriterionRatingRow,
+  type DistributionRow,
+  type DscOckCounts,
+  type EvaluatorRow,
+  type OfficeFigures,
+  type ResultSource,
+  type SavedResult,
+  type ScheduleRow,
+  type StatisticsRepository,
+  createStatisticsRepository,
+} from './statistics';
