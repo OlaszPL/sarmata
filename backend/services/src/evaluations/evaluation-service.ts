@@ -187,11 +187,11 @@ export function createEvaluationService(
     return { positionTitle, orgUnit };
   }
 
-  async function signalsOf(
+  async function signalsAndOwnership(
     detail: EvaluationDetail,
     regulation: RegulationDocument,
     score: SheetScore,
-  ): Promise<EvaluationView['signals']> {
+  ): Promise<{ signals: EvaluationView['signals']; latest: boolean }> {
     const history: HistoryEntry[] = await repositories.evaluations.history(detail.employeeId);
     const drafted = eventDate(detail, ['sheet_approved']);
     const acquaintedOn = eventDate(detail, ['acquainted', 'signature_refused']);
@@ -201,14 +201,32 @@ export function createEvaluationService(
     if (inForce && drafted !== null && acquaintedOn !== null) {
       history.push({ drafted, levelCode: score.levelCode, outcome: score.outcome, acquaintedOn });
     }
+    const counted = inForce || detail.status === 'closed';
+    const last = [...history].sort((a, b) => a.drafted.localeCompare(b.drafted)).at(-1);
+    const latest =
+      counted &&
+      last?.drafted === drafted &&
+      last.acquaintedOn !== null &&
+      last.acquaintedOn === acquaintedOn;
     return {
-      gradeByLaw: gradeByLawDue(regulation, {
-        serviceStatus: detail.snapshot.serviceStatus,
-        gradeGrantedOn: detail.snapshot.gradeGrantedOn,
-        history,
-      }),
-      secondConsecutiveNegative: secondConsecutiveNegative(history),
+      signals: {
+        gradeByLaw: gradeByLawDue(regulation, {
+          serviceStatus: detail.snapshot.serviceStatus,
+          gradeGrantedOn: detail.snapshot.gradeGrantedOn,
+          history,
+        }),
+        secondConsecutiveNegative: secondConsecutiveNegative(history),
+      },
+      latest,
     };
+  }
+
+  async function signalsOf(
+    detail: EvaluationDetail,
+    regulation: RegulationDocument,
+    score: SheetScore,
+  ): Promise<EvaluationView['signals']> {
+    return (await signalsAndOwnership(detail, regulation, score)).signals;
   }
 
   async function objectionAddresseeOf(
@@ -238,10 +256,12 @@ export function createEvaluationService(
     const detail = await load(id);
     const regulation = await regulationOf(detail);
     const { score } = scoreOf(regulation, detail, detail.sheet.content);
-    const signals = await signalsOf(detail, regulation, score);
+    const { signals, latest } = await signalsAndOwnership(detail, regulation, score);
+    // The grade by law slot (an hr task) belongs only to the evaluation whose acquaintance completed
+    // the qualifying run. Other evaluations of the employee show the signal but store no slot.
     await repositories.evaluations.saveDeadlines(id, [
       ...computeEvaluationDeadlines(detail, regulation),
-      ...gradeByLawSlot(signals.gradeByLaw),
+      ...gradeByLawSlot(latest ? signals.gradeByLaw : null),
     ]);
     return view(await load(id));
   }

@@ -30,4 +30,12 @@ describe('createNotificationService', () => {
     expect(repository.markRead).toHaveBeenNthCalledWith(1, [id]);
     expect(repository.markRead).toHaveBeenNthCalledWith(2, 'all');
   });
+
+  it('inbox passes the limit through and rejects a bad one', async () => {
+    const repository = fakeRepository();
+    const service = createNotificationService(repository);
+    await service.inbox({ unreadOnly: true, limit: 5 });
+    expect(repository.list).toHaveBeenCalledWith({ unreadOnly: true, limit: 5 });
+    await expect(service.inbox({ limit: 0 })).rejects.toBeInstanceOf(ZodError);
+  });
 });

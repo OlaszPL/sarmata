@@ -726,7 +726,7 @@ describe('staffing situations and objection flow', () => {
     expect(started.signals.secondConsecutiveNegative).toBe(false);
   });
 
-  it('grade by law due stores gradeByLawGrant slot', async () => {
+  it('a new evaluation shows the grade by law signal but stores no slot', async () => {
     const qualifying = reg.gradeByLaw.qualifyingLevels[0] ?? 'x';
     const history: HistoryEntry[] = Array.from(
       { length: reg.gradeByLaw.consecutiveEvaluations },
@@ -743,10 +743,45 @@ describe('staffing situations and objection flow', () => {
       history,
     );
     const started = await services.evaluations.start({ employeeId: 'emp1', today });
-    const dueOn = started.signals.gradeByLaw?.dueOn;
-    const stored = store.get(started.id)?.deadlines.find((d) => d.slot === 'gradeByLawGrant');
+    expect(started.signals.gradeByLaw).not.toBeNull();
+    const slots = store.get(started.id)?.deadlines.map((d) => d.slot) ?? [];
+    expect(slots).not.toContain('gradeByLawGrant');
+  });
+
+  it('the evaluation whose acquaintance completes the run stores the gradeByLawGrant slot', async () => {
+    const qualifying = reg.gradeByLaw.qualifyingLevels[0] ?? 'x';
+    const history: HistoryEntry[] = Array.from(
+      { length: reg.gradeByLaw.consecutiveEvaluations - 1 },
+      (_, index) => ({
+        drafted: date(`${String(2020 + index)}-03-01`),
+        levelCode: qualifying,
+        outcome: 'positive' as const,
+        acquaintedOn: date(`${String(2020 + index)}-03-10`),
+      }),
+    );
+    const { services, store } = setup(
+      [employee({ serviceStatus: 'civil_servant', gradeGrantedOn: date('2018-01-01') })],
+      [],
+      history,
+    );
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const id = started.id;
+    const run = (command: Parameters<typeof services.evaluations.transition>[1]) =>
+      services.evaluations.transition(id, command);
+    await run({ type: 'approve_part_one', startingInterviewOn: date('2024-09-20') });
+    await run({ type: 'record_part_one_signature', signedOn: date('2024-09-21') });
+    await run({ type: 'record_evaluation_interview', heldOn: date('2026-05-20') });
+    await services.evaluations.saveDraft(id, completeContent(started.sheetId, points(qualifying)));
+    await run({ type: 'approve_sheet', draftedOn: date('2026-05-25') });
+    expect(store.get(id)?.deadlines.map((d) => d.slot)).not.toContain('gradeByLawGrant');
+    const delivered = await run({
+      type: 'record_acquaintance',
+      acquaintedOn: date('2026-06-15'),
+      signatureRefused: false,
+    });
+    const dueOn = delivered.signals.gradeByLaw?.dueOn;
     expect(dueOn).toBeDefined();
-    expect(stored).toEqual({
+    expect(store.get(id)?.deadlines.find((d) => d.slot === 'gradeByLawGrant')).toEqual({
       slot: 'gradeByLawGrant',
       windowStart: null,
       dueOn,

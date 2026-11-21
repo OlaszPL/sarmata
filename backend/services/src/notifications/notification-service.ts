@@ -2,11 +2,12 @@ import { type InboxItem, type NotificationRepository } from '@sarmata/repositori
 import { z } from 'zod';
 
 const idsSchema = z.array(z.uuid()).min(1).max(100);
+const limitSchema = z.number().int().min(1).max(200);
 
 /** The inbox of the signed-in account. */
 export interface NotificationService {
-  /** Open unread first, then by deadline, resolved tasks last. */
-  inbox(options?: { readonly unreadOnly?: boolean }): Promise<InboxItem[]>;
+  /** Open unread first, then by deadline, resolved tasks last. `limit` caps the list (1 to 200). */
+  inbox(options?: { readonly unreadOnly?: boolean; readonly limit?: number }): Promise<InboxItem[]>;
   /** Open and unread only. */
   unreadCount(): Promise<number>;
   /** Throws `ZodError` for ids that are not UUIDs. `'all'` marks the whole inbox. */
@@ -21,7 +22,13 @@ export function createNotificationService(
   notifications: NotificationRepository,
 ): NotificationService {
   return {
-    inbox: (options) => notifications.list(options),
+    async inbox(options = {}) {
+      const items = await notifications.list({
+        ...(options.unreadOnly === undefined ? {} : { unreadOnly: options.unreadOnly }),
+        ...(options.limit === undefined ? {} : { limit: limitSchema.parse(options.limit) }),
+      });
+      return items;
+    },
     unreadCount: () => notifications.unreadCount(),
     async markRead(target) {
       await notifications.markRead(target === 'all' ? 'all' : idsSchema.parse(target));
