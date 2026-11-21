@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/unbound-method -- the vi.fn mocks are asserted through the repository object */
-import { type Note, type NoteRepository, type NoteVersion } from '@sarmata/repositories';
+import {
+  type Note,
+  type NoteRepository,
+  type NoteVersion,
+  RepositoryError,
+} from '@sarmata/repositories';
 import { calendarDate } from '@sarmata/domain';
 import { describe, expect, it, vi } from 'vitest';
 import { ServiceError } from '../errors';
@@ -27,6 +32,7 @@ function fakeRepository(overrides: Partial<NoteRepository> = {}): NoteRepository
   return {
     create: vi.fn(() => Promise.resolve(stored)),
     update: vi.fn(() => Promise.resolve(stored)),
+    get: vi.fn(() => Promise.resolve(stored)),
     listForEmployee: vi.fn(() => Promise.resolve([stored])),
     versions: vi.fn(() => Promise.resolve([] as NoteVersion[])),
     ...overrides,
@@ -94,6 +100,31 @@ describe('note service', () => {
       createNoteService(repository).update('n1', { communicated: true }),
     );
     expect(error.code).toBe('forbidden');
+  });
+
+  it('create denied by RLS fails forbidden', async () => {
+    const repository = fakeRepository({
+      create: vi.fn(() =>
+        Promise.reject(new RepositoryError('notes.create', { message: 'denied', code: '42501' })),
+      ),
+    });
+    const error = await failureOf(
+      createNoteService(repository).create({ ...input, body: 'Terminowy raport' }),
+    );
+    expect(error.code).toBe('forbidden');
+  });
+
+  it('empty patch returns the current note without an update', async () => {
+    const repository = fakeRepository();
+    const note = await createNoteService(repository).update('n1', {});
+    expect(note).toBe(stored);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it('empty patch of an invisible note fails not_found', async () => {
+    const repository = fakeRepository({ get: vi.fn(() => Promise.resolve(null)) });
+    const error = await failureOf(createNoteService(repository).update('n1', {}));
+    expect(error.code).toBe('not_found');
   });
 
   it('history of invisible note fails not_found', async () => {

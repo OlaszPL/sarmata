@@ -77,6 +77,13 @@ describe('office settings service', () => {
     expect(error).toMatchObject({ code: 'forbidden' });
   });
 
+  it('setSmtpPassword rejects an empty password before the repository', async () => {
+    const setSmtpPassword = vi.fn(() => Promise.resolve());
+    const service = createOfficeSettingsService(fakeRepository({ setSmtpPassword }));
+    await expect(service.setSmtpPassword('')).rejects.toBeInstanceOf(ZodError);
+    expect(setSmtpPassword).not.toHaveBeenCalled();
+  });
+
   it('setSmtpPassword rethrows other failures', async () => {
     const failure = new RepositoryError('officeSettings.setSmtpPassword', {
       message: 'boom',

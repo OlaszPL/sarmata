@@ -37,6 +37,8 @@ export interface NoteRepository {
   create(input: NewNoteInput): Promise<Note>;
   /** `null` when access rules do not allow the change (only the author edits). */
   update(id: string, patch: NotePatch): Promise<Note | null>;
+  /** `null` for a note that does not exist or is not visible. */
+  get(id: string): Promise<Note | null>;
   /** Newest occurrence first, then newest entry first. */
   listForEmployee(employeeId: string): Promise<Note[]>;
   /** Earlier versions and the current one, oldest first. Empty for a note that is not visible. */
@@ -133,6 +135,12 @@ export function createNoteRepository(db: Db): NoteRepository {
         .select(COLUMNS)
         .maybeSingle();
       if (error) throw new RepositoryError('notes.update', error);
+      return data === null ? null : toNote(data);
+    },
+
+    async get(id) {
+      const { data, error } = await db.from('notes').select(COLUMNS).eq('id', id).maybeSingle();
+      if (error) throw new RepositoryError('notes.get', error);
       return data === null ? null : toNote(data);
     },
 

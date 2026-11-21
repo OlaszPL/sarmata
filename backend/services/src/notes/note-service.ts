@@ -5,7 +5,12 @@ import {
   notePatchSchema,
   sensitiveDataWarnings,
 } from '@sarmata/domain';
-import { type Note, type NoteRepository, type NoteVersion } from '@sarmata/repositories';
+import {
+  type Note,
+  type NoteRepository,
+  type NoteVersion,
+  RepositoryError,
+} from '@sarmata/repositories';
 import { ServiceError } from '../errors';
 
 export interface NoteWriteOptions {
@@ -40,11 +45,23 @@ export function createNoteService(notes: NoteRepository): NoteService {
     async create(input, options) {
       const note = newNoteSchema.parse(input);
       guardSensitiveData(note.body, options);
-      return notes.create(note);
+      try {
+        return await notes.create(note);
+      } catch (error) {
+        if (error instanceof RepositoryError && error.code === '42501') {
+          throw new ServiceError('forbidden', 'This account cannot add notes');
+        }
+        throw error;
+      }
     },
 
     async update(id, patch, options) {
       const parsed = notePatchSchema.parse(patch);
+      if (Object.keys(parsed).length === 0) {
+        const current = await notes.get(id);
+        if (current === null) throw new ServiceError('not_found', `Note ${id} not found`);
+        return current;
+      }
       if (parsed.body !== undefined) guardSensitiveData(parsed.body, options);
       const updated = await notes.update(id, parsed);
       if (updated === null) {

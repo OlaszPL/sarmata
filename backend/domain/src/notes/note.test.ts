@@ -31,7 +31,24 @@ describe('newNoteSchema', () => {
   });
 });
 
+describe('workload fact sign', () => {
+  it('rejects a workload fact with a sign', () => {
+    expect(newNoteSchema.safeParse({ ...valid, kind: 'workload_fact', sign: 'plus' }).success).toBe(
+      false,
+    );
+    expect(notePatchSchema.safeParse({ kind: 'workload_fact', sign: 'minus' }).success).toBe(false);
+  });
+});
+
 describe('notePatchSchema', () => {
+  it('patch clears criterion', () => {
+    expect(notePatchSchema.parse({ criterionId: null })).toEqual({ criterionId: null });
+  });
+
+  it('empty patch stays empty', () => {
+    expect(notePatchSchema.parse({})).toEqual({});
+  });
+
   it('patch accepts single field', () => {
     expect(notePatchSchema.parse({ communicated: true })).toEqual({ communicated: true });
   });

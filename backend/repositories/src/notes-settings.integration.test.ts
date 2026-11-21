@@ -74,6 +74,23 @@ describe('notes', () => {
     ]);
   });
 
+  it('edit clears the criterion with null', async () => {
+    const evaluator = await signedIn('oceniajacy@kropka.test');
+    const notes = createNoteRepository(evaluator);
+    const marek = await employeeId(evaluator, 'Merytoryczny');
+    const note = await notes.create({
+      employeeId: marek,
+      kind: 'observation',
+      occurredOn: SIGNAL,
+      criterionId: 'terminowosc',
+      sign: 'plus',
+      communicated: false,
+      body: 'Test: kryterium do usuniecia',
+    });
+    expect(note.criterionId).toBe('terminowosc');
+    expect(await notes.update(note.id, { criterionId: null })).toMatchObject({ criterionId: null });
+  });
+
   it('hr update of evaluator note returns null', async () => {
     const evaluator = await signedIn('oceniajacy@kropka.test');
     const marek = await employeeId(evaluator, 'Merytoryczny');

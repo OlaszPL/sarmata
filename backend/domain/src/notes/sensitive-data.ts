@@ -13,7 +13,7 @@ const SENSITIVE_PATTERNS: readonly { category: SensitiveCategory; pattern: RegEx
   {
     category: 'health',
     pattern:
-      /(?<!\p{L})(zwolnie|chor[oaeyąę]|choruj|l4(?!\p{L})|szpital|operacj|zdrowi|leczeni|leczy|rehabilitacj|kuracj|ciąż|macierzyńsk)\p{L}*/iu,
+      /(?<!\p{L})(zwolnie\p{L}*\s+lekarsk|operacj\p{L}*\s+chirurg|chor[oaeyąę]|choruj|l4(?!\p{L})|szpital|zdrowi|leczeni|leczy|rehabilitacj|kuracj|ciąż|macierzyńsk)\p{L}*/iu,
   },
   {
     category: 'diagnosis',
