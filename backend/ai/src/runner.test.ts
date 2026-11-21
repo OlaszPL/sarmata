@@ -1,4 +1,9 @@
-import { type AiInput, type AiRunKind, aiRunKindSchema } from '@sarmata/domain';
+import {
+  type AiInput,
+  type AiRunKind,
+  NOTE_BODY_MAX_LENGTH,
+  aiRunKindSchema,
+} from '@sarmata/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type AiConfig } from './config';
 import {
@@ -439,6 +444,33 @@ describe('sensitive data', () => {
       warnings: keywordWarnings,
       rewrite: 'Pani Ewa 14.11.2026 oddała raport.',
     });
+  });
+
+  it('sensitive data keeps a rewrite that opens with a lowercase word of the note', async () => {
+    const text = 'Po operacji kolana pan Jan 03.11.2026 przygotował raport.';
+    const keywordWarnings = [{ category: 'health' as const, fragment: 'operacji' }];
+    const { runner } = await runnerWith({
+      objects: {
+        sensitive_data: { warnings: [], rewrite: 'Pan Jan 03.11.2026 przygotował raport.' },
+      },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', { text, keywordWarnings });
+    expect(output).toEqual({
+      warnings: keywordWarnings,
+      rewrite: 'Pan Jan 03.11.2026 przygotował raport.',
+    });
+  });
+
+  it('sensitive data drops a rewrite longer than the note limit', async () => {
+    const keywordWarnings = [{ category: 'health' as const, fragment: 'zwolnieniu lekarskim' }];
+    const { runner } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'a'.repeat(NOTE_BODY_MAX_LENGTH + 1) } },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings,
+    });
+    expect(output).toEqual({ warnings: keywordWarnings, rewrite: null });
   });
 
   it('sensitive data has no rewrite without warnings', async () => {

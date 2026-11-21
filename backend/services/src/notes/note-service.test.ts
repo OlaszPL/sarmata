@@ -268,10 +268,17 @@ describe('note check', () => {
     });
   });
 
-  it('check result times out a queued run', async () => {
-    const run = sensitiveRun({ status: 'queued' });
+  it('check result maps a run failed as disabled to disabled', async () => {
+    const run = sensitiveRun({ status: 'failed', failure: { reason: 'disabled', message: null } });
+    expect(await serviceWith(run).checkResult('r1')).toEqual({ status: 'disabled' });
+  });
+
+  it.each(['queued', 'running'] as const)('check result times out a %s run', async (status) => {
+    const run = sensitiveRun({ status });
     const late = serviceWith(run, () => new Date('2026-03-01T10:00:46Z'));
     expect(await late.checkResult('r1')).toEqual({ status: 'unavailable', runId: 'r1' });
+    const boundary = serviceWith(run, () => new Date('2026-03-01T10:00:45Z'));
+    expect(await boundary.checkResult('r1')).toEqual({ status: 'pending', runId: 'r1' });
     const early = serviceWith(run, () => new Date('2026-03-01T10:00:30Z'));
     expect(await early.checkResult('r1')).toEqual({ status: 'pending', runId: 'r1' });
   });

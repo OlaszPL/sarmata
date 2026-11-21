@@ -1,4 +1,6 @@
 import {
+  NOTE_BODY_MAX_LENGTH,
+  NOTE_CHECK_TIMEOUT_MS,
   type NewNoteInput,
   type NotePatch,
   newNoteSchema,
@@ -7,12 +9,12 @@ import {
   sensitiveDataWarnings,
 } from '@sarmata/domain';
 import {
+  type AiRun,
   type Note,
   type NoteRepository,
   type NoteVersion,
   RepositoryError,
 } from '@sarmata/repositories';
-import { type AiRun } from '@sarmata/repositories';
 import { z } from 'zod';
 import { ServiceError } from '../errors';
 import { type AiService } from '../ai/ai-service';
@@ -22,8 +24,7 @@ export interface NoteWriteOptions {
   readonly acceptWarnings?: boolean;
 }
 
-/** A queued or running check older than this counts as unavailable, the user can save without it. */
-export const NOTE_CHECK_TIMEOUT_MS = 45_000;
+export { NOTE_CHECK_TIMEOUT_MS };
 
 export interface NoteCheckInput {
   readonly employeeId: string;
@@ -38,7 +39,11 @@ export type NoteCheckAi =
       readonly runId: string;
       /** Dictionary (keyword) and model warnings merged: the AI task adds `input.keywordWarnings` first. */
       readonly warnings: readonly SensitiveDataWarning[];
-      /** The whole note without sensitive data, null when nothing to rewrite. Fragment `rewrite`. */
+      /**
+       * The whole note without sensitive data, fragment `rewrite`. Null when there are no warnings or
+       * the proposal was dropped as unsafe, then the author rewrites by hand. Deciding the fragment
+       * does not change the note, the frontend puts the text into `body` and saves.
+       */
       readonly rewrite: string | null;
     }
   | { readonly status: 'unavailable'; readonly runId: string };
@@ -58,7 +63,7 @@ export interface NoteServiceDependencies {
 
 const checkInputSchema = z.strictObject({
   employeeId: z.uuid(),
-  body: z.string().trim().min(1).max(5000),
+  body: z.string().trim().min(1).max(NOTE_BODY_MAX_LENGTH),
 });
 
 export interface NoteService {
@@ -74,7 +79,11 @@ export interface NoteService {
    * invalid input. The user decides about the `rewrite` fragment through `services.ai.decide`.
    */
   check(input: NoteCheckInput): Promise<NoteCheck>;
-  /** Poll about once per second until the status is not `pending`. `not_found` for an unknown run or another kind. */
+  /**
+   * Poll about once per second until the status is not `pending`. `not_found` for an unknown run or
+   * another kind. `unavailable` is final for the UI: stop polling and ignore later results (a timed
+   * out run may still finish, and the age compares the server clock with the database `requested_at`).
+   */
   checkResult(runId: string): Promise<NoteCheckAi>;
 }
 
@@ -99,7 +108,11 @@ export function createNoteService(deps: NoteServiceDependencies): NoteService {
     if (run.kind !== 'sensitive_data') {
       throw new ServiceError('not_found', `Check ${runId} not found`);
     }
-    if (run.status === 'failed') return { status: 'unavailable', runId };
+    if (run.status === 'failed') {
+      return run.failure?.reason === 'disabled'
+        ? { status: 'disabled' }
+        : { status: 'unavailable', runId };
+    }
     if (run.status === 'done') {
       if (run.output === null) return { status: 'unavailable', runId };
       return {

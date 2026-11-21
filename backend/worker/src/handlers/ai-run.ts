@@ -1,4 +1,5 @@
 import { type AiRunner, aiRunnerFromEnv } from '@sarmata/ai';
+import { NOTE_CHECK_TIMEOUT_MS } from '@sarmata/domain';
 import {
   type AiRunQueueStore,
   createAiRunQueueStore,
@@ -14,6 +15,8 @@ export interface AiRunHandlerDeps {
   readonly runner: AiRunner;
   /** Minimum time between two progress writes of a run. Default `PROGRESS_INTERVAL_MS`. */
   readonly progressIntervalMs?: number;
+  /** Clock for the expiry of note checks, `() => new Date()` by default. */
+  readonly now?: () => Date;
 }
 
 /**
@@ -37,7 +40,7 @@ export function createAiRunHandler(deps: () => AiRunHandlerDeps) {
     type: 'ai.run',
     payload: z.object({ runId: z.uuid() }),
     async handle({ runId }, { signal, logger }) {
-      const { store, runner, progressIntervalMs } = deps();
+      const { store, runner, progressIntervalMs, now } = deps();
       const run = await store.claim(runId, STALE_AFTER_MS);
       if (run === null) {
         // Another worker runs it now, or a dead one left it running: throw, so the job comes back and
@@ -53,6 +56,18 @@ export function createAiRunHandler(deps: () => AiRunHandlerDeps) {
           failure: { reason: 'disabled', message: 'AI is switched off in the office settings' },
         });
         logger.info('ai run failed', { runId, kind: run.kind, reason: 'disabled' });
+        return;
+      }
+      // A note check the UI already gave up on (see `NOTE_CHECK_TIMEOUT_MS`) is not worth a model call.
+      if (
+        run.kind === 'sensitive_data' &&
+        (now?.() ?? new Date()).getTime() - new Date(run.requestedAt).getTime() >
+          NOTE_CHECK_TIMEOUT_MS
+      ) {
+        await store.finish(runId, {
+          failure: { reason: 'expired', message: 'The note check waited too long in the queue' },
+        });
+        logger.info('ai run failed', { runId, kind: run.kind, reason: 'expired' });
         return;
       }
       const progress = createProgressWriter(store, runId, logger, progressIntervalMs);
