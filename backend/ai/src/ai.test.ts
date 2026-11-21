@@ -1,0 +1,227 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { z } from 'zod';
+import { type FakeReply, type FakeServer, startFakeServer } from './fake-server';
+import { type AiConfig, aiConfigFromEnv, createAi } from './index';
+
+let server: FakeServer | undefined;
+
+afterEach(async () => {
+  await server?.close();
+  server = undefined;
+});
+
+async function serve(reply: () => FakeReply): Promise<FakeServer> {
+  server = await startFakeServer(reply);
+  return server;
+}
+
+const config = (baseUrl: string, overrides: Partial<AiConfig> = {}): AiConfig => ({
+  enabled: true,
+  timeoutMs: 2_000,
+  text: { baseUrl, model: 'bielik-test', apiKey: 'secret' },
+  decision: { baseUrl, model: 'decision', apiKey: null },
+  ...overrides,
+});
+
+const draftSchema = z.object({ summary: z.string(), level: z.enum(['meets', 'above']) });
+
+const completion = (content: string): FakeReply => ({
+  status: 200,
+  body: { choices: [{ message: { role: 'assistant', content } }] },
+});
+
+const request = {
+  schemaName: 'evaluation_draft',
+  schema: draftSchema,
+  system: 'Jesteś asystentem oceniającego.',
+  prompt: 'Przygotuj szkic.',
+};
+
+describe('generateObject', () => {
+  it('sends a chat completion with the JSON schema and returns the validated object', async () => {
+    const fake = await serve(() => completion('{"summary":"Terminowo.","level":"above"}'));
+    const result = await createAi(config(fake.baseUrl)).generateObject(request);
+    expect(result).toEqual({ ok: true, value: { summary: 'Terminowo.', level: 'above' } });
+    const sent = fake.requests[0];
+    expect(sent?.url).toBe('/v1/chat/completions');
+    expect(sent?.headers.authorization).toBe('Bearer secret');
+    expect(sent?.body).toMatchObject({
+      model: 'bielik-test',
+      messages: [
+        { role: 'system', content: request.system },
+        { role: 'user', content: request.prompt },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'evaluation_draft',
+          strict: true,
+          schema: z.toJSONSchema(draftSchema),
+        },
+      },
+    });
+  });
+
+  it('rejects output that does not match the schema', async () => {
+    const fake = await serve(() => completion('{"summary":"Terminowo.","level":"heroic"}'));
+    const result = await createAi(config(fake.baseUrl)).generateObject(request);
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
+  });
+
+  it('rejects output that is not JSON', async () => {
+    const fake = await serve(() => completion('Oto szkic oceny.'));
+    const result = await createAi(config(fake.baseUrl)).generateObject(request);
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
+  });
+
+  it.each([
+    [503, 'unavailable'],
+    [400, 'rejected'],
+  ])('maps HTTP %i to %s', async (status, reason) => {
+    const fake = await serve(() => ({ status, body: { error: 'nope' } }));
+    const result = await createAi(config(fake.baseUrl)).generateObject(request);
+    expect(result).toMatchObject({ ok: false, reason });
+  });
+
+  it('gives up after the timeout', async () => {
+    const fake = await serve(() => ({ ...completion('{}'), delayMs: 500 }));
+    const result = await createAi(config(fake.baseUrl, { timeoutMs: 50 })).generateObject(request);
+    expect(result).toMatchObject({ ok: false, reason: 'timeout' });
+  });
+
+  it('does not call the model when AI is disabled', async () => {
+    const fake = await serve(() => completion('{}'));
+    const ai = createAi(config(fake.baseUrl, { enabled: false }));
+    expect(ai.available).toEqual({ text: false, decision: false });
+    expect(await ai.generateObject(request)).toMatchObject({ ok: false, reason: 'disabled' });
+    expect(fake.requests).toHaveLength(0);
+  });
+});
+
+describe('decide (Bielik-One /v1/systemone)', () => {
+  const questions = {
+    overload: {
+      type: 'noul',
+      instructions: 'Czy notatki wskazują na przeciążenie pracą?',
+      criteria: { true: 'Tak', false: 'Nie' },
+    },
+    tone: {
+      type: 'choice',
+      instructions: 'Jaki jest wydźwięk notatek?',
+      criteria: { positive: 'Pozytywny', neutral: 'Neutralny', negative: 'Negatywny' },
+    },
+    engagement: {
+      type: 'score',
+      instructions: 'Jak oceniasz zaangażowanie?',
+      criteria: ['niskie', 'średnie', 'wysokie'],
+    },
+    signals: {
+      type: 'labels',
+      instructions: 'Które sygnały występują?',
+      criteria: { overtime: 'Nadgodziny', conflict: 'Konflikt' },
+    },
+  } as const;
+
+  const answers = {
+    overload: {
+      type: 'noul',
+      noul: 0.82,
+      probabilities: { true: 0.82, false: 0.18 },
+      confidence: 0.64,
+    },
+    tone: {
+      type: 'choice',
+      choice: 'neutral',
+      probabilities: { positive: 0.2, neutral: 0.7, negative: 0.1 },
+      confidence: 0.55,
+    },
+    engagement: {
+      type: 'score',
+      score: 1.4,
+      legend: { '0': 'niskie', '1': 'średnie', '2': 'wysokie' },
+      probabilities: { '0': 0.1, '1': 0.4, '2': 0.5 },
+      confidence: 0.3,
+    },
+    signals: {
+      type: 'labels',
+      probabilities: { overtime: 0.9, conflict: 0.2 },
+      selected: ['overtime'],
+      confidence: 0.72,
+    },
+  };
+
+  it('posts typed questions and returns the answers', async () => {
+    const fake = await serve(() => ({
+      status: 200,
+      body: { model: 'decision', answers, usage: { input_tokens: 120, output_tokens: 4 } },
+    }));
+    const state = 'Notatki: 12.10 nadgodziny, 20.10 nadgodziny, 3.11 odwołane szkolenie.';
+    const result = await createAi(config(fake.baseUrl)).decide({ state, questions, facts: true });
+    expect(result).toEqual({ ok: true, value: answers });
+    expect(fake.requests[0]?.url).toBe('/v1/systemone');
+    expect(fake.requests[0]?.headers.authorization).toBeUndefined();
+    expect(fake.requests[0]?.body).toEqual({ model: 'decision', state, questions, facts: true });
+  });
+
+  it('rejects a response without an answer for every question', async () => {
+    const fake = await serve(() => ({
+      status: 200,
+      body: { model: 'decision', answers: { overload: answers.overload } },
+    }));
+    const result = await createAi(config(fake.baseUrl)).decide({ state: 'x', questions });
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
+  });
+
+  it('reports an invalid request from the server', async () => {
+    const fake = await serve(() => ({
+      status: 422,
+      body: { error: 'questions.tone.criteria must be a map', code: 'INVALID_REQUEST' },
+    }));
+    const result = await createAi(config(fake.baseUrl)).decide({ state: 'x', questions });
+    expect(result).toMatchObject({ ok: false, reason: 'rejected' });
+    if (!result.ok) expect(result.message).toContain('INVALID_REQUEST');
+  });
+
+  it('is disabled when Bielik-One is not configured', async () => {
+    const ai = createAi({ enabled: true, timeoutMs: 1_000, text: null, decision: null });
+    expect(await ai.decide({ state: 'x', questions })).toMatchObject({
+      ok: false,
+      reason: 'disabled',
+    });
+  });
+});
+
+describe('aiConfigFromEnv', () => {
+  it('turns AI off by default', () => {
+    expect(aiConfigFromEnv({})).toEqual({
+      enabled: false,
+      timeoutMs: 60_000,
+      text: null,
+      decision: null,
+    });
+  });
+
+  it('reads endpoints, trims trailing slashes and ignores empty variables', () => {
+    expect(
+      aiConfigFromEnv({
+        SARMATA_AI_ENABLED: 'true',
+        SARMATA_AI_TIMEOUT_MS: '30000',
+        SARMATA_AI_TEXT_BASE_URL: 'http://127.0.0.1:8080/v1/',
+        SARMATA_AI_TEXT_MODEL: 'bielik-11b-v3.1',
+        SARMATA_AI_TEXT_API_KEY: '',
+        SARMATA_AI_DECISION_BASE_URL: 'http://127.0.0.1:8026/v1',
+      }),
+    ).toEqual({
+      enabled: true,
+      timeoutMs: 30_000,
+      text: { baseUrl: 'http://127.0.0.1:8080/v1', model: 'bielik-11b-v3.1', apiKey: null },
+      decision: { baseUrl: 'http://127.0.0.1:8026/v1', model: 'decision', apiKey: null },
+    });
+  });
+
+  it('rejects a malformed URL', () => {
+    expect(() => aiConfigFromEnv({ SARMATA_AI_TEXT_BASE_URL: 'localhost:8080' })).toThrow(
+      /Invalid AI configuration/,
+    );
+  });
+});

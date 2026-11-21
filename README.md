@@ -29,6 +29,8 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm db:start
        pnpm db:reset
 
+   `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno.
+
 6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp v1.0.0 z Metal (17 MB) i Bielik-11B-v3.1 Q4_K_M (6,7 GB) z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai` (wspólne dla wszystkich worktree, logi w `logs/`):
 
        pnpm ai:setup
@@ -44,10 +46,19 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
    `web:env` zapisuje `frontend/web/.env.local` z adresem i kluczem lokalnego Supabase (oraz `AI_BASE_URL`, `AI_MODEL`, `AI_DECISION_URL` z `.env.ai.local`, jeśli istnieje). Przeglądarka Chromium służy testom e2e i skillowi `app-walkthrough`. Aplikacja działa na `http://localhost:3000`.
 
-8. **Sprawdzenie całości** (to samo co CI):
+8. **Worker kolejki zadań** (opcjonalnie, potrzebny dopiero dla zadań w tle):
+
+       pnpm worker:dev
+
+   Najpierw synchronizuje wersje przepisów, potem czyta kolejkę pgmq `jobs`. Ctrl+C kończy go po bieżącym zadaniu. Próba: `docker exec supabase_db_sarmata psql -U postgres -c "select public.job_queue_send('{\"type\":\"system.ping\",\"payload\":{\"note\":\"hi\"}}')"`, w logu pojawi się `pong`.
+
+9. **Sprawdzenie całości** (to samo co CI):
 
        pnpm check
        pnpm db:test
+       pnpm test:integration
+
+   `pnpm test:integration` to testy repozytoriów na działającej bazie, z kontami demo. CI ich nie uruchamia.
 
 Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`.
 
@@ -62,9 +73,13 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm lint`, `pnpm format` | ESLint i Prettier |
 | `pnpm secrets:decrypt` | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
 | `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 |
-| `pnpm db:reset` | migracje od zera i dane demo |
+| `pnpm db:reset` | migracje od zera, dane demo i synchronizacja oficjalnych wersji przepisów |
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
+| `pnpm test:integration` | testy repozytoriów na lokalnym Supabase, wymagają `pnpm db:reset` |
+| `pnpm regulations:sync` | wstawia brakujące oficjalne wersje przepisów, kończy się błędem, gdy wersja w bazie różni się od kodu |
+| `pnpm worker:dev` | worker kolejki pgmq z przeładowaniem po zmianie kodu |
+| `pnpm worker:start` | worker kolejki pgmq bez przeładowania |
 | `pnpm ai:setup` | llama.cpp i model Bielik do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local` |
 | `pnpm ai:env` | `.env.ai.local` dla tego worktree z już pobranego AI, bez pobierania |
 | `pnpm ai:start` / `ai:stop` | wspólny llama-server w tle na porcie 55490 |
@@ -81,6 +96,20 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 
 Font Open Sans jest na licencji SIL Open Font License 1.1.
 
+## Zmienne środowiskowe
+
+Żadna z nich nie jest sekretem zespołu. Lokalne klucze Supabase podaje `supabase status`, więc nie trafiają do `secrets/dev.enc.env`. W instalacji u klienta ustawia je kreator.
+
+| Zmienna | Kto używa | Skąd w dev |
+|---|---|---|
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | testy integracyjne, worker | `scripts/with-supabase-env.sh` czyta je z `supabase status`, chyba że `SUPABASE_URL` jest już ustawione (zewnętrzna instancja) |
+| `SARMATA_AI_ENABLED` | `@sarmata/ai` | domyślnie `false`, AI wyłączone |
+| `SARMATA_AI_TIMEOUT_MS` | `@sarmata/ai` | domyślnie `60000` |
+| `SARMATA_AI_TEXT_BASE_URL`, `SARMATA_AI_TEXT_MODEL` | `@sarmata/ai`, model tekstowy zgodny z OpenAI | np. `http://127.0.0.1:8080/v1` i `bielik` przy lokalnym llama-server, bez nich model tekstowy jest wyłączony |
+| `SARMATA_AI_DECISION_BASE_URL`, `SARMATA_AI_DECISION_MODEL` | `@sarmata/ai`, Bielik-One `/v1/systemone` | np. `http://127.0.0.1:8026/v1` i `decision`, bez nich decyzje są wyłączone |
+| `SARMATA_AI_TEXT_API_KEY`, `SARMATA_AI_DECISION_API_KEY` | `@sarmata/ai` | tylko gdy serwer modelu wymaga klucza. To sekret: dopisz go do `secrets/dev.enc.env` przez `sops secrets/dev.enc.env`, nigdy jawnie do repo |
+| `SARMATA_WORKER_IDLE_DELAY_MS` | worker | domyślnie `1000`, przerwa po pustym odczycie kolejki |
+
 ## Pliki konfiguracyjne
 
 - W repo: `.envrc`, `.sops.yaml`, `secrets/*.enc.env` (zaszyfrowane), `.mcp.json`, `.claude/`, `.agents/`, `.codex/`, `scripts/termic-*.sh`, `database/supabase/config.toml`.
@@ -94,6 +123,8 @@ W ustawieniach projektu sarmata w Termic ustaw:
 - skrypt run: `./scripts/termic-run.sh`
 
 Skrypt run uruchamia `pnpm dev` na porcie wyliczonym z nazwy taska (`$TERMIC_TASK`, zakres 3001 do 3999, poza Termic port 3000) i ustawia `SITE_URL` aplikacji na ten sam adres. Port bieżącego taska pokazuje `node scripts/task-port.mjs`.
+
+Skrypt setup po starcie wspólnej bazy synchronizuje oficjalne wersje przepisów (`pnpm regulations:sync`).
 
 ## Dokumentacja
 

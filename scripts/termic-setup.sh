@@ -17,6 +17,7 @@ pnpm secrets:decrypt
 # Shared Supabase instance "sarmata" for all worktrees (docs/architektura.md, "Narzędzia deweloperskie").
 if docker info >/dev/null 2>&1; then
   (cd database && { pnpm exec supabase status >/dev/null 2>&1 || pnpm exec supabase start; })
+  pnpm regulations:sync
   # Web app env (frontend/web/.env.local) from the running instance.
   pnpm web:env
 else

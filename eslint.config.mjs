@@ -177,5 +177,22 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ['backend/ai/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@supabase/*', '@sarmata/*'],
+              message:
+                'The AI client knows no database and no other layer, services pass it data (ADR 0004).',
+            },
+          ],
+        },
+      ],
+    },
+  },
   prettier,
 ]);
