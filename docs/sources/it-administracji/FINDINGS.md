@@ -180,7 +180,7 @@ Badanie MC i COI 2026 (N=604, w większości gminy, ostrożnie przy uogólnianiu
 
 - Licencja Apache-2.0. Repozytoria na HF mają bramkę „gated: auto” (trzeba zalogować się i zaakceptować warunki udostępnienia danych). [P] `hf-card-speakleash_*.api.json`, `hf-page-bielik-11b-v3.1-instruct`
 - Bielik-11B-v3.1-Instruct (akt. 10.11.2026): 11B, architektura llama, pretrening 500B tokenów, SFT 26M próbek, RL (zmodyfikowany GRPO), nacisk na polski i języki europejskie. Uruchamianie: vLLM (od 0.24, z parserami narzędzi z `speakleash/bielik-tools`), SGLang, Docker Model Runner, Transformers. [P] `hf-page-bielik-11b-v3.1-instruct`
-- Rodzina: 1.5B, 4.5B (v3.0), Minitron-7B, 11B (v2.x, v3.0, v3.1), Bielik-Guard 0.1B i 0.5B (klasyfikator bezpieczeństwa treści), od 11.2026 Bielik-One (warianty z rozumowaniem i wizją). [P] `hf-api-models-speakleash.json`
+- Rodzina: 1.5B, 4.5B (v3.0), Minitron-7B, 11B (v2.x, v3.0, v3.1), Bielik-Guard 0.1B i 0.5B (klasyfikator bezpieczeństwa treści), od 11.2026 Bielik-One (modele decyzyjne w stylu Jev, bez generowania tekstu, szczegóły w `../ai-lokalne/FINDINGS.md`). [P] `hf-api-models-speakleash.json`
 - Bielik 11B v3 rozszerza architekturę Mistral 7B v0.2 do 11B (depth up-scaling). [P] https://arxiv.org/pdf/2601.11579 (`arxiv-2601.11579`, 30.12.2025)
 
 ### 4.3. Jakość po polsku
