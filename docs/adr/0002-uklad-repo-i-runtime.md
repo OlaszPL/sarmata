@@ -13,3 +13,9 @@ Prace w tle (długie zadania AI, seryjne PDF, powiadomienia) planuje `pg_cron`, 
 - **gRPC między mikroserwisami:** jedyny zewnętrzny serwis to model AI, a dla niego standardem jest HTTP zgodne z OpenAI.
 - **Redis i BullMQ:** dodatkowy kontener, a pgmq daje kolejkę w bazie, którą już mamy.
 - **WeasyPrint i Chromium do PDF:** WeasyPrint to dodatkowy runtime w Pythonie, a Chromium waży około 1 GB i nie deklaruje PDF/UA. Typst daje PDF/UA-1 bez nowego procesu, kosztem szablonów w osobnym języku.
+
+## Uzupełnienie 21.11.2026
+
+- Układ `backend/` ma dziś także `exports` (`@sarmata/exports`: PDF/UA z Typst, DOCX, teczka sprawy, paczka EZD, archiwum teczek pracownika) i `regulations` (oficjalne wersje przepisów, ADR 0006). Opis katalogów jest w `docs/architektura.md`.
+- „Seryjne PDF” w pracach w tle nie powstały. Wszystkie dokumenty powstają na żądanie w procesie aplikacji, bez kolejki i bez Storage. Worker wykonuje dziś zadania `notifications.send_digest`, `evaluations.close_unobjected`, `retention.run`, `ai.run` i `system.ping`.
+- Decyzja o Typst jako module natywnym obowiązuje bez zmian (`@myriaddreamin/typst-ts-node-compiler` w `backend/exports`).
