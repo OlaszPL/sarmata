@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Cel:** monorepo pnpm z Turborepo, w którym działają `pnpm check`, haki git, CI, SOPS i skrypt setup dla termic, sprawdzone na pierwszym prawdziwym kawałku domeny (`dodajMiesiace`).
+**Cel:** monorepo pnpm z Turborepo, w którym działają `pnpm check`, haki git, CI, SOPS i skrypt setup dla termic, sprawdzone na pierwszym prawdziwym kawałku domeny (`addMonths`).
 
 **Architektura:** układ katalogów z ADR 0002 (`frontend/`, `backend/`, `database/`, `infra/`, `e2e/`). Konfiguracje wspólne (TS, ESLint, Prettier) leżą w korzeniu. Pakiety wewnętrzne eksportują źródła TS bez builda. Wersje zależności wspólnych trzyma katalog pnpm (`catalog:`).
 
@@ -29,7 +29,7 @@
 | `.sops.yaml`, `secrets/dev.enc.env`, `scripts/secrets-decrypt.sh` | sekrety zespołu |
 | `.github/workflows/ci.yml` | CI na PR i main |
 | `scripts/termic-setup.sh` | setup nowego taska termic |
-| `backend/domain/**` | pierwszy pakiet: `dodajMiesiace` z testami |
+| `backend/domain/**` | pierwszy pakiet: `addMonths` z testami |
 | `README.md` | jak zacząć |
 
 ---
@@ -130,15 +130,15 @@ rtk git commit -m "chore: monorepo root with pnpm workspace and base tsconfig"
 
 ---
 
-### Task 2: Pakiet `@sarmata/domain`: `DataKalendarzowa` i `dodajMiesiace` (TDD)
+### Task 2: Pakiet `@sarmata/domain`: `CalendarDate` i `addMonths` (TDD)
 
 Pierwszy prawdziwy kod domeny. Termin w miesiącach według art. 112 Kc i zasad KPRM (`docs/zasoby-kprm/6. Materiały dodatkowe/liczenie terminów.docx`): kończy się w dniu miesiąca odpowiadającym dniowi początkowemu, a gdy takiego dnia nie ma, w ostatnim dniu miesiąca. Przesunięcie z dni wolnych to plan 3.
 
-Projekt modułu: data bez czasu i strefy to typ `DataKalendarzowa` (string z marką). Tworzy go tylko `dataKalendarzowa(iso)`, który waliduje format i istnienie dnia, więc każda funkcja terminów dostaje już poprawną datę i nie powtarza walidacji. Pakiet eksportuje tylko `index.ts`. Pomocnicze `skladowe` i `zeSkladowych` są wewnętrzne, a testy przechodzą przez interfejs publiczny.
+Projekt modułu: data bez czasu i strefy to typ `CalendarDate` (string z marką). Tworzy go tylko `calendarDate(iso)`, który waliduje format i istnienie dnia, więc każda funkcja terminów dostaje już poprawną datę i nie powtarza walidacji. Pakiet eksportuje tylko `index.ts`. Pomocnicze `toParts` i `fromParts` są wewnętrzne, a testy przechodzą przez interfejs publiczny.
 
 **Files:**
-- Create: `backend/domain/package.json`, `backend/domain/tsconfig.json`, `backend/domain/src/index.ts`, `backend/domain/src/terminy/data-kalendarzowa.ts`, `backend/domain/src/terminy/dodaj-miesiace.ts`
-- Test: `backend/domain/src/terminy/data-kalendarzowa.test.ts`, `backend/domain/src/terminy/dodaj-miesiace.test.ts`
+- Create: `backend/domain/package.json`, `backend/domain/tsconfig.json`, `backend/domain/src/index.ts`, `backend/domain/src/deadlines/calendar-date.ts`, `backend/domain/src/deadlines/add-months.ts`
+- Test: `backend/domain/src/deadlines/calendar-date.test.ts`, `backend/domain/src/deadlines/add-months.test.ts`
 
 - [ ] **Step 1: Utwórz `backend/domain/package.json`**
 
@@ -174,33 +174,33 @@ Projekt modułu: data bez czasu i strefy to typ `DataKalendarzowa` (string z mar
 
 - [ ] **Step 3: Napisz testy przez interfejs publiczny**
 
-`backend/domain/src/terminy/data-kalendarzowa.test.ts`:
+`backend/domain/src/deadlines/calendar-date.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { dataKalendarzowa } from '../index';
+import { calendarDate } from '../index';
 
-describe('dataKalendarzowa', () => {
+describe('calendarDate', () => {
   it('przyjmuje istniejącą datę RRRR-MM-DD', () => {
-    expect(dataKalendarzowa('2024-02-29')).toBe('2024-02-29');
+    expect(calendarDate('2024-02-29')).toBe('2024-02-29');
   });
 
   it.each(['2024-02-30', '2023-02-29', '2024-13-01', '16.03.2024', '2024-3-16'])(
     'odrzuca %s',
     (zla) => {
-      expect(() => dataKalendarzowa(zla)).toThrow(RangeError);
+      expect(() => calendarDate(zla)).toThrow(RangeError);
     },
   );
 });
 ```
 
-`backend/domain/src/terminy/dodaj-miesiace.test.ts`:
+`backend/domain/src/deadlines/add-months.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { dataKalendarzowa, dodajMiesiace } from '../index';
+import { calendarDate, addMonths } from '../index';
 
-describe('dodajMiesiace (art. 112 Kc, zasady liczenia terminów KPRM)', () => {
+describe('addMonths (art. 112 Kc, zasady liczenia terminów KPRM)', () => {
   it.each([
     ['2024-03-16', 24, '2026-03-16'],
     ['2024-01-31', 13, '2025-02-28'],
@@ -209,48 +209,48 @@ describe('dodajMiesiace (art. 112 Kc, zasady liczenia terminów KPRM)', () => {
     ['2025-11-30', 3, '2026-02-28'],
     ['2025-12-15', 1, '2026-01-15'],
   ])('%s + %i mies. = %s', (od, miesiace, oczekiwana) => {
-    expect(dodajMiesiace(dataKalendarzowa(od), miesiace)).toBe(oczekiwana);
+    expect(addMonths(calendarDate(od), miesiace)).toBe(oczekiwana);
   });
 
   it('odrzuca ujemną albo ułamkową liczbę miesięcy', () => {
-    const od = dataKalendarzowa('2024-03-16');
-    expect(() => dodajMiesiace(od, -1)).toThrow(RangeError);
-    expect(() => dodajMiesiace(od, 1.5)).toThrow(RangeError);
+    const od = calendarDate('2024-03-16');
+    expect(() => addMonths(od, -1)).toThrow(RangeError);
+    expect(() => addMonths(od, 1.5)).toThrow(RangeError);
   });
 });
 ```
 
-Przypadki 1 do 3 w `dodajMiesiace` pochodzą wprost z dokumentu KPRM, przypadek 4 z DSC FAQ 10.
+Przypadki 1 do 3 w `addMonths` pochodzą wprost z dokumentu KPRM, przypadek 4 z DSC FAQ 10.
 
 - [ ] **Step 4: Zainstaluj zależności pakietu i uruchom testy**
 
 Run: `rtk pnpm install && rtk pnpm --filter @sarmata/domain test`
 Expected: FAIL, Vitest nie znajduje modułu `../index`.
 
-- [ ] **Step 5: Zaimplementuj `backend/domain/src/terminy/data-kalendarzowa.ts`**
+- [ ] **Step 5: Zaimplementuj `backend/domain/src/deadlines/calendar-date.ts`**
 
 ```ts
 declare const marka: unique symbol;
 
-/** Data bez czasu i strefy w formacie `RRRR-MM-DD`. Tworzy ją tylko `dataKalendarzowa`, więc zawsze istnieje. */
-export type DataKalendarzowa = string & { readonly [marka]: 'DataKalendarzowa' };
+/** Data bez czasu i strefy w formacie `RRRR-MM-DD`. Tworzy ją tylko `calendarDate`, więc zawsze istnieje. */
+export type CalendarDate = string & { readonly [marka]: 'CalendarDate' };
 
 const FORMAT_DATY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 const dwieCyfry = (n: number): string => String(n).padStart(2, '0');
 
-export const ostatniDzienMiesiaca = (rok: number, miesiac: number): number =>
+export const lastDayOfMonth = (rok: number, miesiac: number): number =>
   new Date(Date.UTC(rok, miesiac, 0)).getUTCDate();
 
 /** Waliduje format i istnienie dnia. Rzuca `RangeError` dla złej daty. */
-export function dataKalendarzowa(iso: string): DataKalendarzowa {
+export function calendarDate(iso: string): CalendarDate {
   const dopasowanie = FORMAT_DATY.exec(iso);
   if (!dopasowanie) throw new RangeError(`Niepoprawny format daty: ${iso}`);
-  return zeSkladowych(Number(dopasowanie[1]), Number(dopasowanie[2]), Number(dopasowanie[3]));
+  return fromParts(Number(dopasowanie[1]), Number(dopasowanie[2]), Number(dopasowanie[3]));
 }
 
 /** Wewnętrzne: rok, miesiąc (1 do 12) i dzień z poprawnej daty. */
-export function skladowe(data: DataKalendarzowa): { rok: number; miesiac: number; dzien: number } {
+export function toParts(data: CalendarDate): { rok: number; miesiac: number; dzien: number } {
   return {
     rok: Number(data.slice(0, 4)),
     miesiac: Number(data.slice(5, 7)),
@@ -259,51 +259,51 @@ export function skladowe(data: DataKalendarzowa): { rok: number; miesiac: number
 }
 
 /** Wewnętrzne: buduje datę ze składowych, rzuca `RangeError`, gdy dzień nie istnieje. */
-export function zeSkladowych(rok: number, miesiac: number, dzien: number): DataKalendarzowa {
-  if (miesiac < 1 || miesiac > 12 || dzien < 1 || dzien > ostatniDzienMiesiaca(rok, miesiac)) {
+export function fromParts(rok: number, miesiac: number, dzien: number): CalendarDate {
+  if (miesiac < 1 || miesiac > 12 || dzien < 1 || dzien > lastDayOfMonth(rok, miesiac)) {
     throw new RangeError(`Data nie istnieje: ${rok}-${dwieCyfry(miesiac)}-${dwieCyfry(dzien)}`);
   }
-  return `${rok}-${dwieCyfry(miesiac)}-${dwieCyfry(dzien)}` as DataKalendarzowa;
+  return `${rok}-${dwieCyfry(miesiac)}-${dwieCyfry(dzien)}` as CalendarDate;
 }
 ```
 
-- [ ] **Step 6: Zaimplementuj `backend/domain/src/terminy/dodaj-miesiace.ts`**
+- [ ] **Step 6: Zaimplementuj `backend/domain/src/deadlines/add-months.ts`**
 
 ```ts
 import {
-  type DataKalendarzowa,
-  ostatniDzienMiesiaca,
-  skladowe,
-  zeSkladowych,
-} from './data-kalendarzowa';
+  type CalendarDate,
+  lastDayOfMonth,
+  toParts,
+  fromParts,
+} from './calendar-date';
 
 /**
  * Koniec terminu liczonego w miesiącach (art. 112 Kc): dzień odpowiadający datą dniowi
  * początkowemu, a gdy go nie ma, ostatni dzień miesiąca.
  */
-export function dodajMiesiace(od: DataKalendarzowa, miesiace: number): DataKalendarzowa {
+export function addMonths(od: CalendarDate, miesiace: number): CalendarDate {
   if (!Number.isInteger(miesiace) || miesiace < 0) {
     throw new RangeError(`Liczba miesięcy musi być nieujemną liczbą całkowitą: ${miesiace}`);
   }
-  const { rok, miesiac, dzien } = skladowe(od);
+  const { rok, miesiac, dzien } = toParts(od);
   const indeks = rok * 12 + (miesiac - 1) + miesiace;
   const nowyRok = Math.floor(indeks / 12);
   const nowyMiesiac = (indeks % 12) + 1;
-  return zeSkladowych(nowyRok, nowyMiesiac, Math.min(dzien, ostatniDzienMiesiaca(nowyRok, nowyMiesiac)));
+  return fromParts(nowyRok, nowyMiesiac, Math.min(dzien, lastDayOfMonth(nowyRok, nowyMiesiac)));
 }
 ```
 
 - [ ] **Step 7: Utwórz `backend/domain/src/index.ts` (jedyny interfejs pakietu)**
 
 ```ts
-export { type DataKalendarzowa, dataKalendarzowa } from './terminy/data-kalendarzowa';
-export { dodajMiesiace } from './terminy/dodaj-miesiace';
+export { type CalendarDate, calendarDate } from './terminy/calendar-date';
+export { addMonths } from './terminy/add-months';
 ```
 
 - [ ] **Step 8: Uruchom testy i typecheck**
 
 Run: `rtk pnpm --filter @sarmata/domain test && rtk pnpm --filter @sarmata/domain typecheck`
-Expected: 19 testów PASS (8 dla `dataKalendarzowa`, 11 dla `dodajMiesiace`), `tsc` bez błędów.
+Expected: 19 testów PASS (8 dla `calendarDate`, 11 dla `addMonths`), `tsc` bez błędów.
 
 - [ ] **Step 9: Commit**
 

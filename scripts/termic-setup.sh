@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Setup nowego taska termic: zależności i sekrety zespołu.
+# Setup for a new termic task: dependencies and team secrets.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

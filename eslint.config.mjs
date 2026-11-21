@@ -34,15 +34,15 @@ export default defineConfig([
           patterns: [
             {
               group: ['@supabase/*', '@sarmata/*'],
-              message: 'Domena jest czysta: bez I/O i bez innych pakietów (ADR 0004).',
+              message: 'The domain is pure: no I/O and no other packages (ADR 0004).',
             },
             {
               group: ['node:*'],
-              message: 'Domena jest czysta: bez wbudowanych modułów Node i bez I/O (ADR 0004).',
+              message: 'The domain is pure: no Node built-ins and no I/O (ADR 0004).',
             },
             {
               group: ['**/repositories/**', '**/services/**', '**/database/**'],
-              message: 'Domena nie sięga do innych warstw ścieżką względną (ADR 0004).',
+              message: 'The domain must not reach into other layers by relative path (ADR 0004).',
             },
           ],
         },
@@ -51,7 +51,7 @@ export default defineConfig([
         'error',
         {
           name: 'process',
-          message: 'Domena jest czysta: bez dostępu do środowiska procesu (ADR 0004).',
+          message: 'The domain is pure: no access to the process environment (ADR 0004).',
         },
       ],
     },
@@ -65,7 +65,7 @@ export default defineConfig([
           patterns: [
             {
               group: ['@supabase/*'],
-              message: 'Serwisy wołają bazę tylko przez @sarmata/repositories (ADR 0004).',
+              message: 'Services call the database only through @sarmata/repositories (ADR 0004).',
             },
           ],
         },
@@ -89,11 +89,12 @@ export default defineConfig([
                 '@sarmata/worker/*',
                 '@supabase/supabase-js',
               ],
-              message: 'Frontend korzysta tylko z @sarmata/services (ADR 0004).',
+              message: 'The frontend uses only @sarmata/services (ADR 0004).',
             },
             {
               group: ['**/backend/repositories/**', '**/backend/ai/**', '**/backend/worker/**'],
-              message: 'Frontend nie sięga do warstwy danych ścieżką względną (ADR 0004).',
+              message:
+                'The frontend must not reach into the data layer by relative path (ADR 0004).',
             },
           ],
         },

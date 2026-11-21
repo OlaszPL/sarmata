@@ -1,2 +1,2 @@
-export { type DataKalendarzowa, dataKalendarzowa } from './terminy/data-kalendarzowa';
-export { dodajMiesiace } from './terminy/dodaj-miesiace';
+export { type CalendarDate, calendarDate } from './deadlines/calendar-date';
+export { addMonths } from './deadlines/add-months';
