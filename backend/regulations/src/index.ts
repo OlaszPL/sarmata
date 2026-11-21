@@ -3,7 +3,10 @@ import {
   type RegulationDocument,
   parseRegulationDocument,
   regulationCasesSchema,
+  type TrainingItem,
+  trainingCatalogSchema,
 } from '@sarmata/domain';
+import trainingCatalogData from '../development/training-catalog.json';
 import cases2016 from '../regulation-2016/cases.json';
 import regulation2016 from '../regulation-2016/rules.json';
 
@@ -19,3 +22,7 @@ export const officialRegulations: readonly RegulationDocument[] = [
 export const officialCases: Readonly<Record<string, readonly RegulationCase[]>> = {
   'regulation-2016': regulationCasesSchema.parse(cases2016),
 };
+
+/** Training and development offers of the Civil Service (249 items), generated from the research CSV. */
+export const trainingCatalog: readonly TrainingItem[] =
+  trainingCatalogSchema.parse(trainingCatalogData);

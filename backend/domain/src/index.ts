@@ -35,6 +35,20 @@ export {
   regulationGraph,
 } from './regulations/regulation-graph';
 export {
+  type TrainingChannel,
+  type TrainingItem,
+  trainingCatalogSchema,
+  trainingItemSchema,
+} from './development/training-catalog';
+export {
+  type DevelopmentAction,
+  type DevelopmentRecommendation,
+  type FocusCriterion,
+  type RecommendedTraining,
+  type RecommendInput,
+  recommendDevelopment,
+} from './development/recommend';
+export {
   type EmploymentBasis,
   type NewEmployeeInput,
   type PositionKind,
