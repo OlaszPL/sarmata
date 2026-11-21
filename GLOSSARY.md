@@ -37,3 +37,29 @@ _Avoid_: przełożony, ewaluator
 **Wersja przepisów** (`RegulationVersion`):
 Komplet reguł oceny (arkusze, kryteria, skala, terminy) obowiązujący od określonej daty. Każda ocena podlega jednej wersji przepisów, ustalonej w dniu jej rozpoczęcia.
 _Avoid_: konfiguracja, ustawienia, polityka
+
+## Ocena
+
+**Ocena**:
+Jedna ocena okresowa jednego pracownika, prowadzona według przypiętej wersji przepisów od rozpoczęcia do zamknięcia.
+_Avoid_: ewaluacja, arkusz (arkusz to dokument oceny)
+
+**Oceniający**:
+Konto przypięte do konkretnej oceny, które ją prowadzi. To relacja oceny, nie rola w urzędzie.
+_Avoid_: przełożony, kierownik (nie modelujemy hierarchii)
+
+**Oceniany**:
+Pracownik, którego dotyczy ocena. Nie ma dostępu do aplikacji.
+_Avoid_: użytkownik
+
+**Rola**:
+Uprawnienie członkostwa w urzędzie: oceniający, kadry albo admin.
+_Avoid_: grupa, poziom dostępu
+
+**Zdarzenie oceny**:
+Fakt z przebiegu oceny (np. rozmowa, podpis, doręczenie, sprzeciw) wpisany z datą faktyczną przez oceniającego albo kadry. Od dat zdarzeń liczy się terminy.
+_Avoid_: log, akcja
+
+**Notatka**:
+Obserwacja oceniającego z okresu oceny o konkretnym pracowniku. Czyta ją autor i kadry.
+_Avoid_: komentarz, uwaga
