@@ -1,4 +1,6 @@
 import js from '@eslint/js';
+import nextPlugin from '@next/eslint-plugin-next';
+import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import prettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
@@ -8,6 +10,10 @@ export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
     'database/src/types.ts',
+    'frontend/ui/src/shadcn/**',
+    '**/next-env.d.ts',
+    'e2e/playwright-report/**',
+    'e2e/test-results/**',
     '**/dist/**',
     '**/.next/**',
     '**/.turbo/**',
@@ -138,6 +144,35 @@ export default defineConfig([
         {
           name: 'process',
           message: 'Regulation versions are pure: no access to the process environment (ADR 0006).',
+        },
+      ],
+    },
+  },
+  {
+    files: ['frontend/**/*.{ts,tsx}'],
+    plugins: { '@next/next': nextPlugin, 'react-hooks': reactHooks },
+    settings: { next: { rootDir: 'frontend/web/' } },
+    languageOptions: {
+      globals: { ...globals.browser },
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+  {
+    files: ['frontend/ui/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@sarmata/*', '@supabase/*', 'next', 'next/*', '**/backend/**'],
+              message: '@sarmata/ui is presentation only: no data, auth or Next.js imports.',
+            },
+          ],
         },
       ],
     },

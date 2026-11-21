@@ -36,7 +36,15 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
    Serwer działa w tle pod `http://127.0.0.1:55490/v1`, zatrzymuje go `pnpm ai:stop`. Oba skrypty zapisują `AI_BASE_URL` i `AI_MODEL` do wygenerowanego `.env.ai.local` w korzeniu, który direnv ładuje zaraz po `.env.local` (bez direnv: `set -a; . ./.env.ai.local; set +a`). Na słabszym sprzęcie: `SARMATA_AI_MODEL=bielik-4.5b-v3.0-q8_0 pnpm ai:setup`. Sekretów ani tokenu Hugging Face nie trzeba, repozytoria modeli są publiczne. Pobieranie robi się raz na maszynę: w kolejnym worktree wystarczy `pnpm ai:env` (zapisuje tylko `.env.ai.local`, bez pobierania i bez startu serwera), a skrypt setup dla Termic woła go sam. Powtórne `ai:setup` też niczego nie ściąga, jeśli pliki mają poprawne sumy.
 
-7. **Sprawdzenie całości** (to samo co CI):
+7. **Aplikacja web** (po `pnpm db:start`):
+
+       pnpm web:env
+       pnpm --filter @sarmata/e2e exec playwright install chromium
+       pnpm dev
+
+   `web:env` zapisuje `frontend/web/.env.local` z adresem i kluczem lokalnego Supabase (oraz `AI_BASE_URL`, `AI_MODEL`, `AI_DECISION_URL` z `.env.ai.local`, jeśli istnieje). Przeglądarka Chromium służy testom e2e i skillowi `app-walkthrough`. Aplikacja działa na `http://localhost:3000`.
+
+8. **Sprawdzenie całości** (to samo co CI):
 
        pnpm check
        pnpm db:test
@@ -61,6 +69,18 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm ai:env` | `.env.ai.local` dla tego worktree z już pobranego AI, bez pobierania |
 | `pnpm ai:start` / `ai:stop` | wspólny llama-server w tle na porcie 55490 |
 
+## Aplikacja web
+
+| Skrypt | Co robi |
+|---|---|
+| `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase |
+| `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
+| `pnpm e2e` | testy Playwright: logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA) |
+| `pnpm e2e:ui` | te same testy w trybie UI Playwright |
+| `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
+
+Font Open Sans jest na licencji SIL Open Font License 1.1.
+
 ## Pliki konfiguracyjne
 
 - W repo: `.envrc`, `.sops.yaml`, `secrets/*.enc.env` (zaszyfrowane), `.mcp.json`, `.claude/`, `.agents/`, `.codex/`, `scripts/termic-*.sh`, `database/supabase/config.toml`.
@@ -68,7 +88,12 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 
 ## Termic
 
-W ustawieniach projektu sarmata w Termic ustaw skrypt setup na `./scripts/termic-setup.sh`. Robi kroki 3 do 5 automatycznie: instalacja, `direnv allow`, sekrety, start wspólnej bazy, ostrzeżenia z `doctor`.
+W ustawieniach projektu sarmata w Termic ustaw:
+
+- skrypt setup: `./scripts/termic-setup.sh`. Robi kroki 3 do 6 automatycznie: instalacja, `direnv allow`, sekrety, start wspólnej bazy, `web:env`, Chromium dla Playwright, ostrzeżenia z `doctor`.
+- skrypt run: `./scripts/termic-run.sh`
+
+Skrypt run uruchamia `pnpm dev` na porcie wyliczonym z nazwy taska (`$TERMIC_TASK`, zakres 3001 do 3999, poza Termic port 3000) i ustawia `SITE_URL` aplikacji na ten sam adres. Port bieżącego taska pokazuje `node scripts/task-port.mjs`.
 
 ## Dokumentacja
 

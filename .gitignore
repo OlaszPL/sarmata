@@ -288,3 +288,11 @@ node_modules/
 
 # Working implementation plans, not part of the repo (decisions go to docs/adr)
 docs/superpowers/
+# frontend and e2e
+.next/
+e2e/test-results/
+e2e/playwright-report/
+e2e/.screenshots/
+
+# the generic "lib/" rule above must not hide source folders
+!frontend/web/src/lib/
