@@ -105,6 +105,48 @@ describe('ai runs', () => {
     expect(await store.claim(run.id, 0)).not.toBeNull();
   });
 
+  it('progress shows while running, finish clears it and keeps the tokens', async () => {
+    const evaluator = await signedIn('oceniajacy@kropka.test');
+    const run = await requestSignals(evaluator);
+    const store = createAiRunQueueStore(serviceClient());
+    const runs = createAiRunRepository(evaluator);
+    await store.progress(run.id, { partialText: '{"x', partialOutput: null, outputTokens: 1 });
+    expect((await runs.get(run.id))?.outputTokens).toBeNull();
+    await store.claim(run.id, 600_000);
+    await store.progress(run.id, {
+      partialText: '{"signals":[',
+      partialOutput: { signals: signalsOutput.signals },
+      outputTokens: 12,
+    });
+    expect(await runs.get(run.id)).toMatchObject({
+      status: 'running',
+      partialText: '{"signals":[',
+      partialOutput: { signals: [{ signal: 'overload', present: true }] },
+      outputTokens: 12,
+    });
+    // A fresh progress write is the heartbeat: the run is not stale although it started long ago.
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    await sleep(300);
+    await store.progress(run.id, { partialText: '{', partialOutput: null, outputTokens: 13 });
+    expect(await store.claim(run.id, 200)).toBeNull();
+    await sleep(250);
+    // Without progress for as long, another delivery takes it over and starts from scratch.
+    expect(await store.claim(run.id, 200)).not.toBeNull();
+    expect((await runs.get(run.id))?.outputTokens).toBeNull();
+    await store.finish(run.id, {
+      output: signalsOutput,
+      promptVersion: 'hr-signals.v2',
+      outputTokens: 40,
+    });
+    await store.progress(run.id, { partialText: 'late', partialOutput: null, outputTokens: 41 });
+    expect(await runs.get(run.id)).toMatchObject({
+      status: 'done',
+      partialText: null,
+      partialOutput: null,
+      outputTokens: 40,
+    });
+  });
+
   it('claim reports office ai switch', async () => {
     const run = await requestSignals(await signedIn('oceniajacy@kropka.test'));
     const settings = createOfficeSettingsRepository(await signedIn('admin@kropka.test'));

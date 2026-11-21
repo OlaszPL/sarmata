@@ -31,15 +31,32 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
    `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa).
 
-6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp z Metal (17 MB) i Bielik-11B-v3.1 Q4_K_M (6,7 GB) z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai`:
+6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp z Metal (17 MB) i model zalecany dla tego komputera z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai`. Na Macu z 16 GB (np. M2) to Bielik-4.5B-v3.0 Q4_K_M (2,9 GB):
 
        pnpm ai:setup
        pnpm ai:start
        pnpm ai:smoke
 
-   Serwer działa w tle pod `http://127.0.0.1:55490/v1`, zatrzymuje go `pnpm ai:stop`. Skrypty zapisują ustawienia `SARMATA_AI_*` (włączenie, adresy i modele, kontrakt z `backend/ai/src/config.ts`) do wygenerowanego `.env.ai.local` w korzeniu, który direnv ładuje zaraz po `.env.local` (bez direnv: `set -a; . ./.env.ai.local; set +a`). Na słabszym sprzęcie: `SARMATA_AI_MODEL=bielik-4.5b-v3.0-q8_0 pnpm ai:setup`. Sekretów ani tokenu Hugging Face nie trzeba.
+   Serwer działa w tle pod `http://127.0.0.1:55490/v1`, zatrzymuje go `pnpm ai:stop`. Skrypty zapisują ustawienia `SARMATA_AI_*` (włączenie, adresy i modele, kontrakt z `backend/ai/src/config.ts`) do wygenerowanego `.env.ai.local` w korzeniu, który direnv ładuje zaraz po `.env.local` (bez direnv: `set -a; . ./.env.ai.local; set +a`). Sekretów ani tokenu Hugging Face nie trzeba.
 
-   **Co się instaluje na jakim sprzęcie.** `ai:setup` wypisuje po polsku, czy Bielik-One (model decyzyjny) zmieści się na stałe obok modelu tekstowego i dlaczego. Na Macu z 16 GB (np. M2) instaluje się tylko Bielik-11B Q4_K_M, a decyzje podejmuje model tekstowy z wymuszonym formatem JSON: GPU Maca może użyć 10,7 GB, a oba modele razem potrzebują około 17,3 GB. Oba naraz mieszczą się od Maca z 32 GB (Bielik-One 4B na MLX) albo karty NVIDIA z 24 GB (vLLM, Linux). Progi i rachunek: ADR 0005.
+   **Który model tekstowy na jakim sprzęcie.** `ai:setup` wybiera model jak kreator (`recommendRuntime`, ADR 0005) i wypisuje po polsku dlaczego:
+
+   | Sprzęt | Model domyślny | Plik |
+   | --- | --- | --- |
+   | Mac z Apple Silicon poniżej 24 GB (8, 16, 18 GB) albo karta graficzna od 8 do 11 GB | Bielik-4.5B-v3.0 Q4_K_M, około 2 razy szybsze generowanie, trochę słabsza polszczyzna | 2,9 GB |
+   | Mac od 24 GB albo karta graficzna od 12 GB | Bielik-11B-v3.1 Q4_K_M (w profilu server najwyższa kwantyzacja, która się mieści) | 6,7 GB (Q5_K_M 7,9 GB, Q6_K 9,2 GB, Q8_0 11,9 GB) |
+   | Bez karty graficznej, od 8 GB RAM | Bielik-4.5B-v3.0 Q8_0 | 5,1 GB |
+
+   Na Macu M2 z 16 GB Bielik-11B Q4_K_M generuje 8 do 10 tokenów na sekundę i pełny szkic arkusza trwał około 4 minut, dlatego domyślny jest tam mniejszy model. Większy model instaluje się ręcznie i od razu staje się modelem `ai:start`:
+
+       pnpm ai:setup --model bielik-11b-v3.1-q4_k_m
+       pnpm ai:stop && pnpm ai:start
+
+   Powrót do domyślnego: `pnpm ai:setup` bez `--model`. Identyfikatory plików wypisuje `ai:setup`, działa też zmienna `SARMATA_AI_MODEL=<id>`. Pobrane modele zostają w katalogu danych, więc przełączanie niczego nie pobiera ponownie.
+
+   **Odpowiedź AI widać w trakcie.** Model streamuje odpowiedź, a worker co około sekundę zapisuje w `ai_runs` tekst, gotowe fragmenty wyniku i liczbę tokenów. Szkic arkusza powstaje kryterium po kryterium, więc pierwsze kryterium jest widoczne po kilkunastu sekundach (ADR 0008).
+
+   **Co się instaluje na jakim sprzęcie.** `ai:setup` wypisuje po polsku, czy Bielik-One (model decyzyjny) zmieści się na stałe obok modelu tekstowego i dlaczego. Na Macu z 16 GB (np. M2) instaluje się tylko Bielik-4.5B Q4_K_M, a decyzje podejmuje model tekstowy z wymuszonym formatem JSON: GPU Maca może użyć 10,7 GB, a oba modele razem potrzebują około 13,7 GB. Oba naraz (Bielik-One 4B na MLX) mieszczą się na Macu od 24 GB, gdy modelem tekstowym jest Bielik-4.5B, i od 32 GB z Bielik-11B, a na Linuksie od karty NVIDIA z 24 GB (vLLM). Tam, gdzie Bielik-One mieści się tylko sam, rekomendacja ma już tryb przełączany (jeden model w pamięci naraz), przełącznik po stronie hosta jest osobnym zadaniem. Progi i rachunek: ADR 0005.
 
    **Test Bielik-One na Macu 16 GB, po jednym modelu.** Modele nie mogą tu działać jednocześnie, więc uruchamia się je po kolei:
 
@@ -51,7 +68,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm ai:smoke                        # jedno pytanie tak/nie do /v1/systemone z czasem i prawdopodobieństwem
        pnpm ai:stop
 
-   `ai:setup --with-bielik-one` ostrzega, że na tym sprzęcie modele działają tylko pojedynczo, a `ai:start` odmawia startu jednego, gdy działa drugi. Bez `--only` startuje sam model tekstowy (oba tylko tam, gdzie się mieszczą). `ai:smoke --only text|decision` sprawdza jeden endpoint. Pierwszy raz pobiera się łącznie około 17 GB.
+   `ai:setup --with-bielik-one` ostrzega, że na tym sprzęcie modele działają tylko pojedynczo, a `ai:start` odmawia startu jednego, gdy działa drugi. Bez `--only` startuje sam model tekstowy (oba tylko tam, gdzie się mieszczą). `ai:smoke --only text|decision` sprawdza jeden endpoint. Pierwszy raz pobiera się łącznie około 13 GB.
 
    **Model pobiera się raz na maszynę.** Katalog danych AI jest jeden na konto i system: `~/Library/Application Support/sarmata/ai` na macOS, `~/.local/share/sarmata/ai` (albo `$XDG_DATA_HOME/sarmata/ai`) na Linuksie i w WSL2, `%LOCALAPPDATA%\sarmata\ai` na Windows. Trzyma llama.cpp, modele GGUF, pamięć podręczną Hugging Face dla Bielik-One (`huggingface/`), środowisko Pythona Bielik-One i logi (`logs/`), a korzystają z niego wszystkie worktree i kreator. Ponowne `ai:setup` z dowolnego worktree niczego nie pobiera, jeśli pliki mają poprawne sumy SHA-256, przerwane pobieranie (`.part`) wznawia od miejsca przerwania, a drugi równoległy `ai:setup` kończy się komunikatem o blokadzie zamiast pobierać ten sam plik. W kolejnym worktree wystarczy `pnpm ai:env` (zapisuje tylko `.env.ai.local`, bez pobierania i bez startu serwera), a skrypt setup dla Termic woła go sam. Modele nie trafiają do obrazów Dockera ani do worktree: aplikacja łączy się z runtime przez HTTP. Windows i WSL2 to dwa systemy z osobnymi katalogami, ale runtime AI działa natywnie w Windows.
 
@@ -75,7 +92,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm db:test
        pnpm test:integration
 
-   `pnpm test:integration` to testy repozytoriów na działającej bazie, z kontami demo, przy zatrzymanym workerze (test czyta wspólną kolejkę). CI ich nie uruchamia.
+   `pnpm test:integration` to testy repozytoriów i workera na działającej bazie, z kontami demo, przy zatrzymanym workerze (test czyta wspólną kolejkę). Test workera przeprowadza przebieg AI ze streamującym atrapowym modelem i sprawdza postęp widoczny w `ai.get`. CI ich nie uruchamia.
 
 10. **Instalator dla urzędów (opcjonalnie).** Testy, binarki kreatora i podgląd instalacji bez zmian w systemie:
 
@@ -102,13 +119,13 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm db:seed:demo` | zakłada trzy oceny demo przez prawdziwy serwis jako `oceniajacy@kropka.test` (sprzeciw jako `kadry@kropka.test`), pomija, gdy oceny już istnieją (wymaga `pnpm regulations:sync`) |
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
-| `pnpm test:integration` | testy repozytoriów na lokalnym Supabase, wymagają `pnpm db:reset` |
+| `pnpm test:integration` | testy repozytoriów i workera na lokalnym Supabase, wymagają `pnpm db:reset` |
 | `pnpm regulations:sync` | wstawia brakujące oficjalne wersje przepisów, kończy się błędem, gdy wersja w bazie różni się od kodu |
 | `pnpm notifications:collect` | ręczne zebranie powiadomień na dziś (`-- --day RRRR-MM-DD` dla innego dnia), pg_cron robi to o 5:00 UTC. Raport JSON zawiera `created`, `queued` i `resolved` |
 | `pnpm retention:run` | ręczne uruchomienie retencji danych (`-- --day RRRR-MM-DD` dla innego dnia, np. po upływie 10 lat dla pracownika demo), pg_cron kolejkuje zadanie o 5:30 UTC. Raport JSON zawiera `notes`, `aiRuns`, `anonymized` i `failed` |
 | `pnpm worker:dev` | worker kolejki pgmq z przeładowaniem po zmianie kodu |
 | `pnpm worker:start` | worker kolejki pgmq bez przeładowania |
-| `pnpm ai:setup` | llama.cpp i model Bielik do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local`, z `--with-bielik-one` także Bielik-One |
+| `pnpm ai:setup` | llama.cpp i model Bielik zalecany dla sprzętu (inny: `--model <id>`) do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local`, z `--with-bielik-one` także Bielik-One |
 | `pnpm ai:env` | `.env.ai.local` dla tego worktree z już pobranego AI, bez pobierania |
 | `pnpm ai:start` / `ai:stop` | wspólny llama-server w tle na porcie 55490 i Bielik-One, gdy się mieści, `--only text\|decision` dla jednego |
 | `pnpm ai:smoke` | krótka odpowiedź modelu tekstowego i jedna decyzja Bielik-One, każdy endpoint osobno, z czasem odpowiedzi |

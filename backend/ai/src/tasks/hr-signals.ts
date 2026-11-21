@@ -7,7 +7,7 @@ import {
 import { z } from 'zod';
 import { type DecisionAnswer, type DecisionQuestion } from '../decision';
 import { quoteIn } from './checks';
-import { type Task, describeNotes, ok, oneOf, withSignal } from './task';
+import { type Task, describeNotes, noteAliases, ok, oneOf, streamCall, withSignal } from './task';
 
 const SIGNALS: readonly HrSignalName[] = [
   'sentiment',
@@ -94,12 +94,26 @@ function describeRatings(pastRatings: AiInput<'hr_signals'>['pastRatings']): str
 const isDiagnostic = (text: string): boolean =>
   sensitiveDataWarnings(text).some((warning) => warning.category === 'diagnosis');
 
+// Points, not prose: about 300 output tokens (ADR 0005, Bielik-4.5B on a 16 GB Mac).
+const MAX_FRAGMENTS = 2;
+const MAX_QUESTIONS = 3;
+const MAX_ACTIONS = 4;
+const MAX_TOKENS = 420;
+
+const fragmentSchema = z.object({ noteId: z.string(), quote: z.string() });
+const actionSchema = z.object({
+  framework: z.enum(['jd_r', 'hse']),
+  signal: z.string(),
+  text: z.string(),
+});
+
 /**
  * HR partner signals: sentiment, overload, engagement drop and burnout risk as a suggestion with
  * source fragments, questions and JD-R and HSE actions. Never a diagnosis: a question or an action the
- * sensitive data guard marks as a diagnosis is dropped.
+ * sensitive data guard marks as a diagnosis is dropped. The decided signals are the first partial
+ * output, then finished questions and actions stream in.
  */
-export const hrSignals: Task<'hr_signals'> = async (input, { ai, system }, signal) => {
+export const hrSignals: Task<'hr_signals'> = async (input, { ai, system, progress }, signal) => {
   // Without notes there is nothing to read a signal from: no model call, every signal absent.
   if (input.notes.length === 0) {
     return ok({
@@ -108,47 +122,83 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system }, signa
       actions: [],
     });
   }
-  const state = `Notatki oceniającego:\n${describeNotes(input.notes)}\n\n${describeRatings(input.pastRatings)}`;
+  const notes = noteAliases(input.notes);
+  const state = `Notatki oceniającego:\n${describeNotes(input.notes, notes.aliasOf)}\n\n${describeRatings(input.pastRatings)}`;
   const decided = await ai.decide({ state, questions: QUESTIONS, ...withSignal(signal) });
   if (!decided.ok) return decided;
   const signals = SIGNALS.map((name) => signalOf(name, decided.value[name]));
   const present = signals.filter((entry) => entry.present).map((entry) => entry.signal);
   if (present.length === 0) return ok({ signals, questions: [], actions: [] });
+  progress.output({ signals });
 
+  const bodies = new Map(input.notes.map((note) => [note.id, note.body]));
+  /** The output from what the model wrote, complete or cut at the limit. Checks every item. */
+  const outputOf = (raw: unknown): AiOutput<'hr_signals'> => {
+    const fields = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+    const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+    const found = list(fields.signals).flatMap((entry) => {
+      const parsed = z
+        .object({ signal: z.string(), fragments: z.array(fragmentSchema) })
+        .safeParse(entry);
+      return parsed.success ? [parsed.data] : [];
+    });
+    return {
+      signals: signals.map((entry) => ({
+        ...entry,
+        fragments: found
+          .filter((item) => item.signal === entry.signal)
+          .flatMap((item) => item.fragments)
+          .flatMap((fragment) => {
+            const noteId = notes.toNoteId(fragment.noteId);
+            const quote = quoteIn(bodies.get(noteId) ?? '', fragment.quote);
+            return quote === null ? [] : [{ noteId, quote }];
+          }),
+      })),
+      questions: list(fields.questions)
+        .filter((question): question is string => typeof question === 'string')
+        .filter((question) => question.trim() !== '' && !isDiagnostic(question)),
+      actions: list(fields.actions).flatMap((entry) => {
+        const parsed = actionSchema.safeParse(entry);
+        if (!parsed.success || isDiagnostic(parsed.data.text)) return [];
+        const name = present.find((candidate) => candidate === parsed.data.signal);
+        return name === undefined ? [] : [{ ...parsed.data, signal: name }];
+      }),
+    };
+  };
+  const call = streamCall(progress, (prefix) => {
+    const partial = outputOf(prefix);
+    return { signals, questions: partial.questions, actions: partial.actions };
+  });
   const result = await ai.generateObject({
     schemaName: 'hr_signals',
     schema: z.object({
-      signals: z.array(
-        z.object({
-          signal: oneOf(present),
-          fragments: z.array(z.object({ noteId: z.string(), quote: z.string() })),
-        }),
-      ),
-      questions: z.array(z.string()),
-      actions: z.array(
-        z.object({ framework: z.enum(['jd_r', 'hse']), signal: oneOf(present), text: z.string() }),
-      ),
+      signals: z
+        .array(
+          z.object({
+            signal: oneOf(present),
+            fragments: z
+              .array(z.object({ noteId: oneOf(notes.aliases), quote: z.string() }))
+              .max(MAX_FRAGMENTS),
+          }),
+        )
+        .max(present.length),
+      questions: z.array(z.string()).max(MAX_QUESTIONS),
+      actions: z
+        .array(
+          z.object({
+            framework: z.enum(['jd_r', 'hse']),
+            signal: oneOf(present),
+            text: z.string(),
+          }),
+        )
+        .max(MAX_ACTIONS),
     }),
     system,
     prompt: `Wskazane sygnały: ${present.join(', ')}.\n\n${state}`,
+    maxTokens: MAX_TOKENS,
+    onProgress: call.onProgress,
     ...withSignal(signal),
   });
-  if (!result.ok) return result;
-  const bodies = new Map(input.notes.map((note) => [note.id, note.body]));
-  return ok({
-    signals: signals.map((entry) => {
-      const fragments = result.value.signals
-        .filter((found) => found.signal === entry.signal)
-        .flatMap((found) => found.fragments)
-        .flatMap((fragment) => {
-          const quote = quoteIn(bodies.get(fragment.noteId) ?? '', fragment.quote);
-          return quote === null ? [] : [{ noteId: fragment.noteId, quote }];
-        });
-      return { ...entry, fragments };
-    }),
-    questions: result.value.questions.filter((question) => !isDiagnostic(question)),
-    actions: result.value.actions
-      .filter((action) => !isDiagnostic(action.text))
-      .map((action) => ({ ...action, signal: action.signal as HrSignalName })),
-  });
+  if (!result.ok && result.reason !== 'invalid_response') return result;
+  return ok(outputOf(result.ok ? result.value : call.prefix()));
 };

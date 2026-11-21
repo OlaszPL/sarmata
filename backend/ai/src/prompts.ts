@@ -5,13 +5,13 @@ import { readFileSync } from 'node:fs';
  * `prompts/<name>.v<n>.md`, and the run log keeps the id (`prompt_version`) of the prompt it used.
  */
 export const PROMPT_VERSIONS = {
-  'sheet-draft': 1,
+  'sheet-draft': 2,
   'quality-check': 1,
   'sensitive-data': 1,
-  'conversation-prep': 1,
+  'conversation-prep': 2,
   'criteria-proposals': 1,
   'appreciation-moments': 1,
-  'hr-signals': 1,
+  'hr-signals': 2,
   'procedure-question': 1,
 } as const;
 

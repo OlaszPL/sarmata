@@ -1,9 +1,17 @@
 import { type AiInput, type AiRunKind, aiRunKindSchema } from '@sarmata/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type AiConfig } from './config';
-import { type FakeServer, modelReplies, startFakeServer } from './fake-server';
+import {
+  type FakeServer,
+  type RecordedRequest,
+  type StreamOptions,
+  modelReplies,
+  promptOf,
+  startFakeServer,
+} from './fake-server';
 import { type AiRunner, createAi, createAiRunner } from './index';
 import { unavailableLegalSearch } from './legal-search';
+import { type AiRunProgress } from './progress';
 import { PROMPT_VERSIONS, type PromptName, loadPrompt } from './prompts';
 
 let server: FakeServer | undefined;
@@ -23,9 +31,10 @@ const config = (baseUrl: string, overrides: Partial<AiConfig> = {}): AiConfig =>
 
 async function runnerWith(
   replies: Parameters<typeof modelReplies>[0],
+  stream: StreamOptions = {},
   overrides: Partial<AiConfig> = {},
 ): Promise<{ runner: AiRunner; fake: FakeServer }> {
-  server = await startFakeServer(modelReplies(replies));
+  server = await startFakeServer(modelReplies(replies, stream));
   const runner = createAiRunner({
     ai: createAi(config(server.baseUrl, overrides)),
     legalSearch: unavailableLegalSearch,
@@ -58,6 +67,10 @@ const draftInput = {
   notes: [note('n1', 'Przekazał ustalenia zespołowi.'), note('n2', 'Oddał raport po terminie.')],
 } satisfies Record<keyof AiInput<'sheet_draft'>, unknown>;
 
+const schemaOf = (request: RecordedRequest): string | undefined =>
+  (request.body as { response_format?: { json_schema?: { name?: string } } } | null)
+    ?.response_format?.json_schema?.name;
+
 const executeOk = async (runner: AiRunner, kind: AiRunKind, input: unknown) => {
   const result = await runner.execute({ kind, input });
   if (!result.ok) throw new Error(`${result.reason}: ${result.message}`);
@@ -78,46 +91,80 @@ describe('prompts', () => {
   });
 });
 
+/** Criterion replies by id, from the task at the end of the prompt (`Zadanie: kryterium <id>`). */
+const perCriterion =
+  (replies: Record<string, unknown>) =>
+  (request: RecordedRequest): unknown =>
+    replies[/Zadanie: kryterium (\S+)/.exec(promptOf(request))?.[1] ?? ''];
+
+const emptySummary = { justification: [], developmentConclusions: [], questions: [] };
+
 describe('sheet draft', () => {
-  it('sheet draft sends criteria enum and scale points', async () => {
+  it('calls the model per criterion, then once for the summary, with a shared prompt start', async () => {
     const { runner, fake } = await runnerWith({
       objects: {
-        sheet_draft: { ratings: [], justification: [], developmentConclusions: [], questions: [] },
+        sheet_draft_criterion: perCriterion({
+          communication: {
+            sentences: [{ text: '12.03.2026 przekazał ustalenia.', noteIds: ['N1'] }],
+            points: 7,
+          },
+          reliability: { sentences: [], points: null },
+        }),
+        sheet_draft_summary: emptySummary,
       },
     });
     const value = await executeOk(runner, 'sheet_draft', draftInput);
-    expect(value.promptVersion).toBe('sheet-draft.v1');
-    const body = JSON.stringify(fake.requests[0]?.body);
-    expect(body).toContain('"enum":["communication","reliability"]');
-    expect(body).toContain('[1,3,5,7,9]');
-    expect(body).toContain('[n1]');
+    expect(value.promptVersion).toBe('sheet-draft.v2');
+    expect(fake.requests.map((request) => schemaOf(request))).toEqual([
+      'sheet_draft_criterion',
+      'sheet_draft_criterion',
+      'sheet_draft_summary',
+    ]);
+    const first = JSON.stringify(fake.requests[0]?.body);
+    expect(first).toContain('[1,3,5,7,9]');
+    expect(first).toContain('"enum":["N1","N2"]');
+    expect(first).toContain('"maxItems":2');
+    expect(first).toContain('"stream":true');
+    const prompts = fake.requests.map(promptOf);
+    expect(prompts[0]).toContain('[N1]');
+    expect(prompts[0]).not.toContain('[n1]');
+    const shared = (prompt: string) => prompt.slice(0, prompt.indexOf('Zadanie:'));
+    expect(new Set(prompts.map(shared)).size).toBe(1);
+    expect(prompts[2]).toContain('Proponowane oceny cząstkowe: communication 7, reliability brak');
+    expect(value.output).toMatchObject({
+      status: 'draft',
+      ratings: [
+        { criterionId: 'communication', points: 7, sentences: [{ noteIds: ['n1'] }] },
+        { criterionId: 'reliability', points: null, sentences: [] },
+      ],
+    });
   });
 
   it('drops sentences citing unknown notes', async () => {
     const { runner } = await runnerWith({
       objects: {
-        sheet_draft: {
-          ratings: [
-            {
-              criterionId: 'communication',
-              points: 7,
-              sentences: [
-                { text: 'Przekazał ustalenia 12.03.2026.', noteIds: ['n1'] },
-                { text: 'Wymyślone zdanie.', noteIds: ['ghost'] },
-              ],
-            },
-          ],
+        sheet_draft_criterion: perCriterion({
+          communication: {
+            sentences: [
+              { text: 'Przekazał ustalenia 12.03.2026.', noteIds: ['N1'] },
+              { text: 'Wymyślone zdanie.', noteIds: ['N9'] },
+            ],
+            points: 7,
+          },
+          reliability: { sentences: [{ text: 'Bez źródła.', noteIds: [] }], points: 3 },
+        }),
+        sheet_draft_summary: {
           justification: [
             { text: 'Bez źródła.', noteIds: [] },
-            { text: 'Z notatki.', noteIds: ['n2'] },
+            { text: 'Z notatki.', noteIds: ['N2'] },
           ],
-          developmentConclusions: [{ text: 'Obca notatka.', noteIds: ['n1', 'ghost'] }],
-          questions: [],
+          developmentConclusions: [{ text: 'Obca notatka.', noteIds: ['N1', 'N9'] }],
+          questions: ['Co pomogło?'],
         },
       },
     });
     const { output } = await executeOk(runner, 'sheet_draft', draftInput);
-    expect(output).toMatchObject({
+    expect(output).toEqual({
       status: 'draft',
       ratings: [
         {
@@ -129,24 +176,18 @@ describe('sheet draft', () => {
       ],
       justification: [{ text: 'Z notatki.', noteIds: ['n2'] }],
       developmentConclusions: [],
+      questions: ['Co pomogło?'],
     });
   });
 
-  it('a draft with every sentence dropped asks for more data', async () => {
-    const { runner } = await runnerWith({
+  it('asks for more data without a summary call when no criterion has a cited sentence', async () => {
+    const { runner, fake } = await runnerWith({
       objects: {
-        sheet_draft: {
-          ratings: [
-            {
-              criterionId: 'reliability',
-              points: 3,
-              sentences: [{ text: 'Spóźnia się.', noteIds: ['ghost'] }],
-            },
-          ],
-          justification: [],
-          developmentConclusions: [],
-          questions: [],
+        sheet_draft_criterion: {
+          sentences: [{ text: 'Spóźnia się.', noteIds: ['N9'] }],
+          points: 3,
         },
+        sheet_draft_summary: emptySummary,
       },
     });
     const { output } = await executeOk(runner, 'sheet_draft', draftInput);
@@ -158,6 +199,85 @@ describe('sheet draft', () => {
       ],
     });
     expect('questions' in output && output.questions).toHaveLength(2);
+    expect(fake.requests).toHaveLength(2);
+  });
+
+  it('keeps the finished sentences of a criterion cut at max_tokens', async () => {
+    const cut =
+      '{"sentences":[{"text":"12.03.2026 przekazał ustalenia.","noteIds":["N1"]},{"text":"Prowa';
+    const { runner } = await runnerWith(
+      {
+        objects: {
+          sheet_draft_criterion: perCriterion({
+            communication: cut,
+            reliability: { sentences: [], points: null },
+          }),
+          sheet_draft_summary: emptySummary,
+        },
+      },
+      { finishReason: 'length' },
+    );
+    const { output } = await executeOk(runner, 'sheet_draft', draftInput);
+    expect(output).toMatchObject({
+      status: 'draft',
+      ratings: [
+        {
+          criterionId: 'communication',
+          points: null,
+          sentences: [{ text: '12.03.2026 przekazał ustalenia.', noteIds: ['n1'] }],
+        },
+        { criterionId: 'reliability', points: null, sentences: [] },
+      ],
+    });
+  });
+
+  it('streams finished sentences and criteria before the run ends', async () => {
+    const { runner } = await runnerWith({
+      objects: {
+        sheet_draft_criterion: perCriterion({
+          communication: {
+            sentences: [
+              { text: '12.03.2026 przekazał ustalenia.', noteIds: ['N1'] },
+              { text: '13.03.2026 omówił je z zespołem.', noteIds: ['N1'] },
+            ],
+            points: 7,
+          },
+          reliability: {
+            sentences: [{ text: 'Oddał raport po terminie.', noteIds: ['N2'] }],
+            points: 3,
+          },
+        }),
+        sheet_draft_summary: {
+          justification: [{ text: 'Komunikuje terminowo.', noteIds: ['N1'] }],
+          developmentConclusions: [],
+          questions: [],
+        },
+      },
+    });
+    const updates: AiRunProgress[] = [];
+    const result = await runner.execute(
+      { kind: 'sheet_draft', input: draftInput },
+      { onProgress: (progress) => updates.push(progress) },
+    );
+    if (!result.ok) throw new Error(result.message);
+    interface PartialDraft {
+      ratings?: { criterionId: string; sentences: unknown[] }[];
+    }
+    const ratingsAt = (update: AiRunProgress) =>
+      (update.partialOutput as PartialDraft | null)?.ratings;
+    // The first sentence of the first criterion shows up before the model writes the second.
+    const early = updates.find((update) => ratingsAt(update)?.[0]?.sentences.length === 1);
+    expect(early?.text).toContain('12.03');
+    expect(early?.text).not.toContain('13.03');
+    // Both criteria are finished while the summary call streams.
+    expect(
+      updates.some(
+        (update) => ratingsAt(update)?.length === 2 && update.text.includes('justification'),
+      ),
+    ).toBe(true);
+    const tokens = updates.map((update) => update.outputTokens);
+    expect(tokens).toEqual([...tokens].sort((a, b) => a - b));
+    expect(tokens.at(-1)).toBeGreaterThan(30);
   });
 
   it('no notes gives insufficient_data without model call', async () => {
@@ -244,7 +364,7 @@ describe('runner', () => {
   });
 
   it('disabled ai fails disabled', async () => {
-    const { runner, fake } = await runnerWith({}, { enabled: false });
+    const { runner, fake } = await runnerWith({}, {}, { enabled: false });
     const result = await runner.execute({ kind: 'sheet_draft', input: draftInput });
     expect(result).toMatchObject({ ok: false, reason: 'disabled' });
     expect(fake.requests).toEqual([]);

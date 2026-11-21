@@ -1,11 +1,12 @@
 export type ModelId =
+  | 'bielik-4.5b-v3.0-q4_k_m'
   | 'bielik-4.5b-v3.0-q8_0'
   | 'bielik-11b-v3.1-q4_k_m'
   | 'bielik-11b-v3.1-q5_k_m'
   | 'bielik-11b-v3.1-q6_k'
   | 'bielik-11b-v3.1-q8_0';
 
-/** One official SpeakLeash GGUF file, pinned to a repository commit and a SHA-256. */
+/** One GGUF file of a Bielik model, pinned to a repository commit and a SHA-256. */
 export interface ModelFile {
   id: ModelId;
   label: string;
@@ -41,6 +42,17 @@ const BIELIK_4_5B: ModelRepo = {
   revision: 'f9b3ef0abcc8c37136800c6c66b46d8d9ea60830',
 };
 
+/**
+ * SpeakLeash publishes the 4.5B model only as Q8_0 and fp16. Q4_K_M comes from Second State
+ * (LlamaEdge): a llama.cpp quantization of speakleash/Bielik-4.5B-v3.0-Instruct, Apache 2.0, pinned
+ * by commit and SHA-256 like the official files (ADR 0005).
+ */
+const BIELIK_4_5B_Q4: ModelRepo = {
+  ...BIELIK_4_5B,
+  repo: 'second-state/Bielik-4.5B-v3.0-Instruct-GGUF',
+  revision: '5ed9534f824c7c184c21320f4d339e75569d0987',
+};
+
 function gguf(
   model: ModelRepo,
   id: ModelId,
@@ -55,6 +67,14 @@ function gguf(
 
 /** Sizes and SHA-256 (`lfs.oid`) from https://huggingface.co/api/models/<repo>/tree/main, 21.11.2026. */
 export const MODEL_FILES: Readonly<Record<ModelId, ModelFile>> = {
+  'bielik-4.5b-v3.0-q4_k_m': gguf(
+    BIELIK_4_5B_Q4,
+    'bielik-4.5b-v3.0-q4_k_m',
+    'Q4_K_M',
+    'Bielik-4.5B-v3.0-Instruct-Q4_K_M.gguf',
+    2_878_886_912,
+    '39fb78db7c5e1582d3ef5bded109cd98606aabd5acbb5c98601155174b6763e1',
+  ),
   'bielik-4.5b-v3.0-q8_0': gguf(
     BIELIK_4_5B,
     'bielik-4.5b-v3.0-q8_0',

@@ -2,10 +2,12 @@ import {
   type AiInput,
   type AiInputRefs,
   type AiOutput,
+  type AiPartialOutput,
   type AiRunKind,
   type AiRunStatus,
   aiInputRefsSchema,
   aiOutputSchemas,
+  aiPartialOutputSchemas,
 } from '@sarmata/domain';
 import { type Db, type ServiceDb } from './db';
 import { RepositoryError } from './errors';
@@ -40,12 +42,36 @@ interface AiRunBase {
   /** Set when retention removed the content: the output is null then, the metadata stays. */
   readonly contentDeletedAt: string | null;
   readonly decisions: AiFragmentDecision[];
+  /**
+   * Raw text of the model call in progress, while the run is running (throttled to about one write
+   * per second). Null before the first token and after the run.
+   */
+  readonly partialText: string | null;
+  /** Output tokens so far while running, all of them after the run. Null before the first token. */
+  readonly outputTokens: number | null;
+  /** The last progress write of the worker. */
+  readonly progressUpdatedAt: string | null;
 }
 
 /** Przebieg AI: one entry of the AI usage log and the state of its job. */
 export type AiRun = {
-  [K in AiRunKind]: AiRunBase & { readonly kind: K; readonly output: AiOutput<K> | null };
+  [K in AiRunKind]: AiRunBase & {
+    readonly kind: K;
+    readonly output: AiOutput<K> | null;
+    /**
+     * What a running run has finished so far (e.g. the finished criteria of a sheet draft), for the
+     * frontend to show before the result. Null when there is nothing yet and after the run.
+     */
+    readonly partialOutput: AiPartialOutput<K> | null;
+  };
 }[AiRunKind];
+
+/** What the worker writes while a run generates. */
+export interface AiRunProgressUpdate {
+  readonly partialText: string;
+  readonly partialOutput: unknown;
+  readonly outputTokens: number;
+}
 
 export interface AiRunFilter {
   readonly employeeId?: string;
@@ -89,11 +115,18 @@ export interface AiRunQueueStore {
   ): Promise<{ kind: AiRunKind; input: unknown; aiEnabled: boolean } | null>;
   /** The status of a run, `null` when it does not exist. */
   status(id: string): Promise<AiRunStatus | null>;
+  /**
+   * Stores the progress of a running run and stamps `progress_updated_at` (the heartbeat that keeps
+   * a long run from counting as stale). A no-op once the run is finished.
+   */
+  progress(id: string, update: AiRunProgressUpdate): Promise<void>;
+  /** Clears the progress text and partial output, keeps the token count (`outputTokens`). */
   finish(
     id: string,
-    outcome:
+    outcome: (
       | { readonly output: unknown; readonly promptVersion: string }
-      | { readonly failure: { readonly reason: string; readonly message: string } },
+      | { readonly failure: { readonly reason: string; readonly message: string } }
+    ) & { readonly outputTokens?: number | null },
   ): Promise<void>;
 }
 
@@ -101,7 +134,7 @@ const DECISION_COLUMNS =
   'fragment, decision, final_text, content_deleted_at, decided_by, decided_at';
 
 const COLUMNS =
-  `id, office_id, kind, status, requested_by, employee_id, evaluation_id, input_refs, output, prompt_version, failure_reason, failure_message, requested_at, started_at, finished_at, content_deleted_at, ai_fragment_decisions(${DECISION_COLUMNS})` as const;
+  `id, office_id, kind, status, requested_by, employee_id, evaluation_id, input_refs, output, prompt_version, failure_reason, failure_message, requested_at, started_at, finished_at, content_deleted_at, partial_text, partial_output, output_tokens, progress_updated_at, ai_fragment_decisions(${DECISION_COLUMNS})` as const;
 
 interface DecisionRow {
   fragment: string;
@@ -129,6 +162,10 @@ interface RunRow {
   started_at: string | null;
   finished_at: string | null;
   content_deleted_at: string | null;
+  partial_text: string | null;
+  partial_output: unknown;
+  output_tokens: number | null;
+  progress_updated_at: string | null;
   ai_fragment_decisions: DecisionRow[];
 }
 
@@ -162,6 +199,11 @@ function toRun(row: RunRow): AiRun {
     }
     output = parsed.data;
   }
+  // Progress is best effort: a partial output that does not match is left out, never an error.
+  const partial =
+    row.partial_output === null || row.status !== 'running'
+      ? null
+      : aiPartialOutputSchemas[row.kind].safeParse(row.partial_output);
   return {
     id: row.id,
     officeId: row.office_id,
@@ -182,6 +224,10 @@ function toRun(row: RunRow): AiRun {
     finishedAt: row.finished_at,
     contentDeletedAt: row.content_deleted_at,
     decisions: latestDecisions(row.ai_fragment_decisions),
+    partialText: row.status === 'running' ? row.partial_text : null,
+    partialOutput: partial?.success ? partial.data : null,
+    outputTokens: row.output_tokens,
+    progressUpdatedAt: row.progress_updated_at,
   } as AiRun;
 }
 
@@ -242,11 +288,22 @@ export function createAiRunQueueStore(db: ServiceDb): AiRunQueueStore {
     async claim(id, staleAfterMs) {
       const now = new Date();
       const staleBefore = new Date(now.getTime() - staleAfterMs).toISOString();
+      // A running run is stale when it started long ago and its worker has not written progress
+      // (the heartbeat) for as long. The progress of a dead worker is cleared.
       const { data, error } = await db
         .from('ai_runs')
-        .update({ status: 'running', started_at: now.toISOString() })
+        .update({
+          status: 'running',
+          started_at: now.toISOString(),
+          partial_text: null,
+          partial_output: null,
+          output_tokens: null,
+          progress_updated_at: null,
+        })
         .eq('id', id)
-        .or(`status.eq.queued,and(status.eq.running,started_at.lt."${staleBefore}")`)
+        .or(
+          `status.eq.queued,and(status.eq.running,started_at.lt."${staleBefore}",or(progress_updated_at.is.null,progress_updated_at.lt."${staleBefore}"))`,
+        )
         .select('kind, input, office_id')
         .maybeSingle();
       if (error) throw new RepositoryError('aiRuns.claim', error);
@@ -264,6 +321,20 @@ export function createAiRunQueueStore(db: ServiceDb): AiRunQueueStore {
       const { data, error } = await db.from('ai_runs').select('status').eq('id', id).maybeSingle();
       if (error) throw new RepositoryError('aiRuns.status', error);
       return data === null ? null : data.status;
+    },
+
+    async progress(id, update) {
+      const { error } = await db
+        .from('ai_runs')
+        .update({
+          partial_text: update.partialText,
+          partial_output: toJson(update.partialOutput ?? null),
+          output_tokens: update.outputTokens,
+          progress_updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('status', 'running');
+      if (error) throw new RepositoryError('aiRuns.progress', error);
     },
 
     async finish(id, outcome) {
@@ -284,7 +355,13 @@ export function createAiRunQueueStore(db: ServiceDb): AiRunQueueStore {
             };
       const { error } = await db
         .from('ai_runs')
-        .update({ ...columns, finished_at: new Date().toISOString() })
+        .update({
+          ...columns,
+          partial_text: null,
+          partial_output: null,
+          ...(outcome.outputTokens == null ? {} : { output_tokens: outcome.outputTokens }),
+          finished_at: new Date().toISOString(),
+        })
         .eq('id', id);
       if (error) throw new RepositoryError('aiRuns.finish', error);
     },

@@ -77,6 +77,10 @@ const baseRun = {
   finishedAt: null,
   contentDeletedAt: null,
   decisions: [],
+  partialText: null,
+  partialOutput: null,
+  outputTokens: null,
+  progressUpdatedAt: null,
 };
 
 const signalsRun: AiRun = {

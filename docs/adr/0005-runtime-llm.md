@@ -2,7 +2,15 @@
 
 Używamy wyłącznie modeli Bielik. Tekst generuje llama-server (llama.cpp, MIT) w przypiętej wersji, uruchamiany natywnie: CUDA przy NVIDIA, Vulkan z CPU w pozostałych przypadkach, Metal na macOS. Bielik-One (model decyzyjny w stylu Jev) oficjalnie działa tylko na vLLM (Linux z NVIDIA) i MLX (Apple Silicon), więc kreator instaluje go tylko tam. Na innym sprzęcie decyzje podejmuje model tekstowy przez wymuszony schemat JSON. Aplikacja zna tylko adresy API zgodnych z OpenAI, więc runtime da się wymienić.
 
-Kreator wykrywa RAM i VRAM, krótko mierzy CPU i GPU, a potem proponuje tier: bez GPU Bielik-4.5B-v3.0 Q8, GPU 8 GB lub więcej albo Mac 16 GB Bielik-11B-v3.1 Q4_K_M, serwer wyższa kwantyzacja. AI da się całkowicie wyłączyć, a w profilu light (słaby sprzęt, jedno stanowisko) jest domyślnie wyłączone. Research: `docs/sources/ai-lokalne/FINDINGS.md`.
+Kreator wykrywa RAM i VRAM, krótko mierzy CPU i GPU, a potem proponuje tier: bez GPU Bielik-4.5B-v3.0 Q8_0, Mac poniżej 24 GB albo karta od 8 do 11 GB Bielik-4.5B-v3.0 Q4_K_M (tier szybki), Mac od 24 GB albo karta od 12 GB Bielik-11B-v3.1 Q4_K_M, serwer na tym sprzęcie wyższa kwantyzacja 11B. AI da się całkowicie wyłączyć, a w profilu light (słaby sprzęt, jedno stanowisko) jest domyślnie wyłączone. Research: `docs/sources/ai-lokalne/FINDINGS.md`.
+
+## Tier szybki: Bielik-4.5B Q4_K_M poniżej Maca 24 GB i karty 12 GB
+
+Pomiar na M2 z 16 GB (llama.cpp, Metal, Bielik-11B Q4_K_M): przetwarzanie promptu 90 do 140 tokenów na sekundę, generowanie 8 do 10 tokenów na sekundę, pełny szkic arkusza (około 1600 tokenów wyjścia jednym wywołaniem) trwał około 4 minut. Generowanie ogranicza przepustowość pamięci, więc model o połowę mniejszy generuje około 2 razy szybciej (szacunek 18 do 20 tokenów na sekundę dla 4.5B Q4_K_M na M2). Decyzja właściciela produktu: na takim sprzęcie domyślny jest Bielik-4.5B-v3.0 Q4_K_M, za cenę trochę słabszej polszczyzny. Bielik-11B jest domyślny dopiero na sprzęcie wyraźnie lepszym: Mac od 24 GB (pamięć 24576 MiB, próg w kodzie 23 GiB) albo karta od 12 GB (12282 MiB, próg 11,5 GiB). Na Macu z 16 GB lista wyboru to Bielik-4.5B Q4_K_M, potem Bielik-11B Q4_K_M i większe pliki 11B. Na Macu nie proponujemy Bielik-4.5B Q8_0, bo Q4_K_M tego samego modelu jest na Metal szybszy, a pamięć lepiej wykorzystać na 11B. Przełączenie w dev: `pnpm ai:setup --model bielik-11b-v3.1-q4_k_m`.
+
+SpeakLeash publikuje Bielik-4.5B-v3.0 w GGUF tylko jako Q8_0 i fp16. Plik Q4_K_M pochodzi z `second-state/Bielik-4.5B-v3.0-Instruct-GGUF` (Second State, LlamaEdge, kwantyzacja llama.cpp z `speakleash/Bielik-4.5B-v3.0-Instruct`, Apache 2.0): `Bielik-4.5B-v3.0-Instruct-Q4_K_M.gguf`, 2 878 886 912 bajtów, SHA-256 `39fb78db…6763e1`, przypięty do commitu `5ed9534f`. Ten sam plik z tą samą sumą leży w `gaianet/Bielik-4.5B-v3.0-Instruct-GGUF`. Weryfikacja jak przy plikach oficjalnych: rozmiar i SHA-256 z API Hugging Face, sprawdzane po pobraniu.
+
+Krótsze wyjście ma większy wpływ niż sam model. Szkic arkusza powstaje wywołaniami po jednym kryterium (najwyżej 2 zdania i poziom), a potem jednym krótkim wywołaniem na uzasadnienie, wnioski IPRZ i pytania. Pełny szkic to około 400 do 600 tokenów wyjścia zamiast 1600. Przygotowanie rozmowy i sygnały HR mają listy z limitem pozycji w schemacie i niski `max_tokens`. Wszystkie wywołania szkicu zaczynają się tym samym tekstem (skala, kryteria, notatki), więc llama-server przetwarza go raz (`cache_prompt`), a kolejne wywołania tylko krótką końcówkę. Szacunek na M2 z 16 GB dla Bielik-4.5B Q4_K_M (18 do 20 tok/s, prompt 90 do 140 tok/s, ostrożnie jak dla 11B): przy 5 kryteriach i około 1100 tokenach wspólnego początku pierwsze zdanie widać po około 10 do 15 sekundach, pierwsze pełne kryterium po około 12 do 17 sekundach, cały szkic po około 35 do 45 sekundach. Przebieg streamuje wyjście do `ai_runs` (ADR 0008).
 
 ## Budżet pamięci i próg dla Bielik-One
 
@@ -12,15 +20,19 @@ Bielik-One instaluje się tylko wtedy, gdy na stałe mieści się w tym budżeci
 
 | Sprzęt | Model tekstowy | Bielik-One |
 | --- | --- | --- |
-| Mac 16 GB (np. M2) | Bielik-11B Q4_K_M | brak: 6,3 + 2 + 9 = 17,3 GB przy budżecie 10,7 GB |
-| Mac 24 GB | Bielik-11B Q4_K_M | brak: budżet 16 GB |
+| Mac 16 GB (np. M2) | Bielik-4.5B Q4_K_M | nie naraz: 2,7 + 2 + 9 = 13,7 GB przy budżecie 10,7 GB, tryb przełączany 4B |
+| Mac 24 GB | Bielik-11B Q4_K_M | nie naraz: 6,3 + 2 + 9 = 17,3 GB przy budżecie 16 GB, tryb przełączany 4B |
 | Mac 32 i 36 GB | Bielik-11B Q4_K_M | 4B na MLX (budżet 21,3 i 27 GB) |
 | Mac od 48 GB | Bielik-11B Q4_K_M | 11B na MLX (34,3 GB przy budżecie 36 GB) |
+| NVIDIA 8 GB | Bielik-4.5B Q4_K_M | brak, 4B na vLLM sam potrzebuje 13 GB |
 | NVIDIA 12 GB | Bielik-11B Q4_K_M | brak, próg to karta 24 GB |
+| NVIDIA 16 GB | Bielik-11B Q4_K_M | nie naraz, tryb przełączany 4B |
 | NVIDIA 24 GB | Bielik-11B Q4_K_M | 4B na vLLM (21,3 GB) |
 | NVIDIA 48 GB, profil server | Bielik-11B Q8_0 | 11B na vLLM (11,1 + 4 + 31 = 46,1 GB) |
 
-Na Macu z 16 GB instaluje się więc tylko model tekstowy w dobrej jakości (Bielik-11B Q4_K_M), a decyzje podejmuje on z wymuszonym schematem JSON (`@sarmata/ai`). Kreator i `pnpm ai:setup` zawsze piszą po polsku, który wariant wybrały i dlaczego, z potrzebną pamięcią, dostępnym budżetem i progiem, od którego oba modele mieszczą się naraz. Bielik-One nigdy nie znika po cichu. Z tego samego budżetu wynika model w profilu server na Macu 16 GB: Q4_K_M zamiast Q5_K_M.
+Rekomendacja (`recommendRuntime`) podaje sposób działania Bielik-One w polu `bielikOnePlan`: `concurrent` (obok modelu tekstowego, to samo co `bielikOne`), `switching` (mieści się tylko sam, więc w pamięci jest naraz jeden model, a przełącznik po stronie hosta zamienia je na żądanie) albo `text-only`. Przełącznika jeszcze nie ma (osobne zadanie), więc kreator dalej instaluje Bielik-One tylko w trybie `concurrent`, a `switching` może już pokazać jako „tryb przełączany”.
+
+Na Macu z 16 GB instaluje się więc tylko model tekstowy (Bielik-4.5B Q4_K_M), a decyzje podejmuje on z wymuszonym schematem JSON (`@sarmata/ai`). Kreator i `pnpm ai:setup` zawsze piszą po polsku, który wariant wybrały i dlaczego, z potrzebną pamięcią, dostępnym budżetem i progiem, od którego oba modele mieszczą się naraz. Bielik-One nigdy nie znika po cichu. W profilu server na Macu 16 GB obowiązuje ten sam tier szybki (Bielik-4.5B Q4_K_M).
 
 Rozważone i odrzucone dla 16 GB: kwantyzacja Bielik-One na MLX (4 albo 8 bitów). Backend MLX bielik-one w przypiętej wersji podpina LoRA tylko do warstw `nn.Linear` bez kwantyzacji, a `calibration.json` wprost wyklucza serwowanie po kwantyzacji bez osobnego sprawdzenia (przy FP8 na vLLM zmienia się 2 do 18% decyzji blisko granicy). Wymagałoby to łatki na kod bielik-one i własnej walidacji kalibracji, więc decyzja właściciela produktu: na 16 GB sam model tekstowy.
 

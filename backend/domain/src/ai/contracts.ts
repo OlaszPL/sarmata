@@ -259,6 +259,23 @@ export const aiOutputSchemas = {
 
 export type AiOutput<K extends AiRunKind> = z.output<(typeof aiOutputSchemas)[K]>;
 
+/**
+ * What a running run has already finished (`ai_runs.partial_output`): the output with every field
+ * optional, and in the lists only complete items. In a sheet draft the last rating may still grow.
+ */
+export const aiPartialOutputSchemas = {
+  sheet_draft: aiOutputSchemas.sheet_draft.partial(),
+  quality_check: aiOutputSchemas.quality_check.partial(),
+  sensitive_data: aiOutputSchemas.sensitive_data.partial(),
+  conversation_prep: aiOutputSchemas.conversation_prep.partial(),
+  criteria_proposals: aiOutputSchemas.criteria_proposals.partial(),
+  appreciation_moments: aiOutputSchemas.appreciation_moments.partial(),
+  hr_signals: aiOutputSchemas.hr_signals.partial(),
+  procedure_question: aiOutputSchemas.procedure_question.partial(),
+} as const satisfies Record<AiRunKind, z.ZodType>;
+
+export type AiPartialOutput<K extends AiRunKind> = z.output<(typeof aiPartialOutputSchemas)[K]>;
+
 /** Ids and versions of what the run read. Never content: it outlives the retention of notes. */
 export interface AiInputRefs {
   noteIds: { id: string; version: number }[];

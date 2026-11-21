@@ -1,6 +1,15 @@
 import { type AiInput } from '@sarmata/domain';
 import { z } from 'zod';
-import { type Task, describeCriteria, describeNotes, ok, oneOf, withSignal } from './task';
+import {
+  type Task,
+  describeCriteria,
+  describeNotes,
+  ok,
+  oneOf,
+  partialOutputOf,
+  streamCall,
+  withSignal,
+} from './task';
 
 const CONVERSATIONS: Record<AiInput<'conversation_prep'>['conversation'], string> = {
   starting: 'rozmowa rozpoczynająca okres oceny',
@@ -26,29 +35,44 @@ function describeSignals(signals: AiInput<'conversation_prep'>['signals']): stri
     .join('\n')}`;
 }
 
-/** Goal, plan, questions per criterion and hints for a conversation, from notes and the latest signals. */
+// Points, not prose: about 400 output tokens for five criteria (ADR 0005, Bielik-4.5B on a 16 GB Mac).
+const MAX_PLAN_STEPS = 4;
+const MAX_QUESTIONS_PER_CRITERION = 2;
+const MAX_SITUATIONS = 2;
+const maxTokensFor = (criteria: number): number => Math.min(160 + 70 * criteria, 700);
+
+/**
+ * Goal, plan, questions per criterion and hints for a conversation, from notes and the latest
+ * signals. Streams: finished points are the partial output. A call cut at the token limit keeps the
+ * points it finished.
+ */
 export const conversationPrep: Task<'conversation_prep'> = async (
   input,
-  { ai, system },
+  { ai, system, progress },
   signal,
 ) => {
+  const call = streamCall(progress, (prefix) => partialOutputOf('conversation_prep', prefix));
   const result = await ai.generateObject({
     schemaName: 'conversation_prep',
     schema: z.object({
       goal: z.string(),
-      plan: z.array(z.string()),
-      questions: z.array(
-        z.object({
-          criterionId: oneOf(input.criteria.map((criterion) => criterion.id)),
-          questions: z.array(z.string()),
-        }),
-      ),
-      difficultSituations: z.array(
-        z.object({
-          situation: z.enum(['defensive_reaction', 'negative_outcome', 'other']),
-          hint: z.string(),
-        }),
-      ),
+      plan: z.array(z.string()).max(MAX_PLAN_STEPS),
+      questions: z
+        .array(
+          z.object({
+            criterionId: oneOf(input.criteria.map((criterion) => criterion.id)),
+            questions: z.array(z.string()).max(MAX_QUESTIONS_PER_CRITERION),
+          }),
+        )
+        .max(input.criteria.length),
+      difficultSituations: z
+        .array(
+          z.object({
+            situation: z.enum(['defensive_reaction', 'negative_outcome', 'other']),
+            hint: z.string(),
+          }),
+        )
+        .max(MAX_SITUATIONS),
     }),
     system,
     prompt:
@@ -56,8 +80,19 @@ export const conversationPrep: Task<'conversation_prep'> = async (
       `Kryteria:\n${describeCriteria(input.criteria)}\n\n` +
       `Notatki oceniającego:\n${describeNotes(input.notes)}\n\n` +
       describeSignals(input.signals),
+    maxTokens: maxTokensFor(input.criteria.length),
+    onProgress: call.onProgress,
     ...withSignal(signal),
   });
-  if (!result.ok) return result;
-  return ok(result.value);
+  if (result.ok) return ok(result.value);
+  if (result.reason !== 'invalid_response') return result;
+  // Cut at the limit: what was finished, when the goal at least is there.
+  const partial = partialOutputOf('conversation_prep', call.prefix());
+  if (partial?.goal === undefined) return result;
+  return ok({
+    goal: partial.goal,
+    plan: partial.plan ?? [],
+    questions: partial.questions ?? [],
+    difficultSituations: partial.difficultSituations ?? [],
+  });
 };

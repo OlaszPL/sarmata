@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { type Ai, createAi } from './ai';
 import { aiConfigFromEnv, legalSearchConfigFromEnv } from './config';
 import { type LegalSearch, createSembleLegalSearch } from './legal-search';
+import { type AiRunProgress, trackRunProgress } from './progress';
 import { type PromptName, loadPrompt } from './prompts';
 import { type AiResult, failure } from './result';
 import { appreciationMoments } from './tasks/appreciation-moments';
@@ -21,6 +22,20 @@ import { sensitiveData } from './tasks/sensitive-data';
 import { sheetDraft } from './tasks/sheet-draft';
 import { type Task } from './tasks/task';
 
+export interface ExecuteOptions {
+  readonly signal?: AbortSignal;
+  /**
+   * Called on every streamed piece of a long task (sheet draft, conversation preparation, HR
+   * signals) with the whole state of the run. Often: the caller throttles its writes.
+   */
+  readonly onProgress?: (progress: AiRunProgress) => void;
+}
+
+export interface AiRunResult {
+  readonly output: AiOutput<AiRunKind>;
+  readonly promptVersion: string;
+}
+
 /** Runs one AI service on the input snapshot of a run. Prompts, model schemas and checks live inside. */
 export interface AiRunner {
   /**
@@ -29,8 +44,8 @@ export interface AiRunner {
    */
   execute(
     run: { readonly kind: AiRunKind; readonly input: unknown },
-    signal?: AbortSignal,
-  ): Promise<AiResult<{ output: AiOutput<AiRunKind>; promptVersion: string }>>;
+    options?: ExecuteOptions,
+  ): Promise<AiResult<AiRunResult>>;
 }
 
 interface TaskEntry<K extends AiRunKind> {
@@ -55,7 +70,7 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
   async function executeKind<K extends AiRunKind>(
     kind: K,
     raw: unknown,
-    signal: AbortSignal | undefined,
+    { signal, onProgress }: ExecuteOptions,
   ): Promise<AiResult<{ output: AiOutput<K>; promptVersion: string }>> {
     const entry = TASKS[kind];
     const input = aiInputSchemas[kind].safeParse(raw);
@@ -69,6 +84,7 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
         ai: entry.long ? deps.ai.long : deps.ai,
         legalSearch: deps.legalSearch,
         system: prompt.system,
+        progress: trackRunProgress<K>(onProgress),
       },
       signal,
     );
@@ -84,11 +100,11 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
   }
 
   return {
-    execute(run, signal) {
+    execute(run, options = {}) {
       if (!deps.ai.available.text && !deps.ai.available.decision) {
         return Promise.resolve(failure('disabled', 'AI is disabled or no model is configured'));
       }
-      return executeKind(run.kind, run.input, signal);
+      return executeKind(run.kind, run.input, options);
     },
   };
 }
