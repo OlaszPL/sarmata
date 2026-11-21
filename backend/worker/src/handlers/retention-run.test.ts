@@ -69,6 +69,7 @@ describe('retentionRunHandler', () => {
       delivery,
       closing: { closeUnobjected: () => Promise.resolve({ closed: 0 }) },
       retention: fakeRetention().retention,
+      invitations: { process: () => Promise.reject(new Error('unused')) },
     }).map((handler) => handler.type);
     expect(types).toContain(RETENTION_JOB_TYPE);
     expect(RETENTION_JOB_TYPE).toBe('retention.run');

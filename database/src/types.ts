@@ -5,7 +5,27 @@ export type Database = {
   
   "public": {
           Tables: {
-            "ai_fragment_decisions": {
+            "account_invitations": {
+                  Row: {
+                    "account_id": string | null,"email": string,"employee_id": string | null,"error": string | null,"error_code": string | null,"finished_at": string | null,"first_name": string,"id": string,"last_name": string,"mode": Database["public"]['Enums']["account_invitation_mode"] | null,"office_id": string,"requested_at": string,"requested_by": string,"role": Database["public"]['Enums']["office_role"],"status": Database["public"]['Enums']["account_invitation_status"],"temporary_password": string | null,"temporary_password_set": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_id"?: string | null,"email": string,"employee_id"?: string | null,"error"?: string | null,"error_code"?: string | null,"finished_at"?: string | null,"first_name": string,"id"?: string,"last_name": string,"mode"?: Database["public"]['Enums']["account_invitation_mode"] | null,"office_id"?: string,"requested_at"?: string,"requested_by"?: string,"role": Database["public"]['Enums']["office_role"],"status"?: Database["public"]['Enums']["account_invitation_status"],"temporary_password"?: string | null,"temporary_password_set"?: boolean
+                  }
+                  Update: {
+                    "account_id"?: string | null,"email"?: string,"employee_id"?: string | null,"error"?: string | null,"error_code"?: string | null,"finished_at"?: string | null,"first_name"?: string,"id"?: string,"last_name"?: string,"mode"?: Database["public"]['Enums']["account_invitation_mode"] | null,"office_id"?: string,"requested_at"?: string,"requested_by"?: string,"role"?: Database["public"]['Enums']["office_role"],"status"?: Database["public"]['Enums']["account_invitation_status"],"temporary_password"?: string | null,"temporary_password_set"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "account_invitations_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ai_fragment_decisions": {
                   Row: {
                     "content_deleted_at": string | null,"decided_at": string,"decided_by": string,"decision": string,"final_text": string | null,"fragment": string,"id": string,"office_id": string,"run_id": string
                   }
@@ -736,10 +756,13 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "cycle_start": string,"employee_id": string,"evaluation_due_on": string,"evaluation_id": string,"evaluator_account_id": string,"evaluator_name": string,"first_name": string,"interview_held": boolean,"last_name": string,"org_unit": string,"starting_interview_due_on": string,"status": string,"suspended": boolean
             }[]
+                           },
+"take_invitation_password":
+{ Args: { "p_invitation_id": string }; Returns: string
                            }
           }
           Enums: {
-            "ai_run_kind": "sheet_draft"|"quality_check"|"sensitive_data"|"conversation_prep"|"criteria_proposals"|"appreciation_moments"|"hr_signals"|"procedure_question","ai_run_status": "queued"|"running"|"done"|"failed","employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted"|"labour_court_appeal","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","note_kind": "observation"|"ongoing_conversation"|"appreciation"|"workload_fact","notification_kind": "deadline_reminder"|"deadline_overdue"|"objection_decision"|"grade_by_law","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
+            "account_invitation_mode": "invitation"|"temporary_password"|"existing_account","account_invitation_status": "pending"|"sent"|"failed","ai_run_kind": "sheet_draft"|"quality_check"|"sensitive_data"|"conversation_prep"|"criteria_proposals"|"appreciation_moments"|"hr_signals"|"procedure_question","ai_run_status": "queued"|"running"|"done"|"failed","employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted"|"labour_court_appeal","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","note_kind": "observation"|"ongoing_conversation"|"appreciation"|"workload_fact","notification_kind": "deadline_reminder"|"deadline_overdue"|"objection_decision"|"grade_by_law","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -855,7 +878,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "ai_run_kind": ["sheet_draft", "quality_check", "sensitive_data", "conversation_prep", "criteria_proposals", "appreciation_moments", "hr_signals", "procedure_question"],"ai_run_status": ["queued", "running", "done", "failed"],"employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted", "labour_court_appeal"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"note_kind": ["observation", "ongoing_conversation", "appreciation", "workload_fact"],"notification_kind": ["deadline_reminder", "deadline_overdue", "objection_decision", "grade_by_law"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
+            "account_invitation_mode": ["invitation", "temporary_password", "existing_account"],"account_invitation_status": ["pending", "sent", "failed"],"ai_run_kind": ["sheet_draft", "quality_check", "sensitive_data", "conversation_prep", "criteria_proposals", "appreciation_moments", "hr_signals", "procedure_question"],"ai_run_status": ["queued", "running", "done", "failed"],"employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted", "labour_court_appeal"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"note_kind": ["observation", "ongoing_conversation", "appreciation", "workload_fact"],"notification_kind": ["deadline_reminder", "deadline_overdue", "objection_decision", "grade_by_law"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
           }
         }
 } as const

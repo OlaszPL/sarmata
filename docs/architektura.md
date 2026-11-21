@@ -60,6 +60,7 @@ Kolejka to jedna kolejka pgmq `jobs` z typowanymi wiadomościami `{ type, payloa
 | `evaluations.close_unobjected` | pg_cron `close-unobjected-daily`, 5:10 UTC | zamyka oceny `delivered` po upływie terminu sprzeciwu (`close_unobjected_evaluations`) |
 | `retention.run` | pg_cron `retention-daily`, 5:30 UTC | retencja treści notatek i przebiegów AI, anonimizacja pracowników po 10 latach |
 | `ai.run` | trigger na `ai_runs` po wstawieniu przebiegu `queued` | `claim`, wywołanie `AiRunner`, zapis postępu i wyniku (ADR 0008) |
+| `accounts.invite` | trigger na `account_invitations` po wstawieniu żądania admina | zaproszenie konta przez Supabase Auth (albo hasło tymczasowe), członkostwo i wynik w tym samym wierszu |
 | `system.ping` | ręcznie | zapis `pong` w logu, próba działania kolejki |
 
 Zbieranie powiadomień jest funkcją SQL, więc `notifications-daily` nie przechodzi przez kolejkę, a jedynie wrzuca do niej zadania wysyłki. Dzień w zadaniach to data warszawska. Każde z trzech zadań cyklicznych da się też uruchomić ręcznie (`pnpm notifications:collect`, `pnpm retention:run`). Przy każdym starcie worker najpierw synchronizuje oficjalne wersje przepisów z `backend/regulations`.

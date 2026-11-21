@@ -1,4 +1,9 @@
-import { type AccountAdminStore, RepositoryError } from '@sarmata/repositories';
+import {
+  type AccountAdminStore,
+  type AccountInvitation,
+  type AccountInvitationRepository,
+  RepositoryError,
+} from '@sarmata/repositories';
 import { describe, expect, it, vi } from 'vitest';
 import { createAccountAdministration } from './account-administration';
 import { createAccountsService } from './accounts-service';
@@ -111,11 +116,18 @@ describe('accounts service', () => {
     endMembership: vi.fn(() => Promise.resolve(2)),
   });
   const admin = { officeId: 'o1', role: 'admin' as const };
+  const invitations = (override: Partial<AccountInvitationRepository> = {}) => ({
+    request: () => Promise.resolve('inv-1'),
+    get: () => Promise.resolve(null),
+    takePassword: () => Promise.resolve(null),
+    ...override,
+  });
 
   it('works for an admin only', async () => {
     const repo = repository();
     const service = createAccountsService({
       repository: repo,
+      invitations: invitations(),
       current: () => Promise.resolve({ officeId: 'o1', role: 'hr' }),
     });
     await expect(service.list()).rejects.toMatchObject({ code: 'forbidden' });
@@ -124,29 +136,48 @@ describe('accounts service', () => {
     await expect(
       service.invite({ email: 'a@b.test', role: 'hr', firstName: 'A', lastName: 'B' }),
     ).rejects.toMatchObject({ code: 'forbidden' });
+    await expect(service.invitation('i')).rejects.toMatchObject({ code: 'forbidden' });
+    await expect(service.takeInvitationPassword('i')).rejects.toMatchObject({ code: 'forbidden' });
     expect(repo.changeRole).not.toHaveBeenCalled();
   });
 
-  it('invites into the office of the admin and validates the input', async () => {
-    const invite = vi.fn(() =>
-      Promise.resolve({ accountId: 'a', employeeId: 'e', mode: 'invitation' as const }),
-    );
+  it('queues the invitation with a normalized e-mail and validates the input', async () => {
+    const request = vi.fn(() => Promise.resolve('inv-1'));
     const service = createAccountsService({
       repository: repository(),
+      invitations: invitations({ request }),
       current: () => Promise.resolve(admin),
-      administration: { invite },
     });
-    await service.invite({ email: 'a@b.test', role: 'hr', firstName: 'A', lastName: 'B' });
-    expect(invite).toHaveBeenCalledWith(expect.objectContaining({ officeId: 'o1', role: 'hr' }));
+    await expect(
+      service.invite({ email: 'A@B.test', role: 'hr', firstName: 'A', lastName: 'B' }),
+    ).resolves.toBe('inv-1');
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'a@b.test', role: 'hr' }),
+    );
     await expect(
       service.invite({ email: 'not-an-email', role: 'hr', firstName: 'A', lastName: 'B' }),
     ).rejects.toThrow();
+  });
+
+  it('polls an invitation and takes its password through the repository', async () => {
+    const service = createAccountsService({
+      repository: repository(),
+      invitations: invitations({
+        get: (id) => Promise.resolve(id === 'inv-1' ? ({ id } as AccountInvitation) : null),
+        takePassword: () => Promise.resolve('Tymczasowe-Haslo-1'),
+      }),
+      current: () => Promise.resolve(admin),
+    });
+    await expect(service.invitation('inv-1')).resolves.toMatchObject({ id: 'inv-1' });
+    await expect(service.invitation('other')).rejects.toMatchObject({ code: 'not_found' });
+    await expect(service.takeInvitationPassword('inv-1')).resolves.toBe('Tymczasowe-Haslo-1');
   });
 
   it('reports open evaluations and maps the last admin rule', async () => {
     const repo = repository();
     const service = createAccountsService({
       repository: repo,
+      invitations: invitations(),
       current: () => Promise.resolve(admin),
     });
     expect(await service.endMembership('a')).toEqual({ openAsEvaluator: 2 });

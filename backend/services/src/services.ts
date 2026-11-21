@@ -28,9 +28,9 @@ import {
   createNotesRetentionPreviewRepository,
   createOfficeSettingsRepository,
   createRepositories,
+  createAccountInvitationRepository,
   createAccountRepository,
 } from '@sarmata/repositories';
-import { type AccountAdministration } from './accounts/account-administration';
 import { type AccountsService, createAccountsService } from './accounts/accounts-service';
 import {
   type EmployeeImportService,
@@ -180,13 +180,8 @@ export type AppServices = Services & {
   readonly employeeImport: EmployeeImportService;
 };
 
-export interface ServicesForOptions {
-  /** From `createSystemServices(...).accounts`. Without it the invitation of an account fails. */
-  readonly accountAdministration?: AccountAdministration;
-}
-
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
-export const servicesFor = (db: Db, options: ServicesForOptions = {}): AppServices => {
+export const servicesFor = (db: Db): AppServices => {
   const officeSettings = createOfficeSettingsRepository(db);
   const repositories = createRepositories(db);
   const notes = createNoteRepository(db);
@@ -243,9 +238,7 @@ export const servicesFor = (db: Db, options: ServicesForOptions = {}): AppServic
           ? { officeId: account.office.id, role: account.role }
           : null;
       },
-      ...(options.accountAdministration === undefined
-        ? {}
-        : { administration: options.accountAdministration }),
+      invitations: createAccountInvitationRepository(db),
     }),
     employeeImport: createEmployeeImportService({
       employees: repositories.employees,
