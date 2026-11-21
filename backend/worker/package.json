@@ -12,7 +12,8 @@
     "sync-regulations": "tsx src/sync-regulations.ts",
     "collect-notifications": "tsx src/collect-notifications.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@sarmata/ai": "workspace:*",
@@ -24,6 +25,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "catalog:",
     "@types/node": "catalog:",
     "@types/nodemailer": "8.0.2",
     "typescript": "catalog:",

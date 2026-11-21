@@ -94,6 +94,7 @@ export {
   type AiFragmentDecisionKind,
   type AiRun,
   type AiRunFilter,
+  type AiRunProgressUpdate,
   type AiRunQueueStore,
   type AiRunRepository,
   type NewAiFragmentDecision,

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { type FakeReply, type FakeServer, startFakeServer } from './fake-server';
+import { type FakeReply, type FakeServer, completionEvents, startFakeServer } from './fake-server';
 import { type AiConfig, aiConfigFromEnv, createAi } from './index';
 import { legalSearchConfigFromEnv } from './config';
 
@@ -107,6 +107,77 @@ describe('generateObject', () => {
     expect(ai.available).toEqual({ text: false, decision: false });
     expect(await ai.generateObject(request)).toMatchObject({ ok: false, reason: 'disabled' });
     expect(fake.requests).toHaveLength(0);
+  });
+});
+
+describe('generateObject with streaming', () => {
+  const streamed = (content: string, options: Parameters<typeof completionEvents>[1] = {}) =>
+    ({ status: 200, body: null, events: completionEvents(content, options) }) satisfies FakeReply;
+
+  it('streams the completion, reports every piece and validates the end result', async () => {
+    const fake = await serve(() => streamed('{"summary":"Terminowo.","level":"above"}'));
+    const progress: { text: string; outputTokens: number }[] = [];
+    const result = await createAi(config(fake.baseUrl)).generateObject({
+      ...request,
+      onProgress: (update) => progress.push(update),
+    });
+    expect(result).toEqual({ ok: true, value: { summary: 'Terminowo.', level: 'above' } });
+    expect(fake.requests[0]?.body).toMatchObject({
+      stream: true,
+      stream_options: { include_usage: true },
+    });
+    expect(progress[0]).toEqual({ text: '{"su', outputTokens: 1 });
+    expect(progress.at(-1)).toEqual({
+      text: '{"summary":"Terminowo.","level":"above"}',
+      outputTokens: 10,
+    });
+  });
+
+  it('rejects a streamed completion that does not match the schema', async () => {
+    const fake = await serve(() => streamed('{"summary":"Terminowo.","level":"heroic"}'));
+    const result = await createAi(config(fake.baseUrl)).generateObject({
+      ...request,
+      onProgress: () => undefined,
+    });
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
+  });
+
+  it('names a completion cut at max_tokens', async () => {
+    const fake = await serve(() => streamed('{"summary":"Termi', { finishReason: 'length' }));
+    const result = await createAi(config(fake.baseUrl)).generateObject({
+      ...request,
+      onProgress: () => undefined,
+    });
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
+    expect(!result.ok && result.message).toContain('max_tokens');
+  });
+
+  it('fails as unavailable on an error event mid-stream', async () => {
+    const fake = await serve(() => ({
+      status: 200,
+      body: null,
+      events: [
+        { choices: [{ index: 0, delta: { content: '{"sum' }, finish_reason: null }] },
+        { error: { code: 500, message: 'slot unavailable' } },
+      ],
+    }));
+    const result = await createAi(config(fake.baseUrl)).generateObject({
+      ...request,
+      onProgress: () => undefined,
+    });
+    expect(result).toMatchObject({ ok: false, reason: 'unavailable' });
+  });
+
+  it('gives up when the whole stream takes longer than the limit', async () => {
+    const fake = await serve(() => ({
+      ...streamed('{"summary":"Terminowo.","level":"above"}'),
+      eventDelayMs: 30,
+    }));
+    const result = await createAi(config(fake.baseUrl, { timeoutMs: 100 })).generateObject({
+      ...request,
+      onProgress: () => undefined,
+    });
+    expect(result).toMatchObject({ ok: false, reason: 'timeout' });
   });
 });
 

@@ -1,9 +1,10 @@
 import { type AiRunKind } from '@sarmata/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type AiConfig } from './config';
-import { type FakeServer, modelReplies, startFakeServer } from './fake-server';
+import { type FakeServer, type StreamOptions, modelReplies, startFakeServer } from './fake-server';
 import { type AiRunner, createAi, createAiRunner } from './index';
 import { unavailableLegalSearch } from './legal-search';
+import { type AiRunProgress } from './progress';
 
 let server: FakeServer | undefined;
 
@@ -15,8 +16,9 @@ afterEach(async () => {
 async function runnerWith(
   replies: Parameters<typeof modelReplies>[0],
   overrides: Partial<AiConfig> = {},
+  stream: StreamOptions = {},
 ): Promise<{ runner: AiRunner; fake: FakeServer }> {
-  server = await startFakeServer(modelReplies(replies));
+  server = await startFakeServer(modelReplies(replies, stream));
   const baseUrl = server.baseUrl;
   const config: AiConfig = {
     enabled: true,
@@ -98,6 +100,34 @@ describe('conversation prep', () => {
     expect(prompt).toContain('przeciążenie, prawdopodobieństwo 0.80');
     expect(prompt).not.toContain('ryzyko wypalenia, prawdopodobieństwo');
     expect(schemaOf(fake, 0)).toContain('"enum":["communication","reliability"]');
+    // Points, not prose: capped lists and a short token limit.
+    expect(schemaOf(fake, 0)).toContain('"maxItems":4');
+    expect(fake.requests[0]?.body).toMatchObject({ max_tokens: 300, stream: true });
+  });
+
+  it('keeps the finished points of a preparation cut at max_tokens', async () => {
+    const { runner } = await runnerWith(
+      {
+        objects: {
+          conversation_prep:
+            '{"goal":"Omówienie okresu.","plan":["Powitanie","Kryteria"],"questions":[{"criterionId":"communication","questions":["Jak przeb',
+        },
+      },
+      {},
+      { finishReason: 'length' },
+    );
+    const output = await executeOk(runner, 'conversation_prep', {
+      conversation: 'ongoing',
+      criteria,
+      notes: [note('n1', 'Poprowadził naradę.')],
+      signals: null,
+    });
+    expect(output).toEqual({
+      goal: 'Omówienie okresu.',
+      plan: ['Powitanie', 'Kryteria'],
+      questions: [],
+      difficultSituations: [],
+    });
   });
 });
 
@@ -225,8 +255,8 @@ describe('hr signals', () => {
       {
         signal: 'overload',
         fragments: [
-          { noteId: 'n1', quote: 'zostaje po godzinach' },
-          { noteId: 'n2', quote: 'zostaje po godzinach' },
+          { noteId: 'N1', quote: 'zostaje po godzinach' },
+          { noteId: 'N2', quote: 'zostaje po godzinach' },
         ],
       },
     ],
@@ -256,6 +286,59 @@ describe('hr signals', () => {
       ],
     });
     expect(JSON.stringify(fake.requests[0]?.body)).toContain('reliability 7');
+    // Notes go to the models as N1, N2: short citations instead of UUIDs.
+    expect(JSON.stringify(fake.requests[1]?.body)).toContain('[N1]');
+    expect(schemaOf(fake, 1)).toContain('"enum":["N1","N2"]');
+  });
+
+  it('streams the decided signals before the questions and actions', async () => {
+    const { runner } = await runnerWith({
+      decision: bielikAnswers(0.8),
+      objects: { hr_signals: explanation },
+    });
+    const updates: AiRunProgress[] = [];
+    const result = await runner.execute(
+      { kind: 'hr_signals', input },
+      { onProgress: (progress) => updates.push(progress) },
+    );
+    expect(result.ok).toBe(true);
+    expect(updates[0]).toMatchObject({
+      outputTokens: 0,
+      partialOutput: {
+        signals: [
+          { signal: 'sentiment' },
+          { signal: 'overload', present: true },
+          { signal: 'engagement_drop' },
+          { signal: 'burnout_risk' },
+        ],
+      },
+    });
+    expect(updates[0]?.partialOutput).not.toHaveProperty('questions');
+    const last = updates.at(-1)?.partialOutput as { questions?: string[] } | undefined;
+    expect(last?.questions).toEqual(['Które zadania można przesunąć?']);
+  });
+
+  it('keeps the finished part of an explanation cut at max_tokens', async () => {
+    const cut = JSON.stringify(explanation).slice(
+      0,
+      JSON.stringify(explanation).indexOf('actions'),
+    );
+    const { runner } = await runnerWith(
+      { decision: bielikAnswers(0.8), objects: { hr_signals: cut } },
+      {},
+      { finishReason: 'length' },
+    );
+    const output = await executeOk(runner, 'hr_signals', input);
+    expect(output).toMatchObject({
+      signals: [
+        { signal: 'sentiment' },
+        { signal: 'overload', fragments: [{ noteId: 'n1', quote: 'zostaje po godzinach' }] },
+        { signal: 'engagement_drop' },
+        { signal: 'burnout_risk' },
+      ],
+      questions: ['Które zadania można przesunąć?'],
+      actions: [],
+    });
   });
 
   it('signals fall back to text model', async () => {

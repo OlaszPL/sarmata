@@ -39,7 +39,12 @@ export interface AiRunListFilter {
 export interface AiService {
   /** Throws `ZodError` for an invalid request, `ai_disabled` when the office switched AI off. */
   start(request: AiRequestInput): Promise<AiRun>;
-  /** `not_found` for a run the account cannot see. */
+  /**
+   * `not_found` for a run the account cannot see. While the run is running it carries the progress
+   * the worker writes about once per second: `partialText` (raw model text), `partialOutput` (the
+   * finished part, e.g. the finished criteria of a sheet draft) and `outputTokens`. Poll it about
+   * once per second until `done` or `failed`.
+   */
   get(id: string): Promise<AiRun>;
   /** Newest first, at most 50. */
   list(filter: AiRunListFilter): Promise<AiRun[]>;
