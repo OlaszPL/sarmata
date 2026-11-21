@@ -45,6 +45,11 @@ export { type JobMessage, type JobQueue, type QueuedJob, createJobQueue } from '
 export { type Repositories, createRepositories } from './repositories';
 export { type Note, type NoteRepository, type NoteVersion, createNoteRepository } from './notes';
 export {
+  type GradeGrant,
+  type HrRegisterRepository,
+  createHrRegisterRepository,
+} from './hr-register';
+export {
   type OfficeSettings,
   type OfficeSettingsRepository,
   createOfficeSettingsRepository,
@@ -66,3 +71,15 @@ export {
   type SmtpSettings,
   createNotificationDeliveryStore,
 } from './notification-delivery';
+export {
+  type CriterionRatingRow,
+  type DistributionRow,
+  type DscOckCounts,
+  type EvaluatorRow,
+  type OfficeFigures,
+  type ResultSource,
+  type SavedResult,
+  type ScheduleRow,
+  type StatisticsRepository,
+  createStatisticsRepository,
+} from './statistics';

@@ -18,12 +18,16 @@ import {
   type OfficeSettingsRepository,
   type Repositories,
   type SimilarEmployee,
+  createHrRegisterRepository,
   createNoteRepository,
   createNotificationRepository,
+  createStatisticsRepository,
   createOfficeSettingsRepository,
   createRepositories,
 } from '@sarmata/repositories';
 import { ServiceError } from './errors';
+import { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
+import { type StatisticsService, createStatisticsService } from './statistics/statistics-service';
 import { type NoteService, createNoteService } from './notes/note-service';
 import {
   type NotificationService,
@@ -135,25 +139,36 @@ export type AppServices = Services & {
   readonly notes: NoteService;
   readonly officeSettings: OfficeSettingsService;
   readonly notifications: NotificationService;
+  readonly hrRegister: HrRegisterService;
+  readonly statistics: StatisticsService;
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
 export const servicesFor = (db: Db): AppServices => {
   const officeSettings = createOfficeSettingsRepository(db);
+  const repositories = createRepositories(db);
+  const services = createServices({
+    repositories,
+    officeSettings,
+    currentAccountId: async () => {
+      const account = await getCurrentAccount(db);
+      if (account.status === 'signed-out') {
+        throw new ServiceError('not_found', 'Nobody is signed in');
+      }
+      return account.userId;
+    },
+  });
   return {
-    ...createServices({
-      repositories: createRepositories(db),
-      officeSettings,
-      currentAccountId: async () => {
-        const account = await getCurrentAccount(db);
-        if (account.status === 'signed-out') {
-          throw new ServiceError('not_found', 'Nobody is signed in');
-        }
-        return account.userId;
-      },
-    }),
+    ...services,
     notes: createNoteService(createNoteRepository(db)),
     officeSettings: createOfficeSettingsService(officeSettings),
     notifications: createNotificationService(createNotificationRepository(db)),
+    hrRegister: createHrRegisterService({ repository: createHrRegisterRepository(db) }),
+    statistics: createStatisticsService({
+      repository: createStatisticsRepository(db),
+      settings: officeSettings,
+      history: (employeeId) => repositories.evaluations.history(employeeId),
+      regulationInForceOn: (on) => services.regulations.inForceOn(on),
+    }),
   };
 };

@@ -65,3 +65,13 @@ update public.notes
 update public.office_settings
    set smtp_host = '127.0.0.1', smtp_port = 55425, smtp_from = 'oceny@kropka.test'
  where office_id = '11111111-1111-4111-8111-111111111111';
+
+-- Statistics demo (B5): organisational units for the per unit distribution and Karol Kadrowy as a civil servant
+-- (grade II since 2022), so a grade request and a grade decision exist among the closed evaluations.
+update public.employees set org_unit = 'Biuro Dyrektora Generalnego' where email = 'admin@kropka.test';
+update public.employees set org_unit = 'Wydział Kadr i Rozwoju' where email in ('kadry@kropka.test', 'marek.merytoryczny@kropka.test');
+update public.employees set org_unit = 'Wydział Kontroli' where email in ('oceniajacy@kropka.test', 'ewa.ewidencyjna@kropka.test', 'stefan.sprzeciwny@kropka.test');
+update public.employees
+   set service_status = 'civil_servant', employment_basis = 'appointment', appointment_year = 2019,
+       grade = 2, grade_granted_on = '2022-03-01'
+ where email = 'kadry@kropka.test';

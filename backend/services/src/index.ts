@@ -35,14 +35,43 @@ export {
   type NotificationService,
   createNotificationService,
 } from './notifications/notification-service';
-export type { InboxItem, Note, NoteVersion, OfficeSettings } from '@sarmata/repositories';
 export type { NotificationCategory, NotificationKind, NotificationStatus } from '@sarmata/domain';
+export { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
+export {
+  type StatisticsService,
+  type StatisticsServiceDependencies,
+  createStatisticsService,
+} from './statistics/statistics-service';
+export { dscOckCsv } from './statistics/dsc-ock-csv';
+export type {
+  DevelopmentNeed,
+  DscOckAnswer,
+  EvaluatorFlag,
+  EvaluatorReport,
+  EvaluatorSummary,
+  LevelShare,
+  OfficeReport,
+  ScheduleItem,
+  ScheduleReport,
+  UnitDistribution,
+} from './statistics/reports';
+export type {
+  GradeGrant,
+  InboxItem,
+  Note,
+  NoteVersion,
+  OfficeSettings,
+} from '@sarmata/repositories';
 export type {
   NewNoteInput,
   NoteKind,
   NotePatch,
   NoteSign,
   OfficeSettingsPatchInput,
+  GradeBasis,
+  GradeGrantInput,
+  LabourCourtAppealInput,
+  EvaluatorFlagThresholds,
   SensitiveDataWarning,
 } from '@sarmata/domain';
 export type {
