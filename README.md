@@ -60,6 +60,14 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
    `pnpm test:integration` to testy repozytoriów na działającej bazie, z kontami demo. CI ich nie uruchamia.
 
+10. **Instalator dla urzędów (opcjonalnie).** Testy, binarki kreatora i podgląd instalacji bez zmian w systemie:
+
+        pnpm --filter @sarmata/deploy test
+        pnpm --filter @sarmata/deploy compile
+        infra/deploy/dist/sarmata-macos-arm64 install --dry-run --answers infra/deploy/examples/light.json
+
+    Prawdziwą instalację (`install` bez `--dry-run`) uruchamiaj tylko na maszynie wirtualnej albo osobnym komputerze: zakłada `~/Sarmata` (macOS) albo `/opt/sarmata` (Linux), kontenery projektu `sarmata` i porty 3000 i 8000.
+
 Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`.
 
 ## Skrypty
@@ -86,6 +94,10 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm --filter @sarmata/deploy test` | testy instalatora (plany kroków, compose, sekrety, skróty) bez Dockera |
 | `pnpm --filter @sarmata/deploy vendor:supabase [TAG]` | odświeża przypiętą kopię self-hosted Supabase w `infra/deploy/supabase/` |
 | `docker build -f infra/deploy/docker/app.Dockerfile --target web -t sarmata/web:check .` | sprawdzenie obrazu aplikacji tak, jak buduje go instalator (cele: `web`, `worker`) |
+| `pnpm --filter @sarmata/deploy compile` | binarki kreatora dla Windows x64, Linux x64 i arm64, macOS arm64 w `infra/deploy/dist/` (Bun pobiera runtime celu przy pierwszej kompilacji) |
+| `pnpm --filter @sarmata/deploy release 1.0.0` | paczka dla urzędów `infra/deploy/release/sarmata-1.0.0.zip`: źródła z HEAD, binarki, `VERSION` |
+| `infra/deploy/dist/sarmata-macos-arm64 install --dry-run --answers infra/deploy/examples/light.json` | lista kroków instalacji bez żadnych zmian (po `compile`) |
+| `infra/deploy/dist/sarmata-macos-arm64 render --answers infra/deploy/examples/server.json --out /tmp/sarmata-server` | `compose.yaml`, `.env` i `Caddyfile` do obejrzenia, bez instalacji |
 
 ## Aplikacja web
 
@@ -113,6 +125,8 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 | `SARMATA_AI_TEXT_API_KEY`, `SARMATA_AI_DECISION_API_KEY` | `@sarmata/ai` | tylko gdy serwer modelu wymaga klucza. To sekret: dopisz go do `secrets/dev.enc.env` przez `sops secrets/dev.enc.env`, nigdy jawnie do repo |
 | `SARMATA_WORKER_IDLE_DELAY_MS` | worker | domyślnie `1000`, przerwa po pustym odczycie kolejki |
 
+W instalacji urzędu te same zmienne ustawia kreator w `.env` katalogu instalacji. Kontener `web` dostaje `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SITE_URL` i `SARMATA_AI_*`, a `SUPABASE_SECRET_KEY` trafia wyłącznie do kontenera `worker` (ADR 0004).
+
 ## Pliki konfiguracyjne
 
 - W repo: `.envrc`, `.sops.yaml`, `secrets/*.enc.env` (zaszyfrowane), `.mcp.json`, `.claude/`, `.agents/`, `.codex/`, `scripts/termic-*.sh`, `database/supabase/config.toml`, `infra/deploy/supabase/` (kopia `docker/` z supabase/supabase, nie edytować ręcznie), `infra/deploy/docker/` (Dockerfile aplikacji i `dbtool.sh` dla instalacji w urzędach).
@@ -128,6 +142,64 @@ W ustawieniach projektu sarmata w Termic ustaw:
 Skrypt run uruchamia `pnpm dev` na porcie wyliczonym z nazwy taska (`$TERMIC_TASK`, zakres 3001 do 3999, poza Termic port 3000) i ustawia `SITE_URL` aplikacji na ten sam adres. Port bieżącego taska pokazuje `node scripts/task-port.mjs`.
 
 Skrypt setup po starcie wspólnej bazy synchronizuje oficjalne wersje przepisów (`pnpm regulations:sync`).
+
+## Instalacja w urzędzie
+
+Instrukcja dla działu IT urzędu. Instalacja nie używa SOPS ani kont w usługach zewnętrznych: kreator generuje hasła i klucze lokalnie i zapisuje je tylko w pliku `.env` katalogu instalacji (prawa tylko dla właściciela). Potrzebny jest dostęp do internetu w czasie instalacji (obrazy Dockera, pakiety npm do budowy aplikacji, opcjonalnie modele AI).
+
+### Wybór profilu
+
+| Profil | Dla kogo | Orientacyjny sprzęt | Dostęp |
+|---|---|---|---|
+| light | jedno stanowisko | 2 rdzenie, 4 GB RAM, 20 GB dysku, AI domyślnie wyłączone | tylko ten komputer, `http://localhost:3000` |
+| standard | mocniejsze stanowisko albo mały urząd | 4 rdzenie, 8 GB RAM (z AI 16 GB albo karta 8 GB), 40 GB dysku | ten komputer albo sieć urzędu, porty 3000 i 8000 |
+| server | serwer w sieci urzędu | Linux, 4 rdzenie, 16 GB RAM, 60 GB dysku | `https://<nazwa-serwera>` przez Caddy, porty 80 i 443 |
+
+Każdy profil może zamiast lokalnej bazy użyć zewnętrznego projektu Supabase.
+
+### Windows 10 i 11 (light, standard)
+
+1. Rozpakuj `sarmata-<wersja>.zip`, np. do `C:\Sarmata\paczka`.
+2. Uruchom dwuklikiem `infra\deploy\install.bat`. Gdy SmartScreen ostrzeże przed nieznanym wydawcą, wybierz „Więcej informacji”, potem „Uruchom mimo to”.
+3. Jeśli komputer nie ma WSL2, kreator go zainstaluje (okno uprawnień administratora) i poprosi o restart. Po restarcie uruchom `install.bat` jeszcze raz.
+4. Kreator zakłada dystrybucję WSL `sarmata` z Docker Engine (darmowy, bez Docker Desktop). Jeśli urząd ma licencję Docker Desktop i jest on uruchomiony, kreator użyje go zamiast WSL.
+5. Odpowiedz na pytania: profil, baza, nazwa urzędu, konto administratora, SMTP, AI, skrót na pulpicie. Pierwsza budowa aplikacji trwa 10 do 20 minut.
+6. Skrót „Sarmata” na pulpicie uruchamia system i otwiera przeglądarkę. Dla profilu standard w sieci kreator włącza tryb sieci `mirrored` WSL i regułę zapory Hyper-V (drugie okno uprawnień administratora).
+
+### Linux (server, także light i standard)
+
+Obsługiwane: Ubuntu 22.04, 24.04, 26.04, Debian 12 i 13, RHEL 8 do 10 (oraz Rocky i Alma), Fedora 43 do 45.
+
+1. Zaloguj się na konto z `sudo` i rozpakuj paczkę: `unzip sarmata-<wersja>.zip && cd sarmata`.
+2. Uruchom `sh infra/deploy/install.sh`.
+3. Kreator instaluje Docker Engine z oficjalnego repozytorium Dockera, dodaje konto do grupy `docker` (działa po ponownym zalogowaniu) i zakłada katalog `/opt/sarmata`.
+4. Profil server pyta o nazwę serwera z DNS urzędu i certyfikat:
+   - wewnętrzne CA Caddy: po instalacji roześlij plik `/opt/sarmata/caddy-root.crt` do magazynu „Zaufane główne urzędy certyfikacji” na komputerach urzędu (np. przez GPO),
+   - certyfikat urzędu: podaj ścieżki do plików PEM certyfikatu (z łańcuchem) i klucza.
+5. Otwórz w zaporze porty 80 i 443 (np. `sudo ufw allow 80,443/tcp` albo `sudo firewall-cmd --permanent --add-service=http --add-service=https && sudo firewall-cmd --reload`).
+6. Profil server robi co noc kopię bazy do `/opt/sarmata/backups` i trzyma 14 ostatnich.
+
+### macOS z Apple Silicon (light, standard)
+
+1. Zainstaluj Docker Desktop (jeśli urząd ma licencję) albo Colima: `brew install colima docker docker-compose`, potem `colima start --cpu 4 --memory 8`.
+2. Rozpakuj paczkę i uruchom `sh infra/deploy/install.sh`.
+3. Skrót `Sarmata.command` na pulpicie uruchamia system i otwiera przeglądarkę.
+
+### Zewnętrzne Supabase
+
+Kreator pyta o adres projektu, klucz publiczny, klucz serwisowy i adres połączenia z bazą (do migracji i kopii). W panelu projektu Supabase trzeba samodzielnie włączyć hook Custom Access Token z funkcją `access.custom_access_token_hook`, ustawić Site URL na adres aplikacji i skonfigurować SMTP dla e-maili logowania.
+
+### Codzienna obsługa
+
+| Polecenie (Windows: `install.bat <polecenie>` z paczki albo skrót) | Co robi |
+|---|---|
+| `sarmata start --open` | uruchamia system i otwiera przeglądarkę (to robi skrót na pulpicie) |
+| `sarmata stop`, `sarmata status` | zatrzymanie, stan usług |
+| `install.sh update` z rozpakowanej nowej paczki | kopia bazy, budowa nowej wersji obok działającej, migracje, restart, przy błędzie automatyczny powrót do poprzedniej wersji i danych |
+| `sarmata update --from sarmata-<wersja>.zip` | to samo z pliku zip (Linux, macOS, WSL) |
+| `sarmata uninstall` | usuwa system, zostawia końcową kopię bazy w `backups/` (`--purge` usuwa wszystko) |
+
+Polecenie `sarmata` leży w `/opt/sarmata/bin` (Linux), `~/Sarmata/bin` (macOS) albo `%LOCALAPPDATA%\Programs\Sarmata` (Windows). Kopie bazy są w `backups/` katalogu instalacji: `/opt/sarmata` (Linux, a na Windows w WSL pod `\\wsl.localhost\sarmata\opt\sarmata`), `~/Sarmata` (macOS), `C:\ProgramData\Sarmata` (Windows z Docker Desktop).
 
 ## Dokumentacja
 
