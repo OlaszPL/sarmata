@@ -45,12 +45,16 @@ jobs:
         working-directory: database
     steps:
       - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v3
+      # The Supabase CLI comes from the @sarmata/database devDependency (pinned in the lockfile), same as locally.
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 3.2.0
-      - run: supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
-      - run: supabase test db
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+      - run: pnpm exec supabase test db
       - name: Typy zgodne z migracjami
         run: |
-          supabase gen types typescript --schema public > /tmp/types.ts
+          pnpm exec supabase gen types typescript --schema public > /tmp/types.ts
           diff -u src/types.ts /tmp/types.ts

@@ -4,7 +4,9 @@ System Automatycznej Rejestracji i Monitorowania Awansów, Terminów i Analiz. C
 
 ## Start
 
-Wymagania: Node 24, pnpm 12.21.0, sops i age (sekrety zespołu). Klucz age leży w `~/.config/sops/age/keys.txt` albo pod ścieżką z `SOPS_AGE_KEY_FILE`.
+Wymagania: Node 24, pnpm 12.21.0, Docker, sops i age (sekrety zespołu). Klucz age leży w `~/.config/sops/age/keys.txt` albo pod ścieżką z `SOPS_AGE_KEY_FILE`. `pnpm doctor` sprawdza narzędzia i podaje polecenia instalacji dla macOS, Debiana/Ubuntu i Windowsa.
+
+Opcjonalnie direnv: `direnv allow` w katalogu repo ładuje `.envrc` (ścieżka klucza age, `node_modules/.bin` w `PATH`, `.env.local`). Skrypt `scripts/termic-setup.sh` robi to sam, gdy direnv jest zainstalowany.
 
     pnpm install
     pnpm secrets:decrypt
@@ -14,6 +16,7 @@ Wymagania: Node 24, pnpm 12.21.0, sops i age (sekrety zespołu). Klucz age leży
 
 | Skrypt                     | Co robi                                            |
 | -------------------------- | -------------------------------------------------- |
+| `pnpm doctor`              | sprawdza wymagane narzędzia i podpowiada instalację |
 | `pnpm check`               | lint, format, typecheck i testy (to samo co CI)    |
 | `pnpm test`                | testy wszystkich pakietów przez Turborepo          |
 | `pnpm typecheck`           | kontrola typów                                     |
@@ -22,7 +25,7 @@ Wymagania: Node 24, pnpm 12.21.0, sops i age (sekrety zespołu). Klucz age leży
 
 ## Baza danych
 
-Wymagania: Docker i Supabase CLI 3.2.0 (`brew install supabase/tap/supabase`).
+Wymagania: Docker. Supabase CLI 3.2.0 przychodzi z `pnpm install` (devDependency `@sarmata/database`), nie trzeba go instalować osobno.
 
 | Skrypt | Co robi |
 |---|---|

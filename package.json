@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm format:check && turbo run typecheck test",
     "prepare": "husky",
+    "doctor": "bash scripts/doctor.sh",
     "secrets:decrypt": "bash scripts/secrets-decrypt.sh",
     "db:start": "pnpm --filter @sarmata/database start",
     "db:stop": "pnpm --filter @sarmata/database stop",

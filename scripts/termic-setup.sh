@@ -3,13 +3,20 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Warnings only: the setup continues so a missing tool does not hide the other steps.
+bash scripts/doctor.sh || true
+
 pnpm install --frozen-lockfile
+
+if command -v direnv >/dev/null 2>&1; then
+  direnv allow
+fi
 
 pnpm secrets:decrypt
 
-# Shared Supabase instance "sarmata" for all worktrees (ADR 0002).
+# Shared Supabase instance "sarmata" for all worktrees (docs/architektura.md, "Narzędzia deweloperskie").
 if docker info >/dev/null 2>&1; then
-  (cd database && { supabase status >/dev/null 2>&1 || supabase start; })
+  (cd database && { pnpm exec supabase status >/dev/null 2>&1 || pnpm exec supabase start; })
 else
   echo "Docker is not running, skipping Supabase start"
 fi

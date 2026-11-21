@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "supabase": "3.2.0",
     "typescript": "catalog:"
   }
 }
