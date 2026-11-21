@@ -77,4 +77,37 @@ describe('planTransition', () => {
     expect(plan.eventKind).toBe('signature_refused');
     expect(plan.next).toBe('delivered');
   });
+
+  it('file_objection from delivered goes to objection', () => {
+    expect(planTransition('delivered', { type: 'file_objection', filedOn: day })).toEqual({
+      next: 'objection',
+      eventKind: 'objection_filed',
+      occurredOn: day,
+      lockSheet: false,
+    });
+  });
+
+  it.each([
+    'criteria',
+    'criteria_awaiting_signature',
+    'period',
+    'interview',
+    'drafted',
+    'delivered',
+    'objection',
+  ] as const)('interrupt allowed from %s', (status) => {
+    expect(
+      planTransition(status, { type: 'interrupt', interruptedOn: day, reason: 'transfer' }),
+    ).toEqual({ next: 'interrupted', eventKind: 'interrupted', occurredOn: day, lockSheet: false });
+  });
+
+  it.each(['closed', 'interrupted'] as const)(
+    'interrupt from %s throws invalid_transition',
+    (status) => {
+      const run = () =>
+        planTransition(status, { type: 'interrupt', interruptedOn: day, reason: 'x' });
+      expect(run).toThrow(TransitionError);
+      expect(run).toThrow(expect.objectContaining({ code: 'invalid_transition' }));
+    },
+  );
 });

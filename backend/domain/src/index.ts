@@ -52,6 +52,11 @@ export {
   evaluationTransitions,
   planTransition,
 } from './evaluations/state-machine';
+export {
+  type ObjectionOutcome,
+  objectionFilingIssue,
+  outcomeLowered,
+} from './evaluations/objection';
 export { type ApprovalIssue, partOneIssues, sheetApprovalIssues } from './evaluations/approval';
 export { type Eligibility, evaluationEligibility } from './evaluations/eligibility';
 export { effectiveDueOn } from './evaluations/due-date';

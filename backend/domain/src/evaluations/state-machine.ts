@@ -8,7 +8,6 @@ export type EvaluationStatus =
   | 'drafted'
   | 'delivered'
   | 'closed'
-  /** No transitions yet, a later plan adds them. */
   | 'objection'
   | 'interrupted';
 
@@ -18,7 +17,9 @@ export type EvaluationCommand =
   | { type: 'record_evaluation_interview'; heldOn: CalendarDate }
   | { type: 'approve_sheet'; draftedOn: CalendarDate }
   | { type: 'record_acquaintance'; acquaintedOn: CalendarDate; signatureRefused: boolean }
-  | { type: 'close_after_objection_window'; closedOn: CalendarDate };
+  | { type: 'close_after_objection_window'; closedOn: CalendarDate }
+  | { type: 'file_objection'; filedOn: CalendarDate }
+  | { type: 'interrupt'; interruptedOn: CalendarDate; reason: string };
 
 export interface EvaluationTransition {
   from: EvaluationStatus;
@@ -46,6 +47,23 @@ export const evaluationTransitions: readonly EvaluationTransition[] = [
   { from: 'drafted', to: 'delivered', eventKind: 'acquainted', lockSheet: false },
   { from: 'drafted', to: 'delivered', eventKind: 'signature_refused', lockSheet: false },
   { from: 'delivered', to: 'closed', eventKind: 'closed', lockSheet: false },
+  { from: 'delivered', to: 'objection', eventKind: 'objection_filed', lockSheet: false },
+  ...(
+    [
+      'criteria',
+      'criteria_awaiting_signature',
+      'period',
+      'interview',
+      'drafted',
+      'delivered',
+      'objection',
+    ] as const
+  ).map((from) => ({
+    from,
+    to: 'interrupted' as const,
+    eventKind: 'interrupted',
+    lockSheet: false,
+  })),
 ];
 
 export interface TransitionPlan {
@@ -95,6 +113,10 @@ function commandFacts(command: EvaluationCommand): CommandFacts {
       };
     case 'close_after_objection_window':
       return { to: 'closed', eventKind: 'closed', occurredOn: command.closedOn };
+    case 'file_objection':
+      return { to: 'objection', eventKind: 'objection_filed', occurredOn: command.filedOn };
+    case 'interrupt':
+      return { to: 'interrupted', eventKind: 'interrupted', occurredOn: command.interruptedOn };
   }
 }
 
