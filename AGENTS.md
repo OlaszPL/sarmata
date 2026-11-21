@@ -1,5 +1,9 @@
 NEVER use em-dashes, slop words, semicolons etc.
 
+## Language
+
+Code is in English: identifiers, file names, comments, SQL tables, columns, enums, policies, JWT claims, developer-facing messages, test names. Only the application UI (user-facing strings) and docs (`docs/`, README) are in Polish. Domain terms keep their Polish name in `GLOSSARY.md` next to the English code name.
+
 ## Searching the repo: semble first
 
 Gather context with semble, a semantic search over this repo:

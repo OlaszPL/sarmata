@@ -65,7 +65,7 @@ flowchart LR
 
 | ADR | Temat |
 |---|---|
-| [0001](adr/0001-urzad-id-od-poczatku.md) | `urzad_id` w każdej tabeli od pierwszej migracji |
+| [0001](adr/0001-office-id-od-poczatku.md) | `office_id` w każdej tabeli od pierwszej migracji |
 | [0002](adr/0002-uklad-repo-i-runtime.md) | układ repo, runtime'y, prace w tle, PDF |
 | [0003](adr/0003-wdrozenie-u-klienta.md) | wdrożenie, kreator, profile, Caddy, licencje |
 | [0004](adr/0004-repozytoria-supabase-js.md) | warstwy backendu, pobieranie danych, minimum tożsamości |
