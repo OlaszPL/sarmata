@@ -1,3 +1,4 @@
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -12,4 +13,4 @@ import { fileURLToPath } from 'node:url';
 export const PDF_FONT_FAMILY = 'Libertinus Serif';
 
 /** Directory with the font files given to the compiler. Resolved from this module, not from cwd. */
-export const FONTS_DIR = fileURLToPath(new URL('../../fonts', import.meta.url));
+export const FONTS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'fonts');

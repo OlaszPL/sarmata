@@ -2,6 +2,7 @@ import { type Db } from '@sarmata/repositories';
 import { type ExportService, createExportService } from './export-service';
 import { loadExportSource } from './load-source';
 
+export { attachmentDisposition } from './content-disposition';
 export { ExportError, type ExportErrorCode } from './errors';
 export {
   type ExportFile,

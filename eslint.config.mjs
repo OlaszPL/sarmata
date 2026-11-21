@@ -136,11 +136,12 @@ export default defineConfig([
                 '!@sarmata/services',
                 '!@sarmata/ui',
                 '!@sarmata/ui/*',
+                '!@sarmata/exports',
                 '@supabase/*',
                 '!@supabase/ssr',
               ],
               message:
-                'The frontend uses only @sarmata/services, @sarmata/ui and @supabase/ssr (ADR 0004).',
+                'The frontend uses only @sarmata/services, @sarmata/exports (download route), @sarmata/ui and @supabase/ssr (ADR 0004).',
             },
             {
               group: ['**/backend/**'],
