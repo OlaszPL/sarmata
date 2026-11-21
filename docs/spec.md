@@ -49,3 +49,5 @@ Nie wiem możesz rozplanować na mikroserwisy jak trzeba, ale na pewno NextJS z 
 
 WAŻNE
 Dodaj precommit i pre-push, jakiś prosty CI, ale aby nie szedł jakoś mega długo i sensowne testowanie gdzie się da, korzystając z nowoczesnych pakietów itp.
+
+Zarządzaj też fajnie configiem do termica: https://github.com/simion/termic/ by automatycznie można było robić nowe chaty itp.
