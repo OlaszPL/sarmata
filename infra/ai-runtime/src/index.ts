@@ -1,3 +1,16 @@
+export type { DownloadAsset, ProgressEvent, RuntimeContext } from './context.ts';
+export { BIELIK_ONE_PACKAGES, MODEL_FILES } from './models.ts';
+export type {
+  BielikOneEngine,
+  BielikOnePackage,
+  BielikOnePackageId,
+  ModelFile,
+  ModelId,
+} from './models.ts';
+export { LLAMA_CPP_RELEASE } from './llama-cpp-release.ts';
+export type { LlamaBackend, LlamaCppBundle } from './llama-cpp-release.ts';
+export { recommendRuntime } from './recommend.ts';
+export type { InstallProfile, RecommendOptions, RuntimeRecommendation } from './recommend.ts';
 export { detectHardware } from './hardware.ts';
 export type { ComputeDevice, Hardware, NvidiaGpu } from './hardware.ts';
 export { fakeMachine, localMachine } from './machine.ts';
