@@ -38,6 +38,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
         choice: raw.choice,
         probabilities: Object.fromEntries(keys.map((key) => [key, key === raw.choice ? 1 : 0])),
         confidence: raw.confidence,
+        calibrated: false,
       }));
     }
     case 'noul':
@@ -46,6 +47,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
         noul: raw.value ? 1 : 0,
         probabilities: { true: raw.value ? 1 : 0, false: raw.value ? 0 : 1 },
         confidence: raw.confidence,
+        calibrated: false,
       }));
     case 'score': {
       const top = Math.max(spec.criteria.length - 1, 0);
@@ -57,6 +59,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
           spec.criteria.map((_, index) => [String(index), index === Math.round(raw.score) ? 1 : 0]),
         ),
         confidence: raw.confidence,
+        calibrated: false,
       }));
     }
     case 'labels': {
@@ -68,6 +71,7 @@ function fallbackQuestion(spec: DecisionRequest['questions'][string]): FallbackQ
           keys.map((key) => [key, raw.selected.includes(key) ? 1 : 0]),
         ),
         confidence: raw.confidence,
+        calibrated: false,
       }));
     }
   }

@@ -105,6 +105,11 @@ const hrSignalsOutputSchema = z.strictObject({
       signal: hrSignalNameSchema,
       present: z.boolean(),
       probability: z.number().min(0).max(1),
+      /**
+       * False when the text model decided instead of Bielik-One: the probability is the confidence the
+       * model reported itself, so the UI labels it ("model tekstowy, pewność deklarowana").
+       */
+      calibrated: z.boolean().default(true),
       fragments: z.array(z.strictObject({ noteId: z.string(), quote: z.string() })),
     }),
   ),

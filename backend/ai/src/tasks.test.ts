@@ -250,7 +250,7 @@ describe('hr signals', () => {
     expect(output).toMatchObject({
       signals: [
         { signal: 'sentiment', present: false, probability: 0.3 },
-        { signal: 'overload', present: true, probability: 0.8 },
+        { signal: 'overload', present: true, probability: 0.8, calibrated: true },
         { signal: 'engagement_drop', present: false },
         { signal: 'burnout_risk', present: false },
       ],
@@ -275,13 +275,37 @@ describe('hr signals', () => {
     );
     const output = await executeOk(runner, 'hr_signals', input);
     expect(schemaOf(fake, 0)).toContain('"name":"decision_answers"');
+    // The fallback is not calibrated: the probability is the confidence the model reported.
     expect(output).toMatchObject({
       signals: [
-        { signal: 'sentiment', present: true, probability: 1 },
-        { signal: 'overload', present: true, probability: 1 },
+        { signal: 'sentiment', present: true, probability: 0.7, calibrated: false },
+        { signal: 'overload', present: true, probability: 0.9, calibrated: false },
+        { signal: 'engagement_drop', present: false, calibrated: false },
+        { signal: 'burnout_risk', present: false, calibrated: false },
+      ],
+    });
+    const signals = (output as { signals: { probability: number }[] }).signals;
+    expect(signals[2]?.probability).toBeCloseTo(0.2);
+    expect(signals[3]?.probability).toBeCloseTo(0.4);
+    for (const entry of signals) {
+      expect(entry.probability).not.toBe(0);
+      expect(entry.probability).not.toBe(1);
+    }
+  });
+
+  it('signals without notes skip the model', async () => {
+    const { runner, fake } = await runnerWith({ decision: bielikAnswers(0.8) });
+    const output = await executeOk(runner, 'hr_signals', { notes: [], pastRatings: [] });
+    expect(fake.requests).toHaveLength(0);
+    expect(output).toMatchObject({
+      signals: [
+        { signal: 'sentiment', present: false, probability: 0 },
+        { signal: 'overload', present: false, probability: 0 },
         { signal: 'engagement_drop', present: false, probability: 0 },
         { signal: 'burnout_risk', present: false, probability: 0 },
       ],
+      questions: [],
+      actions: [],
     });
   });
 

@@ -4,7 +4,7 @@ import { type AiRunKind } from '@sarmata/domain';
 import { type AiRunQueueStore } from '@sarmata/repositories';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type JobContext } from '../job-handler';
-import { createAiRunHandler } from './ai-run';
+import { STALE_AFTER_MS, createAiRunHandler } from './ai-run';
 
 const RUN = '33333333-3333-4333-8333-333333333333';
 
@@ -12,7 +12,7 @@ type Outcome = Parameters<AiRunQueueStore['finish']>[1];
 
 /** A run in memory: claimed once, then finished. */
 class InMemoryStore implements AiRunQueueStore {
-  status: 'queued' | 'running' | 'done' | 'failed' = 'queued';
+  state: 'queued' | 'running' | 'done' | 'failed' = 'queued';
   outcome: Outcome | null = null;
   failClaim = false;
 
@@ -24,13 +24,17 @@ class InMemoryStore implements AiRunQueueStore {
 
   claim() {
     if (this.failClaim) return Promise.reject(new Error('database is down'));
-    if (this.status !== 'queued') return Promise.resolve(null);
-    this.status = 'running';
+    if (this.state !== 'queued') return Promise.resolve(null);
+    this.state = 'running';
     return Promise.resolve({ kind: this.kind, input: this.input, aiEnabled: this.aiEnabled });
   }
 
+  status() {
+    return Promise.resolve(this.state);
+  }
+
   finish(_id: string, outcome: Outcome) {
-    this.status = 'output' in outcome ? 'done' : 'failed';
+    this.state = 'output' in outcome ? 'done' : 'failed';
     this.outcome = outcome;
     return Promise.resolve();
   }
@@ -108,7 +112,7 @@ describe('ai.run handler', () => {
     const handler = createAiRunHandler(() => ({ store, runner }));
     const runner = await fakeRunner({ objects: draftReply });
     expect(await handler.run({ runId: RUN }, context())).toEqual({ status: 'done' });
-    expect(store.status).toBe('done');
+    expect(store.state).toBe('done');
     expect(store.outcome).toMatchObject({
       promptVersion: 'sheet-draft.v1',
       output: { status: 'draft', ratings: [{ criterionId: 'communication', points: 7 }] },
@@ -130,7 +134,7 @@ describe('ai.run handler', () => {
     const store = new InMemoryStore('sheet_draft', draftInput, false);
     const runner = await fakeRunner({ objects: draftReply });
     await createAiRunHandler(() => ({ store, runner })).run({ runId: RUN }, context());
-    expect(store.status).toBe('failed');
+    expect(store.state).toBe('failed');
     expect(store.outcome).toMatchObject({ failure: { reason: 'disabled' } });
     expect(server?.requests).toEqual([]);
   });
@@ -143,7 +147,7 @@ describe('ai.run handler', () => {
       context(),
     );
     expect(outcome).toEqual({ status: 'done' });
-    expect(store.status).toBe('failed');
+    expect(store.state).toBe('failed');
     expect(store.outcome).toMatchObject({ failure: { reason: 'unavailable' } });
   });
 
@@ -156,6 +160,42 @@ describe('ai.run handler', () => {
     ).rejects.toThrow('database is down');
   });
 
+  it('shutdown during a run finishes it as interrupted', async () => {
+    const store = new InMemoryStore('sheet_draft', draftInput);
+    const runner = await fakeRunner({ objects: draftReply });
+    const controller = new AbortController();
+    const shutdown = { ...context(), signal: controller.signal };
+    const execute = runner.execute.bind(runner);
+    const stopping: AiRunner = {
+      execute: (run, signal) => {
+        controller.abort();
+        return execute(run, signal);
+      },
+    };
+    const outcome = await createAiRunHandler(() => ({ store, runner: stopping })).run(
+      { runId: RUN },
+      shutdown,
+    );
+    expect(outcome).toEqual({ status: 'done' });
+    expect(store.state).toBe('failed');
+    expect(store.outcome).toMatchObject({ failure: { reason: 'interrupted' } });
+  });
+
+  it('a run still running elsewhere throws so the job comes back', async () => {
+    const store = new InMemoryStore('sheet_draft', draftInput);
+    store.state = 'running';
+    const runner = await fakeRunner({ objects: draftReply });
+    await expect(
+      createAiRunHandler(() => ({ store, runner })).run({ runId: RUN }, context()),
+    ).rejects.toThrow('running elsewhere');
+    expect(server?.requests).toEqual([]);
+  });
+
+  it('stale threshold is shorter than the queue retry window', () => {
+    // runWorker: 5 deliveries, 60 s visibility timeout.
+    expect(STALE_AFTER_MS).toBeLessThan(5 * 60_000 - 60_000);
+  });
+
   it('invalid run id is invalid_payload', async () => {
     const store = new InMemoryStore('sheet_draft', draftInput);
     const runner = await fakeRunner({});
@@ -164,6 +204,6 @@ describe('ai.run handler', () => {
       context(),
     );
     expect(outcome).toMatchObject({ status: 'invalid_payload' });
-    expect(store.status).toBe('queued');
+    expect(store.state).toBe('queued');
   });
 });

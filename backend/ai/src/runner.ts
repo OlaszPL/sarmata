@@ -36,17 +36,19 @@ export interface AiRunner {
 interface TaskEntry<K extends AiRunKind> {
   readonly prompt: PromptName;
   readonly run: Task<K>;
+  /** The model writes long text: the call gets `AiConfig.longTimeoutMs`. */
+  readonly long: boolean;
 }
 
 const TASKS: { readonly [K in AiRunKind]: TaskEntry<K> } = {
-  sheet_draft: { prompt: 'sheet-draft', run: sheetDraft },
-  quality_check: { prompt: 'quality-check', run: qualityCheck },
-  sensitive_data: { prompt: 'sensitive-data', run: sensitiveData },
-  conversation_prep: { prompt: 'conversation-prep', run: conversationPrep },
-  criteria_proposals: { prompt: 'criteria-proposals', run: criteriaProposals },
-  appreciation_moments: { prompt: 'appreciation-moments', run: appreciationMoments },
-  hr_signals: { prompt: 'hr-signals', run: hrSignals },
-  procedure_question: { prompt: 'procedure-question', run: procedureQuestion },
+  sheet_draft: { prompt: 'sheet-draft', run: sheetDraft, long: true },
+  quality_check: { prompt: 'quality-check', run: qualityCheck, long: false },
+  sensitive_data: { prompt: 'sensitive-data', run: sensitiveData, long: false },
+  conversation_prep: { prompt: 'conversation-prep', run: conversationPrep, long: true },
+  criteria_proposals: { prompt: 'criteria-proposals', run: criteriaProposals, long: false },
+  appreciation_moments: { prompt: 'appreciation-moments', run: appreciationMoments, long: false },
+  hr_signals: { prompt: 'hr-signals', run: hrSignals, long: true },
+  procedure_question: { prompt: 'procedure-question', run: procedureQuestion, long: false },
 };
 
 export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRunner {
@@ -63,7 +65,11 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
     const prompt = loadPrompt(entry.prompt);
     const result = await entry.run(
       input.data as AiInput<K>,
-      { ai: deps.ai, legalSearch: deps.legalSearch, system: prompt.system },
+      {
+        ai: entry.long ? deps.ai.long : deps.ai,
+        legalSearch: deps.legalSearch,
+        system: prompt.system,
+      },
       signal,
     );
     if (!result.ok) return result;

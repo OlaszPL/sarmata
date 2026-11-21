@@ -132,7 +132,7 @@ describe('sheet draft', () => {
     });
   });
 
-  it('rating without supported sentence has null points', async () => {
+  it('a draft with every sentence dropped asks for more data', async () => {
     const { runner } = await runnerWith({
       objects: {
         sheet_draft: {
@@ -151,11 +151,13 @@ describe('sheet draft', () => {
     });
     const { output } = await executeOk(runner, 'sheet_draft', draftInput);
     expect(output).toMatchObject({
+      status: 'insufficient_data',
       ratings: [
         { criterionId: 'communication', points: null },
         { criterionId: 'reliability', points: null, sentences: [] },
       ],
     });
+    expect('questions' in output && output.questions).toHaveLength(2);
   });
 
   it('no notes gives insufficient_data without model call', async () => {

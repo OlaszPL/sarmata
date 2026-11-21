@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { type FakeReply, type FakeServer, startFakeServer } from './fake-server';
 import { type AiConfig, aiConfigFromEnv, createAi } from './index';
+import { legalSearchConfigFromEnv } from './config';
 
 let server: FakeServer | undefined;
 
@@ -87,6 +88,17 @@ describe('generateObject', () => {
     const fake = await serve(() => ({ ...completion('{}'), delayMs: 500 }));
     const result = await createAi(config(fake.baseUrl, { timeoutMs: 50 })).generateObject(request);
     expect(result).toMatchObject({ ok: false, reason: 'timeout' });
+  });
+
+  it('a long task waits for the long limit', async () => {
+    const fake = await serve(() => ({
+      ...completion('{"summary":"Szkic.","level":"meets"}'),
+      delayMs: 200,
+    }));
+    const ai = createAi(config(fake.baseUrl, { timeoutMs: 50, longTimeoutMs: 2_000 }));
+    expect(await ai.generateObject(request)).toMatchObject({ ok: false, reason: 'timeout' });
+    expect((await ai.long.generateObject(request)).ok).toBe(true);
+    expect(ai.long.long).toBe(ai.long);
   });
 
   it('does not call the model when AI is disabled', async () => {
@@ -233,12 +245,14 @@ describe('decide without Bielik-One (text model fallback)', () => {
           noul: 1,
           probabilities: { true: 1, false: 0 },
           confidence: 0.8,
+          calibrated: false,
         },
         tone: {
           type: 'choice',
           choice: 'positive',
           probabilities: { positive: 1, negative: 0 },
           confidence: 0.6,
+          calibrated: false,
         },
         engagement: {
           type: 'score',
@@ -246,12 +260,14 @@ describe('decide without Bielik-One (text model fallback)', () => {
           legend: { '0': 'niskie', '1': 'średnie', '2': 'wysokie' },
           probabilities: { '0': 0, '1': 0, '2': 1 },
           confidence: 0.5,
+          calibrated: false,
         },
         signals: {
           type: 'labels',
           selected: ['overtime'],
           probabilities: { overtime: 1, conflict: 0 },
           confidence: 0.7,
+          calibrated: false,
         },
       },
     });
@@ -290,7 +306,8 @@ describe('aiConfigFromEnv', () => {
   it('turns AI off by default', () => {
     expect(aiConfigFromEnv({})).toEqual({
       enabled: false,
-      timeoutMs: 60_000,
+      timeoutMs: 120_000,
+      longTimeoutMs: 600_000,
       text: null,
       decision: null,
     });
@@ -309,9 +326,15 @@ describe('aiConfigFromEnv', () => {
     ).toEqual({
       enabled: true,
       timeoutMs: 30_000,
+      longTimeoutMs: 600_000,
       text: { baseUrl: 'http://127.0.0.1:8080/v1', model: 'bielik-11b-v3.1', apiKey: null },
       decision: { baseUrl: 'http://127.0.0.1:8026/v1', model: 'decision', apiKey: null },
     });
+  });
+
+  it('gives semble a cold start limit of its own', () => {
+    expect(legalSearchConfigFromEnv({}).timeoutMs).toBe(300_000);
+    expect(legalSearchConfigFromEnv({ SARMATA_SEMBLE_TIMEOUT_MS: '1000' }).timeoutMs).toBe(1_000);
   });
 
   it('rejects a malformed URL', () => {

@@ -13,8 +13,13 @@ export interface AiRunHandlerDeps {
   readonly runner: AiRunner;
 }
 
-/** A running run older than this is taken over: its worker died or the job came back after a restart. */
-const STALE_AFTER_MS = 10 * 60_000;
+/**
+ * A running run older than this is taken over: its worker died without finishing it. It must stay below
+ * the retry window of the queue (5 deliveries, 60 s apart, see `runWorker`), so a delivery that comes
+ * back after a crash can still claim the run. One worker processes jobs one by one, so a long model call
+ * never sees its own job delivered again while it runs.
+ */
+export const STALE_AFTER_MS = 3 * 60_000;
 
 /**
  * Runs one AI run (ADR 0008). `claim` makes a second delivery a no-op. A model failure finishes the
@@ -29,6 +34,11 @@ export function createAiRunHandler(deps: () => AiRunHandlerDeps) {
       const { store, runner } = deps();
       const run = await store.claim(runId, STALE_AFTER_MS);
       if (run === null) {
+        // Another worker runs it now, or a dead one left it running: throw, so the job comes back and
+        // claims the run once it is stale. A finished run is skipped.
+        if ((await store.status(runId)) === 'running') {
+          throw new Error(`AI run ${runId} is running elsewhere, retry later`);
+        }
         logger.info('ai run skipped', { runId });
         return;
       }
@@ -40,8 +50,14 @@ export function createAiRunHandler(deps: () => AiRunHandlerDeps) {
         return;
       }
       const result = await runner.execute({ kind: run.kind, input: run.input }, signal);
-      // On shutdown the job comes back and the stale claim takes the run over.
-      if (signal.aborted) throw new Error(`AI run ${runId} interrupted by shutdown`);
+      // On shutdown the run ends as failed, like other failures: the user asks again.
+      if (signal.aborted) {
+        await store.finish(runId, {
+          failure: { reason: 'interrupted', message: 'The worker stopped during the run' },
+        });
+        logger.info('ai run failed', { runId, kind: run.kind, reason: 'interrupted' });
+        return;
+      }
       if (result.ok) {
         await store.finish(runId, {
           output: result.value.output,

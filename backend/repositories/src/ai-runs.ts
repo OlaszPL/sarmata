@@ -87,6 +87,8 @@ export interface AiRunQueueStore {
     id: string,
     staleAfterMs: number,
   ): Promise<{ kind: AiRunKind; input: unknown; aiEnabled: boolean } | null>;
+  /** The status of a run, `null` when it does not exist. */
+  status(id: string): Promise<AiRunStatus | null>;
   finish(
     id: string,
     outcome:
@@ -256,6 +258,12 @@ export function createAiRunQueueStore(db: ServiceDb): AiRunQueueStore {
         .maybeSingle();
       if (settingsError) throw new RepositoryError('aiRuns.claim', settingsError);
       return { kind: data.kind, input: data.input, aiEnabled: settings?.ai_enabled ?? false };
+    },
+
+    async status(id) {
+      const { data, error } = await db.from('ai_runs').select('status').eq('id', id).maybeSingle();
+      if (error) throw new RepositoryError('aiRuns.status', error);
+      return data === null ? null : data.status;
     },
 
     async finish(id, outcome) {

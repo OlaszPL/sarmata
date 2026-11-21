@@ -64,19 +64,28 @@ export const sheetDraft: Task<'sheet_draft'> = async (input, { ai, system }, sig
   });
   if (!result.ok) return result;
   const noteIds = new Set(input.notes.map((note) => note.id));
+  const ratings = input.criteria.map((criterion) => {
+    const proposed = result.value.ratings.find((rating) => rating.criterionId === criterion.id);
+    const sentences = keepCitedSentences(proposed?.sentences ?? [], noteIds);
+    return {
+      criterionId: criterion.id,
+      points: sentences.length > 0 ? (proposed?.points ?? null) : null,
+      sentences,
+    };
+  });
+  const justification = keepCitedSentences(result.value.justification, noteIds);
+  const developmentConclusions = keepCitedSentences(result.value.developmentConclusions, noteIds);
+  const kept =
+    ratings.reduce((sum, rating) => sum + rating.sentences.length, 0) +
+    justification.length +
+    developmentConclusions.length;
+  // Every sentence was dropped: the notes did not support any of them, so ask for more data.
+  if (kept === 0) return ok(insufficientData(input));
   return ok({
     status: 'draft',
-    ratings: input.criteria.map((criterion) => {
-      const proposed = result.value.ratings.find((rating) => rating.criterionId === criterion.id);
-      const sentences = keepCitedSentences(proposed?.sentences ?? [], noteIds);
-      return {
-        criterionId: criterion.id,
-        points: sentences.length > 0 ? (proposed?.points ?? null) : null,
-        sentences,
-      };
-    }),
-    justification: keepCitedSentences(result.value.justification, noteIds),
-    developmentConclusions: keepCitedSentences(result.value.developmentConclusions, noteIds),
+    ratings,
+    justification,
+    developmentConclusions,
     questions: result.value.questions,
   });
 };
