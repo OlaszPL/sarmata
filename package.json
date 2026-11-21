@@ -29,6 +29,7 @@
     "db:reset": "pnpm --filter @sarmata/database reset",
     "db:types": "pnpm --filter @sarmata/database types",
     "db:test": "pnpm --filter @sarmata/database test:db",
+    "test:integration": "bash scripts/with-supabase-env.sh pnpm --filter @sarmata/repositories test:integration",
     "ai:setup": "pnpm --filter @sarmata/ai-runtime ai:setup",
     "ai:env": "pnpm --filter @sarmata/ai-runtime ai:env",
     "ai:start": "pnpm --filter @sarmata/ai-runtime ai:start",

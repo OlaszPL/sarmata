@@ -48,6 +48,9 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
        pnpm check
        pnpm db:test
+      pnpm test:integration
+
+   `pnpm test:integration` to testy repozytoriów na działającej bazie, z kontami demo. CI ich nie uruchamia.
 
 Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`.
 
@@ -65,6 +68,7 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm db:reset` | migracje od zera i dane demo |
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
+| `pnpm test:integration` | testy repozytoriów na lokalnym Supabase, wymagają `pnpm db:reset` |
 | `pnpm ai:setup` | llama.cpp i model Bielik do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local` |
 | `pnpm ai:env` | `.env.ai.local` dla tego worktree z już pobranego AI, bez pobierania |
 | `pnpm ai:start` / `ai:stop` | wspólny llama-server w tle na porcie 55490 |
@@ -80,6 +84,14 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
 Font Open Sans jest na licencji SIL Open Font License 1.1.
+
+## Zmienne środowiskowe
+
+Żadna z nich nie jest sekretem zespołu. Lokalne klucze Supabase podaje `supabase status`, więc nie trafiają do `secrets/dev.enc.env`. W instalacji u klienta ustawia je kreator.
+
+| Zmienna | Kto używa | Skąd w dev |
+|---|---|---|
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | testy integracyjne, worker | `scripts/with-supabase-env.sh` czyta je z `supabase status`, chyba że `SUPABASE_URL` jest już ustawione (zewnętrzna instancja) |
 
 ## Pliki konfiguracyjne
 

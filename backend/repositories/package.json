@@ -7,14 +7,18 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@sarmata/database": "workspace:*",
+    "@sarmata/domain": "workspace:*",
     "@supabase/supabase-js": "catalog:"
   },
   "devDependencies": {
+    "@sarmata/regulations": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
