@@ -29,7 +29,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm db:start
        pnpm db:reset
 
-   `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno.
+   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno.
 
 6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp v1.0.0 z Metal (17 MB) i Bielik-11B-v3.1 Q4_K_M (6,7 GB) z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai` (wspólne dla wszystkich worktree, logi w `logs/`):
 
@@ -52,15 +52,15 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
    Najpierw synchronizuje wersje przepisów, potem czyta kolejkę pgmq `jobs`. Ctrl+C kończy go po bieżącym zadaniu. Próba: `docker exec supabase_db_sarmata psql -U postgres -c "select public.job_queue_send('{\"type\":\"system.ping\",\"payload\":{\"note\":\"hi\"}}')"`, w logu pojawi się `pong`.
 
-9. **Sprawdzenie całości** (to samo co CI):
+9. **Sprawdzenie całości.** CI na pull requeście robi tylko `pnpm check`, a pgTAP i e2e uruchamia na main:
 
        pnpm check
        pnpm db:test
        pnpm test:integration
 
-   `pnpm test:integration` to testy repozytoriów na działającej bazie, z kontami demo. CI ich nie uruchamia.
+   `pnpm test:integration` to testy repozytoriów na działającej bazie, z kontami demo, przy zatrzymanym workerze (test czyta wspólną kolejkę). CI ich nie uruchamia.
 
-Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`.
+Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`. Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`.
 
 ## Skrypty
 
@@ -102,10 +102,13 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 
 | Zmienna | Kto używa | Skąd w dev |
 |---|---|---|
-| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | testy integracyjne, worker | `scripts/with-supabase-env.sh` czyta je z `supabase status`, chyba że `SUPABASE_URL` jest już ustawione (zewnętrzna instancja) |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | testy integracyjne, worker | `scripts/with-supabase-env.mjs` czyta je z `supabase status`, chyba że `SUPABASE_URL` jest już ustawione (zewnętrzna instancja) |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | aplikacja web | `frontend/web/.env.local`, zapisuje go `pnpm web:env` |
+| `SITE_URL` | aplikacja web | domyślnie `http://localhost:3000`, `scripts/termic-run.sh` ustawia adres taska. Na razie nic go nie czyta (zaproszenia i reset hasła) |
+| `PORT` | `pnpm dev` | domyślnie 3000, `scripts/termic-run.sh` ustawia port taska |
 | `SARMATA_AI_ENABLED` | `@sarmata/ai` | domyślnie `false`, AI wyłączone |
 | `SARMATA_AI_TIMEOUT_MS` | `@sarmata/ai` | domyślnie `60000` |
-| `SARMATA_AI_TEXT_BASE_URL`, `SARMATA_AI_TEXT_MODEL` | `@sarmata/ai`, model tekstowy zgodny z OpenAI | np. `http://127.0.0.1:8080/v1` i `bielik` przy lokalnym llama-server, bez nich model tekstowy jest wyłączony |
+| `SARMATA_AI_TEXT_BASE_URL`, `SARMATA_AI_TEXT_MODEL` | `@sarmata/ai`, model tekstowy zgodny z OpenAI | np. `http://127.0.0.1:55490/v1` i `bielik-11b-v3.1-instruct` przy lokalnym llama-server z `pnpm ai:start`, bez nich model tekstowy jest wyłączony |
 | `SARMATA_AI_DECISION_BASE_URL`, `SARMATA_AI_DECISION_MODEL` | `@sarmata/ai`, Bielik-One `/v1/systemone` | np. `http://127.0.0.1:8026/v1` i `decision`, bez nich decyzje są wyłączone |
 | `SARMATA_AI_TEXT_API_KEY`, `SARMATA_AI_DECISION_API_KEY` | `@sarmata/ai` | tylko gdy serwer modelu wymaga klucza. To sekret: dopisz go do `secrets/dev.enc.env` przez `sops secrets/dev.enc.env`, nigdy jawnie do repo |
 | `SARMATA_WORKER_IDLE_DELAY_MS` | worker | domyślnie `1000`, przerwa po pustym odczycie kolejki |
@@ -119,7 +122,7 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 
 W ustawieniach projektu sarmata w Termic ustaw:
 
-- skrypt setup: `./scripts/termic-setup.sh`. Robi kroki 3 do 6 automatycznie: instalacja, `direnv allow`, sekrety, start wspólnej bazy, `web:env`, Chromium dla Playwright, ostrzeżenia z `doctor`.
+- skrypt setup: `./scripts/termic-setup.sh`. Robi automatycznie: ostrzeżenia z `doctor` (krok 1), `pnpm install` (krok 3), `direnv allow` i sekrety (krok 4), start wspólnej bazy bez `db:reset` oraz `pnpm regulations:sync` (krok 5), `pnpm ai:env` bez pobierania modeli (krok 6), `web:env` i Chromium dla Playwright (krok 7).
 - skrypt run: `./scripts/termic-run.sh`
 
 Skrypt run uruchamia `pnpm dev` na porcie wyliczonym z nazwy taska (`$TERMIC_TASK`, zakres 3001 do 3999, poza Termic port 3000) i ustawia `SITE_URL` aplikacji na ten sam adres. Port bieżącego taska pokazuje `node scripts/task-port.mjs`.

@@ -10,8 +10,7 @@ frontend/
   ui/             komponenty shadcn z CLI (nietknięte) i nasze nakładki
 backend/
   domain/         typy, reguły prawne, strategie terminów, schematy zod (bez I/O)
-  regulations/    oficjalne wersje przepisów: rules.json, testy przypadków, źródła prawa (ADR 0006)
-  repositories/   jedyne miejsce z zapytaniami do bazy (supabase-js z JWT użytkownika)
+  repositories/   jedyne miejsce z zapytaniami do bazy (supabase-js z JWT użytkownika, klucz serwisowy tylko w workerze)
   services/       logika, woła repositories, jedyne API dla frontend/web
   ai/             klient API zgodnego z OpenAI, prompty, endpoint decyzyjny Bielik-One
   worker/         proces Node: zadania z kolejki pgmq
