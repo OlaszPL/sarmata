@@ -135,3 +135,19 @@ _Avoid_: akceptacja AI
 **Sygnał HR partnera** (`hr_signals`):
 Sugestia dla oceniającego o sentymencie, przeciążeniu, spadku zaangażowania albo ryzyku wypalenia, z prawdopodobieństwem i fragmentami notatek źródłowych. Nigdy diagnoza. Decyduje człowiek.
 _Avoid_: diagnoza, ocena stanu pracownika
+
+**Ustanie zatrudnienia** (`employees.employment_ended_on`, `employee_retention`):
+Oznaczenie przez kadry, że stosunek pracy pracownika się zakończył. Przerywa otwarte oceny, kończy dostęp konta i uruchamia zegar przechowywania dokumentacji: 10 lat od końca roku kalendarzowego ustania (art. 94 pkt 9b KP).
+_Avoid_: zwolnienie, usunięcie pracownika
+
+**Retencja treści** (`purge_expired_content`):
+Usuwanie notatek oraz treści przebiegów AI po okresie z ustawień urzędu (`notesRetentionMonths`). Metadane przebiegów AI zostają. Skrócenie okresu działa wstecz.
+_Avoid_: czyszczenie bazy, archiwizacja notatek
+
+**Anonimizacja pracownika** (`anonymize_employee`):
+Jednorazowa operacja po upływie 10 lat: usuwa oceny, arkusze, dziennik zdarzeń, notatki, treść AI, dane osobowe rekordu i konto logowania, zostawia fakty do statystyk. Rekord pracownika zostaje jako anonimowy, z tym samym identyfikatorem.
+_Avoid_: usunięcie danych, kasowanie konta
+
+**Fakty zachowane** (`retained_evaluation_facts`, `retained_grade_grants`):
+Dane oceny i przyznania stopnia bez osoby (rok, komórka, poziom, wynik, punkty cząstkowe), które zostają po anonimizacji i zasilają raporty statystyk.
+_Avoid_: kopia oceny

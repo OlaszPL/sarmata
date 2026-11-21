@@ -133,8 +133,10 @@ Plik powstaje na żądanie w procesie aplikacji z danych w bazie (bez Storage i 
 
 ## Retencja
 
-- Okres przechowywania notatek i analiz HR partnera ustawia admin w ustawieniach urzędu (`OfficeSettings.notesRetentionMonths`, 1 do 120). Domyślnie 36 miesięcy: to decyzja do potwierdzenia, bo `docs/wymagania-i-kontekst.md` zostawia okres notatek roboczych do ustalenia. Usuwanie wykonuje zadanie pg_cron (B9).
-- Arkusz i dziennik zdarzeń zostają zgodnie z przepisami o dokumentacji pracowniczej (10 lat, art. 94 pkt 9b KP).
+- Okres przechowywania notatek i analiz HR partnera ustawia admin w ustawieniach urzędu (`OfficeSettings.notesRetentionMonths`, 1 do 120). Domyślnie 36 miesięcy: to decyzja do potwierdzenia, bo `docs/wymagania-i-kontekst.md` zostawia okres notatek roboczych do ustalenia. Usuwanie wykonuje dzienne zadanie `retention.run` (pg_cron o 5:30 UTC przez kolejkę, krok 1 to `purge_expired_content`).
+- Retencja treści: notatka starsza niż okres znika razem z wersjami. Przebieg AI (status `done` albo `failed`) starszy niż okres traci `input`, `output` i `failure_message`, a decyzje o fragmentach tekst po edycji (`content_deleted_at`). Metadane przebiegu zostają: kto, kiedy, jaka usługa, status, wersja promptu. Przebiegi `queued` i `running` zostają.
+- Skrócenie okresu przez admina działa wstecz: następny nocny bieg usuwa notatki starsze niż nowy okres. `OfficeSettingsService.notesRetentionPreview(months)` podaje, ile notatek i przebiegów AI by to usunęło, żeby ekran ustawień ostrzegł przed zapisem.
+- Arkusz i dziennik zdarzeń zostają zgodnie z przepisami o dokumentacji pracowniczej (10 lat, art. 94 pkt 9b KP). Okres liczy się od końca roku kalendarzowego, w którym stosunek pracy ustał (`retentionEndsOn` w `@sarmata/domain`: 31 grudnia roku ustania plus 10 lat).
 
 ## Sprzeciw
 
@@ -259,10 +261,14 @@ Retencja: treść przebiegów AI (wejście, wynik, komunikat porażki, tekst po 
 
 ## Usuwanie danych pracownika
 
-- Kadry oznaczają ustanie zatrudnienia. Otwarta ocena przechodzi w `przerwana`.
+- Kadry oznaczają ustanie zatrudnienia (`EmploymentService.end`, SQL `end_employment`). W jednej transakcji: data ustania, wiersz rejestru retencji (`employee_retention`, ostatni dzień przechowywania), koniec dostępu konta i przerwanie każdej otwartej oceny pracownika (zdarzenie `interrupted` z powodem `employment_ended`). Oceny `closed` zostają. Jeśli pracownik prowadzi cudze otwarte oceny, serwis zwraca ich liczbę (`openAsEvaluator`), a zmianę oceniającego robią kadry.
+- Koniec dostępu: członkostwo konta dostaje `ended_on`, od tej daty token nie niesie urzędu i konto nie loguje się do urzędu. Wiersz członkostwa zostaje do anonimizacji, bo oceny prowadzone przez konto dalej wskazują oceniającego. Konto Auth jest usuwane przy anonimizacji.
 - Notatki i analizy AI znikają według retencji ustawionej przez admina.
-- Arkusze zostają 10 lat (art. 94 pkt 9b KP). Potem zadanie pg_cron anonimizuje rekord pracownika i usuwa arkusze, a dane do statystyk zostają bez danych osobowych.
-- Przed usunięciem teczkę sprawy można wyeksportować.
+- Arkusze zostają 10 lat (art. 94 pkt 9b KP, od końca roku ustania). Dzień po upływie okresu zadanie `retention.run` woła `anonymize_employee` dla pracownika. Brak potwierdzenia pobrania archiwum nie blokuje anonimizacji, archiwum jest dostępne od ustania zatrudnienia, a kadry widzą terminy w `retention_overview`.
+- Anonimizacja (jedna transakcja): usuwa oceny z arkuszami, terminami, wynikami i powiadomieniami, dziennik zdarzeń, wpisy `grade_grants`, wszystkie notatki i treść przebiegów AI pracownika, imię, nazwisko, e-mail, stanowisko, komórkę, stopień i daty (zostaje rok rozpoczęcia pracy jako 1 stycznia) oraz konto Auth. Zostają: `id`, relacja przełożonego, data ustania, wiersz rejestru, oceny archiwalne i fakty zachowane.
+- Fakty zachowane: `retained_evaluation_facts` (rok, komórka, status, poziom, wynik, liczba punktów cząstkowych, sprzeciw, rok odwołania, konto oceniającego) i `retained_grade_grants` (podstawa, rok, stopień). Raporty roczne statystyk sumują je z danymi bieżącymi, więc liczby zostają bez zmian.
+- Droga systemowa usuwania: dziennik zdarzeń jest append-only także dla właściciela bazy. Wyjątek to transakcja ze znacznikiem w `lifecycle.purge_marker`. Wpisuje go tylko `anonymize_employee` (wykonanie tylko dla roli serwisowej) i usuwa przed zwróceniem. Każdy nowy trigger blokujący `delete` musi respektować ten znacznik.
+- Przed usunięciem kadry pobierają archiwum teczek (`archiveFor(db).exportEmployeeArchive`): ZIP z folderem teczki sprawy na każdą ocenę i `manifest.json` ze skrótami. Potwierdzenie pobrania zapisuje się dopiero po złożeniu pliku.
 
 ## Z przepisów (bez osobnej decyzji)
 
