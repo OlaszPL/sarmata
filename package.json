@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm format:check && turbo run typecheck test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "secrets:decrypt": "bash scripts/secrets-decrypt.sh"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
