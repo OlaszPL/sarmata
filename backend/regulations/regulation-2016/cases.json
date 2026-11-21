@@ -187,20 +187,43 @@
   },
   {
     "kind": "score",
+    "id": "ex-1",
+    "title": "Arkusz A, EX-1",
+    "source": "KPRM, przykładowe wypełnione formularze",
+    "sheetId": "A",
+    "additionalCriteria": ["negotiation", "crisis-management"],
+    "ratings": {
+      "people-management": 5,
+      "decision-making": 5,
+      "work-organization": 5,
+      "cooperation": 7,
+      "communication": 7,
+      "strategic-management": 5,
+      "negotiation": 5,
+      "crisis-management": 5
+    },
+    "expected": {
+      "levelCode": "meets",
+      "outcome": "positive",
+      "mean": 5.5
+    }
+  },
+  {
+    "kind": "score",
     "id": "ex-2",
     "title": "Arkusz B, EX-2",
     "source": "KPRM, przykładowe wypełnione formularze",
     "sheetId": "B",
-    "additionalCriteria": ["creativity", "negotiation", "customer-orientation"],
+    "additionalCriteria": ["public-speaking", "knowledge-use", "creativity"],
     "ratings": {
       "people-management": 9,
       "decision-making": 5,
       "work-organization": 7,
       "cooperation": 7,
       "communication": 7,
-      "creativity": 5,
-      "negotiation": 7,
-      "customer-orientation": 7
+      "public-speaking": 5,
+      "knowledge-use": 7,
+      "creativity": 7
     },
     "expected": {
       "levelCode": "above",
@@ -214,14 +237,14 @@
     "title": "Arkusz B, EX-3",
     "source": "KPRM, przykładowe wypełnione formularze",
     "sheetId": "B",
-    "additionalCriteria": ["creativity", "negotiation"],
+    "additionalCriteria": ["strategic-management", "negotiation"],
     "ratings": {
       "people-management": 9,
       "decision-making": 7,
       "work-organization": 9,
       "cooperation": 7,
       "communication": 7,
-      "creativity": 9,
+      "strategic-management": 9,
       "negotiation": 7
     },
     "expected": {
@@ -252,11 +275,32 @@
   },
   {
     "kind": "score",
+    "id": "ex-5",
+    "title": "Arkusz C, EX-5",
+    "source": "KPRM, przykładowe wypełnione formularze (arkusz podaje średnią 6,3, zaokrągloną z 6,33)",
+    "sheetId": "C",
+    "additionalCriteria": ["analytical-thinking"],
+    "ratings": {
+      "knowledge-use": 5,
+      "reliability": 7,
+      "work-organization": 7,
+      "cooperation": 7,
+      "communication": 7,
+      "analytical-thinking": 5
+    },
+    "expected": {
+      "levelCode": "above",
+      "outcome": "positive",
+      "mean": 6.333333333333333
+    }
+  },
+  {
+    "kind": "score",
     "id": "ex-6",
     "title": "Arkusz A, EX-6",
     "source": "KPRM, przykładowe wypełnione formularze",
     "sheetId": "A",
-    "additionalCriteria": ["creativity", "negotiation"],
+    "additionalCriteria": ["public-speaking", "crisis-management"],
     "ratings": {
       "people-management": 7,
       "decision-making": 5,
@@ -264,56 +308,163 @@
       "cooperation": 5,
       "communication": 7,
       "strategic-management": 5,
-      "creativity": 9,
-      "negotiation": 5
+      "public-speaking": 9,
+      "crisis-management": 5
     },
     "expected": {
       "levelCode": "meets",
       "outcome": "positive",
-      "mean": 6
+      "mean": 6.0
+    }
+  },
+  {
+    "kind": "score",
+    "id": "ex-7",
+    "title": "Arkusz B, EX-7",
+    "source": "KPRM, przykładowe wypełnione formularze",
+    "sheetId": "B",
+    "additionalCriteria": ["knowledge-use", "analytical-thinking", "strategic-management"],
+    "ratings": {
+      "people-management": 1,
+      "decision-making": 5,
+      "work-organization": 5,
+      "cooperation": 3,
+      "communication": 3,
+      "knowledge-use": 3,
+      "analytical-thinking": 5,
+      "strategic-management": 5
+    },
+    "expected": {
+      "levelCode": "below",
+      "outcome": "negative",
+      "mean": 3.75
+    }
+  },
+  {
+    "kind": "score",
+    "id": "ex-8",
+    "title": "Arkusz C, EX-8",
+    "source": "KPRM, przykładowe wypełnione formularze",
+    "sheetId": "C",
+    "additionalCriteria": [],
+    "ratings": {
+      "knowledge-use": 5,
+      "reliability": 5,
+      "work-organization": 5,
+      "cooperation": 7,
+      "communication": 5
+    },
+    "expected": {
+      "levelCode": "meets",
+      "outcome": "positive",
+      "mean": 5.4
     }
   },
   {
     "kind": "score",
     "id": "ex-9",
     "title": "Arkusz C, EX-9",
-    "source": "KPRM, przykładowe wypełnione formularze",
+    "source": "KPRM, przykładowe wypełnione formularze (błąd w oryginale: arkusz podaje średnią 3,3, poprawna średnia to 3,0)",
     "sheetId": "C",
-    "additionalCriteria": ["creativity"],
+    "additionalCriteria": ["analytical-thinking"],
     "ratings": {
       "knowledge-use": 5,
       "reliability": 1,
       "work-organization": 5,
       "cooperation": 1,
       "communication": 1,
-      "creativity": 5
+      "analytical-thinking": 5
     },
     "expected": {
       "levelCode": "below",
       "outcome": "negative",
-      "mean": 3
+      "mean": 3.0
+    }
+  },
+  {
+    "kind": "score",
+    "id": "ex-10",
+    "title": "Arkusz C, EX-10",
+    "source": "KPRM, przykładowe wypełnione formularze",
+    "sheetId": "C",
+    "additionalCriteria": [],
+    "ratings": {
+      "knowledge-use": 5,
+      "reliability": 5,
+      "work-organization": 5,
+      "cooperation": 5,
+      "communication": 5
+    },
+    "expected": {
+      "levelCode": "meets",
+      "outcome": "positive",
+      "mean": 5.0
+    }
+  },
+  {
+    "kind": "score",
+    "id": "ex-11",
+    "title": "Arkusz C, EX-11",
+    "source": "KPRM, przykładowe wypełnione formularze",
+    "sheetId": "C",
+    "additionalCriteria": ["analytical-thinking"],
+    "ratings": {
+      "knowledge-use": 7,
+      "reliability": 9,
+      "work-organization": 7,
+      "cooperation": 7,
+      "communication": 5,
+      "analytical-thinking": 7
+    },
+    "expected": {
+      "levelCode": "above",
+      "outcome": "positive",
+      "mean": 7.0
     }
   },
   {
     "kind": "score",
     "id": "ex-12",
     "title": "Arkusz C, EX-12",
-    "source": "KPRM, przykładowe wypełnione formularze",
+    "source": "KPRM, przykładowe wypełnione formularze (arkusz podaje średnią 3,8, zaokrągloną z 3,86)",
     "sheetId": "C",
-    "additionalCriteria": ["creativity", "negotiation"],
+    "additionalCriteria": ["customer-orientation", "creativity"],
     "ratings": {
       "knowledge-use": 5,
       "reliability": 5,
       "work-organization": 5,
       "cooperation": 3,
       "communication": 3,
-      "creativity": 3,
-      "negotiation": 3
+      "customer-orientation": 3,
+      "creativity": 3
     },
     "expected": {
       "levelCode": "below",
       "outcome": "negative",
       "mean": 3.857142857142857
+    }
+  },
+  {
+    "kind": "score",
+    "id": "ex-13",
+    "title": "Arkusz B, EX-13",
+    "source": "KPRM, przykładowe wypełnione formularze",
+    "sheetId": "B",
+    "additionalCriteria": ["public-speaking", "knowledge-use", "negotiation"],
+    "ratings": {
+      "people-management": 9,
+      "decision-making": 5,
+      "work-organization": 7,
+      "cooperation": 7,
+      "communication": 7,
+      "public-speaking": 3,
+      "knowledge-use": 7,
+      "negotiation": 5
+    },
+    "expected": {
+      "levelCode": "above",
+      "outcome": "positive",
+      "mean": 6.25
     }
   }
 ]

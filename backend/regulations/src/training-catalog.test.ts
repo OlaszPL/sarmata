@@ -90,6 +90,12 @@ describe('recommendDevelopment', () => {
     expect(shown.some((id) => managerOnly.has(id))).toBe(false);
   });
 
+  it('items for managers and coordinators are open to sheet C', () => {
+    for (const id of ['SK072', 'SK078', 'SK249']) {
+      expect(trainingCatalog.find((item) => item.id === id)?.audience).toBe('all');
+    }
+  });
+
   it('manager-only items are offered for sheet A', () => {
     const catalog = trainingCatalog
       .filter((item) => item.audience === 'managers' && item.status !== 'finished')

@@ -103,7 +103,7 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004). Raporty urzędu czytają k
 
 - Admin klonuje opublikowaną wersję przepisów do szkicu.
 - W szkicu zmienia parametry (stałe, progi, skale, kryteria, arkusze) i wybiera strategie z zarejestrowanego katalogu w `backend/domain`.
-- Przed publikacją backend uruchamia walidację zod i testy przypadków (liczenie terminów KPRM, 13 wypełnionych przykładów) i zwraca wynik.
+- Przed publikacją backend uruchamia walidację zod i testy przypadków (liczenie terminów KPRM, 13 wypełnionych przykładów KPRM jako przypadki oceny) i zwraca wynik.
 - Opublikowana wersja jest niezmienna, ma datę obowiązywania i podstawę prawną przy każdej regule.
 - Serwis `regulationEditor` ma sześć metod: `list`, `get` (dokument, graf slotów i parametrów oraz wynik walidacji i przypadków liczone przy odczycie), `clone`, `saveDraft`, `publish` i `deleteDraft`. Front nie składa walidacji ani grafu sam.
 - Zapis szkicu niezgodnego ze schematem zwraca `saved: false` i problemy ze ścieżkami (na przykład `overallLevel.bands.1.min`), a w bazie nic się nie zmienia.

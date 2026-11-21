@@ -61,7 +61,7 @@ describe('regulation drafts', () => {
           status: 'failed',
           expected: { kind: 'due', due: '2026-03-16' },
           actual: { kind: 'due', due: '2025-03-17' },
-          message: 'The result differs from the expected one',
+          message: 'Wynik różni się od oczekiwanego',
         },
       ],
     );

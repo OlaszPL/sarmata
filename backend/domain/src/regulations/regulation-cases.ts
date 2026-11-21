@@ -124,7 +124,7 @@ function runCase(regulation: RegulationDocument, testCase: RegulationCase): Verd
       status: passed ? 'passed' : 'failed',
       expected,
       actual,
-      message: passed ? null : 'The result differs from the expected one',
+      message: passed ? null : 'Wynik różni się od oczekiwanego',
     };
   } catch (error) {
     return {

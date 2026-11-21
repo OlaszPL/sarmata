@@ -313,6 +313,14 @@ describe('buildSheetDocument', () => {
     );
   });
 
+  it('an office version cloned from the official regulation uses the root form texts', () => {
+    const source = {
+      ...makeSource(),
+      regulation: { ...regulation2016, id: 'regulation-2016-local-1' },
+    };
+    expect(() => buildSheetDocument(source, { signatureBox: false, version: 1 })).not.toThrow();
+  });
+
   it('another regulation version is refused', () => {
     const source = { ...makeSource(), regulation: { ...regulation2016, id: 'regulation-2030' } };
     expect(() => buildSheetDocument(source, { signatureBox: false })).toThrow(

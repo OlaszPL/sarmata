@@ -188,7 +188,9 @@ export function previousEvaluation(
 }
 
 export function textsFor(regulation: RegulationDocument) {
-  const texts = regulationTexts[regulation.id];
+  // An office version is cloned from the official root as `<root code>-local-<n>` and shares its texts.
+  const rootCode = regulation.id.replace(/-local-\d+$/, '');
+  const texts = regulationTexts[regulation.id] ?? regulationTexts[rootCode];
   if (texts === undefined) {
     throw new ExportError(
       'unsupported_regulation',

@@ -117,7 +117,9 @@ function status(raw: string): string {
 
 function audience(raw: string): string {
   if (/wszyscy|wszystkie|każdy/i.test(raw)) return 'all';
-  if (/kierown|dyrektor|dyrektork|menedżer|lider/i.test(raw)) return 'managers';
+  // A coordinator counts as an employee, so any item that names coordinators is open to everyone.
+  if (/koordyn/i.test(raw)) return 'all';
+  if (/kierown|dyrektor|dyrektork|menedżer|lider|przełożon|oceniając/i.test(raw)) return 'managers';
   if (/kadrow|trener|HR/.test(raw)) return 'specialists';
   return 'all';
 }

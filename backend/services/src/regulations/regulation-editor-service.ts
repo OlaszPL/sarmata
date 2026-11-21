@@ -6,6 +6,7 @@ import {
   type RegulationGraph,
   RegulationDocumentError,
   calendarDate,
+  officeVersionInForce,
   parseRegulationDocument,
   regulationDocumentSchema,
   regulationGraph,
@@ -42,6 +43,8 @@ export interface RegulationVersionSummary {
   /** Row id of the version this one was cloned from. */
   basedOn: string | null;
   publishedAt: string | null;
+  /** True for the one version in force for the office today. Only `list` sets it, `get` leaves it false. */
+  inForce: boolean;
 }
 
 export interface RegulationVersionDetail extends RegulationVersionSummary {
@@ -100,6 +103,7 @@ const summaryOf = (
   code: document.id,
   name: document.name,
   effectiveFrom: document.effectiveFrom,
+  inForce: false,
   ...rest,
 });
 
@@ -113,7 +117,7 @@ function wrapWrite(error: unknown): never {
       throw new ServiceError('forbidden', 'Not allowed to change versions');
     if (error.code === '23505') {
       throw invalid([
-        { path: ['effectiveFrom'], message: 'Another version of the office starts on this date' },
+        { path: ['effectiveFrom'], message: 'Inna wersja urzędu obowiązuje od tego dnia' },
       ]);
     }
   }
@@ -220,7 +224,15 @@ export function createRegulationEditorService(
 
   return {
     async list() {
-      const { officials, local } = await load();
+      const { officials, local, candidates } = await load();
+      const inForceRow = officeVersionInForce(
+        candidates.map((candidate) => ({
+          rowId: candidate.rowId,
+          isOfficial: candidate.isOfficial,
+          effectiveFrom: candidate.document.effectiveFrom,
+        })),
+        today(),
+      )?.rowId;
       const summaries = [
         ...officials.map((official) =>
           summaryOf(official.rowId, official.document, {
@@ -232,11 +244,13 @@ export function createRegulationEditorService(
         ),
         ...local.map(localSummary),
       ];
-      return summaries.sort(
-        (a, b) =>
-          a.effectiveFrom.localeCompare(b.effectiveFrom) ||
-          Number(b.isOfficial) - Number(a.isOfficial),
-      );
+      return summaries
+        .map((summary) => ({ ...summary, inForce: summary.id === inForceRow }))
+        .sort(
+          (a, b) =>
+            a.effectiveFrom.localeCompare(b.effectiveFrom) ||
+            Number(b.isOfficial) - Number(a.isOfficial),
+        );
     },
 
     async get(id) {

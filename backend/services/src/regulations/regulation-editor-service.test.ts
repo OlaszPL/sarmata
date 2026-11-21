@@ -115,6 +115,7 @@ describe('regulation editor', () => {
       ['regulation-2016-local-1', 'draft', false],
     ]);
     expect(list[0]).not.toHaveProperty('document');
+    expect(list.map((item) => item.inForce)).toEqual([true, false]);
   });
 
   it('clone of an official version makes a draft with a graph and passing cases', async () => {
