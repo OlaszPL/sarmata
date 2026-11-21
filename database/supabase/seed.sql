@@ -61,6 +61,13 @@ update public.notes
    set body = 'Przekazał zespołowi ustalenia ze spotkania i zadbał o notatkę z działań.'
  where id = '33333333-3333-4333-8333-000000000001';
 
+-- A plus note of Olga Oceniająca about Ewa Ewidencyjna: the appreciation moment of the evaluator dashboard cites it.
+insert into public.notes (id, office_id, employee_id, author_account_id, kind, occurred_on, criterion_id, sign, communicated, body) values
+  ('33333333-3333-4333-8333-000000000004', '11111111-1111-4111-8111-111111111111',
+   (select id from public.employees where email = 'ewa.ewidencyjna@kropka.test'),
+   '22222222-2222-4222-8222-000000000003', 'appreciation', '2026-11-14', 'work-organization', 'plus', false,
+   'Wdrożyła nowy rejestr pism bez przestojów w pracy wydziału.');
+
 -- SMTP of the demo office: the Mailpit of the local Supabase (smtp_port in config.toml), no password needed.
 update public.office_settings
    set smtp_host = '127.0.0.1', smtp_port = 55425, smtp_from = 'oceny@kropka.test'
@@ -108,6 +115,24 @@ insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, inpu
     "questions":["Które z przejętych spraw można przekazać dalej po powrocie współpracownika?"],
     "actions":[{"framework":"jd_r","signal":"overload","text":"Przegląd priorytetów i terminów spraw przejętych na czas urlopu."}]}',
    'hr-signals.v1', '2026-11-03 10:00:00+01', '2026-11-03 10:00:02+01', '2026-11-03 10:01:10+01');
+
+-- Appreciation moments for Ewa (done, so nothing is enqueued). The last appreciation was 8 days before the demo
+-- day 2026-11-22, the office threshold is 30 days, so the gap is not overdue.
+insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, input, input_refs, status, output,
+                            prompt_version, requested_at, started_at, finished_at) values
+  ('44444444-4444-4444-8444-000000000003', '11111111-1111-4111-8111-111111111111', 'appreciation_moments',
+   '22222222-2222-4222-8222-000000000003',
+   (select id from public.employees where email = 'ewa.ewidencyjna@kropka.test'),
+   '{"today":"2026-11-22","gapDays":30,"notes":[{"id":"33333333-3333-4333-8333-000000000004","version":1,"kind":"appreciation","occurredOn":"2026-11-14","criterionId":"work-organization","sign":"plus","communicated":false,"body":"Wdrożyła nowy rejestr pism bez przestojów w pracy wydziału."}]}',
+   '{"noteIds":[{"id":"33333333-3333-4333-8333-000000000004","version":1}],"droppedNoteIds":[]}',
+   'done',
+   '{"gap":{"lastAppreciationOn":"2026-11-14","daysSince":8,"thresholdDays":30,"overdue":false},
+    "moments":[{"noteIds":["33333333-3333-4333-8333-000000000004"],
+      "reason":"14.11.2026 wdrożyła nowy rejestr pism bez przestojów w pracy wydziału.",
+      "sbi":{"situation":"14.11.2026 w wydziale zaczął działać nowy rejestr pism.",
+             "behaviour":"Pracownica wdrożyła rejestr bez przestojów w pracy wydziału.",
+             "impact":"Wydział pracował bez przerwy, a pisma były rejestrowane na bieżąco."}}]}',
+   'appreciation-moments.v2', '2026-11-22 08:30:00+01', '2026-11-22 08:30:02+01', '2026-11-22 08:30:20+01');
 
 insert into public.ai_fragment_decisions (run_id, office_id, fragment, decision, final_text, decided_by, decided_at) values
   ('44444444-4444-4444-8444-000000000001', '11111111-1111-4111-8111-111111111111', 'rating.communication',
