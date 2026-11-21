@@ -20,7 +20,20 @@ export {
   parseRegulationDocument,
   regulationDocumentSchema,
 } from './regulations/regulation-document';
-export { versionInForce } from './regulations/version-in-force';
+export { officeVersionInForce, versionInForce } from './regulations/version-in-force';
+export {
+  type RegulationCase,
+  type RegulationCaseResult,
+  regulationCaseSchema,
+  regulationCasesSchema,
+  runRegulationCases,
+} from './regulations/regulation-cases';
+export {
+  type GraphEdge,
+  type GraphNode,
+  type RegulationGraph,
+  regulationGraph,
+} from './regulations/regulation-graph';
 export {
   type EmploymentBasis,
   type NewEmployeeInput,

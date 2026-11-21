@@ -19,3 +19,24 @@ export function versionInForce<T extends { readonly effectiveFrom: CalendarDate 
   }
   return best;
 }
+
+/**
+ * The version in force for an office: like `versionInForce`, but when an office version and an
+ * official one start on the same day the office version wins.
+ */
+export function officeVersionInForce<
+  T extends { readonly effectiveFrom: CalendarDate; readonly isOfficial: boolean },
+>(versions: readonly T[], on: CalendarDate): T | null {
+  let best: T | null = null;
+  for (const version of versions) {
+    if (version.effectiveFrom > on) continue;
+    if (
+      best === null ||
+      version.effectiveFrom > best.effectiveFrom ||
+      (version.effectiveFrom === best.effectiveFrom && best.isOfficial && !version.isOfficial)
+    ) {
+      best = version;
+    }
+  }
+  return best;
+}

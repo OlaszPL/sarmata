@@ -1,4 +1,10 @@
-import { type RegulationDocument, parseRegulationDocument } from '@sarmata/domain';
+import {
+  type RegulationCase,
+  type RegulationDocument,
+  parseRegulationDocument,
+  regulationCasesSchema,
+} from '@sarmata/domain';
+import cases2016 from '../regulation-2016/cases.json';
 import regulation2016 from '../regulation-2016/rules.json';
 
 /**
@@ -8,3 +14,8 @@ import regulation2016 from '../regulation-2016/rules.json';
 export const officialRegulations: readonly RegulationDocument[] = [
   parseRegulationDocument(regulation2016),
 ];
+
+/** Worked examples of each official version, keyed by its id. They feed Vitest and the rule editor. */
+export const officialCases: Readonly<Record<string, readonly RegulationCase[]>> = {
+  'regulation-2016': regulationCasesSchema.parse(cases2016),
+};
