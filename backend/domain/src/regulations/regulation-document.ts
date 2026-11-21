@@ -28,7 +28,7 @@ export const deadlineSlotSchema = z.enum([
   'gradeByLawGrant',
 ]);
 
-const termChangeReasonSchema = z.enum([
+export const termChangeReasonSchema = z.enum([
   'evaluatorChange',
   'expectedAbsenceOfEvaluated',
   'expectedAbsenceOfEvaluator',
@@ -185,6 +185,7 @@ export const regulationDocumentSchema = regulationDocumentShape.superRefine(chec
 
 export type RegulationDocument = z.output<typeof regulationDocumentSchema>;
 export type DeadlineSlot = z.infer<typeof deadlineSlotSchema>;
+export type TermChangeReason = z.infer<typeof termChangeReasonSchema>;
 
 export class RegulationDocumentError extends Error {
   readonly issues: z.ZodError['issues'];

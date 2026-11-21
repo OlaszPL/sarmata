@@ -13,6 +13,8 @@ export {
 } from './deadlines/compute-deadline';
 export {
   type DeadlineSlot,
+  type TermChangeReason,
+  termChangeReasonSchema,
   type RegulationDocument,
   RegulationDocumentError,
   parseRegulationDocument,
@@ -57,6 +59,18 @@ export {
   objectionFilingIssue,
   outcomeLowered,
 } from './evaluations/objection';
+export {
+  type AbsencePayload,
+  type PositionChangePayload,
+  type TermChangeIssue,
+  type TermChangePayload,
+  absencePayloadSchema,
+  latestAbsences,
+  positionChangePayloadSchema,
+  termChangeIssues,
+  termChangePayloadSchema,
+} from './evaluations/side-events';
+export { type HistoryEntry, gradeByLawDue, secondConsecutiveNegative } from './evaluations/signals';
 export { type ApprovalIssue, partOneIssues, sheetApprovalIssues } from './evaluations/approval';
 export { type Eligibility, evaluationEligibility } from './evaluations/eligibility';
 export { effectiveDueOn } from './evaluations/due-date';

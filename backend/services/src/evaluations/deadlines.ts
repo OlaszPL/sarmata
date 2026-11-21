@@ -1,5 +1,9 @@
 import {
   type Absence,
+  addMonths,
+  latestAbsences,
+  positionChangePayloadSchema,
+  termChangePayloadSchema,
   type CalendarDate,
   type DeadlineSlot,
   type RegulationDocument,
@@ -13,18 +17,6 @@ import {
   type StoredDeadline,
 } from '@sarmata/repositories';
 import { ServiceError } from '../errors';
-
-function absencesOf(events: readonly EvaluationEvent[]): Absence[] {
-  return events
-    .filter((event) => event.kind === 'absence')
-    .map((event) => {
-      const { from, to } = event.payload as { from: string; to?: string | null };
-      return {
-        from: calendarDate(from),
-        to: to === undefined || to === null ? null : calendarDate(to),
-      };
-    });
-}
 
 function slot(
   regulation: RegulationDocument,
@@ -66,7 +58,7 @@ export function computeEvaluationDeadlines(
   detail: EvaluationDetail,
   regulation: RegulationDocument,
 ): StoredDeadline[] {
-  const absences = absencesOf(detail.events);
+  const absences = latestAbsences(detail.events);
   const { status, cycleStart, afterNegative } = detail;
   const slots: StoredDeadline[] = [];
 
@@ -92,14 +84,22 @@ export function computeEvaluationDeadlines(
       const eventDate = typeof acquainted === 'string' ? calendarDate(acquainted) : cycleStart;
       slots.push(slot(regulation, 'reevaluationAfterNegative', eventDate, absences));
     } else {
+      const base = slot(
+        regulation,
+        'evaluationDeadline',
+        cycleStart,
+        absences,
+        detail.sheet.content.partOne.dueOn,
+      );
+      const termChange = detail.events.filter((event) => event.kind === 'term_changed').at(-1);
       slots.push(
-        slot(
-          regulation,
-          'evaluationDeadline',
-          cycleStart,
-          absences,
-          detail.sheet.content.partOne.dueOn,
-        ),
+        termChange === undefined
+          ? base
+          : {
+              ...base,
+              dueOn: termChangePayloadSchema.parse(termChange.payload).newDueOn,
+              suspendedSince: null,
+            },
       );
     }
   }
@@ -107,5 +107,19 @@ export function computeEvaluationDeadlines(
     const acquaintedOn = lastEventDate(detail.events, ['acquainted', 'signature_refused']);
     if (acquaintedOn !== null) slots.push(slot(regulation, 'objection', acquaintedOn, absences));
   }
+  const positionChange = detail.events.filter((event) => event.kind === 'position_changed').at(-1);
+  if (positionChange !== undefined) {
+    const { changedOn, significant } = positionChangePayloadSchema.parse(positionChange.payload);
+    if (significant && changedOn > addMonths(cycleStart, 6)) {
+      slots.push(slot(regulation, 'evaluationOnPositionChange', changedOn, absences));
+      slots.push(slot(regulation, 'criteriaResetAfterPositionChange', changedOn, absences));
+    }
+  }
+  if (status === 'objection') {
+    const filedOn = lastEventDate(detail.events, ['objection_filed']);
+    if (filedOn !== null) slots.push(slot(regulation, 'objectionDecision', filedOn, absences));
+  }
+  const outcomeOn = lastEventDate(detail.events, ['objection_outcome']);
+  if (outcomeOn !== null) slots.push(slot(regulation, 'labourCourtAppeal', outcomeOn, absences));
   return slots;
 }
