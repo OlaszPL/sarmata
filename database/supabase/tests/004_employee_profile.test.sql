@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(8);
+select plan(9);
 
 insert into public.offices (id, name) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'Urząd A'),
@@ -28,6 +28,13 @@ update public.employees set supervisor_employee_id = 'aaaaaaaa-2222-4000-8000-00
 select throws_ok(
   $$update public.employees set supervisor_employee_id = 'aaaaaaaa-2222-4000-8000-000000000002' where id = 'aaaaaaaa-2222-4000-8000-000000000001'$$,
   'P0001', 'supervisor cycle', 'supervisor cycle is refused'
+);
+-- Longer chain: C -> Marek -> Ewa, so Ewa -> C closes a cycle of three.
+insert into public.employees (id, office_id, first_name, last_name, supervisor_employee_id) values
+  ('aaaaaaaa-2222-4000-8000-000000000004', 'aaaaaaaa-0000-4000-8000-000000000001', 'Cezary', 'Cykliczny', 'aaaaaaaa-2222-4000-8000-000000000002');
+select throws_ok(
+  $$update public.employees set supervisor_employee_id = 'aaaaaaaa-2222-4000-8000-000000000004' where id = 'aaaaaaaa-2222-4000-8000-000000000001'$$,
+  'P0001', 'supervisor cycle', 'multi step supervisor cycle is refused'
 );
 select throws_ok(
   $$update public.employees set supervisor_employee_id = 'bbbbbbbb-2222-4000-8000-000000000003' where id = 'aaaaaaaa-2222-4000-8000-000000000001'$$,

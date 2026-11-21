@@ -40,6 +40,8 @@ as $$
 declare
   ancestor uuid := new.supervisor_employee_id;
 begin
+  -- Serialize per office: without it two concurrent transactions could each close half of a cycle unseen.
+  perform pg_advisory_xact_lock(hashtext(new.office_id::text));
   -- Walk up the tree: the new supervisor chain must not contain the employee.
   while ancestor is not null loop
     if ancestor = new.id then
