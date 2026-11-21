@@ -35,6 +35,9 @@ const termChangeReasonSchema = z.enum([
   'requestOfEvaluated',
 ]);
 
+/** Kebab-case spelling of `PositionKind` as written in regulation files. */
+export const sheetPositionKindSchema = z.enum(['office-head', 'manages-people', 'other']);
+
 const regulationDocumentShape = z.strictObject({
   id: identifier,
   name: text,
@@ -97,6 +100,7 @@ const regulationDocumentShape = z.strictObject({
       z.strictObject({
         id: z.string().regex(/^[A-Z]$/, 'expected a single capital letter'),
         annex: z.number().int().positive(),
+        positionKind: sheetPositionKindSchema,
         basis,
         position: text,
         mandatoryCriteria: z.array(identifier).min(1),
@@ -148,7 +152,12 @@ function checkReferences(document: Shape, ctx: z.RefinementCtx): void {
   document.gradeByLaw.qualifyingLevels.forEach((code, index) => {
     checkLevel(['gradeByLaw', 'qualifyingLevels', index], code);
   });
+  const kinds = new Set<string>();
   document.sheets.forEach((sheet, sheetIndex) => {
+    if (kinds.has(sheet.positionKind)) {
+      issue(['sheets', sheetIndex, 'positionKind'], `duplicate positionKind ${sheet.positionKind}`);
+    }
+    kinds.add(sheet.positionKind);
     sheet.mandatoryCriteria.forEach((id, index) => {
       if (!criteria.has(id)) {
         issue(['sheets', sheetIndex, 'mandatoryCriteria', index], `unknown criterion ${id}`);

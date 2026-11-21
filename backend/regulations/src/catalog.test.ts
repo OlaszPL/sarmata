@@ -115,3 +115,25 @@ describe('regulation document schema', () => {
     expect(parse).toThrow(message);
   });
 });
+
+describe('sheet position kinds', () => {
+  it.each([
+    [
+      'a sheet without positionKind',
+      (document: RawDocument) => {
+        Reflect.deleteProperty(document.sheets[0] ?? {}, 'positionKind');
+      },
+      /positionKind/,
+    ],
+    [
+      'two sheets with the same positionKind',
+      (document: RawDocument) => {
+        const sheet = document.sheets[1];
+        if (sheet) sheet.positionKind = 'other';
+      },
+      /duplicate positionKind other/,
+    ],
+  ])('rejects %s', (_name, mutate, message) => {
+    expect(parseMutated(mutate)).toThrow(message);
+  });
+});

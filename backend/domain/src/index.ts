@@ -33,3 +33,16 @@ export {
   positionKindSchema,
   serviceStatusSchema,
 } from './employees/employee';
+export {
+  type GradeRequest,
+  type SheetContent,
+  emptySheetContent,
+  sheetContentSchema,
+} from './evaluations/sheet-content';
+export {
+  type CriteriaIssue,
+  additionalCriteriaIssues,
+  sheetCriteria,
+} from './evaluations/criteria';
+export { type SheetScore, scoreSheet } from './evaluations/score';
+export { proposeSheet } from './evaluations/sheet-selection';
