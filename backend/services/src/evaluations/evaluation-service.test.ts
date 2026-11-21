@@ -94,6 +94,11 @@ function fakeEvaluations(seed: EvaluationDetail[] = []) {
       store.set(id, { ...current, deadlines: [...deadlines] });
       return Promise.resolve();
     },
+    recordEvent: () => Promise.reject(new Error('unused')),
+    applyObjectionOutcome: () => Promise.reject(new Error('unused')),
+    correctSheet: () => Promise.reject(new Error('unused')),
+    changeEvaluator: () => Promise.reject(new Error('unused')),
+    history: () => Promise.resolve([]),
   };
   return { repository, store };
 }
@@ -135,6 +140,10 @@ function setup(employees: Employee[], seed: EvaluationDetail[] = []) {
       findOfficialRowId: (id) => Promise.resolve(id === reg.id ? 'row-1' : null),
     },
     evaluations: repository,
+    archivedEvaluations: {
+      create: () => Promise.reject(new Error('unused')),
+      listForEmployee: () => Promise.resolve([]),
+    },
   };
   const services = createServices({
     repositories,

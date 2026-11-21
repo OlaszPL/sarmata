@@ -1,4 +1,8 @@
 import { type Db } from './db';
+import {
+  type ArchivedEvaluationRepository,
+  createArchivedEvaluationRepository,
+} from './archived-evaluations';
 import { type EmployeeRepository, createEmployeeRepository } from './employees';
 import { type EvaluationRepository, createEvaluationRepository } from './evaluations';
 import {
@@ -10,6 +14,7 @@ export interface Repositories {
   readonly employees: EmployeeRepository;
   readonly regulationVersions: RegulationVersionRepository;
   readonly evaluations: EvaluationRepository;
+  readonly archivedEvaluations: ArchivedEvaluationRepository;
 }
 
 /** All repositories on one client. With the user's JWT, RLS decides what they see. */
@@ -18,5 +23,6 @@ export function createRepositories(db: Db): Repositories {
     employees: createEmployeeRepository(db),
     regulationVersions: createRegulationVersionRepository(db),
     evaluations: createEvaluationRepository(db),
+    archivedEvaluations: createArchivedEvaluationRepository(db),
   };
 }

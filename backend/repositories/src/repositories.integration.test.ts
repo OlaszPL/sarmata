@@ -238,4 +238,111 @@ describe('evaluations', () => {
     );
     expect(fromDb.sort()).toEqual(fromDomain.sort());
   });
+
+  async function driveToObjection(evaluationId: string) {
+    const evaluator = createRepositories(await signedIn('oceniajacy@kropka.test'));
+    const hr = createRepositories(await signedIn('kadry@kropka.test'));
+    const step = (
+      expectedStatus: Parameters<typeof evaluator.evaluations.applyTransition>[0]['expectedStatus'],
+      nextStatus: Parameters<typeof evaluator.evaluations.applyTransition>[0]['nextStatus'],
+      eventKind: Parameters<typeof evaluator.evaluations.applyTransition>[0]['eventKind'],
+      lockSheet: boolean,
+    ) => ({
+      evaluationId,
+      expectedStatus,
+      nextStatus,
+      eventKind,
+      occurredOn: today,
+      payload: {},
+      lockSheet,
+    });
+    await evaluator.evaluations.applyTransition(approvePartOne(evaluationId));
+    await evaluator.evaluations.applyTransition(
+      step('criteria_awaiting_signature', 'period', 'part_one_signed', false),
+    );
+    await evaluator.evaluations.applyTransition(
+      step('period', 'interview', 'evaluation_interview_held', false),
+    );
+    await evaluator.evaluations.applyTransition(
+      step('interview', 'drafted', 'sheet_approved', true),
+    );
+    await evaluator.evaluations.applyTransition(step('drafted', 'delivered', 'acquainted', false));
+    await hr.evaluations.applyTransition(step('delivered', 'objection', 'objection_filed', false));
+    return { evaluator, hr };
+  }
+
+  it('records an absence event as evaluator', async () => {
+    const { repositories, evaluation } = await startFor('oceniajacy@kropka.test', 'Oceniająca');
+    await repositories.evaluations.recordEvent(evaluation.id, 'absence', today, {
+      absenceId: 'a1',
+      from: today,
+      to: null,
+    });
+    const detail = await repositories.evaluations.get(evaluation.id);
+    expect(detail?.events.map((event) => event.kind)).toContain('absence');
+  });
+
+  it('hr runs objection redraft on a delivered evaluation', async () => {
+    const { evaluation } = await startFor('oceniajacy@kropka.test', 'Administracyjna');
+    const { evaluator, hr } = await driveToObjection(evaluation.id);
+    await expect(
+      evaluator.evaluations.applyObjectionOutcome({
+        evaluationId: evaluation.id,
+        outcome: 'redraft',
+        occurredOn: today,
+        payload: {},
+        newContent: null,
+      }),
+    ).rejects.toMatchObject({ code: '42501' });
+    await hr.evaluations.applyObjectionOutcome({
+      evaluationId: evaluation.id,
+      outcome: 'redraft',
+      occurredOn: today,
+      payload: { decidedBy: 'hr' },
+      newContent: null,
+    });
+    const detail = await hr.evaluations.get(evaluation.id);
+    expect(detail?.status).toBe('interview');
+    expect(detail?.sheet).toMatchObject({ version: 2, state: 'draft' });
+    expect(detail?.events.map((event) => event.kind)).toContain('objection_outcome');
+  });
+
+  it('admin corrects a locked sheet and hr changes the evaluator', async () => {
+    const { evaluation } = await startFor('oceniajacy@kropka.test', 'Kadrowy');
+    const { hr } = await driveToObjection(evaluation.id);
+    const admin = createRepositories(await signedIn('admin@kropka.test'));
+    const content = emptySheetContent();
+    content.partTwo.developmentConclusions = 'Korekta';
+    await expect(hr.evaluations.correctSheet(evaluation.id, content, 'typo')).rejects.toMatchObject(
+      { code: '42501' },
+    );
+    await admin.evaluations.correctSheet(evaluation.id, content, 'typo');
+    const detail = await admin.evaluations.get(evaluation.id);
+    expect(detail?.sheet).toMatchObject({ version: 2, state: 'locked' });
+    const { data } = await (await signedIn('kadry@kropka.test')).auth.getUser();
+    await hr.evaluations.changeEvaluator(evaluation.id, data.user?.id ?? '', today, 'handover');
+    const changed = await hr.evaluations.get(evaluation.id);
+    expect(changed?.evaluatorAccountId).toBe(data.user?.id);
+  });
+
+  it('history merges archived and closed evaluations', async () => {
+    const hr = createRepositories(await signedIn('kadry@kropka.test'));
+    const employees = await hr.employees.list();
+    const employee = employees.find((candidate) => candidate.lastName === 'Oceniająca');
+    if (employee === undefined) throw new Error('No demo employee');
+    const before = await hr.evaluations.history(employee.id);
+    await hr.archivedEvaluations.create({
+      employeeId: employee.id,
+      draftedOn: calendarDate('2019-03-01'),
+      acquaintedOn: calendarDate('2019-03-10'),
+      levelCode: 'B',
+      outcome: 'positive',
+      ratings: null,
+    });
+    const history = await hr.evaluations.history(employee.id);
+    expect(history).toHaveLength(before.length + 1);
+    expect(history[0]).toMatchObject({ drafted: '2019-03-01', outcome: 'positive' });
+    const listed = await hr.archivedEvaluations.listForEmployee(employee.id);
+    expect(listed.some((entry) => entry.draftedOn === '2019-03-01')).toBe(true);
+  });
 });

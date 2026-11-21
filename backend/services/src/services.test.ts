@@ -53,7 +53,13 @@ function inMemoryRepositories(seed: { employees?: Employee[]; official?: Regulat
       saveDraft: unavailable,
       applyTransition: unavailable,
       saveDeadlines: unavailable,
+      recordEvent: unavailable,
+      applyObjectionOutcome: unavailable,
+      correctSheet: unavailable,
+      changeEvaluator: unavailable,
+      history: unavailable,
     },
+    archivedEvaluations: { create: unavailable, listForEmployee: unavailable },
   };
   const writer: OfficialRegulationWriter = {
     insertOfficial: (document) => {

@@ -2,14 +2,20 @@ import {
   type CalendarDate,
   type DeadlineSlot,
   type EvaluationStatus,
+  type HistoryEntry,
+  type ObjectionOutcome,
   type ServiceStatus,
   type SheetContent,
   calendarDate,
+  parseRegulationDocument,
+  scoreSheet,
   sheetContentSchema,
+  sheetCriteria,
 } from '@sarmata/domain';
 import { type Database } from '@sarmata/database';
 import { type Db } from './db';
 import { RepositoryError } from './errors';
+import { createArchivedEvaluationRepository } from './archived-evaluations';
 import { toJson } from './json';
 
 export type EvaluationEventKind = Database['public']['Enums']['evaluation_event_kind'];
@@ -110,6 +116,34 @@ export interface EvaluationRepository {
   applyTransition(input: TransitionInput): Promise<string>;
   /** Writes the given slots (insert or update) and nulls the dates of the stored slots that are not listed. */
   saveDeadlines(evaluationId: string, deadlines: readonly StoredDeadline[]): Promise<void>;
+  /** Records a side event (evaluator or hr). Transition and RPC-only events are refused by the database. */
+  recordEvent(
+    evaluationId: string,
+    kind: 'absence' | 'term_changed' | 'position_changed',
+    occurredOn: CalendarDate,
+    payload: Record<string, unknown>,
+  ): Promise<void>;
+  /** Decides an objection (hr only). `newContent` is required for `changed` and ignored otherwise. */
+  applyObjectionOutcome(input: ObjectionOutcomeInput): Promise<void>;
+  /** Corrects the locked sheet with a new locked version (admin only). */
+  correctSheet(evaluationId: string, content: SheetContent, reason: string): Promise<void>;
+  /** Hands the evaluation to another evaluator or hr of the office (hr only). */
+  changeEvaluator(
+    evaluationId: string,
+    accountId: string,
+    occurredOn: CalendarDate,
+    reason: string,
+  ): Promise<void>;
+  /** Closed evaluations plus archived ones of the employee, oldest `drafted` first. */
+  history(employeeId: string): Promise<HistoryEntry[]>;
+}
+
+export interface ObjectionOutcomeInput {
+  readonly evaluationId: string;
+  readonly outcome: ObjectionOutcome;
+  readonly occurredOn: CalendarDate;
+  readonly payload: Record<string, unknown>;
+  readonly newContent: SheetContent | null;
 }
 
 const BASE_COLUMNS =
@@ -157,6 +191,50 @@ const rpcStartEvaluation = (db: Db, args: NullableStartArgs) =>
 
 /** The select string is dynamic, so the client types rows loosely and the row shape is asserted here. */
 const asEvaluationRows = (data: unknown): EvaluationRow[] => data as EvaluationRow[];
+
+interface HistoryRow {
+  sheet_id: string;
+  regulation_versions: { document: unknown } | null;
+  evaluation_sheets: { version: number; state: string; content: unknown }[];
+  evaluation_events: { kind: string; occurred_on: string }[];
+}
+
+const HISTORY_COLUMNS =
+  'sheet_id, regulation_versions(document), evaluation_sheets(version, state, content), evaluation_events(kind, occurred_on)' as const;
+
+function toHistoryEntry(row: HistoryRow): HistoryEntry | null {
+  const lastOn = (kinds: readonly string[]) =>
+    row.evaluation_events
+      .filter((event) => kinds.includes(event.kind))
+      .map((event) => event.occurred_on)
+      .sort()
+      .at(-1);
+  const drafted = lastOn(['sheet_approved']);
+  if (drafted === undefined) return null;
+  const acquainted = lastOn(['acquainted', 'signature_refused']);
+  const sheet = row.evaluation_sheets
+    .filter((candidate) => candidate.state === 'locked')
+    .sort((a, b) => b.version - a.version)[0];
+  let levelCode: string | null = null;
+  let outcome: 'positive' | 'negative' | null = null;
+  if (sheet !== undefined && row.regulation_versions !== null) {
+    const regulation = parseRegulationDocument(row.regulation_versions.document);
+    const content = sheetContentSchema.parse(sheet.content);
+    const criteria = sheetCriteria(regulation, row.sheet_id, content.partOne.additionalCriteria);
+    try {
+      ({ levelCode, outcome } = scoreSheet(regulation, criteria, content.partTwo.ratings));
+    } catch (error) {
+      // An off-scale rating gives the sheet no outcome.
+      if (!(error instanceof RangeError)) throw error;
+    }
+  }
+  return {
+    drafted: calendarDate(drafted),
+    levelCode,
+    outcome,
+    acquaintedOn: acquainted === undefined ? null : calendarDate(acquainted),
+  };
+}
 
 function toRepositoryError(operation: string, error: { message: string; code?: string }) {
   if (error.code === 'P0001') {
@@ -375,6 +453,75 @@ export function createEvaluationRepository(db: Db): EvaluationRepository {
           .eq('slot', row.slot);
         if (error) throw toRepositoryError('evaluations.saveDeadlines', error);
       }
+    },
+
+    async recordEvent(evaluationId, kind, occurredOn, payload) {
+      const { data: row, error: readError } = await db
+        .from('evaluations')
+        .select('office_id')
+        .eq('id', evaluationId)
+        .single();
+      if (readError) throw toRepositoryError('evaluations.recordEvent', readError);
+      const { error } = await db.from('evaluation_events').insert({
+        office_id: row.office_id,
+        evaluation_id: evaluationId,
+        kind,
+        occurred_on: occurredOn,
+        payload: toJson(payload),
+      });
+      if (error) throw toRepositoryError('evaluations.recordEvent', error);
+    },
+
+    async applyObjectionOutcome(input) {
+      const { error } = await db.rpc('apply_objection_outcome', {
+        p_evaluation_id: input.evaluationId,
+        p_outcome: input.outcome,
+        p_occurred_on: input.occurredOn,
+        p_payload: toJson(input.payload),
+        p_new_content: input.newContent === null ? null : toJson(input.newContent),
+      });
+      if (error) throw toRepositoryError('evaluations.applyObjectionOutcome', error);
+    },
+
+    async correctSheet(evaluationId, content, reason) {
+      const { error } = await db.rpc('correct_sheet', {
+        p_evaluation_id: evaluationId,
+        p_content: toJson(content),
+        p_reason: reason,
+      });
+      if (error) throw toRepositoryError('evaluations.correctSheet', error);
+    },
+
+    async changeEvaluator(evaluationId, accountId, occurredOn, reason) {
+      const { error } = await db.rpc('change_evaluator', {
+        p_evaluation_id: evaluationId,
+        p_new_evaluator_account_id: accountId,
+        p_occurred_on: occurredOn,
+        p_reason: reason,
+      });
+      if (error) throw toRepositoryError('evaluations.changeEvaluator', error);
+    },
+
+    async history(employeeId) {
+      const { data, error } = await db
+        .from('evaluations')
+        .select(HISTORY_COLUMNS)
+        .eq('employee_id', employeeId)
+        .eq('status', 'closed');
+      if (error) throw toRepositoryError('evaluations.history', error);
+      const closed = (data as unknown as HistoryRow[])
+        .map(toHistoryEntry)
+        .filter((entry): entry is HistoryEntry => entry !== null);
+      const archived = await createArchivedEvaluationRepository(db).listForEmployee(employeeId);
+      return [
+        ...closed,
+        ...archived.map((entry): HistoryEntry => ({
+          drafted: entry.draftedOn,
+          levelCode: entry.levelCode,
+          outcome: entry.outcome,
+          acquaintedOn: entry.acquaintedOn,
+        })),
+      ].sort((a, b) => a.drafted.localeCompare(b.drafted));
     },
   };
 }

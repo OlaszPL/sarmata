@@ -13,6 +13,12 @@ export {
   type SimilarEmployee,
 } from './employees';
 export {
+  type ArchivedEvaluation,
+  type ArchivedEvaluationRepository,
+  type NewArchivedEvaluation,
+  createArchivedEvaluationRepository,
+} from './archived-evaluations';
+export {
   type Evaluation,
   type EvaluationDetail,
   type EvaluationEvent,
@@ -20,6 +26,7 @@ export {
   type EvaluationRepository,
   type EvaluatedSnapshot,
   type NewEvaluation,
+  type ObjectionOutcomeInput,
   type StoredDeadline,
   type TransitionInput,
 } from './evaluations';
