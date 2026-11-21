@@ -9,11 +9,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const account = await requireMember();
 
   return (
-    <AppShell
-      productName={product.name}
-      productTagline={product.tagline}
-      account={<AccountBar account={account} />}
-    >
+    <AppShell product={product} account={<AccountBar account={account} />}>
       {children}
     </AppShell>
   );

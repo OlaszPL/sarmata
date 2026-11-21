@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Logowanie' };
 
 export default function SignInPage() {
   return (
-    <AppShell productName={product.name} productTagline={product.tagline}>
+    <AppShell product={product}>
       <div className="mx-auto max-w-md">
         <Card>
           <CardHeader>

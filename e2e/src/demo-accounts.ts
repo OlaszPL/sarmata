@@ -1,4 +1,4 @@
-// Demo data from database/supabase/seed.sql (plan 2). Keep both in sync.
+// Demo data of database/supabase/seed.sql. tests/seed.spec.ts fails when the two drift apart.
 export const DEMO_PASSWORD = 'Haslo-Demo-2026';
 export const DEMO_OFFICE_NAME = 'Urząd Ministerstwa Testowego w Kropce Wielkopolskiej';
 

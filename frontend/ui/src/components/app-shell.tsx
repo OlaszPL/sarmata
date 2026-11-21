@@ -2,15 +2,14 @@ import type { ReactNode } from 'react';
 import { BrandMark } from '#components/brand-mark';
 
 interface AppShellProps {
-  productName: string;
-  productTagline: string;
+  product: { readonly name: string; readonly tagline: string };
   /** Right side of the header, e.g. the signed-in account and the sign-out button. */
   account?: ReactNode;
   children: ReactNode;
 }
 
 /** Page frame: skip link, header with the product name and the main landmark. */
-export function AppShell({ productName, productTagline, account, children }: AppShellProps) {
+export function AppShell({ product, account, children }: AppShellProps) {
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -24,8 +23,8 @@ export function AppShell({ productName, productTagline, account, children }: App
           <div className="flex items-center gap-3">
             <BrandMark className="size-10 shrink-0" />
             <div>
-              <p className="text-lg leading-tight font-bold">{productName}</p>
-              <p className="text-sm text-muted-foreground">{productTagline}</p>
+              <p className="text-lg leading-tight font-bold">{product.name}</p>
+              <p className="text-sm text-muted-foreground">{product.tagline}</p>
             </div>
           </div>
           {account}

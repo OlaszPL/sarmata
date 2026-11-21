@@ -14,7 +14,7 @@ export default async function NoOfficePage() {
   if (account.status === 'member') redirect(routes.home);
 
   return (
-    <AppShell productName={product.name} productTagline={product.tagline}>
+    <AppShell product={product}>
       <h1 className="text-3xl font-bold">Konto bez przypisanego urzędu</h1>
       <p className="mt-4 max-w-prose">
         Konto {account.email} nie ma jeszcze urzędu ani roli. Poproś administratora urzędu o nadanie
