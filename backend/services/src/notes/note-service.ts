@@ -36,7 +36,7 @@ export type NoteCheckAi =
   | {
       readonly status: 'done';
       readonly runId: string;
-      /** The model's warnings. The keyword ones are already in `NoteCheck.keywordWarnings`. */
+      /** Dictionary (keyword) and model warnings merged: the AI task adds `input.keywordWarnings` first. */
       readonly warnings: readonly SensitiveDataWarning[];
       /** The whole note without sensitive data, null when nothing to rewrite. Fragment `rewrite`. */
       readonly rewrite: string | null;

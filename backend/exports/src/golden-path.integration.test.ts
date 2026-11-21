@@ -371,6 +371,15 @@ describe('golden path of the demo', () => {
       sign: 'minus',
       body,
     } as const;
+    const checked = await evaluator.notes.check({ employeeId: employee.id, body });
+    expect(checked.keywordWarnings.map((warning) => warning.category)).toEqual(
+      expect.arrayContaining(['health', 'diagnosis']),
+    );
+    // The worker does not run in this test, so the AI run stays pending.
+    expect(checked.ai.status).toBe('pending');
+    if (checked.ai.status === 'pending') {
+      expect((await evaluator.notes.checkResult(checked.ai.runId)).status).toBe('pending');
+    }
     const refusedNote = await evaluator.notes.create(draft).catch((error: unknown) => error);
     expect(refusedNote).toBeInstanceOf(ServiceError);
     expect(refusedNote).toMatchObject({ code: 'sensitive_data' });
