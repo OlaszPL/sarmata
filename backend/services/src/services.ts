@@ -12,7 +12,9 @@ import {
 } from '@sarmata/domain';
 import {
   type Db,
+  type ArchivedEvaluation,
   type Employee,
+  type NewArchivedEvaluation,
   type Repositories,
   type SimilarEmployee,
   createRepositories,
@@ -47,6 +49,11 @@ export interface Services {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
   };
   readonly evaluations: EvaluationService;
+  readonly archivedEvaluations: {
+    /** Enters a past evaluation result by hand (hr or evaluator). */
+    create(input: NewArchivedEvaluation): Promise<void>;
+    listForEmployee(employeeId: string): Promise<ArchivedEvaluation[]>;
+  };
   readonly deadlines: { compute(request: DeadlineRequest): Promise<DeadlineResult> };
 }
 
@@ -81,6 +88,10 @@ export function createServices(dependencies: ServiceDependencies): Services {
       regulationInForceOn: (on) => regulations.inForceOn(on),
       ...(currentAccountId === undefined ? {} : { currentAccountId }),
     }),
+    archivedEvaluations: {
+      create: (input) => repositories.archivedEvaluations.create(input),
+      listForEmployee: (employeeId) => repositories.archivedEvaluations.listForEmployee(employeeId),
+    },
     deadlines: {
       async compute({ regulationId, slot, facts }) {
         const version = await repositories.regulationVersions.findOfficialById(regulationId);

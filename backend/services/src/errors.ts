@@ -9,6 +9,9 @@ export type ServiceErrorCode =
   | 'criteria_invalid'
   | 'part_locked'
   | 'stale_status'
+  | 'objection_late'
+  | 'objection_lowers_outcome'
+  | 'term_change_invalid'
   | 'not_found';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */

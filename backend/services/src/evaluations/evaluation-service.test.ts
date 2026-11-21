@@ -1,4 +1,9 @@
-import { type RegulationDocument, calendarDate, sheetContentSchema } from '@sarmata/domain';
+import {
+  type HistoryEntry,
+  type RegulationDocument,
+  calendarDate,
+  sheetContentSchema,
+} from '@sarmata/domain';
 import { officialRegulations } from '@sarmata/regulations';
 import {
   type Employee,
@@ -17,7 +22,7 @@ const reg: RegulationDocument = regulation;
 
 const date = calendarDate;
 
-function fakeEvaluations(seed: EvaluationDetail[] = []) {
+function fakeEvaluations(seed: EvaluationDetail[] = [], history: HistoryEntry[] = []) {
   const store = new Map<string, EvaluationDetail>(seed.map((detail) => [detail.id, detail]));
   let counter = 0;
   const repository: EvaluationRepository = {
@@ -94,11 +99,47 @@ function fakeEvaluations(seed: EvaluationDetail[] = []) {
       store.set(id, { ...current, deadlines: [...deadlines] });
       return Promise.resolve();
     },
-    recordEvent: () => Promise.reject(new Error('unused')),
-    applyObjectionOutcome: () => Promise.reject(new Error('unused')),
+    recordEvent: (id, kind, occurredOn, payload) => {
+      const current = store.get(id);
+      if (current === undefined) return Promise.reject(new Error('missing'));
+      const event: EvaluationEvent = {
+        id: `${id}-${String(current.events.length)}`,
+        kind,
+        occurredOn,
+        payload,
+        recordedBy: current.evaluatorAccountId,
+        recordedAt: new Date(2000 + current.events.length).toISOString(),
+      };
+      store.set(id, { ...current, events: [...current.events, event] });
+      return Promise.resolve();
+    },
+    applyObjectionOutcome: (input) => {
+      const current = store.get(input.evaluationId);
+      if (current === undefined) return Promise.reject(new Error('missing'));
+      const redraft = input.outcome === 'redraft';
+      const event: EvaluationEvent = {
+        id: `${input.evaluationId}-${String(current.events.length)}`,
+        kind: 'objection_outcome',
+        occurredOn: input.occurredOn,
+        payload: { ...input.payload, outcome: input.outcome },
+        recordedBy: current.evaluatorAccountId,
+        recordedAt: new Date(3000 + current.events.length).toISOString(),
+      };
+      store.set(input.evaluationId, {
+        ...current,
+        status: redraft ? 'interview' : 'closed',
+        sheet: {
+          version: current.sheet.version + (input.outcome === 'rejected' ? 0 : 1),
+          state: redraft ? 'draft' : 'locked',
+          content: input.newContent ?? current.sheet.content,
+        },
+        events: [...current.events, event],
+      });
+      return Promise.resolve();
+    },
     correctSheet: () => Promise.reject(new Error('unused')),
     changeEvaluator: () => Promise.reject(new Error('unused')),
-    history: () => Promise.resolve([]),
+    history: () => Promise.resolve([...history]),
   };
   return { repository, store };
 }
@@ -124,8 +165,8 @@ const employee = (patch: Partial<Employee> = {}): Employee => ({
   ...patch,
 });
 
-function setup(employees: Employee[], seed: EvaluationDetail[] = []) {
-  const { repository, store } = fakeEvaluations(seed);
+function setup(employees: Employee[], seed: EvaluationDetail[] = [], history: HistoryEntry[] = []) {
+  const { repository, store } = fakeEvaluations(seed, history);
   const repositories: Repositories = {
     employees: {
       list: () => Promise.resolve(employees),
@@ -507,5 +548,172 @@ describe('evaluations.transition', () => {
       criterionId: 'knowledge-use',
     });
     expect((await services.evaluations.get(id))?.score.complete).toBe(false);
+  });
+});
+
+describe('staffing situations and objection flow', () => {
+  async function deliver(services: ReturnType<typeof setup>['services'], rating: string) {
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const id = started.id;
+    const run = (command: Parameters<typeof services.evaluations.transition>[1]) =>
+      services.evaluations.transition(id, command);
+    await run({ type: 'approve_part_one', startingInterviewOn: date('2024-09-20') });
+    await run({ type: 'record_part_one_signature', signedOn: date('2024-09-21') });
+    await run({ type: 'record_evaluation_interview', heldOn: date('2026-05-20') });
+    await services.evaluations.saveDraft(id, completeContent('C', points(rating)));
+    await run({ type: 'approve_sheet', draftedOn: date('2026-05-25') });
+    await run({
+      type: 'record_acquaintance',
+      acquaintedOn: date('2026-06-15'),
+      signatureRefused: false,
+    });
+    return { id, run };
+  }
+
+  it('objection filed late fails objection_late', async () => {
+    const { services } = setup([employee()]);
+    const { run } = await deliver(services, 'meets');
+    await expectCode(
+      run({ type: 'file_objection', filedOn: date('2026-06-23') }),
+      'objection_late',
+    );
+  });
+
+  it('objection filed on the last day moves to objection', async () => {
+    const { services } = setup([employee()]);
+    const { run } = await deliver(services, 'meets');
+    const filed = await run({ type: 'file_objection', filedOn: date('2026-06-22') });
+    expect(filed.status).toBe('objection');
+    expect(filed.deadlines.map((d) => d.slot)).toContain('objectionDecision');
+  });
+
+  it('changed outcome lowering fails', async () => {
+    const { services } = setup([employee()]);
+    const { id, run } = await deliver(services, 'meets');
+    await run({ type: 'file_objection', filedOn: date('2026-06-16') });
+    const lower = completeContent('C', points('far-below'));
+    await expectCode(
+      services.evaluations.decideObjection(id, {
+        outcome: 'changed',
+        decidedOn: date('2026-06-20'),
+        content: lower,
+      }),
+      'objection_lowers_outcome',
+    );
+  });
+
+  it('changed outcome without content fails', async () => {
+    const { services } = setup([employee()]);
+    const { id, run } = await deliver(services, 'meets');
+    await run({ type: 'file_objection', filedOn: date('2026-06-16') });
+    await expectCode(
+      services.evaluations.decideObjection(id, {
+        outcome: 'changed',
+        decidedOn: date('2026-06-20'),
+      }),
+      'criteria_invalid',
+    );
+  });
+
+  it('redraft returns view in interview', async () => {
+    const { services } = setup([employee()]);
+    const { id, run } = await deliver(services, 'meets');
+    await run({ type: 'file_objection', filedOn: date('2026-06-16') });
+    const redrafted = await services.evaluations.decideObjection(id, {
+      outcome: 'redraft',
+      decidedOn: date('2026-06-20'),
+    });
+    expect(redrafted.status).toBe('interview');
+    expect(redrafted.sheet).toMatchObject({ version: 2, state: 'draft' });
+  });
+
+  it('term change too early fails term_change_invalid', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const attempt = services.evaluations.changeTerm(started.id, {
+      newDueOn: date('2027-06-01'),
+      reason: 'evaluatorChange',
+      noticeOn: date('2027-01-01'),
+    });
+    await expectCode(attempt, 'term_change_invalid');
+    await expect(attempt).rejects.toMatchObject({ details: ['term_change_too_early'] });
+  });
+
+  it('term change after the minimum period sets the due date', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const changed = await services.evaluations.changeTerm(started.id, {
+      newDueOn: date('2027-09-30'),
+      reason: 'evaluatorChange',
+      noticeOn: date('2027-06-01'),
+    });
+    const slot = changed.deadlines.find((d) => d.slot === 'evaluationDeadline');
+    expect(slot?.dueOn).toBe('2027-09-30');
+  });
+
+  it('absence without end suspends deadline in view', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const absenceId = '11111111-1111-4111-8111-111111111111';
+    const open = await services.evaluations.recordAbsence(started.id, {
+      absenceId,
+      from: date('2026-12-01'),
+      to: null,
+    });
+    const suspended = open.deadlines.find((d) => d.slot === 'evaluationDeadline');
+    expect(suspended).toMatchObject({ dueOn: null, suspendedSince: '2026-12-01' });
+    const closed = await services.evaluations.recordAbsence(started.id, {
+      absenceId,
+      from: date('2026-12-01'),
+      to: date('2026-12-10'),
+    });
+    const resumed = closed.deadlines.find((d) => d.slot === 'evaluationDeadline');
+    expect(resumed?.suspendedSince).toBeNull();
+    expect(resumed?.dueOn).not.toBeNull();
+  });
+
+  it('position change shows current position', async () => {
+    const { services } = setup([employee({ positionTitle: 'Specialist', orgUnit: 'Unit A' })]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.currentPosition).toEqual({ positionTitle: 'Specialist', orgUnit: 'Unit A' });
+    const changed = await services.evaluations.recordPositionChange(started.id, {
+      changedOn: date('2027-06-01'),
+      significant: true,
+      justification: 'Promotion',
+      positionTitle: 'Senior specialist',
+      orgUnit: 'Unit B',
+    });
+    expect(changed.currentPosition).toEqual({
+      positionTitle: 'Senior specialist',
+      orgUnit: 'Unit B',
+    });
+    expect(changed.snapshot.positionTitle).toBe('Specialist');
+  });
+
+  it('view signals grade by law for civil servant', async () => {
+    const qualifying = reg.gradeByLaw.qualifyingLevels[0] ?? 'x';
+    const history: HistoryEntry[] = Array.from(
+      { length: reg.gradeByLaw.consecutiveEvaluations },
+      (_, index) => ({
+        drafted: date(`${String(2020 + index)}-03-01`),
+        levelCode: qualifying,
+        outcome: 'positive' as const,
+        acquaintedOn: date(`${String(2020 + index)}-03-10`),
+      }),
+    );
+    const { services } = setup(
+      [employee({ serviceStatus: 'civil_servant', gradeGrantedOn: date('2018-01-01') })],
+      [],
+      history,
+    );
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.signals.gradeByLaw).not.toBeNull();
+    expect(started.signals.secondConsecutiveNegative).toBe(false);
+  });
+
+  it('view signals nothing for a plain employee', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.signals).toEqual({ gradeByLaw: null, secondConsecutiveNegative: false });
   });
 });

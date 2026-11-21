@@ -14,6 +14,11 @@ export {
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
 export {
+  type AbsenceInput,
+  type EvaluatorChangeInput,
+  type ObjectionDecisionInput,
+  type SheetCorrectionInput,
+  type TermChangeInput,
   type EvaluationFilter,
   type EvaluationService,
   type EvaluationView,
@@ -30,6 +35,11 @@ export type {
   NewEvaluation,
   StoredDeadline,
   TransitionInput,
+} from '@sarmata/repositories';
+export type {
+  ArchivedEvaluation,
+  NewArchivedEvaluation,
+  ObjectionOutcomeInput,
 } from '@sarmata/repositories';
 export type {
   Employee,
@@ -49,6 +59,11 @@ export {
   type EvaluationCommand,
   type EvaluationStatus,
   type SheetContent,
+  type ObjectionOutcome,
+  type PositionChangePayload,
+  type TermChangePayload,
+  type TermChangeReason,
+  type HistoryEntry,
   type SheetScore,
   type NewEmployeeInput,
   type EmploymentBasis,

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   type ApprovalIssue,
   type CalendarDate,
@@ -6,7 +8,18 @@ import {
   type RegulationDocument,
   type SheetContent,
   type SheetScore,
+  type HistoryEntry,
+  type ObjectionOutcome,
+  type PositionChangePayload,
   TransitionError,
+  absencePayloadSchema,
+  gradeByLawDue,
+  objectionFilingIssue,
+  outcomeLowered,
+  positionChangePayloadSchema,
+  secondConsecutiveNegative,
+  termChangeIssues,
+  termChangePayloadSchema,
   emptySheetContent,
   evaluationEligibility,
   partOneIssues,
@@ -46,7 +59,49 @@ export interface StartEvaluationInput {
 export type EvaluationView = EvaluationDetail & {
   readonly criteria: string[];
   readonly score: SheetScore;
+  /** From the snapshot, or from the last `position_changed` event. */
+  readonly currentPosition: {
+    readonly positionTitle: string | null;
+    readonly orgUnit: string | null;
+  };
+  readonly signals: {
+    /** Grade by law (art. 89 ust. 2) is due, counted from the last acquaintance. */
+    readonly gradeByLaw: { readonly dueOn: CalendarDate } | null;
+    readonly secondConsecutiveNegative: boolean;
+  };
 };
+
+export interface AbsenceInput {
+  /** Pass the id of an earlier entry to complete it, e.g. with the return date. */
+  readonly absenceId?: string;
+  readonly from: CalendarDate;
+  /** `null` while the absence is ongoing: the deadline is suspended. */
+  readonly to: CalendarDate | null;
+}
+
+export interface TermChangeInput {
+  readonly newDueOn: CalendarDate;
+  readonly reason: string;
+  readonly noticeOn: CalendarDate;
+}
+
+export interface EvaluatorChangeInput {
+  readonly accountId: string;
+  readonly occurredOn: CalendarDate;
+  readonly reason: string;
+}
+
+export interface ObjectionDecisionInput {
+  readonly outcome: ObjectionOutcome;
+  readonly decidedOn: CalendarDate;
+  /** Required for `changed`. */
+  readonly content?: SheetContent;
+}
+
+export interface SheetCorrectionInput {
+  readonly content: SheetContent;
+  readonly reason: string;
+}
 
 export interface EvaluationFilter {
   readonly status?: EvaluationStatus;
@@ -59,7 +114,14 @@ export interface EvaluationService {
   get(id: string): Promise<EvaluationView | null>;
   list(filter?: EvaluationFilter): Promise<Evaluation[]>;
   saveDraft(id: string, content: SheetContent): Promise<EvaluationView>;
+  /** Filing an objection (`file_objection`) and interrupting (`interrupt`) are commands here too. */
   transition(id: string, command: EvaluationCommand): Promise<EvaluationView>;
+  recordAbsence(id: string, input: AbsenceInput): Promise<EvaluationView>;
+  changeTerm(id: string, input: TermChangeInput): Promise<EvaluationView>;
+  recordPositionChange(id: string, input: PositionChangePayload): Promise<EvaluationView>;
+  changeEvaluator(id: string, input: EvaluatorChangeInput): Promise<EvaluationView>;
+  decideObjection(id: string, input: ObjectionDecisionInput): Promise<EvaluationView>;
+  correctSheet(id: string, input: SheetCorrectionInput): Promise<EvaluationView>;
 }
 
 export interface EvaluationServiceDependencies {
@@ -96,16 +158,61 @@ export function createEvaluationService(
     return detail;
   }
 
-  async function view(detail: EvaluationDetail): Promise<EvaluationView> {
-    const regulation = await regulationOf(detail);
-    const { content } = detail.sheet;
+  /** Scores valid ratings only: drafts may hold off-scale ones (the approval gate reports them). */
+  function scoreOf(
+    regulation: RegulationDocument,
+    detail: EvaluationDetail,
+    content: SheetContent,
+  ) {
     const criteria = sheetCriteria(regulation, detail.sheetId, content.partOne.additionalCriteria);
-    // Drafts may hold off-scale ratings (the approval gate reports them), so score only valid ones.
     const allowed = new Set(regulation.partialScale.levels.map((level) => level.points));
     const ratings = Object.fromEntries(
       Object.entries(content.partTwo.ratings).filter(([, points]) => allowed.has(points)),
     );
-    return { ...detail, criteria, score: scoreSheet(regulation, criteria, ratings) };
+    return { criteria, score: scoreSheet(regulation, criteria, ratings) };
+  }
+
+  function currentPositionOf(detail: EvaluationDetail): EvaluationView['currentPosition'] {
+    const change = detail.events.filter((event) => event.kind === 'position_changed').at(-1);
+    if (change === undefined) {
+      return { positionTitle: detail.snapshot.positionTitle, orgUnit: detail.snapshot.orgUnit };
+    }
+    const { positionTitle, orgUnit } = positionChangePayloadSchema.parse(change.payload);
+    return { positionTitle, orgUnit };
+  }
+
+  async function signalsOf(
+    detail: EvaluationDetail,
+    regulation: RegulationDocument,
+    score: SheetScore,
+  ): Promise<EvaluationView['signals']> {
+    const history: HistoryEntry[] = await repositories.evaluations.history(detail.employeeId);
+    const drafted = eventDate(detail, ['sheet_approved']);
+    const acquaintedOn = eventDate(detail, ['acquainted', 'signature_refused']);
+    // A closed evaluation is already part of the history.
+    if (detail.status !== 'closed' && drafted !== null && acquaintedOn !== null) {
+      history.push({ drafted, levelCode: score.levelCode, outcome: score.outcome, acquaintedOn });
+    }
+    return {
+      gradeByLaw: gradeByLawDue(regulation, {
+        serviceStatus: detail.snapshot.serviceStatus,
+        gradeGrantedOn: detail.snapshot.gradeGrantedOn,
+        history,
+      }),
+      secondConsecutiveNegative: secondConsecutiveNegative(history),
+    };
+  }
+
+  async function view(detail: EvaluationDetail): Promise<EvaluationView> {
+    const regulation = await regulationOf(detail);
+    const { criteria, score } = scoreOf(regulation, detail, detail.sheet.content);
+    return {
+      ...detail,
+      criteria,
+      score,
+      currentPosition: currentPositionOf(detail),
+      signals: await signalsOf(detail, regulation, score),
+    };
   }
 
   async function refreshDeadlines(id: string): Promise<EvaluationView> {
@@ -126,6 +233,19 @@ export function createEvaluationService(
       throw new ServiceError('invalid_transition', error.message);
     }
     throw error;
+  }
+
+  async function recordSideEvent(
+    detail: EvaluationDetail,
+    kind: 'absence' | 'term_changed' | 'position_changed',
+    occurredOn: CalendarDate,
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      await repositories.evaluations.recordEvent(detail.id, kind, occurredOn, payload);
+    } catch (error) {
+      wrapStale(error);
+    }
   }
 
   async function resolveEvaluator(
@@ -291,6 +411,16 @@ export function createEvaluationService(
         }
       }
 
+      if (command.type === 'file_objection') {
+        const dueOn = detail.deadlines.find((slot) => slot.slot === 'objection')?.dueOn ?? null;
+        if (objectionFilingIssue(dueOn, command.filedOn) !== null) {
+          throw new ServiceError('objection_late', 'The objection deadline has passed', {
+            dueOn,
+            filedOn: command.filedOn,
+          });
+        }
+      }
+
       if (command.type === 'close_after_objection_window') {
         const dueOn = detail.deadlines.find((slot) => slot.slot === 'objection')?.dueOn ?? null;
         if (dueOn === null || command.closedOn <= dueOn) {
@@ -312,6 +442,104 @@ export function createEvaluationService(
           payload: {},
           lockSheet: plan.lockSheet,
         });
+      } catch (error) {
+        wrapStale(error);
+      }
+      return refreshDeadlines(id);
+    },
+
+    async recordAbsence(id, input) {
+      const detail = await load(id);
+      const payload = absencePayloadSchema.parse({
+        absenceId: input.absenceId ?? randomUUID(),
+        from: input.from,
+        to: input.to,
+      });
+      await recordSideEvent(detail, 'absence', payload.from, payload);
+      return refreshDeadlines(id);
+    },
+
+    async changeTerm(id, input) {
+      const detail = await load(id);
+      const regulation = await regulationOf(detail);
+      const issues = termChangeIssues(regulation, {
+        cycleStart: detail.cycleStart,
+        changedOn: input.noticeOn,
+        reason: input.reason,
+      });
+      if (issues.length > 0) {
+        throw new ServiceError('term_change_invalid', 'The term cannot be changed', issues);
+      }
+      const payload = termChangePayloadSchema.parse(input);
+      await recordSideEvent(detail, 'term_changed', payload.noticeOn, payload);
+      return refreshDeadlines(id);
+    },
+
+    async recordPositionChange(id, input) {
+      const detail = await load(id);
+      const payload = positionChangePayloadSchema.parse(input);
+      await recordSideEvent(detail, 'position_changed', payload.changedOn, payload);
+      return refreshDeadlines(id);
+    },
+
+    async changeEvaluator(id, input) {
+      await load(id);
+      try {
+        await repositories.evaluations.changeEvaluator(
+          id,
+          input.accountId,
+          input.occurredOn,
+          input.reason,
+        );
+      } catch (error) {
+        wrapStale(error);
+      }
+      return refreshDeadlines(id);
+    },
+
+    async decideObjection(id, input) {
+      const detail = await load(id);
+      if (detail.status !== 'objection') {
+        throw new ServiceError('invalid_transition', 'The evaluation has no objection to decide');
+      }
+      let newContent: SheetContent | null = null;
+      if (input.outcome === 'changed') {
+        if (input.content === undefined) {
+          throw new ServiceError('criteria_invalid', 'A changed outcome needs the new sheet', [
+            { code: 'content_missing' },
+          ]);
+        }
+        newContent = sheetContentSchema.parse(input.content);
+        const regulation = await regulationOf(detail);
+        const before = scoreOf(regulation, detail, detail.sheet.content).score;
+        const after = scoreOf(regulation, detail, newContent).score;
+        if (outcomeLowered(regulation, before, after)) {
+          throw new ServiceError(
+            'objection_lowers_outcome',
+            'An objection cannot lower the evaluation outcome',
+            { before: before.levelCode, after: after.levelCode },
+          );
+        }
+      }
+      try {
+        await repositories.evaluations.applyObjectionOutcome({
+          evaluationId: id,
+          outcome: input.outcome,
+          occurredOn: input.decidedOn,
+          payload: input.outcome === 'changed' ? { reason: 'objection' } : {},
+          newContent,
+        });
+      } catch (error) {
+        wrapStale(error);
+      }
+      return refreshDeadlines(id);
+    },
+
+    async correctSheet(id, input) {
+      await load(id);
+      const content = sheetContentSchema.parse(input.content);
+      try {
+        await repositories.evaluations.correctSheet(id, content, input.reason);
       } catch (error) {
         wrapStale(error);
       }
