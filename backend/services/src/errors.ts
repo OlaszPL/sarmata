@@ -12,6 +12,9 @@ export type ServiceErrorCode =
   | 'objection_late'
   | 'objection_lowers_outcome'
   | 'term_change_invalid'
+  | 'forbidden'
+  | 'invalid_evaluator'
+  | 'no_locked_sheet'
   | 'not_found';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */

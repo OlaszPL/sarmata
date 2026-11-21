@@ -22,7 +22,11 @@ const reg: RegulationDocument = regulation;
 
 const date = calendarDate;
 
-function fakeEvaluations(seed: EvaluationDetail[] = [], history: HistoryEntry[] = []) {
+function fakeEvaluations(
+  seed: EvaluationDetail[] = [],
+  history: HistoryEntry[] = [],
+  override: Partial<EvaluationRepository> = {},
+) {
   const store = new Map<string, EvaluationDetail>(seed.map((detail) => [detail.id, detail]));
   let counter = 0;
   const repository: EvaluationRepository = {
@@ -140,6 +144,7 @@ function fakeEvaluations(seed: EvaluationDetail[] = [], history: HistoryEntry[] 
     correctSheet: () => Promise.reject(new Error('unused')),
     changeEvaluator: () => Promise.reject(new Error('unused')),
     history: () => Promise.resolve([...history]),
+    ...override,
   };
   return { repository, store };
 }
@@ -165,8 +170,13 @@ const employee = (patch: Partial<Employee> = {}): Employee => ({
   ...patch,
 });
 
-function setup(employees: Employee[], seed: EvaluationDetail[] = [], history: HistoryEntry[] = []) {
-  const { repository, store } = fakeEvaluations(seed, history);
+function setup(
+  employees: Employee[],
+  seed: EvaluationDetail[] = [],
+  history: HistoryEntry[] = [],
+  override: Partial<EvaluationRepository> = {},
+) {
+  const { repository, store } = fakeEvaluations(seed, history, override);
   const repositories: Repositories = {
     employees: {
       list: () => Promise.resolve(employees),
@@ -715,5 +725,176 @@ describe('staffing situations and objection flow', () => {
     const { services } = setup([employee()]);
     const started = await services.evaluations.start({ employeeId: 'emp1', today });
     expect(started.signals).toEqual({ gradeByLaw: null, secondConsecutiveNegative: false });
+  });
+});
+
+describe('fix wave 1: staffing review findings', () => {
+  const negativeBefore: HistoryEntry[] = [
+    {
+      drafted: date('2020-03-01'),
+      levelCode: 'D',
+      outcome: 'negative',
+      acquaintedOn: date('2020-03-10'),
+    },
+  ];
+
+  async function deliverNegative(services: ReturnType<typeof setup>['services']) {
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const id = started.id;
+    const run = (command: Parameters<typeof services.evaluations.transition>[1]) =>
+      services.evaluations.transition(id, command);
+    await run({ type: 'approve_part_one', startingInterviewOn: date('2024-09-20') });
+    await run({ type: 'record_part_one_signature', signedOn: date('2024-09-21') });
+    await run({ type: 'record_evaluation_interview', heldOn: date('2026-05-20') });
+    await services.evaluations.saveDraft(id, completeContent('C', points('far-below')));
+    await run({ type: 'approve_sheet', draftedOn: date('2026-05-25') });
+    const delivered = await run({
+      type: 'record_acquaintance',
+      acquaintedOn: date('2026-06-15'),
+      signatureRefused: false,
+    });
+    return { id, run, delivered };
+  }
+
+  it('interrupt keeps the reason in the event payload', async () => {
+    const { services, store } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    await services.evaluations.transition(started.id, {
+      type: 'interrupt',
+      interruptedOn: date('2026-12-01'),
+      reason: 'Employee left the office',
+    });
+    const event = store.get(started.id)?.events.find((e) => e.kind === 'interrupted');
+    expect(event?.payload).toEqual({ reason: 'Employee left the office' });
+  });
+
+  it('maps a denied role (42501) to forbidden', async () => {
+    const denied = () =>
+      Promise.reject(new RepositoryError('rpc', { message: 'denied', code: '42501' }));
+    const { services } = setup([employee()], [], [], {
+      correctSheet: denied,
+      changeEvaluator: denied,
+      applyTransition: denied,
+    });
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    await expectCode(
+      services.evaluations.changeEvaluator(started.id, {
+        accountId: 'acc-x',
+        occurredOn: today,
+        reason: 'Leave',
+      }),
+      'forbidden',
+    );
+    await expectCode(
+      services.evaluations.correctSheet(started.id, {
+        content: completeContent('C', 4),
+        reason: 'Typo',
+      }),
+      'forbidden',
+    );
+    await expectCode(
+      services.evaluations.transition(started.id, {
+        type: 'interrupt',
+        interruptedOn: today,
+        reason: 'x',
+      }),
+      'forbidden',
+    );
+  });
+
+  it('maps an evaluator outside the office to invalid_evaluator', async () => {
+    const { services } = setup([employee()], [], [], {
+      changeEvaluator: () =>
+        Promise.reject(
+          new RepositoryError('rpc', { message: 'invalid_evaluator', code: 'invalid_evaluator' }),
+        ),
+    });
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    await expectCode(
+      services.evaluations.changeEvaluator(started.id, {
+        accountId: 'acc-x',
+        occurredOn: today,
+        reason: 'Leave',
+      }),
+      'invalid_evaluator',
+    );
+  });
+
+  it('maps a missing locked sheet to no_locked_sheet', async () => {
+    const { services } = setup([employee()], [], [], {
+      correctSheet: () =>
+        Promise.reject(
+          new RepositoryError('rpc', {
+            message: 'no locked sheet to correct',
+            code: 'no_locked_sheet',
+          }),
+        ),
+    });
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    await expectCode(
+      services.evaluations.correctSheet(started.id, {
+        content: completeContent('C', 4),
+        reason: 'Typo',
+      }),
+      'no_locked_sheet',
+    );
+  });
+
+  it('changed outcome with an incomplete sheet is blocked', async () => {
+    const { services } = setup([employee()]);
+    const { id, run } = await (async () => {
+      const started = await services.evaluations.start({ employeeId: 'emp1', today });
+      const runner = (command: Parameters<typeof services.evaluations.transition>[1]) =>
+        services.evaluations.transition(started.id, command);
+      await runner({ type: 'approve_part_one', startingInterviewOn: date('2024-09-20') });
+      await runner({ type: 'record_part_one_signature', signedOn: date('2024-09-21') });
+      await runner({ type: 'record_evaluation_interview', heldOn: date('2026-05-20') });
+      await services.evaluations.saveDraft(started.id, completeContent('C', points('meets')));
+      await runner({ type: 'approve_sheet', draftedOn: date('2026-05-25') });
+      await runner({
+        type: 'record_acquaintance',
+        acquaintedOn: date('2026-06-15'),
+        signatureRefused: false,
+      });
+      return { id: started.id, run: runner };
+    })();
+    await run({ type: 'file_objection', filedOn: date('2026-06-16') });
+    const incomplete = completeContent('C', points('meets'));
+    incomplete.partTwo.ratings = {};
+    await expectCode(
+      services.evaluations.decideObjection(id, {
+        outcome: 'changed',
+        decidedOn: date('2026-06-20'),
+        content: incomplete,
+      }),
+      'approval_blocked',
+    );
+  });
+
+  it('signals count a delivered evaluation', async () => {
+    const { services } = setup([employee()], [], negativeBefore);
+    const { delivered } = await deliverNegative(services);
+    expect(delivered.signals.secondConsecutiveNegative).toBe(true);
+  });
+
+  it('signals ignore the redrafted copy and an interrupted evaluation', async () => {
+    const redraft = setup([employee()], [], negativeBefore);
+    const first = await deliverNegative(redraft.services);
+    await first.run({ type: 'file_objection', filedOn: date('2026-06-16') });
+    const redrafted = await redraft.services.evaluations.decideObjection(first.id, {
+      outcome: 'redraft',
+      decidedOn: date('2026-06-20'),
+    });
+    expect(redrafted.status).toBe('interview');
+    expect(redrafted.signals.secondConsecutiveNegative).toBe(false);
+
+    const interrupt = setup([employee()], [], negativeBefore);
+    const second = await deliverNegative(interrupt.services);
+    const interrupted = await second.run({
+      type: 'interrupt',
+      interruptedOn: date('2026-06-20'),
+      reason: 'Left',
+    });
+    expect(interrupted.signals.secondConsecutiveNegative).toBe(false);
   });
 });

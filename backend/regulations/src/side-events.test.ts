@@ -16,11 +16,21 @@ describe('termChangeIssues', () => {
     ).toEqual(['term_change_too_early']);
   });
 
-  it('term change after 6 months with a listed reason is fine', () => {
+  it('term change exactly 6 months after the cycle start is too early', () => {
     expect(
       termChangeIssues(regulation, {
         cycleStart: calendarDate('2026-01-15'),
         changedOn: calendarDate('2026-07-15'),
+        reason: 'requestOfEvaluated',
+      }),
+    ).toEqual(['term_change_too_early']);
+  });
+
+  it('term change more than 6 months with a listed reason is fine', () => {
+    expect(
+      termChangeIssues(regulation, {
+        cycleStart: calendarDate('2026-01-15'),
+        changedOn: calendarDate('2026-07-16'),
         reason: 'requestOfEvaluated',
       }),
     ).toEqual([]);

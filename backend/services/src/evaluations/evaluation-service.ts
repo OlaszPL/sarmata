@@ -189,8 +189,10 @@ export function createEvaluationService(
     const history: HistoryEntry[] = await repositories.evaluations.history(detail.employeeId);
     const drafted = eventDate(detail, ['sheet_approved']);
     const acquaintedOn = eventDate(detail, ['acquainted', 'signature_refused']);
-    // A closed evaluation is already part of the history.
-    if (detail.status !== 'closed' && drafted !== null && acquaintedOn !== null) {
+    // A closed evaluation is already part of the history. Only a delivered evaluation counts, not
+    // a redrafted copy or an interrupted one.
+    const inForce = detail.status === 'delivered' || detail.status === 'objection';
+    if (inForce && drafted !== null && acquaintedOn !== null) {
       history.push({ drafted, levelCode: score.levelCode, outcome: score.outcome, acquaintedOn });
     }
     return {
@@ -231,6 +233,17 @@ export function createEvaluationService(
     }
     if (error instanceof RepositoryError && error.code === 'invalid_transition') {
       throw new ServiceError('invalid_transition', error.message);
+    }
+    if (error instanceof RepositoryError) {
+      if (error.code === '42501') {
+        throw new ServiceError('forbidden', 'Your role does not allow this action');
+      }
+      if (error.code === 'invalid_evaluator') {
+        throw new ServiceError('invalid_evaluator', 'The new evaluator is not in this office');
+      }
+      if (error.code === 'no_locked_sheet') {
+        throw new ServiceError('no_locked_sheet', 'The evaluation has no locked sheet');
+      }
     }
     throw error;
   }
@@ -439,7 +452,7 @@ export function createEvaluationService(
           nextStatus: plan.next,
           eventKind: plan.eventKind as EvaluationEventKind,
           occurredOn: plan.occurredOn,
-          payload: {},
+          payload: command.type === 'interrupt' ? { reason: command.reason } : {},
           lockSheet: plan.lockSheet,
         });
       } catch (error) {
@@ -513,12 +526,26 @@ export function createEvaluationService(
         const regulation = await regulationOf(detail);
         const before = scoreOf(regulation, detail, detail.sheet.content).score;
         const after = scoreOf(regulation, detail, newContent).score;
+        if (!after.complete) {
+          throw new ServiceError('approval_blocked', 'The new sheet is incomplete', [
+            { code: 'sheet_incomplete' },
+          ]);
+        }
         if (outcomeLowered(regulation, before, after)) {
           throw new ServiceError(
             'objection_lowers_outcome',
             'An objection cannot lower the evaluation outcome',
             { before: before.levelCode, after: after.levelCode },
           );
+        }
+        const issues = sheetApprovalIssues({
+          regulation,
+          sheetId: detail.sheetId,
+          content: newContent,
+          evaluated: detail.snapshot,
+        });
+        if (issues.length > 0) {
+          throw new ServiceError('approval_blocked', 'The new sheet cannot be approved', issues);
         }
       }
       try {

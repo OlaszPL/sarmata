@@ -118,22 +118,73 @@ describe('computeEvaluationDeadlines', () => {
       orgUnit: null,
     });
 
-  it('significant position change after 7 months adds window slots', () => {
+  it('significant position change after 7 months adds only the evaluation window', () => {
     const deadlines = computeEvaluationDeadlines(
       withEvents(detail('2023-08-23'), positionChange('2024-03-25', true)),
       regulation,
     );
     expect(find(deadlines, 'evaluationOnPositionChange')).toBeDefined();
-    expect(find(deadlines, 'criteriaResetAfterPositionChange')).toBeDefined();
+    expect(find(deadlines, 'criteriaResetAfterPositionChange')).toBeUndefined();
   });
 
-  it('position change before 6 months adds none', () => {
+  it('significant position change within 6 months adds only the criteria reset', () => {
     const deadlines = computeEvaluationDeadlines(
       withEvents(detail('2023-08-23'), positionChange('2023-12-01', true)),
       regulation,
     );
     expect(find(deadlines, 'evaluationOnPositionChange')).toBeUndefined();
+    expect(find(deadlines, 'criteriaResetAfterPositionChange')?.dueOn).toBe('2024-01-02');
+  });
+
+  it('position change exactly 6 months after the cycle start counts as within 6 months', () => {
+    const deadlines = computeEvaluationDeadlines(
+      withEvents(detail('2023-08-23'), positionChange('2024-02-23', true)),
+      regulation,
+    );
+    expect(find(deadlines, 'evaluationOnPositionChange')).toBeUndefined();
+    expect(find(deadlines, 'criteriaResetAfterPositionChange')).toBeDefined();
+  });
+
+  it('insignificant position change adds no slot', () => {
+    const deadlines = computeEvaluationDeadlines(
+      withEvents(detail('2023-08-23'), positionChange('2024-03-25', false)),
+      regulation,
+    );
+    expect(find(deadlines, 'evaluationOnPositionChange')).toBeUndefined();
     expect(find(deadlines, 'criteriaResetAfterPositionChange')).toBeUndefined();
+  });
+
+  const outcome = (kind: string, occurredOn: string) =>
+    event('objection_outcome', occurredOn, { outcome: kind });
+
+  it('labour court appeal follows a rejected objection', () => {
+    const deadlines = computeEvaluationDeadlines(
+      withEvents({ ...detail('2023-08-23'), status: 'closed' }, outcome('rejected', '2026-06-10')),
+      regulation,
+    );
+    expect(find(deadlines, 'labourCourtAppeal')).toBeDefined();
+  });
+
+  it('labour court appeal is absent after a changed or redraft outcome', () => {
+    for (const kind of ['changed', 'redraft']) {
+      const deadlines = computeEvaluationDeadlines(
+        withEvents({ ...detail('2023-08-23'), status: 'interview' }, outcome(kind, '2026-06-10')),
+        regulation,
+      );
+      expect(find(deadlines, 'labourCourtAppeal')).toBeUndefined();
+    }
+  });
+
+  it('only the latest objection outcome counts for the labour court appeal', () => {
+    const deadlines = computeEvaluationDeadlines(
+      withEvents(
+        { ...detail('2023-08-23'), status: 'interview' },
+        outcome('rejected', '2026-06-10'),
+        outcome('redraft', '2026-06-20'),
+      ),
+      regulation,
+    );
+    expect(find(deadlines, 'labourCourtAppeal')).toBeUndefined();
   });
 
   it('objection status yields 14-day decision slot', () => {

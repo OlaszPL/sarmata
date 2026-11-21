@@ -110,16 +110,24 @@ export function computeEvaluationDeadlines(
   const positionChange = detail.events.filter((event) => event.kind === 'position_changed').at(-1);
   if (positionChange !== undefined) {
     const { changedOn, significant } = positionChangePayloadSchema.parse(positionChange.payload);
-    if (significant && changedOn > addMonths(cycleStart, 6)) {
-      slots.push(slot(regulation, 'evaluationOnPositionChange', changedOn, absences));
-      slots.push(slot(regulation, 'criteriaResetAfterPositionChange', changedOn, absences));
+    if (significant) {
+      // Rozporządzenie § 9 ust. 1 and ustawa art. 81 ust. 6: within 6 months the criteria are
+      // reset (term unchanged), after more than 6 months the evaluation is drawn up.
+      const slotName =
+        changedOn > addMonths(cycleStart, 6)
+          ? 'evaluationOnPositionChange'
+          : 'criteriaResetAfterPositionChange';
+      slots.push(slot(regulation, slotName, changedOn, absences));
     }
   }
   if (status === 'objection') {
     const filedOn = lastEventDate(detail.events, ['objection_filed']);
     if (filedOn !== null) slots.push(slot(regulation, 'objectionDecision', filedOn, absences));
   }
-  const outcomeOn = lastEventDate(detail.events, ['objection_outcome']);
-  if (outcomeOn !== null) slots.push(slot(regulation, 'labourCourtAppeal', outcomeOn, absences));
+  // art. 83 ust. 5: only a rejected objection opens the appeal, and only the latest outcome counts.
+  const lastOutcome = detail.events.filter((event) => event.kind === 'objection_outcome').at(-1);
+  if (lastOutcome?.payload.outcome === 'rejected') {
+    slots.push(slot(regulation, 'labourCourtAppeal', lastOutcome.occurredOn, absences));
+  }
   return slots;
 }

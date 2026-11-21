@@ -43,14 +43,14 @@ export type PositionChangePayload = z.output<typeof positionChangePayloadSchema>
 
 export type TermChangeIssue = 'term_change_too_early' | 'term_change_reason_unknown';
 
-/** art. 81 ust. 8: the term changes no earlier than after the minimum elapsed months, for a listed reason. */
+/** art. 81 ust. 8: the term changes only after more than the minimum elapsed months, for a listed reason. */
 export function termChangeIssues(
   regulation: RegulationDocument,
   input: { cycleStart: CalendarDate; changedOn: CalendarDate; reason: string },
 ): TermChangeIssue[] {
   const issues: TermChangeIssue[] = [];
   const earliest = addMonths(input.cycleStart, regulation.termChange.minimumElapsedMonths);
-  if (input.changedOn < earliest) issues.push('term_change_too_early');
+  if (input.changedOn <= earliest) issues.push('term_change_too_early');
   if (!(regulation.termChange.reasons as readonly string[]).includes(input.reason)) {
     issues.push('term_change_reason_unknown');
   }

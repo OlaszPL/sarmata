@@ -238,8 +238,11 @@ function toHistoryEntry(row: HistoryRow): HistoryEntry | null {
 
 function toRepositoryError(operation: string, error: { message: string; code?: string }) {
   if (error.code === 'P0001') {
-    for (const code of ['stale_status', 'invalid_transition']) {
+    for (const code of ['stale_status', 'invalid_transition', 'invalid_evaluator']) {
       if (error.message.includes(code)) return new RepositoryError(operation, { ...error, code });
+    }
+    if (error.message.includes('no locked sheet')) {
+      return new RepositoryError(operation, { ...error, code: 'no_locked_sheet' });
     }
   }
   return new RepositoryError(operation, error);
