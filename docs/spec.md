@@ -45,3 +45,7 @@ Co do reszty ustaleń:
 
 
 Nie wiem możesz rozplanować na mikroserwisy jak trzeba, ale na pewno NextJS z backendem w monorepo niech będzie, inne rzeczy się będą po jakimś grpc czy rest komuniktować - co uznasz za najwydajniesze.
+
+
+WAŻNE
+Dodaj precommit i pre-push, jakiś prosty CI, ale aby nie szedł jakoś mega długo i sensowne testowanie gdzie się da, korzystając z nowoczesnych pakietów itp.
