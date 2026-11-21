@@ -466,6 +466,31 @@ isOneToOne: false
                            },
 "start_evaluation":
 { Args: { "p_after_negative": boolean,"p_content": Json,"p_cycle_start": string,"p_employee_id": string,"p_evaluator_account_id": string,"p_previous_acquainted_on": string,"p_previous_evaluation_id": string,"p_regulation_version_id": string,"p_sheet_id": string,"p_snapshot": Json }; Returns: string
+                           },
+"statistics_criteria":
+{ Args: { "p_year": number }; Returns: {
+              "criterion_id": string,"points": number,"ratings": number
+            }[]
+                           },
+"statistics_distribution":
+{ Args: { "p_year": number }; Returns: {
+              "civil_servant": boolean,"evaluations": number,"grade_by_law": number,"grade_requests": number,"level_code": string,"negative": number,"org_unit": string,"second_negative": number,"with_conclusions": number
+            }[]
+                           },
+"statistics_dsc_ock_counts":
+{ Args: { "p_year": number }; Returns: {
+              "civil_servants": number,"grades_on_request": number,"indefinite_employees": number,"labour_court_appeals": number,"objections_pending": number,"objections_rejected": number,"objections_upheld": number
+            }[]
+                           },
+"statistics_evaluators":
+{ Args: { "p_year": number }; Returns: {
+              "evaluations": number,"evaluator_account_id": string,"evaluator_name": string,"level_code": string,"points_sum": number,"ratings": number
+            }[]
+                           },
+"statistics_schedule":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "cycle_start": string,"employee_id": string,"evaluation_due_on": string,"evaluation_id": string,"evaluator_account_id": string,"evaluator_name": string,"first_name": string,"interview_held": boolean,"last_name": string,"org_unit": string,"starting_interview_due_on": string,"status": string,"suspended": boolean
+            }[]
                            }
           }
           Enums: {
