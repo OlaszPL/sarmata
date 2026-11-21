@@ -56,6 +56,8 @@ export const conversationPrep: Task<'conversation_prep'> = async (
       `Kryteria:\n${describeCriteria(input.criteria)}\n\n` +
       `Notatki oceniającego:\n${describeNotes(input.notes)}\n\n` +
       describeSignals(input.signals),
+    // Questions for every criterion: up to the 14 of the catalog for a starting conversation.
+    maxTokens: 3072,
     ...withSignal(signal),
   });
   if (!result.ok) return result;

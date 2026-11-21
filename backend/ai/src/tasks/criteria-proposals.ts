@@ -11,13 +11,19 @@ export const criteriaProposals: Task<'criteria_proposals'> = async (
   signal,
 ) => {
   const candidates = input.candidates.map((criterion) => criterion.id);
+  const mandatory = input.mandatory.map((criterion) => criterion.id);
+  // At least one proposal: the real Bielik left the list empty and still wrote expectations for a
+  // candidate it did not propose.
+  const atLeast = candidates.length > 0 && input.maxAdditional > 0 ? 1 : 0;
   const result = await ai.generateObject({
     schemaName: 'criteria_proposals',
     schema: z.object({
-      additionalCriteria: z.array(z.object({ criterionId: oneOf(candidates), reason: z.string() })),
+      additionalCriteria: z
+        .array(z.object({ criterionId: oneOf(candidates), reason: z.string() }))
+        .min(atLeast),
       behaviouralExpectations: z.array(
         z.object({
-          criterionId: oneOf([...input.mandatory.map((criterion) => criterion.id), ...candidates]),
+          criterionId: oneOf([...mandatory, ...candidates]),
           expectations: z.array(z.string()),
         }),
       ),
@@ -38,5 +44,10 @@ export const criteriaProposals: Task<'criteria_proposals'> = async (
       return true;
     })
     .slice(0, input.maxAdditional);
-  return ok({ additionalCriteria, behaviouralExpectations: result.value.behaviouralExpectations });
+  // Expectations only for the criteria of the sheet: the mandatory ones and the proposed ones.
+  const onSheet = new Set([...mandatory, ...additionalCriteria.map((entry) => entry.criterionId)]);
+  const behaviouralExpectations = result.value.behaviouralExpectations.filter((entry) =>
+    onSheet.has(entry.criterionId),
+  );
+  return ok({ additionalCriteria, behaviouralExpectations });
 };

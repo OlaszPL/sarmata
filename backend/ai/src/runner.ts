@@ -45,7 +45,8 @@ const TASKS: { readonly [K in AiRunKind]: TaskEntry<K> } = {
   quality_check: { prompt: 'quality-check', run: qualityCheck, long: false },
   sensitive_data: { prompt: 'sensitive-data', run: sensitiveData, long: false },
   conversation_prep: { prompt: 'conversation-prep', run: conversationPrep, long: true },
-  criteria_proposals: { prompt: 'criteria-proposals', run: criteriaProposals, long: false },
+  // Expectations for every criterion of the sheet: about 120 s on a 16 GB Mac, past the short limit.
+  criteria_proposals: { prompt: 'criteria-proposals', run: criteriaProposals, long: true },
   appreciation_moments: { prompt: 'appreciation-moments', run: appreciationMoments, long: false },
   hr_signals: { prompt: 'hr-signals', run: hrSignals, long: true },
   procedure_question: { prompt: 'procedure-question', run: procedureQuestion, long: false },
