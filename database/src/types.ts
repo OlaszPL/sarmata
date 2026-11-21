@@ -233,6 +233,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"notification_digests": {
+                  Row: {
+                    "account_id": string,"attempts": number,"created_at": string,"day": string,"last_error": string | null,"office_id": string,"sent_at": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_id": string,"attempts"?: number,"created_at"?: string,"day": string,"last_error"?: string | null,"office_id": string,"sent_at"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "account_id"?: string,"attempts"?: number,"created_at"?: string,"day"?: string,"last_error"?: string | null,"office_id"?: string,"sent_at"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_digests_account_fkey"
+      columns: ["account_id","office_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["user_id","office_id"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "account_id": string,"created_at": string,"created_on": string,"due_on": string,"evaluation_id": string,"id": string,"kind": Database["public"]['Enums']["notification_kind"],"lead_days": number | null,"office_id": string,"read_at": string | null,"resolved_at": string | null,"slot": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_id": string,"created_at"?: string,"created_on": string,"due_on": string,"evaluation_id": string,"id"?: string,"kind": Database["public"]['Enums']["notification_kind"],"lead_days"?: number | null,"office_id": string,"read_at"?: string | null,"resolved_at"?: string | null,"slot": string,"status"?: string
+                  }
+                  Update: {
+                    "account_id"?: string,"created_at"?: string,"created_on"?: string,"due_on"?: string,"evaluation_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["notification_kind"],"lead_days"?: number | null,"office_id"?: string,"read_at"?: string | null,"resolved_at"?: string | null,"slot"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_account_fkey"
+      columns: ["account_id","office_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["user_id","office_id"]
+    },{
+      foreignKeyName: "notifications_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "evaluations"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "notifications_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"office_settings": {
                   Row: {
                     "ai_enabled": boolean,"default_place": string | null,"notes_retention_months": number,"objection_addressee_sheet_a": string | null,"office_id": string,"reminder_lead_days": (number)[],"smtp_from": string | null,"smtp_host": string | null,"smtp_password_secret_id": string | null,"smtp_password_set": boolean | null,"smtp_port": number | null,"smtp_user": string | null
@@ -308,6 +360,11 @@ isOneToOne: false
 "change_evaluator":
 { Args: { "p_evaluation_id": string,"p_new_evaluator_account_id": string,"p_occurred_on": string,"p_reason": string }; Returns: string
                            },
+"collect_notifications":
+{ Args: { "p_today": string }; Returns: {
+              "created": number,"queued": number,"resolved": number
+            }[]
+                           },
 "correct_sheet":
 { Args: { "p_content": Json,"p_evaluation_id": string,"p_reason": string }; Returns: string
                            },
@@ -332,6 +389,19 @@ isOneToOne: false
 "job_queue_send":
 { Args: { "delay_seconds"?: number,"message": Json }; Returns: number
                            },
+"notification_digest_facts":
+{ Args: { "p_account_id": string,"p_day": string }; Returns: {
+              "email": string,"nearest_due_on": string,"office_id": string,"status": string,"unread_count": number
+            }[]
+                           },
+"office_smtp_settings":
+{ Args: { "p_office_id": string }; Returns: {
+              "host": string,"password": string,"port": number,"sender": string,"sender_name": string,"username": string
+            }[]
+                           },
+"record_digest_result":
+{ Args: { "p_account_id": string,"p_day": string,"p_error": string,"p_status": string }; Returns: undefined
+                           },
 "set_smtp_password":
 { Args: { "p_password": string }; Returns: undefined
                            },
@@ -340,7 +410,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","note_kind": "observation"|"ongoing_conversation"|"appreciation"|"workload_fact","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
+            "employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","note_kind": "observation"|"ongoing_conversation"|"appreciation"|"workload_fact","notification_kind": "deadline_reminder"|"deadline_overdue"|"objection_decision"|"grade_by_law","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -456,7 +526,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"note_kind": ["observation", "ongoing_conversation", "appreciation", "workload_fact"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
+            "employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"note_kind": ["observation", "ongoing_conversation", "appreciation", "workload_fact"],"notification_kind": ["deadline_reminder", "deadline_overdue", "objection_decision", "grade_by_law"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
           }
         }
 } as const
