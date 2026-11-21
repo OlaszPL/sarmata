@@ -4,7 +4,7 @@ Repo jest monorepo pnpm z katalogami pogrupowanymi po warstwie: `frontend/` (web
 
 Pakiet `@sarmata/ui` eksportuje oprócz `index.ts` także arkusz `globals.css`: style importuje się po ścieżce (`@sarmata/ui/globals.css`), bo CSS nie przechodzi przez moduł TypeScript.
 
-Prace w tle (długie zadania AI, seryjne PDF, powiadomienia) planuje `pg_cron`, trzyma kolejka pgmq w Postgresie, a wykonuje osobny proces worker na Node z tym samym kodem `backend/services`. Worker działa w osobnym kontenerze w każdym profilu, także w light, bo tylko on dostaje klucz serwisowy (ADR 0003 i 0004). PDF arkuszy (PDF/UA-1) generuje Typst przez WASM w procesie Node, bez osobnego serwisu. DOCX generuje biblioteka `docx` (MIT), też w procesie. Paczka do EZD potrzebuje PDF/A: Typst obsługuje standardy PDF/A, a to, czy PDF/A i PDF/UA-1 dadzą się połączyć w jednym pliku, sprawdzamy przy implementacji PDF. Jeśli nie, paczka EZD dostaje osobny render PDF/A.
+Prace w tle (długie zadania AI, seryjne PDF, powiadomienia) planuje `pg_cron`, trzyma kolejka pgmq w Postgresie, a wykonuje osobny proces worker na Node z tym samym kodem `backend/services`. Worker działa w osobnym kontenerze w każdym profilu, także w light, bo tylko on dostaje klucz serwisowy (ADR 0003 i 0004). PDF arkuszy generuje Typst jako natywny moduł Node (`@myriaddreamin/typst-ts-node-compiler`, napi) w procesie aplikacji, bez osobnego serwisu. Wariant WASM odpada, bo jego API JS nie pozwala ustawić standardu PDF, a moduł natywny ustawia PDF/UA-1 (arkusz do pobrania) i PDF/A-2a (paczka EZD). `pdfStandard` przyjmuje jeden standard, więc PDF/UA-1 i PDF/A nie łączą się w jednym pliku i paczka EZD dostaje osobny render. Krój dokumentów to Open Sans (SIL OFL 1.1), pliki leżą w `backend/exports/fonts/open-sans/`, a nazwę trzyma stała `PDF_FONT_FAMILY`. DOCX generuje biblioteka `docx` (MIT), też w procesie, z tą samą nazwą kroju.
 
 ## Odrzucone
 
@@ -13,3 +13,9 @@ Prace w tle (długie zadania AI, seryjne PDF, powiadomienia) planuje `pg_cron`, 
 - **gRPC między mikroserwisami:** jedyny zewnętrzny serwis to model AI, a dla niego standardem jest HTTP zgodne z OpenAI.
 - **Redis i BullMQ:** dodatkowy kontener, a pgmq daje kolejkę w bazie, którą już mamy.
 - **WeasyPrint i Chromium do PDF:** WeasyPrint to dodatkowy runtime w Pythonie, a Chromium waży około 1 GB i nie deklaruje PDF/UA. Typst daje PDF/UA-1 bez nowego procesu, kosztem szablonów w osobnym języku.
+
+## Uzupełnienie 21.11.2026
+
+- Układ `backend/` ma dziś także `exports` (`@sarmata/exports`: PDF/UA z Typst, DOCX, teczka sprawy, paczka EZD, archiwum teczek pracownika) i `regulations` (oficjalne wersje przepisów, ADR 0006). Opis katalogów jest w `docs/architektura.md`.
+- „Seryjne PDF” w pracach w tle nie powstały. Wszystkie dokumenty powstają na żądanie w procesie aplikacji, bez kolejki i bez Storage. Worker wykonuje dziś zadania `notifications.send_digest`, `evaluations.close_unobjected`, `retention.run`, `ai.run` i `system.ping`.
+- Decyzja o Typst jako module natywnym obowiązuje bez zmian (`@myriaddreamin/typst-ts-node-compiler` w `backend/exports`).

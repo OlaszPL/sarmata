@@ -1,7 +1,19 @@
+import { z } from 'zod';
+
 declare const brand: unique symbol;
 
 /** A date without time and zone in `YYYY-MM-DD` format. Only `calendarDate` creates it, so it always exists. */
 export type CalendarDate = string & { readonly [brand]: 'CalendarDate' };
+
+/** Zod schema for a `YYYY-MM-DD` string that must be an existing day. Output is a `CalendarDate`. */
+export const calendarDateSchema = z.string().transform((value, ctx): CalendarDate => {
+  try {
+    return calendarDate(value);
+  } catch {
+    ctx.issues.push({ code: 'custom', message: `invalid date ${value}`, input: value });
+    return z.NEVER;
+  }
+});
 
 const MIN_YEAR = 1000;
 const MAX_YEAR = 9999;

@@ -10,18 +10,25 @@
     "start": "tsx src/main.ts",
     "dev": "tsx watch src/main.ts",
     "sync-regulations": "tsx src/sync-regulations.ts",
+    "collect-notifications": "tsx src/collect-notifications.ts",
+    "run-retention": "tsx src/run-retention.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
+    "@sarmata/ai": "workspace:*",
     "@sarmata/domain": "workspace:*",
     "@sarmata/repositories": "workspace:*",
     "@sarmata/services": "workspace:*",
+    "nodemailer": "10.6.1",
     "tsx": "4.23.15",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "catalog:",
     "@types/node": "catalog:",
+    "@types/nodemailer": "8.0.2",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

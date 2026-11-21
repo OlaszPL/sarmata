@@ -28,12 +28,15 @@ export const deadlineSlotSchema = z.enum([
   'gradeByLawGrant',
 ]);
 
-const termChangeReasonSchema = z.enum([
+export const termChangeReasonSchema = z.enum([
   'evaluatorChange',
   'expectedAbsenceOfEvaluated',
   'expectedAbsenceOfEvaluator',
   'requestOfEvaluated',
 ]);
+
+/** Kebab-case spelling of `PositionKind` as written in regulation files. */
+export const sheetPositionKindSchema = z.enum(['office-head', 'manages-people', 'other']);
 
 const regulationDocumentShape = z.strictObject({
   id: identifier,
@@ -46,7 +49,13 @@ const regulationDocumentShape = z.strictObject({
         id: identifier,
         title: text,
         citation: text,
-        text: z.string().regex(/^docs\/legal\/[^/]+\.md$/, 'expected a file in docs/legal'),
+        // The legal text for the procedure assistant (RAG), kept with the rules of its version.
+        text: z
+          .string()
+          .regex(
+            /^backend\/regulations\/[^/]+\/sources\/[^/]+\.md$/,
+            "expected a file in the version's sources directory",
+          ),
       }),
     )
     .min(1),
@@ -97,6 +106,7 @@ const regulationDocumentShape = z.strictObject({
       z.strictObject({
         id: z.string().regex(/^[A-Z]$/, 'expected a single capital letter'),
         annex: z.number().int().positive(),
+        positionKind: sheetPositionKindSchema,
         basis,
         position: text,
         mandatoryCriteria: z.array(identifier).min(1),
@@ -148,7 +158,12 @@ function checkReferences(document: Shape, ctx: z.RefinementCtx): void {
   document.gradeByLaw.qualifyingLevels.forEach((code, index) => {
     checkLevel(['gradeByLaw', 'qualifyingLevels', index], code);
   });
+  const kinds = new Set<string>();
   document.sheets.forEach((sheet, sheetIndex) => {
+    if (kinds.has(sheet.positionKind)) {
+      issue(['sheets', sheetIndex, 'positionKind'], `duplicate positionKind ${sheet.positionKind}`);
+    }
+    kinds.add(sheet.positionKind);
     sheet.mandatoryCriteria.forEach((id, index) => {
       if (!criteria.has(id)) {
         issue(['sheets', sheetIndex, 'mandatoryCriteria', index], `unknown criterion ${id}`);
@@ -176,6 +191,7 @@ export const regulationDocumentSchema = regulationDocumentShape.superRefine(chec
 
 export type RegulationDocument = z.output<typeof regulationDocumentSchema>;
 export type DeadlineSlot = z.infer<typeof deadlineSlotSchema>;
+export type TermChangeReason = z.infer<typeof termChangeReasonSchema>;
 
 export class RegulationDocumentError extends Error {
   readonly issues: z.ZodError['issues'];

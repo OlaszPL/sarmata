@@ -1,7 +1,7 @@
 import { lstat, mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import type { RuntimeContext } from './context.ts';
-import { downloadVerified, readTextOrNull } from './download.ts';
+import { downloadVerified, lockFile, readTextOrNull } from './download.ts';
 import { LLAMA_CPP_RELEASE, type LlamaBackend, type LlamaCppBundle } from './llama-cpp-release.ts';
 
 /** An installed llama.cpp: the directory with llama-server, llama-bench and their libraries. */
@@ -18,7 +18,8 @@ const INSTALL_MARKER = '.sarmata-install.json';
 /**
  * Downloads, verifies and unpacks a llama.cpp bundle into `<dataDir>/llama.cpp/<build>-<key>`.
  * Extra archives (the CUDA runtime) land next to llama-server so it finds their libraries.
- * A finished install of the same archives is reused without downloading.
+ * A finished install of the same archives is reused without downloading. A lock keeps two runs
+ * (two worktrees) from unpacking into the same directory at once.
  */
 export async function installLlamaCpp(
   bundle: LlamaCppBundle,
@@ -35,7 +36,25 @@ export async function installLlamaCpp(
   };
   const fingerprint = JSON.stringify(bundle.assets.map((asset) => asset.sha256));
   if ((await readTextOrNull(join(dir, INSTALL_MARKER))) === fingerprint) return llama;
+  await mkdir(dirname(dir), { recursive: true });
+  const unlock = await lockFile(`${dir}.lock`, `llama.cpp ${LLAMA_CPP_RELEASE.build}`);
+  try {
+    if ((await readTextOrNull(join(dir, INSTALL_MARKER))) !== fingerprint) {
+      await unpackBundle(bundle, dir, llama, ctx);
+      await writeFile(join(dir, INSTALL_MARKER), fingerprint);
+    }
+  } finally {
+    await unlock();
+  }
+  return llama;
+}
 
+async function unpackBundle(
+  bundle: LlamaCppBundle,
+  dir: string,
+  llama: LlamaCpp,
+  ctx: RuntimeContext,
+): Promise<void> {
   const staging = `${dir}.staging`;
   await rm(dir, { recursive: true, force: true });
   await rm(staging, { recursive: true, force: true });
@@ -61,8 +80,6 @@ export async function installLlamaCpp(
     await rm(`${archive}.sha256`, { force: true });
   }
   await rm(staging, { recursive: true, force: true });
-  await writeFile(join(dir, INSTALL_MARKER), fingerprint);
-  return llama;
 }
 
 async function findFile(root: string, name: string): Promise<string | null> {

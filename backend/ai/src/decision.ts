@@ -63,7 +63,11 @@ const answerSchema = z.discriminatedUnion('type', [
 
 const responseSchema = z.object({ answers: z.record(z.string(), answerSchema) });
 
-export type DecisionAnswer = z.infer<typeof answerSchema>;
+/**
+ * `fallback: true` marks an answer of the text model fallback: its probabilities are one-hot on its
+ * own answer and `confidence` is what the model says about itself. Bielik-One answers have no flag.
+ */
+export type DecisionAnswer = z.infer<typeof answerSchema> & { readonly fallback?: true };
 export type DecisionAnswers = Record<string, DecisionAnswer>;
 
 export async function decide(

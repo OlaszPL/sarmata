@@ -67,3 +67,16 @@ Rzeczy sprawdzalne tylko na prawdziwych komputerach albo maszynach wirtualnych:
 16. Aktualizacja z wymuszonymi błędami: zepsuta migracja (powrót plików, obrazów i danych), błąd w sprzątaniu po starcie (tylko ostrzeżenie, nowa wersja działa), aktualizacja przez `sarmata update --from` z paczką, w której zmienił się compose (planuje ją kreator nowej wersji), wymiana `sarmata.exe` w czasie działania.
 17. Usunięcie bez `--purge`, potem `sarmata restore` końcowej kopii na świeżej instalacji, z kluczem pgsodium i CA Caddy z `backups/`.
 18. `sarmata ai` na działającej instalacji: wybór mniejszego modelu, instalacja `uv`, gdy go brakuje, Bielik-One, który nie wstaje (zostaje sam model tekstowy), `sarmata ai --off`.
+19. [ ] Bielik-One na vLLM z kartą NVIDIA (Linux, compute capability co najmniej 8.0, karta od 24 GB): instalacja `bielik-one[vllm]` i wtyczki `systemone-vllm-heads` przez `uv`, pierwsze pobranie pakietu i modelu bazowego do `<katalog danych AI>/huggingface`, `pnpm ai:smoke` zwraca decyzję z `/v1/systemone`, usługa systemd po restarcie. Na Macu M2 16 GB tego nie sprawdzimy.
+20. [ ] Bielik-One 11B (MLX na Macu od 48 GB albo vLLM): model bazowy `speakleash/Bielik-11B-v3.1-Instruct` jest bramkowany, pobranie wymaga tokenu zapisanego w `<katalog danych AI>/huggingface`.
+
+## Uzupełnienie 21.11.2026
+
+Opis profilu server („Bielik-One na vLLM”) czytaj z zastrzeżeniem z ADR 0005: Bielik-One instaluje się tylko tam, gdzie mieści się na stałe obok modelu tekstowego (na vLLM karta NVIDIA od 24 GB), a gdzie nie, decyzje podejmuje model tekstowy. Profil server jest tylko dla Linuksa.
+
+## Sprawdzone 21.11.2026 (macOS arm64, Docker Desktop, bez zmian w lokalnym Supabase)
+
+- Budowa obrazów poleceniem kreatora (`docker build --file infra/deploy/docker/app.Dockerfile --target web|worker`) na linux/arm64: `sarmata/web` 362 MB w 115 s, `sarmata/worker` 329 MB w 78 s (zimny cache pnpm, pierwsza budowa łącznie).
+- Obraz web: standalone zawiera czcionki Open Sans (`backend/exports/fonts`) i natywny moduł Typst `linux-arm64-musl`. Zalogowany eksport arkusza PDF oceny demo zwraca 200 i poprawny PDF z osadzoną czcionką, `/logowanie` zwraca 200.
+- Obraz worker: `uv` 0.8.0 i teksty prawne w `/legal/backend/regulations`, proces startuje jako użytkownik `node`, synchronizuje przepisy i przetwarza zadanie `system.ping`.
+- Nie sprawdzono: budowy na linux/amd64 (plik blokady zawiera `typst-ts-node-compiler-linux-x64-musl`, ale obraz nie powstał), uruchomienia `uvx semble` w kontenerze (pierwsze pobranie pakietu i modelu), pełnego stosu z `docker compose` i kreatora.

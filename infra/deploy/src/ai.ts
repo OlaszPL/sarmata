@@ -156,7 +156,7 @@ export async function installDecisionRuntime(
     model: modelOf(ai),
   });
   const decision = recommendation.bielikOne;
-  if (decision === null) throw new Error('Bielik-One does not fit next to the text model here');
+  if (decision === null) throw new Error(recommendation.decisionReason);
   const install = await installBielikOne(decision.engine, ctx, { uv });
   const commands = bielikOneCommands(install, decision.package, ctx.dataDir);
   return [

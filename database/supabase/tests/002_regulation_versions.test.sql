@@ -40,8 +40,9 @@ select throws_ok(
   'a local version belongs to an office'
 );
 
+-- Cascade: a plain truncate already stops at the foreign key from evaluations, the trigger must hold anyway.
 select throws_ok(
-  'truncate public.regulation_versions',
+  'truncate public.regulation_versions cascade',
   'P0001',
   'official regulation versions are immutable, truncate refused',
   'nobody truncates the table while official versions exist, not even the database owner'

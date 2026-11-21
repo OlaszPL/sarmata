@@ -29,8 +29,15 @@ CMD ["node", "frontend/web/server.js"]
 
 # Same start as "pnpm --filter @sarmata/worker start": tsx runs the TypeScript sources.
 FROM ${NODE_IMAGE} AS worker
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    SARMATA_LEGAL_ROOT=/legal \
+    UV_CACHE_DIR=/home/node/.cache/uv
+# semble (legal search of the AI procedure assistant, ADR 0008) runs through uvx: the worker needs uv
+# and the legal source texts at SARMATA_LEGAL_ROOT.
+COPY --from=ghcr.io/astral-sh/uv:0.8.0 /uv /uvx /usr/local/bin/
 WORKDIR /worker
 COPY --from=build --chown=node:node /out/worker ./
+COPY --from=build --chown=node:node /repo/backend/regulations /legal/backend/regulations
+RUN mkdir -p /home/node/.cache/uv && chown -R node:node /home/node/.cache
 USER node
 CMD ["node_modules/.bin/tsx", "src/main.ts"]

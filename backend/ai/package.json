@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/fake-server.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@sarmata/domain": "workspace:*",
+    "undici": "7.30.2",
     "zod": "catalog:"
   },
   "devDependencies": {

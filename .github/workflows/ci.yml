@@ -35,6 +35,8 @@ jobs:
       - run: pnpm check
         env:
           TURBO_CACHE_DIR: .turbo/cache
+          # Type-aware ESLint over the whole monorepo needs more than Node's default heap on the runner (7 GB RAM).
+          NODE_OPTIONS: --max-old-space-size=6144
 
   baza:
     if: github.event_name != 'pull_request'

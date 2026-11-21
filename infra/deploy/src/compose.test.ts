@@ -122,6 +122,16 @@ describe('composeServicesFor and renderCompose', () => {
     });
   });
 
+  it('gives the AI call limits to the web app and the worker, as in pnpm ai:env', () => {
+    const { services } = render(PROFILES.light);
+    for (const name of ['web', 'worker']) {
+      expect(services[name]?.environment).toMatchObject({
+        SARMATA_AI_TIMEOUT_MS: '120000',
+        SARMATA_AI_LONG_TIMEOUT_MS: '600000',
+      });
+    }
+  });
+
   it('AI relay: host network, AI ports bound to the docker0 gateway only', () => {
     const compose = parse(
       renderCompose(upstreamCompose(), PROFILES.withAi, [55491, 8026]),

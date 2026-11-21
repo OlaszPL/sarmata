@@ -119,6 +119,11 @@ export default defineConfig([
     },
   },
   {
+    // The demo seed script signs in with a plain client, like a browser, and then uses the services.
+    files: ['backend/services/src/seed-demo-evaluations.ts'],
+    rules: { 'no-restricted-imports': ['error', { paths: [serviceClientPath] }] },
+  },
+  {
     files: ['frontend/**'],
     rules: {
       'no-restricted-imports': [
@@ -131,11 +136,12 @@ export default defineConfig([
                 '!@sarmata/services',
                 '!@sarmata/ui',
                 '!@sarmata/ui/*',
+                '!@sarmata/exports',
                 '@supabase/*',
                 '!@supabase/ssr',
               ],
               message:
-                'The frontend uses only @sarmata/services, @sarmata/ui and @supabase/ssr (ADR 0004).',
+                'The frontend uses only @sarmata/services, @sarmata/exports (download route), @sarmata/ui and @supabase/ssr (ADR 0004).',
             },
             {
               group: ['**/backend/**'],
@@ -148,6 +154,11 @@ export default defineConfig([
   },
   {
     files: ['backend/regulations/**'],
+    // The test of the legal source files and the catalog import script read from disk.
+    ignores: [
+      'backend/regulations/src/sources.test.ts',
+      'backend/regulations/scripts/import-training-catalog.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',

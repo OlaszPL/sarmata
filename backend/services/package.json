@@ -9,16 +9,19 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
+    "seed-demo-evaluations": "tsx src/seed-demo-evaluations.ts",
     "test": "vitest run"
   },
   "dependencies": {
     "@sarmata/domain": "workspace:*",
     "@sarmata/regulations": "workspace:*",
     "@sarmata/repositories": "workspace:*",
+    "@supabase/supabase-js": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "tsx": "4.23.15",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

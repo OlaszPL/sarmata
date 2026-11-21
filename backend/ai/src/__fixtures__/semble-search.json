@@ -1,0 +1,61 @@
+{
+  "query": "termin wniesienia sprzeciwu od oceny",
+  "results": [
+    {
+      "file_path": "ustawa-o-sluzbie-cywilnej-tj-2026.md",
+      "start_line": 1438,
+      "end_line": 1449,
+      "score": 0.01639344262295082,
+      "content": "### Art. 83\n\n1. Od oceny okresowej służy, w terminie 7 dni od dnia zapoznania się z oceną, sprzeciw do dyrektora generalnego urzędu.\n\n2. (uchylony)\n\n3. Sprzeciw rozpatruje się w terminie 14 dni od dnia wniesienia.\n\n4. W razie uwzględnienia sprzeciwu ocenę okresową zmienia się albo sporządza po raz drugi. Od oceny okresowej sporządzonej po raz drugi przysługuje sprzeciw na zasadach określonych w us"
+    },
+    {
+      "file_path": "NOTES-zarzadzenie-nowelizacja-strategia.md",
+      "start_line": 138,
+      "end_line": 139,
+      "score": 0.015749007936507936,
+      "content": "| Sprzeciw | każdemu ocenianemu, 7 dni, do DG, rozpatrzenie 14 dni, uwzględnienie tylko w całości, ocena zmieniona albo sporządzona po raz drugi, od niej znów sprzeciw (art. 83) | tylko urzędnikom i pracownikom na czas nieokreślony, 7 dni, do DG (art. 83 ust. 1 i 2a). DG w 14 dni odmawia na piśmie albo uwzględnia w całości lub części i wskazuje sposób (ust. 3). Oceniający w 7 dni ponownie dokonuje"
+    },
+    {
+      "file_path": "rozporzadzenie-oceny-okresowe-2016.md",
+      "start_line": 243,
+      "end_line": 244,
+      "score": 0.014913831197525408,
+      "content": "- Pouczenie. B i C: „Zgodnie z art. 83 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej od oceny okresowej służy, w terminie 7 dni od dnia zapoznania się z oceną, sprzeciw do dyrektora generalnego urzędu.” Przypis 17: „W urzędzie, w którym przepisy nie przewidują tworzenia stanowiska dyrektora generalnego urzędu, sprzeciw składa się do kierownika tego urzędu.” A: „Na podstawie art. 83 "
+    },
+    {
+      "file_path": "rozporzadzenie-oceny-okresowe-2016.md",
+      "start_line": 89,
+      "end_line": 104,
+      "score": 0.014756944444444444,
+      "content": "### § 6\n\n1. Oceniający zapoznaje ocenianego z kryteriami oceny i terminem sporządzenia oceny na piśmie.\n\n2. Oceniany potwierdza podpisem przeprowadzenie z nim rozmowy, o której mowa w § 5 ust. 1, oraz zapoznanie się z kryteriami oceny i terminem sporządzenia oceny na piśmie.\n\n3. Po dokonaniu czynności, o której mowa w ust. 2, oryginał arkusza niezwłocznie włącza się do akt osobowych ocenianego, a "
+    },
+    {
+      "file_path": "ustawa-o-sluzbie-cywilnej-tj-2026.md",
+      "start_line": 1422,
+      "end_line": 1430,
+      "score": 0.013789868667917449,
+      "content": "1) zmiany na stanowisku oceniającego w trakcie okresu, w którym oceniany podlega ocenie,\n\n2) przewidywanej, dłuższej, usprawiedliwionej nieobecności w pracy ocenianego, która może uniemożliwić przeprowadzenie oceny,\n\n3) przewidywanej, dłuższej, usprawiedliwionej nieobecności w pracy oceniającego, która może utrudnić przeprowadzenie oceny,\n\n4) złożenia przez ocenianego wniosku o zmianę terminu prze"
+    },
+    {
+      "file_path": "rozporzadzenie-oceny-okresowe-2016.md",
+      "start_line": 85,
+      "end_line": 88,
+      "score": 0.013763197586726998,
+      "content": "2. Oceniający może wybrać z wykazu kryteriów oceny nie więcej niż 3 kryteria dodatkowe, najistotniejsze ze względu na charakter obowiązków wynikających z opisu stanowiska pracy zajmowanego przez ocenianego.\n\n3. Po przeprowadzeniu rozmowy, o której mowa w ust. 1, oceniający wpisuje do części I arkusza kryteria dodatkowe, jeżeli zostały wybrane, oraz termin sporządzenia oceny na piśmie.\n\n"
+    },
+    {
+      "file_path": "ustawa-o-sluzbie-cywilnej-tj-2026.md",
+      "start_line": 1414,
+      "end_line": 1421,
+      "score": 0.013070263070263072,
+      "content": "6. Ocena okresowa jest sporządzana w razie zmiany stanowiska pracy, wiążącej się z istotną zmianą zakresu obowiązków, jeżeli od dnia sporządzenia ostatniej oceny okresowej upłynęło więcej niż 6 miesięcy. W przypadku osób ocenianych po raz pierwszy, ocenę sporządza się, jeżeli okres podlegający ocenie jest dłuższy niż 6 miesięcy.\n\n7. W razie usprawiedliwionej nieobecności ocenianego w pracy, trwają"
+    },
+    {
+      "file_path": "rozporzadzenie-oceny-okresowe-2016.md",
+      "start_line": 111,
+      "end_line": 114,
+      "score": 0.013068651778329199,
+      "content": "1. W przypadku gdy w okresie 6 miesięcy od dnia ustalenia kryteriów oceny sporządzanej po raz pierwszy albo od dnia sporządzenia ostatniej oceny następuje zmiana stanowiska pracy zajmowanego przez ocenianego, wiążąca się z istotną zmianą zakresu obowiązków, w terminie 30 dni od zmiany stanowiska pracy ponownie dokonuje się czynności, o których mowa w § 5 i § 6; termin sporządzenia oceny nie ulega "
+    }
+  ]
+}

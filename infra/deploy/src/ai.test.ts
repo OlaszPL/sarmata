@@ -131,13 +131,17 @@ describe('uvInstall', () => {
 });
 
 describe('aiSettings and aiUnsupportedReason', () => {
+  const fourB = {
+    engine: 'mlx',
+    package: BIELIK_ONE_PACKAGES['bielik-one-4b-r1-adapter'],
+  } as const;
   const choice = (bielikOne: boolean): RuntimeRecommendation => ({
     enabledByDefault: true,
     llamaCpp: { key: 'macos-arm64', backend: 'metal', assets: [] },
     model: MODEL_FILES['bielik-11b-v3.1-q4_k_m'],
-    bielikOne: bielikOne
-      ? { engine: 'mlx', package: BIELIK_ONE_PACKAGES['bielik-one-4b-r1-adapter'] }
-      : null,
+    bielikOne: bielikOne ? fourB : null,
+    bielikOnePlan: bielikOne ? { mode: 'concurrent', choice: fourB } : { mode: 'text-only' },
+    decisionReason: '',
     server: { contextSize: 8192, parallel: 2 },
     reason: '',
   });
