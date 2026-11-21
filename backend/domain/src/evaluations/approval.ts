@@ -10,13 +10,15 @@ export interface ApprovalIssue {
     | CriteriaIssue['code']
     | 'due_after_deadline'
     | 'rating_missing'
+    | 'rating_out_of_scale'
     | 'development_conclusions_missing'
     | 'justification_missing'
     | 'grade_request_not_allowed'
     | 'grade_request_max_grade'
     | 'grade_request_motivation_missing'
     | 'grade_request_wrong_grade'
-    | 'interview_date_missing';
+    | 'interview_date_missing'
+    | 'objection_window_open';
   criterionId?: string;
 }
 
@@ -55,6 +57,10 @@ export function sheetApprovalIssues(input: {
   for (const id of criteria) {
     if (partTwo.ratings[id] === undefined) issues.push({ code: 'rating_missing', criterionId: id });
   }
+  const allowed = new Set(regulation.partialScale.levels.map((level) => level.points));
+  const outOfScale = Object.entries(partTwo.ratings).filter(([, points]) => !allowed.has(points));
+  for (const [id] of outOfScale) issues.push({ code: 'rating_out_of_scale', criterionId: id });
+  if (outOfScale.length > 0) return issues;
   const score = scoreSheet(regulation, criteria, partTwo.ratings);
 
   if (partTwo.developmentConclusions.trim() === '')

@@ -65,7 +65,7 @@ Treść arkusza A, B albo C jednej oceny, wypełniana w trakcie oceny. Dokument 
 _Avoid_: formularz, ankieta
 
 **Wersja arkusza** (`version`):
-Kolejny numer zapisu arkusza. Każda zmiana tworzy nową wersję, a poprzednie zostają do odczytu.
+Numer wersji arkusza. Edycje roboczej wersji nadpisują ją w miejscu. Zablokowanie arkusza nie zmienia numeru. Nowa wersja powstaje dopiero przy korekcie albo sprzeciwie, a poprzednie zostają do odczytu.
 _Avoid_: kopia, edycja
 
 **Rodzaj stanowiska** (`PositionKind`, `position_kind`):

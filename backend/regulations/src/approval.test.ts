@@ -49,6 +49,13 @@ const issueCodes = (input: Parameters<typeof sheetApprovalIssues>[0]) =>
 const servant = { serviceStatus: 'civil_servant', grade: 4 } as const;
 
 describe('sheetApprovalIssues', () => {
+  it('reports an off-scale rating instead of throwing', () => {
+    const content = contentFor('C', [5, 5, 5, 5, 5]);
+    content.partTwo.ratings.reliability = 4;
+    const issues = sheetApprovalIssues({ regulation, sheetId: 'C', content, evaluated: servant });
+    expect(issues).toContainEqual({ code: 'rating_out_of_scale', criterionId: 'reliability' });
+  });
+
   it('flags an empty justification for a negative result (EX-4 ratings)', () => {
     const content = contentFor('C', [5, 1, 5, 5, 5], { justification: '' });
     expect(issueCodes({ regulation, sheetId: 'C', content, evaluated: servant })).toEqual([

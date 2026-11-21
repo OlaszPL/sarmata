@@ -194,12 +194,53 @@ describe('evaluations.start', () => {
     const started = await services.evaluations.start({ employeeId: 'emp1', today });
     expect(started.sheetId).toBe('C');
     expect(started.regulationId).toBe(reg.id);
-    expect(started.cycleStart).toBe('2024-09-02');
+    expect(started.cycleStart).toBe(today);
     expect(started.evaluatorAccountId).toBe('acc-current');
     expect(started.deadlines.map((d) => d.slot).sort()).toEqual([
       'evaluationDeadline',
       'startingInterview',
     ]);
+  });
+
+  it('start for an employee hired in 2010 without history uses today and finds a regulation', async () => {
+    const { services } = setup([employee({ employmentStart: date('2010-03-01') })]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.cycleStart).toBe(today);
+    expect(started.regulationId).toBe(reg.id);
+  });
+
+  it('start accepts an explicit cycleStart', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({
+      employeeId: 'emp1',
+      today,
+      cycleStart: date('2026-03-01'),
+    });
+    expect(started.cycleStart).toBe('2026-03-01');
+  });
+
+  it('start rejects a second evaluation while one is in progress', async () => {
+    const { services } = setup([employee()]);
+    await services.evaluations.start({ employeeId: 'emp1', today });
+    const second = services.evaluations.start({ employeeId: 'emp1', today });
+    await expectCode(second, 'not_eligible');
+    await expect(second).rejects.toMatchObject({ details: { reason: 'evaluation_in_progress' } });
+  });
+
+  it('get returns criteria and score', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    await services.evaluations.saveDraft(started.id, completeContent('C', points('meets')));
+    const detail = await services.evaluations.get(started.id);
+    expect(detail?.criteria).toEqual(criteriaOf('C'));
+    expect(detail?.score).toMatchObject({ complete: true, outcome: 'positive' });
+  });
+
+  it('get scores an incomplete draft as incomplete', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const detail = await services.evaluations.get(started.id);
+    expect(detail?.score.complete).toBe(false);
   });
 
   it('start after negative sets afterNegative and 7-day starting interview', async () => {
@@ -211,7 +252,7 @@ describe('evaluations.start', () => {
       evaluatorAccountId: 'acc1',
       regulationId: reg.id,
       sheetId: 'C',
-      status: 'delivered',
+      status: 'closed',
       cycleStart: date('2024-09-02'),
       afterNegative: false,
       previousEvaluationId: null,
@@ -349,5 +390,61 @@ describe('evaluations.transition', () => {
     });
     expect(closed.status).toBe('closed');
     expect(closed.deadlines).toEqual([]);
+  });
+
+  it('close_after_objection_window is blocked until the objection window has passed', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const id = started.id;
+    const run = (command: Parameters<typeof services.evaluations.transition>[1]) =>
+      services.evaluations.transition(id, command);
+    await run({ type: 'approve_part_one', startingInterviewOn: date('2024-09-20') });
+    await run({ type: 'record_part_one_signature', signedOn: date('2024-09-21') });
+    await run({ type: 'record_evaluation_interview', heldOn: date('2026-05-20') });
+    await services.evaluations.saveDraft(id, completeContent('C', points('meets')));
+    await run({ type: 'approve_sheet', draftedOn: date('2026-05-25') });
+    await run({
+      type: 'record_acquaintance',
+      acquaintedOn: date('2026-06-15'),
+      signatureRefused: false,
+    });
+    for (const closedOn of ['2026-06-15', '2026-06-22']) {
+      const attempt = run({ type: 'close_after_objection_window', closedOn: date(closedOn) });
+      await expectCode(attempt, 'approval_blocked');
+      await expect(attempt).rejects.toMatchObject({
+        details: [{ code: 'objection_window_open' }],
+      });
+    }
+  });
+
+  it('approve_sheet reports an off-scale rating as an approval issue, not a RangeError', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const id = started.id;
+    await services.evaluations.transition(id, {
+      type: 'approve_part_one',
+      startingInterviewOn: date('2024-09-20'),
+    });
+    await services.evaluations.transition(id, {
+      type: 'record_part_one_signature',
+      signedOn: date('2024-09-21'),
+    });
+    await services.evaluations.transition(id, {
+      type: 'record_evaluation_interview',
+      heldOn: date('2026-05-20'),
+    });
+    await services.evaluations.saveDraft(id, completeContent('C', 4));
+    const attempt = services.evaluations.transition(id, {
+      type: 'approve_sheet',
+      draftedOn: date('2026-05-25'),
+    });
+    await expectCode(attempt, 'approval_blocked');
+    const error = await attempt.catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ServiceError);
+    expect((error as ServiceError).details).toContainEqual({
+      code: 'rating_out_of_scale',
+      criterionId: 'knowledge-use',
+    });
+    expect((await services.evaluations.get(id))?.score.complete).toBe(false);
   });
 });

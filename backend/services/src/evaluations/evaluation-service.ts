@@ -5,6 +5,7 @@ import {
   type EvaluationStatus,
   type RegulationDocument,
   type SheetContent,
+  type SheetScore,
   TransitionError,
   emptySheetContent,
   evaluationEligibility,
@@ -34,7 +35,18 @@ export interface StartEvaluationInput {
   /** Defaults to the sheet proposed for the position kind. */
   readonly sheetId?: string;
   readonly today: CalendarDate;
+  /**
+   * Start of the evaluation cycle. Defaults to the approval date of the previous evaluation,
+   * otherwise to `today` (history starts when the system is deployed).
+   */
+  readonly cycleStart?: CalendarDate;
 }
+
+/** An evaluation with the criteria to rate and the computed result, ready for the frontend. */
+export type EvaluationView = EvaluationDetail & {
+  readonly criteria: string[];
+  readonly score: SheetScore;
+};
 
 export interface EvaluationFilter {
   readonly status?: EvaluationStatus;
@@ -43,11 +55,11 @@ export interface EvaluationFilter {
 }
 
 export interface EvaluationService {
-  start(input: StartEvaluationInput): Promise<EvaluationDetail>;
-  get(id: string): Promise<EvaluationDetail | null>;
+  start(input: StartEvaluationInput): Promise<EvaluationView>;
+  get(id: string): Promise<EvaluationView | null>;
   list(filter?: EvaluationFilter): Promise<Evaluation[]>;
-  saveDraft(id: string, content: SheetContent): Promise<EvaluationDetail>;
-  transition(id: string, command: EvaluationCommand): Promise<EvaluationDetail>;
+  saveDraft(id: string, content: SheetContent): Promise<EvaluationView>;
+  transition(id: string, command: EvaluationCommand): Promise<EvaluationView>;
 }
 
 export interface EvaluationServiceDependencies {
@@ -84,14 +96,26 @@ export function createEvaluationService(
     return detail;
   }
 
-  async function refreshDeadlines(id: string): Promise<EvaluationDetail> {
+  async function view(detail: EvaluationDetail): Promise<EvaluationView> {
+    const regulation = await regulationOf(detail);
+    const { content } = detail.sheet;
+    const criteria = sheetCriteria(regulation, detail.sheetId, content.partOne.additionalCriteria);
+    // Drafts may hold off-scale ratings (the approval gate reports them), so score only valid ones.
+    const allowed = new Set(regulation.partialScale.levels.map((level) => level.points));
+    const ratings = Object.fromEntries(
+      Object.entries(content.partTwo.ratings).filter(([, points]) => allowed.has(points)),
+    );
+    return { ...detail, criteria, score: scoreSheet(regulation, criteria, ratings) };
+  }
+
+  async function refreshDeadlines(id: string): Promise<EvaluationView> {
     const detail = await load(id);
     const regulation = await regulationOf(detail);
     await repositories.evaluations.saveDeadlines(
       id,
       computeEvaluationDeadlines(detail, regulation),
     );
-    return load(id);
+    return view(await load(id));
   }
 
   function wrapStale(error: unknown): never {
@@ -135,8 +159,15 @@ export function createEvaluationService(
       const evaluatorAccountId = await resolveEvaluator(input, employee.supervisorEmployeeId);
 
       const previous = await repositories.evaluations.latestForEmployee(employee.id);
+      if (previous !== null && previous.status !== 'closed' && previous.status !== 'interrupted') {
+        throw new ServiceError(
+          'not_eligible',
+          'The employee already has an evaluation in progress',
+          { reason: 'evaluation_in_progress' },
+        );
+      }
       const previousApprovedOn = previous === null ? null : eventDate(previous, ['sheet_approved']);
-      const cycleStart = previousApprovedOn ?? employee.employmentStart ?? input.today;
+      const cycleStart = input.cycleStart ?? previousApprovedOn ?? input.today;
       let afterNegative = false;
       if (previous !== null && previousApprovedOn !== null) {
         const previousRegulation = await regulationOf(previous);
@@ -182,7 +213,10 @@ export function createEvaluationService(
       return refreshDeadlines(created.id);
     },
 
-    get: (id) => repositories.evaluations.get(id),
+    async get(id) {
+      const detail = await repositories.evaluations.get(id);
+      return detail === null ? null : view(detail);
+    },
 
     list: (filter = {}) => repositories.evaluations.listForOffice(filter),
 
@@ -195,7 +229,7 @@ export function createEvaluationService(
           ['criteria', 'criteria_awaiting_signature', 'period', 'interview'] as EvaluationStatus[]
         ).includes(detail.status);
       if (locked) {
-        if (sameJson(detail.sheet.content, parsed)) return detail;
+        if (sameJson(detail.sheet.content, parsed)) return view(detail);
         throw new ServiceError('part_locked', 'The sheet is locked');
       }
       if (detail.status !== 'criteria' && !sameJson(detail.sheet.content.partOne, parsed.partOne)) {
@@ -249,6 +283,17 @@ export function createEvaluationService(
         });
         if (issues.length > 0) {
           throw new ServiceError('approval_blocked', 'The sheet cannot be approved', issues);
+        }
+      }
+
+      if (command.type === 'close_after_objection_window') {
+        const dueOn = detail.deadlines.find((slot) => slot.slot === 'objection')?.dueOn ?? null;
+        if (dueOn === null || command.closedOn <= dueOn) {
+          throw new ServiceError(
+            'approval_blocked',
+            'The objection window is still open on the closing date',
+            [{ code: 'objection_window_open' }],
+          );
         }
       }
 

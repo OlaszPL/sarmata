@@ -45,21 +45,34 @@ const fields = {
 };
 
 /** Employee profile as entered by HR. Omitted optional fields become `null`, the enums default to the most common value. */
-export const newEmployeeSchema = z.strictObject({
-  ...fields,
-  email: fields.email.default(null),
-  positionTitle: fields.positionTitle.default(null),
-  orgUnit: fields.orgUnit.default(null),
-  positionKind: fields.positionKind.default('other'),
-  serviceStatus: fields.serviceStatus.default('employee'),
-  employmentBasis: fields.employmentBasis.default('indefinite'),
-  employmentStart: fields.employmentStart.default(null),
-  appointmentYear: fields.appointmentYear.default(null),
-  grade: fields.grade.default(null),
-  gradeGrantedOn: fields.gradeGrantedOn.default(null),
-  employmentEndedOn: fields.employmentEndedOn.default(null),
-  supervisorEmployeeId: fields.supervisorEmployeeId.default(null),
-});
+export const newEmployeeSchema = z
+  .strictObject({
+    ...fields,
+    email: fields.email.default(null),
+    positionTitle: fields.positionTitle.default(null),
+    orgUnit: fields.orgUnit.default(null),
+    positionKind: fields.positionKind.default('other'),
+    serviceStatus: fields.serviceStatus.default('employee'),
+    employmentBasis: fields.employmentBasis.default('indefinite'),
+    employmentStart: fields.employmentStart.default(null),
+    appointmentYear: fields.appointmentYear.default(null),
+    grade: fields.grade.default(null),
+    gradeGrantedOn: fields.gradeGrantedOn.default(null),
+    employmentEndedOn: fields.employmentEndedOn.default(null),
+    supervisorEmployeeId: fields.supervisorEmployeeId.default(null),
+  })
+  .superRefine((value, context) => {
+    if (value.serviceStatus === 'civil_servant') return;
+    for (const key of ['grade', 'appointmentYear', 'gradeGrantedOn'] as const) {
+      if (value[key] !== null) {
+        context.addIssue({
+          code: 'custom',
+          path: [key],
+          message: `${key} is only allowed for a civil servant`,
+        });
+      }
+    }
+  });
 
 export const employeePatchSchema = z.strictObject(fields).partial();
 
