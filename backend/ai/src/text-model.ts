@@ -15,7 +15,14 @@ export interface ObjectRequest<S extends z.ZodType> {
 }
 
 const chatResponseSchema = z.object({
-  choices: z.array(z.object({ message: z.object({ content: z.string().nullable() }) })).min(1),
+  choices: z
+    .array(
+      z.object({
+        message: z.object({ content: z.string().nullable() }),
+        finish_reason: z.string().nullish(),
+      }),
+    )
+    .min(1),
 });
 
 export async function generateObject<S extends z.ZodType>(
@@ -23,6 +30,7 @@ export async function generateObject<S extends z.ZodType>(
   timeoutMs: number,
   request: ObjectRequest<S>,
 ): Promise<AiResult<z.output<S>>> {
+  const maxTokens = request.maxTokens ?? 2048;
   const body = {
     model: endpoint.model,
     messages: [
@@ -37,14 +45,19 @@ export async function generateObject<S extends z.ZodType>(
         schema: z.toJSONSchema(request.schema),
       },
     },
-    max_tokens: request.maxTokens ?? 2048,
+    max_tokens: maxTokens,
     temperature: 0,
   };
   const raw = await postJson(endpoint, '/chat/completions', body, timeoutMs, request.signal);
   if (!raw.ok) return raw;
   const chat = chatResponseSchema.safeParse(raw.value);
   if (!chat.success) return failure('invalid_response', 'Unexpected chat completion shape');
-  const content = chat.data.choices[0]?.message.content;
+  const choice = chat.data.choices[0];
+  // Cut JSON would only fail to parse: say why, so the token budget of the task can be raised.
+  if (choice?.finish_reason === 'length') {
+    return failure('invalid_response', `The completion hit the limit of ${maxTokens} tokens`);
+  }
+  const content = choice?.message.content;
   if (!content) return failure('invalid_response', 'The completion is empty');
   let json: unknown;
   try {

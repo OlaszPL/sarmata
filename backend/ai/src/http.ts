@@ -1,6 +1,14 @@
 import { errorMessage } from '@sarmata/domain';
+import { Agent, fetch } from 'undici';
 import { type AiEndpoint } from './config';
 import { type AiResult, failure } from './result';
+
+/**
+ * The call limit is `timeoutMs` alone. The defaults of undici (300 s for the response headers and 300 s
+ * between body chunks) cut a long completion of a local model, which sends its headers only when the
+ * whole answer is ready: a sheet draft on a 16 GB Mac ended as `unavailable: fetch failed` at 300 s.
+ */
+const dispatcher = new Agent({ headersTimeout: 0, bodyTimeout: 0 });
 
 const isTimeout = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'name' in error && error.name === 'TimeoutError';
@@ -25,6 +33,7 @@ export async function postJson(
       },
       body: JSON.stringify(body),
       signal: AbortSignal.any(signals),
+      dispatcher,
     });
     status = response.status;
     text = await response.text();
