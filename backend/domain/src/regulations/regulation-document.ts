@@ -49,7 +49,13 @@ const regulationDocumentShape = z.strictObject({
         id: identifier,
         title: text,
         citation: text,
-        text: z.string().regex(/^docs\/legal\/[^/]+\.md$/, 'expected a file in docs/legal'),
+        // The legal text for the procedure assistant (RAG), kept with the rules of its version.
+        text: z
+          .string()
+          .regex(
+            /^backend\/regulations\/[^/]+\/sources\/[^/]+\.md$/,
+            "expected a file in the version's sources directory",
+          ),
       }),
     )
     .min(1),

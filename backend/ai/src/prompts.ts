@@ -12,6 +12,7 @@ export const PROMPT_VERSIONS = {
   'criteria-proposals': 1,
   'appreciation-moments': 1,
   'hr-signals': 1,
+  'procedure-question': 1,
 } as const;
 
 export type PromptName = keyof typeof PROMPT_VERSIONS;

@@ -1,5 +1,7 @@
+import { fileURLToPath } from 'node:url';
 import { parseEnv } from '@sarmata/domain';
 import { z } from 'zod';
+import { type SembleLegalSearchConfig } from './legal-search';
 
 export interface AiEndpoint {
   /** Base URL with the API version, e.g. `http://127.0.0.1:55490/v1`. */
@@ -53,5 +55,26 @@ export function aiConfigFromEnv(env: Record<string, string | undefined>): AiConf
       values.SARMATA_AI_DECISION_MODEL,
       values.SARMATA_AI_DECISION_API_KEY,
     ),
+  };
+}
+
+const legalSearchEnvSchema = z.object({
+  SARMATA_SEMBLE_COMMAND: z.string().trim().min(1).default('uvx --from semble[mcp]==0.6.1 semble'),
+  SARMATA_LEGAL_ROOT: z.string().min(1).optional(),
+  SARMATA_AI_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
+});
+
+/** The repository directory (backend/ai/src is three levels down): legal source paths are relative to it. */
+const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+
+/** semble command and the directory the legal source paths of the regulation versions start from. */
+export function legalSearchConfigFromEnv(
+  env: Record<string, string | undefined>,
+): SembleLegalSearchConfig {
+  const values = parseEnv(legalSearchEnvSchema, env, 'legal search');
+  return {
+    command: values.SARMATA_SEMBLE_COMMAND.split(/\s+/),
+    root: values.SARMATA_LEGAL_ROOT ?? REPO_ROOT,
+    timeoutMs: values.SARMATA_AI_TIMEOUT_MS,
   };
 }

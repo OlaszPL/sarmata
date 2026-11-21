@@ -1,4 +1,4 @@
-import { type AiInput, type AiRunKind } from '@sarmata/domain';
+import { type AiInput, type AiRunKind, aiRunKindSchema } from '@sarmata/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type AiConfig } from './config';
 import { type FakeServer, modelReplies, startFakeServer } from './fake-server';
@@ -66,7 +66,11 @@ const executeOk = async (runner: AiRunner, kind: AiRunKind, input: unknown) => {
 
 describe('prompts', () => {
   it('every kind has a prompt file', () => {
-    for (const name of Object.keys(PROMPT_VERSIONS) as PromptName[]) {
+    const names = Object.keys(PROMPT_VERSIONS) as PromptName[];
+    expect([...names].sort()).toEqual(
+      aiRunKindSchema.options.map((kind) => kind.replaceAll('_', '-')).sort(),
+    );
+    for (const name of names) {
       const prompt = loadPrompt(name);
       expect(prompt.id).toBe(`${name}.v${PROMPT_VERSIONS[name]}`);
       expect(prompt.system.length).toBeGreaterThan(100);

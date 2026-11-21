@@ -7,14 +7,15 @@ import {
 } from '@sarmata/domain';
 import { z } from 'zod';
 import { type Ai, createAi } from './ai';
-import { aiConfigFromEnv } from './config';
-import { type LegalSearch, unavailableLegalSearch } from './legal-search';
+import { aiConfigFromEnv, legalSearchConfigFromEnv } from './config';
+import { type LegalSearch, createSembleLegalSearch } from './legal-search';
 import { type PromptName, loadPrompt } from './prompts';
 import { type AiResult, failure } from './result';
 import { appreciationMoments } from './tasks/appreciation-moments';
 import { conversationPrep } from './tasks/conversation-prep';
 import { criteriaProposals } from './tasks/criteria-proposals';
 import { hrSignals } from './tasks/hr-signals';
+import { procedureQuestion } from './tasks/procedure-question';
 import { qualityCheck } from './tasks/quality-check';
 import { sensitiveData } from './tasks/sensitive-data';
 import { sheetDraft } from './tasks/sheet-draft';
@@ -37,7 +38,7 @@ interface TaskEntry<K extends AiRunKind> {
   readonly run: Task<K>;
 }
 
-const TASKS: { readonly [K in AiRunKind]?: TaskEntry<K> } = {
+const TASKS: { readonly [K in AiRunKind]: TaskEntry<K> } = {
   sheet_draft: { prompt: 'sheet-draft', run: sheetDraft },
   quality_check: { prompt: 'quality-check', run: qualityCheck },
   sensitive_data: { prompt: 'sensitive-data', run: sensitiveData },
@@ -45,6 +46,7 @@ const TASKS: { readonly [K in AiRunKind]?: TaskEntry<K> } = {
   criteria_proposals: { prompt: 'criteria-proposals', run: criteriaProposals },
   appreciation_moments: { prompt: 'appreciation-moments', run: appreciationMoments },
   hr_signals: { prompt: 'hr-signals', run: hrSignals },
+  procedure_question: { prompt: 'procedure-question', run: procedureQuestion },
 };
 
 export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRunner {
@@ -54,7 +56,6 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
     signal: AbortSignal | undefined,
   ): Promise<AiResult<{ output: AiOutput<K>; promptVersion: string }>> {
     const entry = TASKS[kind];
-    if (entry === undefined) return failure('rejected', `No AI task for ${kind}`);
     const input = aiInputSchemas[kind].safeParse(raw);
     if (!input.success) {
       return failure('rejected', `Invalid ${kind} input: ${z.prettifyError(input.error)}`);
@@ -86,10 +87,10 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
   };
 }
 
-/** The runner of the worker: models from `SARMATA_AI_*`. */
+/** The runner of the worker: models from `SARMATA_AI_*`, legal search with semble (`SARMATA_SEMBLE_COMMAND`). */
 export function aiRunnerFromEnv(env: Record<string, string | undefined>): AiRunner {
   return createAiRunner({
     ai: createAi(aiConfigFromEnv(env)),
-    legalSearch: unavailableLegalSearch,
+    legalSearch: createSembleLegalSearch(legalSearchConfigFromEnv(env)),
   });
 }

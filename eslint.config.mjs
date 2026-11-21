@@ -153,6 +153,8 @@ export default defineConfig([
   },
   {
     files: ['backend/regulations/**'],
+    // The test of the legal source files reads them from disk.
+    ignores: ['backend/regulations/src/sources.test.ts'],
     rules: {
       'no-restricted-imports': [
         'error',

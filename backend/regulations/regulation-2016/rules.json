@@ -8,19 +8,19 @@
       "id": "civil-service-act",
       "title": "Ustawa z dnia 21 listopada 2008 r. o służbie cywilnej",
       "citation": "Dz.U. 2026 poz. 590 t.j.",
-      "text": "docs/legal/ustawa-o-sluzbie-cywilnej-tj-2026.md"
+      "text": "backend/regulations/regulation-2016/sources/ustawa-o-sluzbie-cywilnej-tj-2026.md"
     },
     {
       "id": "periodic-evaluation-regulation",
       "title": "Rozporządzenie Prezesa Rady Ministrów z dnia 4 kwietnia 2016 r. w sprawie warunków i sposobu przeprowadzania ocen okresowych urzędników służby cywilnej i pracowników służby cywilnej",
       "citation": "Dz.U. 2016 poz. 470",
-      "text": "docs/legal/rozporzadzenie-oceny-okresowe-2016.md"
+      "text": "backend/regulations/regulation-2016/sources/rozporzadzenie-oceny-okresowe-2016.md"
     },
     {
       "id": "hr-standards-order-6",
       "title": "Zarządzenie nr 6 Szefa Służby Cywilnej z dnia 12 marca 2020 r. w sprawie standardów zarządzania zasobami ludzkimi w służbie cywilnej",
       "citation": "publikacja na gov.pl/web/sluzbacywilna, zmienione zarządzeniem nr 7 z 16.12.2020 r.",
-      "text": "docs/legal/zarzadzenie-6-szefa-sc-2020-standardy-zzl.md"
+      "text": "backend/regulations/regulation-2016/sources/zarzadzenie-6-szefa-sc-2020-standardy-zzl.md"
     }
   ],
   "partialScale": {
