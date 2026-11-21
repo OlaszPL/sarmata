@@ -23,6 +23,12 @@ export type Database = {
 isOneToOne: false
       referencedRelation: "offices"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "employees_user_id_office_id_fkey"
+      columns: ["user_id","office_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["user_id","office_id"]
     }
                   ]
                 },"memberships": {
@@ -65,9 +71,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "custom_access_token_hook":
-{ Args: { "event": Json }; Returns: Json
-                           }
+            [_ in never]: never
           }
           Enums: {
             "office_role": "admin"|"hr"|"evaluator"

@@ -286,5 +286,3 @@ secrets/*.env
 
 node_modules/
 
-database/supabase/.temp/
-database/supabase/.branches/
