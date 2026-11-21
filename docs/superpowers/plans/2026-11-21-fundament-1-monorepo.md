@@ -303,7 +303,7 @@ export { dodajMiesiace } from './terminy/dodaj-miesiace';
 - [ ] **Step 8: Uruchom testy i typecheck**
 
 Run: `rtk pnpm --filter @sarmata/domain test && rtk pnpm --filter @sarmata/domain typecheck`
-Expected: 13 testów PASS (6 dla `dataKalendarzowa`, 7 dla `dodajMiesiace`), `tsc` bez błędów.
+Expected: 19 testów PASS (8 dla `dataKalendarzowa`, 11 dla `dodajMiesiace`), `tsc` bez błędów.
 
 - [ ] **Step 9: Commit**
 

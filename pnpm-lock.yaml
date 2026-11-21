@@ -212,7 +212,7 @@ importers:
         specifier: 2.11.13
         version: 2.11.13
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
       typescript-eslint:
         specifier: 8.73.0

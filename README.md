@@ -4,7 +4,7 @@ System Automatycznej Rejestracji i Monitorowania Awansów, Terminów i Analiz. C
 
 ## Start
 
-Wymagania: Node 24, pnpm 12.21.0, sops i age (sekrety zespołu).
+Wymagania: Node 24, pnpm 12.21.0, sops i age (sekrety zespołu). Klucz age leży w `~/.config/sops/age/keys.txt` albo pod ścieżką z `SOPS_AGE_KEY_FILE`.
 
     pnpm install
     pnpm secrets:decrypt

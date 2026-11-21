@@ -36,7 +36,22 @@ export default defineConfig([
               group: ['@supabase/*', '@sarmata/*'],
               message: 'Domena jest czysta: bez I/O i bez innych pakietów (ADR 0004).',
             },
+            {
+              group: ['node:*'],
+              message: 'Domena jest czysta: bez wbudowanych modułów Node i bez I/O (ADR 0004).',
+            },
+            {
+              group: ['**/repositories/**', '**/services/**', '**/database/**'],
+              message: 'Domena nie sięga do innych warstw ścieżką względną (ADR 0004).',
+            },
           ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'process',
+          message: 'Domena jest czysta: bez dostępu do środowiska procesu (ADR 0004).',
         },
       ],
     },
@@ -65,8 +80,20 @@ export default defineConfig([
         {
           patterns: [
             {
-              group: ['@sarmata/repositories', '@sarmata/repositories/*'],
+              group: [
+                '@sarmata/repositories',
+                '@sarmata/repositories/*',
+                '@sarmata/ai',
+                '@sarmata/ai/*',
+                '@sarmata/worker',
+                '@sarmata/worker/*',
+                '@supabase/supabase-js',
+              ],
               message: 'Frontend korzysta tylko z @sarmata/services (ADR 0004).',
+            },
+            {
+              group: ['**/backend/repositories/**', '**/backend/ai/**', '**/backend/worker/**'],
+              message: 'Frontend nie sięga do warstwy danych ścieżką względną (ADR 0004).',
             },
           ],
         },

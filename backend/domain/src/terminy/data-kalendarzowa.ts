@@ -3,6 +3,9 @@ declare const marka: unique symbol;
 /** Data bez czasu i strefy w formacie `RRRR-MM-DD`. Tworzy ją tylko `dataKalendarzowa`, więc zawsze istnieje. */
 export type DataKalendarzowa = string & { readonly [marka]: 'DataKalendarzowa' };
 
+const MIN_ROK = 1000;
+const MAX_ROK = 9999;
+
 const FORMAT_DATY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 const dwieCyfry = (n: number): string => String(n).padStart(2, '0');
@@ -26,9 +29,19 @@ export function skladowe(data: DataKalendarzowa): { rok: number; miesiac: number
   };
 }
 
-/** Wewnętrzne: buduje datę ze składowych, rzuca `RangeError`, gdy dzień nie istnieje. */
+/** Wewnętrzne: buduje datę ze składowych, rzuca `RangeError`, gdy dzień nie istnieje albo rok jest poza zakresem 1000 do 9999. */
 export function zeSkladowych(rok: number, miesiac: number, dzien: number): DataKalendarzowa {
-  if (miesiac < 1 || miesiac > 12 || dzien < 1 || dzien > ostatniDzienMiesiaca(rok, miesiac)) {
+  if (
+    !Number.isInteger(rok) ||
+    !Number.isInteger(miesiac) ||
+    !Number.isInteger(dzien) ||
+    rok < MIN_ROK ||
+    rok > MAX_ROK ||
+    miesiac < 1 ||
+    miesiac > 12 ||
+    dzien < 1 ||
+    dzien > ostatniDzienMiesiaca(rok, miesiac)
+  ) {
     throw new RangeError(`Data nie istnieje: ${rok}-${dwieCyfry(miesiac)}-${dwieCyfry(dzien)}`);
   }
   return `${rok}-${dwieCyfry(miesiac)}-${dwieCyfry(dzien)}` as DataKalendarzowa;
