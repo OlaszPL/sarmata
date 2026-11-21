@@ -64,7 +64,10 @@ const draftInput = {
   sheetId: 'C',
   criteria,
   scale,
-  notes: [note('n1', 'Przekazał ustalenia zespołowi.'), note('n2', 'Oddał raport po terminie.')],
+  notes: [
+    note('n1', 'Przekazał ustalenia zespołowi.'),
+    { ...note('n2', 'Oddał raport po terminie.'), criterionId: 'reliability' },
+  ],
 } satisfies Record<keyof AiInput<'sheet_draft'>, unknown>;
 
 const schemaOf = (request: RecordedRequest): string | undefined =>
@@ -100,7 +103,7 @@ const perCriterion =
 const emptySummary = { justification: [], developmentConclusions: [], questions: [] };
 
 describe('sheet draft', () => {
-  it('calls the model per criterion, then once for the summary, with a shared prompt start', async () => {
+  it('calls the model per criterion, then once for the summary, with notes filtered by criterion', async () => {
     const { runner, fake } = await runnerWith({
       objects: {
         sheet_draft_criterion: perCriterion({
@@ -114,7 +117,7 @@ describe('sheet draft', () => {
       },
     });
     const value = await executeOk(runner, 'sheet_draft', draftInput);
-    expect(value.promptVersion).toBe('sheet-draft.v2');
+    expect(value.promptVersion).toBe('sheet-draft.v3');
     expect(fake.requests.map((request) => schemaOf(request))).toEqual([
       'sheet_draft_criterion',
       'sheet_draft_criterion',
@@ -122,14 +125,20 @@ describe('sheet draft', () => {
     ]);
     const first = JSON.stringify(fake.requests[0]?.body);
     expect(first).toContain('[1,3,5,7,9]');
-    expect(first).toContain('"enum":["N1","N2"]');
+    expect(first).toContain('"enum":["N1"]');
+    expect(first).toContain('przekazuje informacje');
     expect(first).toContain('"maxItems":2');
     expect(first).toContain('"stream":true');
     const prompts = fake.requests.map(promptOf);
     expect(prompts[0]).toContain('[N1]');
     expect(prompts[0]).not.toContain('[n1]');
-    const shared = (prompt: string) => prompt.slice(0, prompt.indexOf('Zadanie:'));
-    expect(new Set(prompts.map(shared)).size).toBe(1);
+    // Each criterion call sees only the notes tagged for it (and the untagged ones).
+    expect(prompts[0]).not.toContain('[N2]');
+    expect(prompts[1]).toContain('[N2]');
+    expect(prompts[1]).not.toContain('[N1]');
+    expect(prompts[1]).toContain('dotrzymuje terminów');
+    expect(prompts[2]).toContain('[N1]');
+    expect(prompts[2]).toContain('[N2]');
     expect(prompts[2]).toContain('Proponowane oceny cząstkowe: communication 7, reliability brak');
     expect(value.output).toMatchObject({
       status: 'draft',

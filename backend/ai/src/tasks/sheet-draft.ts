@@ -67,11 +67,16 @@ export const sheetDraft: Task<'sheet_draft'> = async (input, { ai, system, progr
   const levels = input.scale.map((level) => level.points);
   const [firstLevel, ...otherLevels] = levels;
   const points = firstLevel === undefined ? z.never() : z.literal([firstLevel, ...otherLevels]);
-  const sentence = z.object({
-    text: z.string(),
-    noteIds: z.array(oneOf(notes.aliases)).min(1).max(MAX_CITED_NOTES),
-  });
-  const sentences = (max: number) => z.array(sentence).max(max);
+  const sentencesCiting = (max: number, aliases: readonly string[]) =>
+    z
+      .array(
+        z.object({
+          text: z.string(),
+          noteIds: z.array(oneOf(aliases)).min(1).max(MAX_CITED_NOTES),
+        }),
+      )
+      .max(max);
+  const allAliases = notes.aliases;
 
   /** Sentences of the model with note ids instead of aliases, only those citing notes of the input. */
   const citedSentences = (raw: unknown): Sentence[] => {
@@ -112,28 +117,40 @@ export const sheetDraft: Task<'sheet_draft'> = async (input, { ai, system, progr
   });
 
   const scale = input.scale.map((level) => `${level.points} (${level.name})`).join(', ');
-  // The same beginning for every call: llama-server reuses its processed prompt (cache_prompt), so
-  // only the task at the end is processed again.
-  const context =
-    `Arkusz ${input.sheetId}. Skala ocen cząstkowych w punktach: ${scale}.\n\n` +
-    `Kryteria:\n${describeCriteria(input.criteria)}\n\n` +
+  const header = `Arkusz ${input.sheetId}. Skala ocen cząstkowych w punktach: ${scale}.\n\n`;
+  const summaryContext =
+    `${header}Kryteria:\n${describeCriteria(input.criteria)}\n\n` +
     `Notatki oceniającego:\n${describeNotes(input.notes, notes.aliasOf)}\n\n`;
 
   const ratings: Rating[] = [];
   for (const criterion of input.criteria) {
+    // A 4.5B model files a note under the wrong criterion when it sees them all, so the call sees
+    // only the notes tagged for this criterion and the untagged ones.
+    const relevant = input.notes.filter(
+      (note) => note.criterionId === null || note.criterionId === criterion.id,
+    );
+    if (relevant.length === 0) {
+      ratings.push(ratingOf(criterion, null));
+      progress.output(draft(ratings, EMPTY_SUMMARY));
+      continue;
+    }
     const call = streamCall(progress, (prefix) =>
       draft([...ratings, ratingOf(criterion, prefix)], EMPTY_SUMMARY),
     );
     const result = await ai.generateObject({
       schemaName: 'sheet_draft_criterion',
       schema: z.object({
-        sentences: sentences(MAX_CRITERION_SENTENCES),
+        sentences: sentencesCiting(MAX_CRITERION_SENTENCES, relevant.map(notes.aliasOf)),
         points: points.nullable(),
       }),
       system,
       prompt:
-        context +
-        `Zadanie: kryterium ${criterion.id} (${criterion.name}). Najwyżej ${MAX_CRITERION_SENTENCES} krótkie zdania, potem poziom ze skali.`,
+        `${header}Kryterium: ${criterion.id} (${criterion.name}).\n` +
+        `Wskaźniki zachowań: ${criterion.indicators.length > 0 ? criterion.indicators.join('; ') : 'brak'}.\n\n` +
+        `Notatki oceniającego:\n${describeNotes(relevant, notes.aliasOf)}\n\n` +
+        `Zadanie: kryterium ${criterion.id} (${criterion.name}). Użyj tylko notatek, które pokazują właśnie to kryterium i jego wskaźniki. ` +
+        `Pomiń notatki o czymś innym. Gdy żadna nie pasuje, zostaw pustą listę zdań i ustaw points na null (za mało danych). ` +
+        `Najwyżej ${MAX_CRITERION_SENTENCES} krótkie zdania, potem poziom ze skali.`,
       maxTokens: CRITERION_MAX_TOKENS,
       onProgress: call.onProgress,
       ...withSignal(signal),
@@ -154,13 +171,13 @@ export const sheetDraft: Task<'sheet_draft'> = async (input, { ai, system, progr
   const result = await ai.generateObject({
     schemaName: 'sheet_draft_summary',
     schema: z.object({
-      justification: sentences(MAX_SUMMARY_SENTENCES),
-      developmentConclusions: sentences(MAX_SUMMARY_SENTENCES),
+      justification: sentencesCiting(MAX_SUMMARY_SENTENCES, allAliases),
+      developmentConclusions: sentencesCiting(MAX_SUMMARY_SENTENCES, allAliases),
       questions: z.array(z.string()).max(MAX_QUESTIONS),
     }),
     system,
     prompt:
-      context +
+      summaryContext +
       `Zadanie: podsumowanie. Proponowane oceny cząstkowe: ${proposed}. Uzasadnienie i wnioski IPRZ po najwyżej ${MAX_SUMMARY_SENTENCES} zdania, najwyżej ${MAX_QUESTIONS} pytania.`,
     maxTokens: SUMMARY_MAX_TOKENS,
     onProgress: call.onProgress,

@@ -126,7 +126,7 @@ describe('ai.run handler', () => {
     expect(await handler.run({ runId: RUN }, context())).toEqual({ status: 'done' });
     expect(store.state).toBe('done');
     expect(store.outcome).toMatchObject({
-      promptVersion: 'sheet-draft.v2',
+      promptVersion: 'sheet-draft.v3',
       output: { status: 'draft', ratings: [{ criterionId: 'communication', points: 7 }] },
     });
   });

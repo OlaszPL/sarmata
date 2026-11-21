@@ -13,6 +13,9 @@ const describeFragments = (fragments: readonly LegalFragment[]): string =>
     )
     .join('\n\n');
 
+/** A full sentence ("Sprzeciw wnosi się w terminie 7 dni [1]."), not a bare "7". */
+const MIN_ANSWER_LENGTH = 40;
+
 /**
  * Procedure assistant (RAG): semble finds the fragments in the legal texts of the regulation version,
  * the text model answers with citations of the fragment numbers. The answer is grounded when at least
@@ -33,7 +36,7 @@ export const procedureQuestion: Task<'procedure_question'> = async (
   const result = await ai.generateObject({
     schemaName: 'procedure_question',
     schema: z.object({
-      answer: z.string(),
+      answer: z.string().min(MIN_ANSWER_LENGTH),
       citations: z.array(
         z.object({ fragmentId: z.literal([first, ...rest]), reference: z.string() }),
       ),

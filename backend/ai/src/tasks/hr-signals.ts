@@ -96,7 +96,11 @@ const isDiagnostic = (text: string): boolean =>
 const MAX_FRAGMENTS = 2;
 const MAX_QUESTIONS = 3;
 const MAX_ACTIONS = 4;
-const MAX_TOKENS = 420;
+const MIN_QUESTIONS = 2;
+const MIN_ACTIONS = 2;
+/** Below this a signal is too weak to ask the text model for evidence: it stays without fragments. */
+const MIN_EVIDENCE_PROBABILITY = 0.6;
+const MAX_TOKENS = 480;
 
 const fragmentSchema = z.object({ noteId: z.string(), quote: z.string() });
 const actionSchema = z.object({
@@ -126,7 +130,11 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system, progres
   if (!decided.ok) return decided;
   const signals = SIGNALS.map((name) => signalOf(name, decided.value[name]));
   const present = signals.filter((entry) => entry.present).map((entry) => entry.signal);
-  if (present.length === 0) return ok({ signals, questions: [], actions: [] });
+  const evidenced = signals
+    .filter((entry) => entry.present && entry.probability >= MIN_EVIDENCE_PROBABILITY)
+    .map((entry) => entry.signal);
+  if (present.length === 0 || evidenced.length === 0)
+    return ok({ signals, questions: [], actions: [] });
   progress.output({ signals });
 
   const bodies = new Map(input.notes.map((note) => [note.id, note.body]));
@@ -173,26 +181,29 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system, progres
       signals: z
         .array(
           z.object({
-            signal: oneOf(present),
+            signal: oneOf(evidenced),
             fragments: z
               .array(z.object({ noteId: oneOf(notes.aliases), quote: z.string() }))
+              .min(1)
               .max(MAX_FRAGMENTS),
           }),
         )
-        .max(present.length),
-      questions: z.array(z.string()).max(MAX_QUESTIONS),
+        .min(evidenced.length)
+        .max(evidenced.length),
+      questions: z.array(z.string()).min(MIN_QUESTIONS).max(MAX_QUESTIONS),
       actions: z
         .array(
           z.object({
             framework: z.enum(['jd_r', 'hse']),
-            signal: oneOf(present),
+            signal: oneOf(evidenced),
             text: z.string(),
           }),
         )
+        .min(MIN_ACTIONS)
         .max(MAX_ACTIONS),
     }),
     system,
-    prompt: `Wskazane sygnały: ${present.join(', ')}.\n\n${state}`,
+    prompt: `Wskazane sygnały: ${evidenced.join(', ')}.\n\n${state}`,
     maxTokens: MAX_TOKENS,
     onProgress: call.onProgress,
     ...withSignal(signal),

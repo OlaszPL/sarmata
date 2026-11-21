@@ -320,6 +320,28 @@ describe('hr signals', () => {
     expect(schemaOf(fake, 1)).toContain('"enum":["N1","N2"]');
   });
 
+  it('requires evidence, questions and actions in the schema', async () => {
+    const { runner, fake } = await runnerWith({
+      decision: bielikAnswers(0.8),
+      objects: { hr_signals: explanation },
+    });
+    await executeOk(runner, 'hr_signals', input);
+    const schema = schemaOf(fake, 1);
+    expect(schema).toContain('"minItems":1');
+    expect(schema.match(/"minItems":2/g)).toHaveLength(2);
+    expect(schema).toContain('"enum":["overload"]');
+  });
+
+  it('asks the text model only about signals above the minimum probability', async () => {
+    const { runner, fake } = await runnerWith({
+      decision: bielikAnswers(0.55),
+      objects: { hr_signals: explanation },
+    });
+    const output = await executeOk(runner, 'hr_signals', input);
+    expect(fake.requests.map((request) => request.url)).toEqual(['/v1/systemone']);
+    expect(output).toMatchObject({ questions: [], actions: [] });
+  });
+
   it('streams the decided signals before the questions and actions', async () => {
     const { runner } = await runnerWith({
       decision: bielikAnswers(0.8),
