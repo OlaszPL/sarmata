@@ -143,7 +143,7 @@ describe('ai.run through the worker with a streaming model', () => {
     const finished = await services.ai.get(run.id);
     expect(finished).toMatchObject({
       status: 'done',
-      promptVersion: 'sheet-draft.v2',
+      promptVersion: 'sheet-draft.v3',
       partialText: null,
       partialOutput: null,
       output: {
