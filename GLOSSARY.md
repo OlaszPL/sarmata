@@ -45,8 +45,12 @@ Jedna ocena okresowa jednego pracownika, prowadzona według przypiętej wersji p
 _Avoid_: ewaluacja, arkusz (arkusz to dokument oceny)
 
 **Oceniający**:
-Konto przypięte do konkretnej oceny, które ją prowadzi. To relacja oceny, nie rola w urzędzie.
-_Avoid_: przełożony, kierownik (nie modelujemy hierarchii)
+Konto przypięte do konkretnej oceny, które ją prowadzi. To bezpośredni przełożony ocenianego, zapisany jako relacja oceny, nie rola w urzędzie.
+_Avoid_: kierownik
+
+**Przełożony**:
+Opcjonalny bezpośredni przełożony pracownika w drzewie urzędu. Gdy jest ustawiony i ma konto, jest domyślnym oceniającym.
+_Avoid_: szef, kierownik komórki
 
 **Oceniany**:
 Pracownik, którego dotyczy ocena. Nie ma dostępu do aplikacji.

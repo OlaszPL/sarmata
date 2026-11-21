@@ -9,11 +9,14 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
   - `evaluator`: zakłada oceny, prowadzi je, pisze notatki, korzysta z AI.
   - `hr`: to samo co oceniający, a dodatkowo wyznacza i zmienia oceniającego w ocenie, widzi harmonogram terminów całego urzędu i statystyki.
   - `admin`: konta, członkostwa, wersje przepisów, ustawienia AI.
-- Oceniający nie jest rolą organizacyjną. To relacja konkretnej oceny z kontem (`evaluator_account_id`). Na starcie jest nim konto, które zakłada ocenę, albo konto wskazane przez kadry. Nie modelujemy hierarchii ani przełożonych.
+- Ocena jest zawsze między pracownikiem a jego bezpośrednim przełożonym (potwierdzone przez mentorów KPRM 21.11.2026). Oceniający to relacja konkretnej oceny z kontem (`evaluator_account_id`), nie rola w urzędzie.
+- Struktura bywa płaska albo mieszana, więc drzewo jest opcjonalne: pracownik może mieć bezpośredniego przełożonego (`supervisor_employee_id`, inny pracownik tego urzędu). Gdy przełożony ma konto, jest domyślnym oceniającym. Bez drzewa oceniającym jest konto, które zakłada ocenę, albo konto wskazane przez kadry.
 
 ## Dostęp w ramach urzędu
 
-- Oceny i ich historia: odczyt otwarty dla każdego członkostwa w urzędzie (zgodnie ze spec).
+- Widoczność ocen to ustawienie urzędu (`offices.evaluation_visibility`), bo urzędy różnią się tym, czy każdy widzi każdego (mentorzy KPRM):
+  - `office` (domyślnie): każde członkostwo w urzędzie czyta wszystkie oceny i ich historię,
+  - `tree`: oceniający czyta oceny, które prowadzi, oraz oceny pracowników ze swojego poddrzewa przełożonych. Role `hr` i `admin` czytają wszystkie.
 - Notatki z obserwacji i wyniki modułu HR partnera: czyta autor, rola `hr` i bieżący oceniający tego pracownika (po zmianie oceniającego wszystkie notatki przechodzą na nowego).
 - Cała logika dostępu przechodzi przez jedno miejsce: funkcję SQL `access.can(action, resource, office_id)`, wołaną przez wszystkie polityki RLS. Zmiana modelu (np. na wgląd tylko dla stron oceny) to zmiana tej jednej funkcji i jej testów pgTAP, bez ruszania polityk tabel.
 - Zapis do oceny: jej oceniający i rola `hr`.
@@ -30,7 +33,7 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 - Zdarzenia z udziałem ocenianego (rozmowa, podpis, doręczenie, zapoznanie, sprzeciw) wpisuje oceniający albo kadry, podając faktyczną datę zdarzenia.
 - Każde zdarzenie trafia do dziennika: rodzaj, data faktyczna, konto wpisującego, data wpisu.
 - Silnik terminów liczy kolejne kroki od dat faktycznych.
-- Podpis odbywa się poza aplikacją. Aplikacja tylko odnotowuje jego datę.
+- Podpis to zatwierdzenie w systemie (potwierdzone przez mentorów KPRM 21.11.2026). Zatwierdza oceniający: zalogowane konto, znacznik czasu i wpis w dzienniku. Potwierdzenie ocenianego (podpis części I, zapoznanie, odmowa) oceniający odnotowuje z datą, bo oceniany nie ma konta. Wydruk PDF zostaje jako opcja dla urzędu.
 
 ## Notatki
 
@@ -110,7 +113,7 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
   - zmiana oceny: kadry wpisują nową wersję arkusza w imieniu DG, backend nie pozwala obniżyć oceny,
   - ponowne sporządzenie: obecna wersja zostaje anulowana, ocena wraca do etapu rozmowy oceniającej z nowym terminem.
 - Wcześniejsze wersje arkusza zostają do odczytu i trafiają do teczki sprawy.
-- Adresat sprzeciwu jest parametrem (domyślnie DG urzędu, art. 83 ust. 1). Arkusz A ma pole adresata, a wyciąg z ustawy od organizatorów zawiera uchylony art. 83 ust. 2 (sprzeciw do oceniającego). Reguły opieramy na Dz.U. 2026 poz. 590, rozbieżność czeka na odpowiedź mentorów (`docs/wymagania-i-kontekst.md`, sekcja 21, pytanie 10).
+- Adresat sprzeciwu jest parametrem arkusza w `rules.json`. Arkusze B i C: dyrektor generalny urzędu (art. 83 ust. 1). Arkusz A: organ nadrzędny wobec ocenianego, nie wyżej (mentorzy KPRM 21.11.2026). Arkuszem A ocenia się kilka stanowisk, głównie lekarzy weterynarii kierujących inspektoratem (około 5 w służbie cywilnej). Art. 81 ust. 2 i art. 83 ust. 2 są uchylone, reguły opieramy na Dz.U. 2026 poz. 590.
 
 ## Korekta zablokowanych pól
 

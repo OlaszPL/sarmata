@@ -628,15 +628,16 @@ Dlaczego to ważne: organizator wprost wskazuje obieg dokumentów cyfrowych i po
 ## 21. Otwarte pytania do mentorów
 
 1. ~~Czy dostaniemy materiały z sekcji 7 general-info?~~ Otrzymane 21.11.2026, w `docs/zasoby-kprm/`.
-2. Jakiej formy podpisu oczekują urzędy pod arkuszem w wersji cyfrowej: zatwierdzenie w systemie, podpis zaufany, podpis osobisty, kwalifikowany? Czy wydruk do podpisu odręcznego ma zostać jako tryb awaryjny?
+2. ~~Jakiej formy podpisu oczekują urzędy?~~ Odpowiedź 21.11.2026: zatwierdzenie w systemie.
 3. Jakie systemy kadrowe i EZD są najczęstsze w urzędach (do integracji i importu danych pracowników i struktury)?
 4. Czy wolno używać zewnętrznych modeli AI (chmura) przy anonimizacji, czy oczekiwany jest model lokalny?
 5. Co konkretnie zmienia procedowana nowelizacja w ocenach i kiedy ma wejść w życie (jeśli research nie da pełnej odpowiedzi)?
 6. Czy pierwsza ocena (art. 38) ma być w zakresie?
-7. Czy kryterium obowiązkowe może być też wybrane jako dodatkowe (praktyka DSC)?
+7. ~~Czy kryterium obowiązkowe może być też wybrane jako dodatkowe?~~ Odpowiedź 21.11.2026: nie, kryteria by się dublowały.
 8. Czy statystyki dla DG mają obejmować rozkład ocen per komórka, terminowość, realizację IPRZ?
 9. Jaką rolę ma pełnić komórka kadrowa w systemie: tylko podgląd i przypomnienia, czy także zakładanie ocen i przypisywanie oceniających?
-10. Wyciąg z ustawy w pakiecie ma nagłówek t.j. Dz.U. 2026 poz. 590, ale art. 81 ust. 2, art. 82 pkt 2 i art. 83 ust. 2 są w nim w brzmieniu sprzed 2016 r. W Dz.U. 2026 poz. 590 art. 81 ust. 2 i art. 83 ust. 2 są uchylone. Którą wersję mamy przyjąć? Czy są dziś oceniani członkowie korpusu, których nie ocenia bezpośredni przełożony albo którzy wnoszą sprzeciw do kogoś innego niż DG? Do kogo wnosi sprzeciw oceniany na arkuszu A (w przykładach EX-1 i EX-6 jest to „Lekarz Weterynarii” i „Mazowiecki Wojewódzki Lekarz Weterynarii”)? Dotychczas przyjmujemy Dz.U., a adresat sprzeciwu jest parametrem.
+10. ~~Wyciąg z ustawy ma art. 81 ust. 2 i art. 83 ust. 2 w brzmieniu sprzed 2016 r. Którą wersję przyjąć?~~ Odpowiedź 21.11.2026: oba ustępy są uchylone, obowiązuje Dz.U. Dziś każdego ocenia bezpośredni przełożony, a sprzeciw idzie do dyrektora generalnego. Wyjątek to arkusz A: kilka stanowisk, głównie lekarze weterynarii kierujący inspektoratem (około 5 w służbie cywilnej), sprzeciw wnoszą do organu nadrzędnego, nie wyżej.
+11. Uwagi mentorów 21.11.2026 bez pytania: ocena jest zawsze między pracownikiem a bezpośrednim przełożonym, ale struktura bywa płaska i mieszana, więc rozwiązanie ma być maksymalnie uniwersalne. To, czy każdy widzi oceny każdego, czy tylko w dół drzewa, zależy od urzędu i może być konfigurowalne.
 
 ## 22. Rejestr źródeł i status pobrania
 
