@@ -6,6 +6,7 @@ export {
   type OfficeRole,
 } from './account/current-account';
 export {
+  type AppServices,
   type DeadlineRequest,
   type ServiceDependencies,
   type Services,
@@ -25,6 +26,20 @@ export {
   type StartEvaluationInput,
 } from './evaluations/evaluation-service';
 export { computeEvaluationDeadlines } from './evaluations/deadlines';
+export { type NoteService, type NoteWriteOptions, createNoteService } from './notes/note-service';
+export {
+  type OfficeSettingsService,
+  createOfficeSettingsService,
+} from './office-settings/office-settings-service';
+export type { Note, NoteVersion, OfficeSettings } from '@sarmata/repositories';
+export type {
+  NewNoteInput,
+  NoteKind,
+  NotePatch,
+  NoteSign,
+  OfficeSettingsPatchInput,
+  SensitiveDataWarning,
+} from '@sarmata/domain';
 export type {
   Evaluation,
   EvaluationDetail,
