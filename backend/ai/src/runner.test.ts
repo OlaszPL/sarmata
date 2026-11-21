@@ -371,6 +371,7 @@ describe('sensitive data', () => {
             { category: 'family', fragment: 'opiekował się synem' },
             { category: 'religion', fragment: 'nie ma tego w notatce' },
           ],
+          rewrite: 'Był nieobecny w pracy.',
         },
       },
     });
@@ -383,7 +384,62 @@ describe('sensitive data', () => {
         { category: 'health', fragment: 'zwolnieniu lekarskim' },
         { category: 'family', fragment: 'opiekował się synem' },
       ],
+      rewrite: 'Był nieobecny w pracy.',
     });
+  });
+
+  it('sensitive data drops a rewrite that keeps a flagged fragment', async () => {
+    const { runner } = await runnerWith({
+      objects: {
+        sensitive_data: { warnings: [], rewrite: 'Był na zwolnieniu lekarskim w marcu.' },
+      },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+    });
+    expect(output).toEqual({
+      warnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+      rewrite: null,
+    });
+  });
+
+  it('sensitive data has no rewrite without warnings', async () => {
+    const { runner } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'Coś innego.' } },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Oddał raport w terminie.',
+      keywordWarnings: [],
+    });
+    expect(output).toEqual({ warnings: [], rewrite: null });
+  });
+
+  it('sensitive data drops a rewrite equal to the note', async () => {
+    const { runner } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: ' Był na zwolnieniu lekarskim. ' } },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+    });
+    expect(output).toEqual({
+      warnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+      rewrite: null,
+    });
+  });
+
+  it('sensitive data prompt lists keyword warnings', async () => {
+    const { runner, fake } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: null } },
+    });
+    await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+    });
+    const prompt = fake.requests.map(promptOf)[0];
+    expect(prompt).toContain('Notatka:\nBył na zwolnieniu lekarskim.');
+    expect(prompt).toContain('Słownik wskazał fragmenty:\n- health: zwolnieniu lekarskim');
   });
 });
 
