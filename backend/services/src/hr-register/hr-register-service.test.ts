@@ -103,6 +103,7 @@ describe('hr register service', () => {
       evaluationVisibility: 'office',
       defaultPlace: null,
       objectionAddresseeSheetA: null,
+      appreciationGapDays: 30,
       evaluatorFlags: { minEvaluations: 3, centralShare: 0.75, leniencyPoints: 1.5 },
       smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
     };

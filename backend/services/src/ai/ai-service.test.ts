@@ -31,6 +31,7 @@ const settings: OfficeSettings = {
   defaultPlace: null,
   objectionAddresseeSheetA: null,
   appreciationGapDays: 30,
+  evaluatorFlags: { minEvaluations: 5, centralShare: 0.8, leniencyPoints: 1 },
   smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
 };
 
