@@ -11,3 +11,11 @@ export {
   type DeadlineResult,
   computeDeadline,
 } from './deadlines/compute-deadline';
+export {
+  type DeadlineSlot,
+  type RegulationDocument,
+  RegulationDocumentError,
+  parseRegulationDocument,
+  regulationDocumentSchema,
+} from './regulations/regulation-document';
+export { versionInForce } from './regulations/version-in-force';
