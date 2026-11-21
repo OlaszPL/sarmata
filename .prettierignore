@@ -12,3 +12,4 @@ pnpm-lock.yaml
 AGENTS.md
 GLOSSARY.md
 README.md
+database/src/types.ts

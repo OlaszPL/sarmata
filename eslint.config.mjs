@@ -7,6 +7,7 @@ import tseslint from 'typescript-eslint';
 export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
+    'database/src/types.ts',
     '**/dist/**',
     '**/.next/**',
     '**/.turbo/**',
