@@ -44,6 +44,10 @@ const AI_ENVIRONMENT = {
   SARMATA_AI_TEXT_BASE_URL: '${SARMATA_AI_TEXT_BASE_URL}',
   SARMATA_AI_TEXT_MODEL: '${SARMATA_AI_TEXT_MODEL}',
   SARMATA_AI_DECISION_BASE_URL: '${SARMATA_AI_DECISION_BASE_URL}',
+  // Same values as the defaults of backend/ai/src/config.ts and `pnpm ai:env`: 2 minutes for short
+  // calls, 10 minutes for the long ones (sheet draft, conversation preparation, HR signals).
+  SARMATA_AI_TIMEOUT_MS: '120000',
+  SARMATA_AI_LONG_TIMEOUT_MS: '600000',
 };
 // frontend/web/src/env.ts. No service key: the web app acts with the user's JWT (ADR 0004).
 const WEB_ENVIRONMENT = {

@@ -73,3 +73,10 @@ Rzeczy sprawdzalne tylko na prawdziwych komputerach albo maszynach wirtualnych:
 ## Uzupełnienie 21.11.2026
 
 Opis profilu server („Bielik-One na vLLM”) czytaj z zastrzeżeniem z ADR 0005: Bielik-One instaluje się tylko tam, gdzie mieści się na stałe obok modelu tekstowego (na vLLM karta NVIDIA od 24 GB), a gdzie nie, decyzje podejmuje model tekstowy. Profil server jest tylko dla Linuksa.
+
+## Sprawdzone 21.11.2026 (macOS arm64, Docker Desktop, bez zmian w lokalnym Supabase)
+
+- Budowa obrazów poleceniem kreatora (`docker build --file infra/deploy/docker/app.Dockerfile --target web|worker`) na linux/arm64: `sarmata/web` 362 MB w 115 s, `sarmata/worker` 329 MB w 78 s (zimny cache pnpm, pierwsza budowa łącznie).
+- Obraz web: standalone zawiera czcionki Open Sans (`backend/exports/fonts`) i natywny moduł Typst `linux-arm64-musl`. Zalogowany eksport arkusza PDF oceny demo zwraca 200 i poprawny PDF z osadzoną czcionką, `/logowanie` zwraca 200.
+- Obraz worker: `uv` 0.8.0 i teksty prawne w `/legal/backend/regulations`, proces startuje jako użytkownik `node`, synchronizuje przepisy i przetwarza zadanie `system.ping`.
+- Nie sprawdzono: budowy na linux/amd64 (plik blokady zawiera `typst-ts-node-compiler-linux-x64-musl`, ale obraz nie powstał), uruchomienia `uvx semble` w kontenerze (pierwsze pobranie pakietu i modelu), pełnego stosu z `docker compose` i kreatora.
