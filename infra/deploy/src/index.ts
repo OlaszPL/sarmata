@@ -18,3 +18,13 @@ export {
   type RandomBytes,
   type Secrets,
 } from './secrets.ts';
+
+export {
+  APP_IMAGES,
+  composeVariables,
+  renderCompose,
+  servicesFor,
+  type AppImage,
+} from './compose.ts';
+export { renderCaddyfile } from './caddy.ts';
+export { renderBootstrapSql, type BootstrapAccount } from './bootstrap-sql.ts';
