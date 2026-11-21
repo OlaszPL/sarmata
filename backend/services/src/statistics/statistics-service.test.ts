@@ -73,6 +73,7 @@ const counts: DscOckCounts = {
   objectionsPending: 0,
   labourCourtAppeals: 3,
   gradesOnRequest: 5,
+  gradesByLaw: 2,
 };
 
 interface Fake {
@@ -299,12 +300,16 @@ describe('office report', () => {
     expect(asked.sort()).toEqual(['cs', 'neg']);
   });
 
-  it('dsc-ock answers 14 and 16 come from the counts', async () => {
-    const report = await serviceWith(fakeRepository()).officeReport(2026);
+  it('dsc-ock answers 14, 16 and 17 come from the counts', async () => {
+    const report = await serviceWith(
+      fakeRepository({ distribution: [distributionRow({ civilServant: true, gradeByLaw: 7 })] }),
+    ).officeReport(2026);
     const value = (question: number) =>
       report.dscOck.find((answer) => answer.question === question)?.value;
     expect(value(14)).toBe(3);
     expect(value(16)).toBe(5);
+    // Question 17 counts the grants by law in the register, not the computed due dates.
+    expect(value(17)).toBe(2);
     expect(value(4)).toBe(10);
     expect(value(5)).toBe(4);
     expect(value(12)).toBe(3);

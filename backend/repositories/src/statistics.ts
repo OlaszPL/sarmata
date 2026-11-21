@@ -68,6 +68,8 @@ export interface DscOckCounts {
   readonly objectionsPending: number;
   readonly labourCourtAppeals: number;
   readonly gradesOnRequest: number;
+  /** Grades granted by law (art. 89 ust. 2) in the year, from the register. */
+  readonly gradesByLaw: number;
 }
 
 export interface CriterionRatingRow {
@@ -223,6 +225,7 @@ export function createStatisticsRepository(db: Db): StatisticsRepository {
           objectionsPending: count?.objections_pending ?? 0,
           labourCourtAppeals: count?.labour_court_appeals ?? 0,
           gradesOnRequest: count?.grades_on_request ?? 0,
+          gradesByLaw: count?.grades_by_law ?? 0,
         },
         criteria: criteria.data.map((row) => ({
           criterionId: row.criterion_id,

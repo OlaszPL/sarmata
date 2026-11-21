@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(25);
+select plan(26);
 
 -- Office A (visibility tree): hr, evaluator one, evaluator two, admin. Office B: hr.
 insert into public.offices (id, name, evaluation_visibility) values
@@ -128,6 +128,10 @@ insert into public.evaluation_deadlines (evaluation_id, office_id, slot, due_on,
 insert into public.grade_grants (office_id, employee_id, basis, granted_on, previous_grade, new_grade, recorded_by) values
   ('a1a1a1a1-0000-4000-8000-000000000001', 'a1a1a1a1-2222-4000-8000-000000000002', 'on_request', '2026-03-01', 2, 3, 'a1a1a1a1-1111-4000-8000-000000000001'),
   ('a1a1a1a1-0000-4000-8000-000000000001', 'a1a1a1a1-2222-4000-8000-000000000002', 'on_request', '2025-03-01', 1, 2, 'a1a1a1a1-1111-4000-8000-000000000001');
+-- Grants by law: one ruled in 2026 and one in January 2027 for an evaluation acquainted in 2026.
+insert into public.grade_grants (office_id, employee_id, evaluation_id, basis, granted_on, previous_grade, new_grade, recorded_by) values
+  ('a1a1a1a1-0000-4000-8000-000000000001', 'a1a1a1a1-2222-4000-8000-000000000002', 'e1e1e1e1-0000-4000-8000-000000000002', 'by_law', '2026-06-01', 3, 4, 'a1a1a1a1-1111-4000-8000-000000000001'),
+  ('a1a1a1a1-0000-4000-8000-000000000001', 'a1a1a1a1-2222-4000-8000-000000000002', 'e1e1e1e1-0000-4000-8000-000000000003', 'by_law', '2027-01-10', 4, 5, 'a1a1a1a1-1111-4000-8000-000000000001');
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a1a1a1a1-1111-4000-8000-000000000001","role":"authenticated","office_id":"a1a1a1a1-0000-4000-8000-000000000001","office_role":"hr"}';
@@ -236,6 +240,12 @@ select results_eq(
   $$select labour_court_appeals::int, grades_on_request::int from public.statistics_dsc_ock_counts(2026)$$,
   $$values (1, 1)$$,
   'appeals and grades on request counted in their year'
+);
+select results_eq(
+  $$select (select grades_by_law::int from public.statistics_dsc_ock_counts(2026)),
+           (select grades_by_law::int from public.statistics_dsc_ock_counts(2027))$$,
+  $$values (1, 1)$$,
+  'grades by law are counted from the register by the year of the grant'
 );
 select results_eq(
   $$select indefinite_employees::int, civil_servants::int from public.statistics_dsc_ock_counts(2026)$$,

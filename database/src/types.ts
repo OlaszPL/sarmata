@@ -618,7 +618,7 @@ isOneToOne: false
                            },
 "statistics_dsc_ock_counts":
 { Args: { "p_year": number }; Returns: {
-              "civil_servants": number,"grades_on_request": number,"indefinite_employees": number,"labour_court_appeals": number,"objections_pending": number,"objections_rejected": number,"objections_upheld": number
+              "civil_servants": number,"grades_by_law": number,"grades_on_request": number,"indefinite_employees": number,"labour_court_appeals": number,"objections_pending": number,"objections_rejected": number,"objections_upheld": number
             }[]
                            },
 "statistics_evaluators":

@@ -266,7 +266,7 @@ export function dscOckAnswers(
     {
       question: 17,
       label: 'Stopnie służbowe przyznane z mocy prawa (art. 89 ust. 2)',
-      value: sum(civil, (row) => row.gradeByLaw),
+      value: counts.gradesByLaw,
     },
   ];
 }
