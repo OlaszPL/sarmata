@@ -83,6 +83,43 @@ export async function installBielikOne(
   return install;
 }
 
+/** A Bielik-One process as a command line: started by startBielikOne, or registered as a system service. */
+export interface BielikOneCommand {
+  command: string;
+  args: string[];
+  env: Readonly<Record<string, string>>;
+  logFile: string;
+}
+
+/**
+ * Command lines of `bielik-one backend` and `bielik-one frontend` for an adapter package. The
+ * launcher fixes the ports per package and listens on 127.0.0.1.
+ */
+export function bielikOneCommands(
+  install: BielikOneInstall,
+  pkg: BielikOnePackage,
+  dataDir: string,
+): { backend: BielikOneCommand; frontend: BielikOneCommand } {
+  const logs = join(dataDir, 'logs');
+  const env = { HF_HOME: join(dataDir, 'huggingface') };
+  const packageArgs = [pkg.repo, '--revision', pkg.revision];
+  const engineArgs = install.engine === 'mlx' ? ['--engine', 'mlx'] : [];
+  return {
+    backend: {
+      command: install.executable,
+      args: ['backend', ...packageArgs, ...engineArgs],
+      env,
+      logFile: join(logs, 'bielik-one-backend.log'),
+    },
+    frontend: {
+      command: install.executable,
+      args: ['frontend', ...packageArgs],
+      env,
+      logFile: join(logs, 'bielik-one-frontend.log'),
+    },
+  };
+}
+
 /**
  * Starts `bielik-one backend` and `bielik-one frontend` for an adapter package and waits until
  * the frontend answers calibrated decisions. The first start downloads the package and its base
@@ -94,19 +131,16 @@ export async function startBielikOne(
   ctx: RuntimeContext,
   options: StartOptions = {},
 ): Promise<BielikOneServer> {
-  const logs = join(ctx.dataDir, 'logs');
-  const env = { HF_HOME: join(ctx.dataDir, 'huggingface') };
   const detached = options.detached ?? false;
-  const packageArgs = [pkg.repo, '--revision', pkg.revision];
-  const engineArgs = install.engine === 'mlx' ? ['--engine', 'mlx'] : [];
-  const backend = await spawnLogged(
-    install.executable,
-    ['backend', ...packageArgs, ...engineArgs],
-    { logFile: join(logs, 'bielik-one-backend.log'), env, detached },
-  );
-  const frontend = await spawnLogged(install.executable, ['frontend', ...packageArgs], {
-    logFile: join(logs, 'bielik-one-frontend.log'),
-    env,
+  const commands = bielikOneCommands(install, pkg, ctx.dataDir);
+  const backend = await spawnLogged(commands.backend.command, commands.backend.args, {
+    logFile: commands.backend.logFile,
+    env: commands.backend.env,
+    detached,
+  });
+  const frontend = await spawnLogged(commands.frontend.command, commands.frontend.args, {
+    logFile: commands.frontend.logFile,
+    env: commands.frontend.env,
     detached,
   });
   const url = `http://127.0.0.1:${pkg.port}`;
