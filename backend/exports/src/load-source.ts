@@ -1,5 +1,10 @@
 import { officeIdSchema } from '@sarmata/domain';
-import { type Db, createRepositories, findOfficeName } from '@sarmata/repositories';
+import {
+  type Db,
+  createOfficeSettingsRepository,
+  createRepositories,
+  findOfficeName,
+} from '@sarmata/repositories';
 import { servicesFor } from '@sarmata/services';
 import { ExportError } from './errors';
 import { type ExportSource, type PersonOnSheet } from './sheet-document';
@@ -18,11 +23,15 @@ export function loadExportSource(db: Db): (evaluationId: string) => Promise<Expo
     if (regulation === null) {
       throw new ExportError('unsupported_regulation', `Regulation ${view.regulationId} not found`);
     }
-    const [officeName, employees, history, sheetVersions] = await Promise.all([
+    const [officeName, employees, history, sheetVersions, settings] = await Promise.all([
       findOfficeName(db, officeIdSchema.parse(view.officeId)),
       services.employees.list(),
       repositories.evaluations.history(view.employeeId),
       repositories.sheetVersions.listForEvaluation(view.id),
+      // The place is a nicety on the notice: a role that cannot read the settings prints none.
+      createOfficeSettingsRepository(db)
+        .get()
+        .catch(() => null),
     ]);
     const accountNames = new Map<string, string>();
     for (const employee of employees) {
@@ -50,6 +59,7 @@ export function loadExportSource(db: Db): (evaluationId: string) => Promise<Expo
       accountNames,
       history,
       sheetVersions,
+      defaultPlace: settings?.defaultPlace ?? null,
     };
   };
 }

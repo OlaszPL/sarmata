@@ -16,6 +16,10 @@ export function noticeTemplateData(notice: NoticeDocument) {
     labels,
     officeName: notice.officeName,
     noticeOn: formatDate(notice.noticeOn),
+    dateLine:
+      notice.place === null
+        ? formatDate(notice.noticeOn)
+        : `${notice.place}, ${formatDate(notice.noticeOn)}`,
     addressee: {
       name: fullName(notice.addressee),
       position: notice.addressee.positionTitle,
@@ -39,7 +43,7 @@ export function noticeTemplateData(notice: NoticeDocument) {
 export const NOTICE_TEMPLATE = `${PREAMBLE}${String.raw`
 #let l = data.labels
 
-#align(right)[#data.noticeOn]
+#align(right)[#data.dateLine]
 #strong(data.officeName)
 
 #v(1em)
@@ -53,8 +57,6 @@ export const NOTICE_TEMPLATE = `${PREAMBLE}${String.raw`
 #strong(l.newDueOn): #data.newDueOn
 
 #strong(l.reason): #data.reasonLabel
-
-#l.copyNote
 
 == #l.approvalHeading
 

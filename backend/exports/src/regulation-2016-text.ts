@@ -89,6 +89,9 @@ export interface FormLabels {
   readonly partThreeIntro: string;
   readonly signatureBoxNote: string;
   readonly approvedInSystem: string;
+  readonly recordedInSystem: string;
+  readonly signatureRefused: string;
+  readonly versionMark: string;
   readonly noApproval: string;
   readonly noApprovals: string;
   readonly reasonLabel: string;
@@ -101,7 +104,6 @@ export interface NoticeLabels {
   readonly newDueOn: string;
   readonly reason: string;
   readonly approvalHeading: string;
-  readonly copyNote: string;
   readonly signature: string;
 }
 
@@ -115,6 +117,8 @@ export interface RegulationText {
   readonly objectionNotice: (sheetId: string, addressee: string | null) => string;
   readonly termReasons: Record<TermChangeReason, string>;
   readonly eventLabels: Record<EvaluationEventKind, string>;
+  /** The request sentence of part III with the name of the civil servant and the requested grade. */
+  readonly gradeRequestSentence: (fullName: string, grade: number) => string;
 }
 
 const SCOPE_A =
@@ -156,6 +160,19 @@ const positionTitleFootnote =
   'Należy wskazać pełną nazwę stanowiska pracy wraz z jego rozszerzeniem określającym, do jakich spraw jest to stanowisko (jeżeli zostało to określone w opisie stanowiska pracy).';
 const objectionFootnote =
   'W urzędzie, w którym przepisy nie przewidują tworzenia stanowiska dyrektora generalnego urzędu, sprzeciw składa się do kierownika tego urzędu.';
+
+/** Genitive ordinals of the grades (stopnie służbowe), as the request sentence needs them. */
+const GRADE_ORDINALS: Readonly<Record<number, string>> = {
+  1: 'pierwszego',
+  2: 'drugiego',
+  3: 'trzeciego',
+  4: 'czwartego',
+  5: 'piątego',
+  6: 'szóstego',
+  7: 'siódmego',
+  8: 'ósmego',
+  9: 'dziewiątego',
+};
 
 export const regulation2016Text: RegulationText = {
   sheetTitle: (sheetId) =>
@@ -227,6 +244,9 @@ export const regulation2016Text: RegulationText = {
       'Wniosek jest wypełniany i dołączany do arkusza oceny okresowej ocenianego tylko w sytuacji skorzystania przez oceniającego z możliwości przewidzianej w art. 89 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej.',
     signatureBoxNote: 'Podpis odręczny (dla urzędów, które drukują dokument)',
     approvedInSystem: 'zatwierdzono w systemie',
+    recordedInSystem: 'odnotowano w systemie',
+    signatureRefused: 'odmowa podpisu',
+    versionMark: 'wersja',
     noApproval: 'brak zatwierdzenia',
     noApprovals: 'Brak zatwierdzeń dla tej wersji arkusza.',
     reasonLabel: 'Powód',
@@ -239,7 +259,6 @@ export const regulation2016Text: RegulationText = {
     newDueOn: 'Nowy termin sporządzenia oceny na piśmie',
     reason: 'Przyczyna zmiany terminu',
     approvalHeading: 'Zatwierdzenie w systemie',
-    copyNote: 'Kopię zawiadomienia dołącza się do arkusza.',
     signature: 'podpis oceniającego',
   },
   footnotes: (sheetId) => {
@@ -280,6 +299,8 @@ export const regulation2016Text: RegulationText = {
     interrupted: 'Przerwanie oceny',
     labour_court_appeal: 'Odwołanie do sądu pracy',
   },
+  gradeRequestSentence: (fullName, grade) =>
+    `W związku z uzyskaniem przez Panią/Pana ${fullName} pozytywnej oceny okresowej, na podstawie art. 89 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej wnioskuję o przyznanie ${GRADE_ORDINALS[grade] ?? String(grade)} stopnia służbowego.`,
 };
 
 /** Form texts per regulation document id. */

@@ -207,8 +207,63 @@ describe('event log csv', () => {
       rows: log.rows.map((row) => ({ ...row, recordedBy: 'Kowalski, "Jan"' })),
     });
     expect(csv.split('\r\n')[0]).toBe(
-      'rodzaj,zdarzenie,data_zdarzenia,czas_wpisu,konto,wersja,sha256',
+      'rodzaj,zdarzenie,data_zdarzenia,czas_wpisu,konto,wersja,sha256,szczegoly',
     );
     expect(csv).toContain('"Kowalski, ""Jan"""');
+  });
+
+  it('carries the details of each event', () => {
+    const log = buildEventLog(
+      makeSource({
+        events: [
+          approval('signature_refused', 1, '2026-06-20', {
+            place: 'Kraków',
+            refusalNote: 'Oceniany odmówił podpisu',
+            witnesses: ['Anna Świadek'],
+          }),
+          event({
+            kind: 'objection_outcome',
+            occurredOn: '2026-06-30',
+            payload: { outcome: 'changed', reason: 'objection', sheetVersion: 2 },
+          }),
+          event({
+            kind: 'term_changed',
+            occurredOn: '2026-05-01',
+            payload: {
+              newDueOn: '2026-07-01',
+              reason: 'requestOfEvaluated',
+              noticeOn: '2026-05-01',
+            },
+          }),
+          event({
+            kind: 'interrupted',
+            occurredOn: '2026-07-02',
+            payload: { reason: 'Rozwiązanie stosunku pracy' },
+          }),
+          event({
+            kind: 'correction',
+            occurredOn: '2026-07-03',
+            payload: { reason: 'Literówka w uzasadnieniu' },
+          }),
+          event({
+            kind: 'absence',
+            occurredOn: '2026-04-01',
+            payload: { absenceId: 'x', from: '2026-04-01', to: null },
+          }),
+        ],
+      }),
+    );
+    const details = log.rows.map((row) => row.details);
+    expect(details[0]).toBe(
+      'Notatka o odmowie podpisu: Oceniany odmówił podpisu. Świadkowie: Anna Świadek. Miejscowość: Kraków.',
+    );
+    expect(details[1]).toContain('sprzeciw uwzględniony, ocena zmieniona');
+    expect(details[2]).toBe(
+      'Nowy termin: 01.07.2026. Przyczyna: wniosek ocenianego. Zawiadomienie z dnia: 01.05.2026.',
+    );
+    expect(details[3]).toBe('Przyczyna przerwania: Rozwiązanie stosunku pracy.');
+    expect(details[4]).toBe('Powód korekty: Literówka w uzasadnieniu.');
+    expect(details[5]).toBe('Nieobecność od: 01.04.2026, do: nie wpisano.');
+    expect(eventLogCsv(log)).toContain('Przyczyna przerwania: Rozwiązanie stosunku pracy.');
   });
 });

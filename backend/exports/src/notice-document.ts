@@ -7,6 +7,8 @@ export interface NoticeDocument {
   readonly officeName: string;
   readonly labels: NoticeLabels;
   readonly noticeOn: CalendarDate;
+  /** Place next to the date of the letter, from office settings. */
+  readonly place: string | null;
   readonly newDueOn: CalendarDate;
   readonly reasonLabel: string;
   readonly addressee: PersonLine;
@@ -41,6 +43,7 @@ export function buildNoticeDocument(
     officeName: source.officeName,
     labels: noticeLabelsFor(source.regulation),
     noticeOn: notice.noticeOn,
+    place: source.defaultPlace ?? null,
     newDueOn: notice.newDueOn,
     reasonLabel: notice.reasonLabel,
     addressee: {

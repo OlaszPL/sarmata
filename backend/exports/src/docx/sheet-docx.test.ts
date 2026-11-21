@@ -81,6 +81,21 @@ describe('sheet DOCX', () => {
     expect(read('word/footnotes.xml')).toContain('Należy wstawić znak');
   });
 
+  it('docx prints the part three sentence once and the refusal on the signature line', async () => {
+    const { document } = await docx({
+      gradeRequest: { requestedGrade: 6, motivation: 'Wysokie wyniki' },
+      events: [
+        approval('sheet_approved', 1, '2026-06-15'),
+        approval('signature_refused', 1, '2026-06-20', { refusalNote: 'Odmowa' }),
+      ],
+    });
+    expect(document).toContain('wnioskuję o przyznanie szóstego stopnia służbowego.');
+    expect(document.match(/WNIOSEK O PRZYZNANIE URZĘDNIKOWI/g)).toHaveLength(1);
+    expect(document).toContain(
+      'podpis ocenianego: odmowa podpisu. Notatka o odmowie podpisu: Odmowa.',
+    );
+  });
+
   it('draft docx is marked as draft', async () => {
     const draft = await docx({ state: 'draft', status: 'interview' });
     const headers = Object.keys(draft.files).filter((name) => name.startsWith('word/header'));

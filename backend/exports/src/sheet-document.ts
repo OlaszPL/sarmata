@@ -37,6 +37,8 @@ export interface ExportSource {
   readonly accountNames: ReadonlyMap<string, string>;
   readonly history: readonly HistoryEntry[];
   readonly sheetVersions: readonly SheetVersion[];
+  /** The place printed on letters (office settings), `null` or missing when not set. */
+  readonly defaultPlace?: string | null;
 }
 
 export interface PersonLine {
@@ -61,9 +63,17 @@ export interface Approval {
   readonly witnesses: string[];
 }
 
+/** The event behind one signature line of the form, from any sheet version up to the printed one. */
 export interface PlaceAndDate {
   readonly place: string | null;
   readonly occurredOn: CalendarDate;
+  readonly kind: EvaluationEvent['kind'];
+  /** Name of the account that recorded the event, or the account id. */
+  readonly recordedBy: string;
+  /** The sheet version the event refers to, may be earlier than the printed one. */
+  readonly sheetVersion: number;
+  readonly refusalNote: string | null;
+  readonly witnesses: readonly string[];
 }
 
 export interface ScaleColumn {
@@ -145,11 +155,16 @@ export interface SheetDocument {
     readonly currentGrade: number | null;
     readonly gradeGrantedOn: CalendarDate | null;
     readonly requestedGrade: number;
+    /** The request sentence of the form with the name and the ordinal of the grade filled in. */
+    readonly requestSentence: string;
     readonly motivation: string;
     readonly evaluator: PersonLine;
   } | null;
   readonly approvals: Approval[];
-  /** Place and date printed next to the signature lines, taken from the approvals of this version. */
+  /**
+   * Place and date printed next to the signature lines: the latest matching approval of this version or
+   * an earlier one, so a version made by a correction or an objection decision keeps its signatures.
+   */
   readonly placeAndDate: {
     readonly partOneEvaluator: PlaceAndDate | null;
     readonly partOneEvaluated: PlaceAndDate | null;
@@ -199,12 +214,18 @@ const stringOrNull = (value: unknown): string | null =>
 
 function toApproval(
   event: EvaluationEvent,
-  version: number,
+  upToVersion: number,
   names: ReadonlyMap<string, string>,
   labels: Record<string, string>,
 ): Approval | null {
   const { sheetVersion, sheetSha256 } = event.payload;
-  if (sheetVersion !== version || typeof sheetSha256 !== 'string') return null;
+  if (
+    typeof sheetVersion !== 'number' ||
+    sheetVersion > upToVersion ||
+    typeof sheetSha256 !== 'string'
+  ) {
+    return null;
+  }
   const witnesses = Array.isArray(event.payload.witnesses)
     ? event.payload.witnesses.filter((name): name is string => typeof name === 'string')
     : [];
@@ -215,7 +236,7 @@ function toApproval(
     occurredOn: event.occurredOn,
     recordedAt: event.recordedAt,
     recordedBy: names.get(event.recordedBy) ?? event.recordedBy,
-    sheetVersion: version,
+    sheetVersion,
     sheetSha256,
     place: stringOrNull(event.payload.place),
     refusalNote: stringOrNull(event.payload.refusalNote),
@@ -296,13 +317,31 @@ export function buildSheetDocument(
     };
   });
 
+  // The approvals come from the whole event log up to this version, so a version made by a correction,
+  // a changed objection or a redraft still shows who approved what, and for which version.
   const approvals = view.events
     .map((event) => toApproval(event, versionNumber, source.accountNames, texts.eventLabels))
     .filter((approval): approval is Approval => approval !== null);
-  const firstOf = (...kinds: string[]): PlaceAndDate | null => {
-    const found = approvals.find((approval) => kinds.includes(approval.kind));
-    return found === undefined ? null : { place: found.place, occurredOn: found.occurredOn };
-  };
+  const latestOf = (kinds: readonly string[], after?: Approval): Approval | undefined =>
+    approvals
+      .filter((approval) => kinds.includes(approval.kind))
+      .filter((approval) => after === undefined || approval.recordedAt >= after.recordedAt)
+      .at(-1);
+  const signature = (found: Approval | undefined): PlaceAndDate | null =>
+    found === undefined
+      ? null
+      : {
+          place: found.place,
+          occurredOn: found.occurredOn,
+          kind: found.kind,
+          recordedBy: found.recordedBy,
+          sheetVersion: found.sheetVersion,
+          refusalNote: found.refusalNote,
+          witnesses: found.witnesses,
+        };
+  const sheetApproval = latestOf(['sheet_approved']);
+  // The evaluated person confirms the approved sheet: an acquaintance before a redraft does not count.
+  const acquaintance = latestOf(['acquainted', 'signature_refused'], sheetApproval);
 
   const isCivilServant = view.snapshot.serviceStatus === 'civil_servant';
   const gradeRequest = content.partTwo.gradeRequest;
@@ -370,16 +409,20 @@ export function buildSheetDocument(
             currentGrade: view.snapshot.grade,
             gradeGrantedOn: view.snapshot.gradeGrantedOn,
             requestedGrade: gradeRequest.requestedGrade,
+            requestSentence: texts.gradeRequestSentence(
+              `${view.snapshot.firstName} ${view.snapshot.lastName}`,
+              gradeRequest.requestedGrade,
+            ),
             motivation: gradeRequest.motivation,
             evaluator,
           }
         : null,
     approvals,
     placeAndDate: {
-      partOneEvaluator: firstOf('part_one_approved'),
-      partOneEvaluated: firstOf('part_one_signed'),
-      partTwoEvaluator: firstOf('sheet_approved'),
-      partTwoEvaluated: firstOf('acquainted', 'signature_refused'),
+      partOneEvaluator: signature(latestOf(['part_one_approved'])),
+      partOneEvaluated: signature(latestOf(['part_one_signed'])),
+      partTwoEvaluator: signature(sheetApproval),
+      partTwoEvaluated: signature(acquaintance),
     },
     attachments: termNotices(source),
     signatureBox: options.signatureBox,
@@ -404,4 +447,37 @@ export function termNotices(source: ExportSource): TermNotice[] {
       },
     ];
   });
+}
+
+const EVALUATED_KINDS: readonly string[] = ['part_one_signed', 'acquainted'];
+
+/**
+ * The text next to a signature line. A refusal prints the refusal annotation, a confirmation of the
+ * evaluated person says the evaluator recorded it (ADR 0007), and an event of an earlier sheet version
+ * names that version.
+ */
+export function signatureStatus(
+  value: PlaceAndDate | null,
+  printedVersion: number,
+  labels: FormLabels,
+): string {
+  if (value === null) return labels.noApproval;
+  const version =
+    value.sheetVersion === printedVersion
+      ? ''
+      : `, ${labels.versionMark} ${String(value.sheetVersion)}`;
+  if (value.kind === 'signature_refused') {
+    const parts = [
+      `${labels.signatureRefused}${version}`,
+      ...(value.refusalNote === null ? [] : [`${labels.refusalNote}: ${value.refusalNote}`]),
+      ...(value.witnesses.length === 0
+        ? []
+        : [`${labels.witnesses}: ${value.witnesses.join(', ')}`]),
+    ];
+    return `${parts.join('. ')}.`;
+  }
+  const action = EVALUATED_KINDS.includes(value.kind)
+    ? labels.recordedInSystem
+    : labels.approvedInSystem;
+  return `${action} (${value.recordedBy}${version})`;
 }

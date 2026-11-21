@@ -1,5 +1,5 @@
 import { formatDate, formatDateTime, formatMean } from '../format';
-import { type PlaceAndDate, type SheetDocument } from '../sheet-document';
+import { type PlaceAndDate, type SheetDocument, signatureStatus } from '../sheet-document';
 import { PREAMBLE } from './preamble';
 import { type RenderOptions, renderPdf } from './typst';
 
@@ -10,8 +10,11 @@ const STATE_NAMES: Record<SheetDocument['version']['state'], string> = {
   cancelled: 'anulowana',
 };
 
-const placeAndDate = (value: PlaceAndDate | null) =>
-  value === null ? null : { place: value.place, date: formatDate(value.occurredOn) };
+const placeAndDate = (document: SheetDocument, value: PlaceAndDate | null) => ({
+  place: value?.place ?? null,
+  date: value === null ? '' : formatDate(value.occurredOn),
+  status: signatureStatus(value, document.version.number, document.labels),
+});
 
 /** The model as the template reads it: dates and numbers already formatted. */
 export function sheetTemplateData(document: SheetDocument) {
@@ -58,10 +61,10 @@ export function sheetTemplateData(document: SheetDocument) {
             requestedGrade: String(partThree.requestedGrade),
           },
     placeAndDate: {
-      partOneEvaluator: placeAndDate(document.placeAndDate.partOneEvaluator),
-      partOneEvaluated: placeAndDate(document.placeAndDate.partOneEvaluated),
-      partTwoEvaluator: placeAndDate(document.placeAndDate.partTwoEvaluator),
-      partTwoEvaluated: placeAndDate(document.placeAndDate.partTwoEvaluated),
+      partOneEvaluator: placeAndDate(document, document.placeAndDate.partOneEvaluator),
+      partOneEvaluated: placeAndDate(document, document.placeAndDate.partOneEvaluated),
+      partTwoEvaluator: placeAndDate(document, document.placeAndDate.partTwoEvaluator),
+      partTwoEvaluated: placeAndDate(document, document.placeAndDate.partTwoEvaluated),
     },
     approvals: document.approvals.map((approval) => ({
       label: approval.label,
@@ -100,8 +103,8 @@ export const SHEET_TEMPLATE = `${PREAMBLE}${String.raw`
   #field(l.position, p.positionTitle, key: if evaluated { "positionTitle" } else { none })
 ]
 #let sign(pd, role) = block(breakable: false, width: 100%, above: 1em)[
-  #l.placeAndDate: #strong[#if pd == none [#blank] else [#if pd.place != none [#pd.place, ]#pd.date]] \
-  #role: #if pd == none [#l.noApproval] else [#l.approvedInSystem]
+  #l.placeAndDate: #strong[#if pd.date == "" [#blank] else [#if pd.place != none [#pd.place, ]#pd.date]] \
+  #role: #pd.status
   #if data.signatureBox [
     \
     #box(width: 70mm, height: 15mm, stroke: 0.5pt)[]
@@ -208,7 +211,7 @@ export const SHEET_TEMPLATE = `${PREAMBLE}${String.raw`
   #field(l.currentGrade, data.partThree.currentGrade)
   #field(l.gradeGrantedOn, data.partThree.gradeGrantedOn)
   #section(l.gradeRequestHeading)
-  #field(l.gradeRequestHeading, data.partThree.requestedGrade)
+  #data.partThree.requestSentence
   #section(l.gradeRequestMotivation)
   #data.partThree.motivation
   #person(data.partThree.evaluator, l.evaluatorData, false)

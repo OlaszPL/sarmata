@@ -7,7 +7,7 @@ import { buildSheetDocument } from '../sheet-document';
 import { approval, event, makeSource } from '../test-fixtures';
 import { PDF_FONT_FAMILY } from './font';
 import { renderEventLogPdf } from './event-log-template';
-import { renderNoticePdf } from './notice-template';
+import { NOTICE_TEMPLATE, noticeTemplateData, renderNoticePdf } from './notice-template';
 import { SHEET_TEMPLATE, renderSheetPdf, sheetTemplateData } from './sheet-template';
 import { renderPdf } from './typst';
 
@@ -142,6 +142,14 @@ describe('notice and event log PDF', () => {
     const bytes = renderNoticePdf(notice, ua);
     expect(text(bytes).startsWith('%PDF')).toBe(true);
     expect(text(bytes)).toContain('pdfuaid:part');
+  });
+
+  it('notice prints the place with the date and no internal instruction', () => {
+    const source = { ...makeSource({ events: [termChanged] }), defaultPlace: 'Warszawa' };
+    const notice = buildNoticeDocument(source, termChanged.id, { signatureBox: false });
+    expect(noticeTemplateData(notice).dateLine).toBe('Warszawa, 20.01.2026');
+    expect(NOTICE_TEMPLATE).not.toContain('copyNote');
+    expect(JSON.stringify(noticeTemplateData(notice))).not.toContain('Kopię zawiadomienia');
   });
 
   it('event log renders', () => {

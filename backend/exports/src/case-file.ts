@@ -31,6 +31,7 @@ export function eventLogCsv(log: EventLog): string {
     'konto',
     'wersja',
     'sha256',
+    'szczegoly',
   ];
   const rows = log.rows.map((row) => [
     row.kind,
@@ -40,6 +41,7 @@ export function eventLogCsv(log: EventLog): string {
     row.recordedBy,
     row.sheetVersion === null ? '' : String(row.sheetVersion),
     row.sheetSha256 ?? '',
+    row.details,
   ]);
   return [header, ...rows].map((line) => line.map(csvField).join(',')).join('\r\n') + '\r\n';
 }

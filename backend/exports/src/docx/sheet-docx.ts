@@ -15,7 +15,7 @@ import {
 } from 'docx';
 import { formatDate, formatDateTime, formatMean } from '../format';
 import { PDF_FONT_FAMILY } from '../pdf/font';
-import { type PlaceAndDate, type SheetDocument } from '../sheet-document';
+import { type PlaceAndDate, type SheetDocument, signatureStatus } from '../sheet-document';
 import { type FootnoteKey } from '../regulation-2016-text';
 
 /** The DOCX uses the same face constant as the PDF, so one change moves both (plan B6 task 3A). */
@@ -145,7 +145,7 @@ export async function renderSheetDocx(document: SheetDocument): Promise<Uint8Arr
       ],
       spacing: { before: 120, after: 40 },
     }),
-    paragraph(`${role}: ${value === null ? labels.noApproval : labels.approvedInSystem}`),
+    paragraph(`${role}: ${signatureStatus(value, document.version.number, labels)}`),
     ...(document.signatureBox
       ? [
           new Table({
@@ -297,7 +297,7 @@ export async function renderSheetDocx(document: SheetDocument): Promise<Uint8Arr
     );
     body.push(field(labels.gradeGrantedOn, formatDate(three.gradeGrantedOn)));
     body.push(label(labels.gradeRequestHeading));
-    body.push(paragraph(String(three.requestedGrade)));
+    body.push(paragraph(three.requestSentence));
     body.push(label(labels.gradeRequestMotivation));
     body.push(paragraph(three.motivation === '' ? BLANK : three.motivation));
     body.push(...person(labels.evaluatorData, three.evaluator, false));
