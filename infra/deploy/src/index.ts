@@ -28,3 +28,7 @@ export {
 } from './compose.ts';
 export { renderCaddyfile } from './caddy.ts';
 export { renderBootstrapSql, type BootstrapAccount } from './bootstrap-sql.ts';
+
+export { describePlan, type Action, type Plan, type Step, type Target } from './plan.ts';
+export { localHost, wslHost, type Host, type RunOptions, type RunResult } from './host.ts';
+export { executePlan, type ExecutionEvent, type ExecutionResult, type Hosts } from './execute.ts';
