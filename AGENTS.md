@@ -4,6 +4,11 @@ NEVER use em-dashes, slop words, semicolons etc.
 
 Code is in English: identifiers, file names, comments, SQL tables, columns, enums, policies, JWT claims, developer-facing messages, test names. Only the application UI (user-facing strings) and docs (`docs/`, README) are in Polish. Domain terms keep their Polish name in `GLOSSARY.md` next to the English code name.
 
+## Config, secrets and README
+
+- Commit all project configs (`.envrc`, `.sops.yaml`, `.mcp.json`, `.claude/`, `.agents/`, `scripts/termic-*.sh`, tool configs). Never commit `.env*` files: `.env.local` is decrypted from `secrets/*.enc.env` by SOPS (direnv does it automatically, or `pnpm secrets:decrypt`), app env files come from scripts.
+- `README.md` always holds the exact, current way to run the project from a clean machine. Every change that adds or changes a script, service, port, env file or setup step updates README in the same commit.
+
 ## Searching the repo: semble first
 
 Gather context with semble, a semantic search over this repo:

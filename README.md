@@ -2,44 +2,64 @@
 
 System Automatycznej Rejestracji i Monitorowania Awansów, Terminów i Analiz. Cyfrowy asystent ocen okresowych w służbie cywilnej.
 
-## Start
+## Jak uruchomić (dev)
 
-Wymagania: Node 24, pnpm 12.21.0, Docker, sops i age (sekrety zespołu). Klucz age leży w `~/.config/sops/age/keys.txt` albo pod ścieżką z `SOPS_AGE_KEY_FILE`. `pnpm run doctor` sprawdza narzędzia i podaje polecenia instalacji dla macOS, Debiana/Ubuntu i Windowsa.
+Krok po kroku, od czystej maszyny do działającego środowiska.
 
-Opcjonalnie direnv: `direnv allow` w katalogu repo ładuje `.envrc` (ścieżka klucza age, `node_modules/.bin` w `PATH`, `.env.local`). Skrypt `scripts/termic-setup.sh` robi to sam, gdy direnv jest zainstalowany.
+1. **Narzędzia systemowe:** Node 24, pnpm 12.21.0, Docker (działający), sops, age, opcjonalnie direnv. Sprawdzenie i polecenia instalacji dla macOS, Debiana/Ubuntu i Windowsa:
 
-    pnpm install
-    pnpm secrets:decrypt
-    pnpm check
+       pnpm run doctor
 
-## Skrypty
+   (`pnpm doctor` bez `run` to wbudowana komenda pnpm 12, nie nasz skrypt.)
 
-| Skrypt                     | Co robi                                            |
-| -------------------------- | -------------------------------------------------- |
-| `pnpm run doctor`            | sprawdza wymagane narzędzia i podpowiada instalację |
-| `pnpm check`               | lint, format, typecheck i testy (to samo co CI)    |
-| `pnpm test`                | testy wszystkich pakietów przez Turborepo          |
-| `pnpm typecheck`           | kontrola typów                                     |
-| `pnpm lint`, `pnpm format` | ESLint i Prettier                                  |
-| `pnpm secrets:decrypt`     | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
+2. **Klucz age zespołu** w `~/.config/sops/age/keys.txt` (albo ścieżka w `SOPS_AGE_KEY_FILE`). Nowa osoba generuje klucz `age-keygen -o ~/.config/sops/age/keys.txt`, przekazuje klucz publiczny, a ktoś z zespołu dopisuje go do `.sops.yaml` i robi `sops updatekeys secrets/dev.enc.env`.
 
-## Baza danych
+3. **Zależności:**
 
-Wymagania: Docker. Supabase CLI 3.2.0 przychodzi z `pnpm install` (devDependency `@sarmata/database`), nie trzeba go instalować osobno.
+       pnpm install
 
-| Skrypt | Co robi |
-|---|---|
-| `pnpm db:start` / `db:stop` / `db:status` | wspólna instancja `sarmata` (API 55421, DB 55422, Studio 55423, Mailpit 55424) |
-| `pnpm db:reset` | migracje od zera i dane demo |
-| `pnpm db:test` | testy pgTAP |
-| `pnpm db:types` | typy do `database/src/types.ts` po każdej migracji |
+   Supabase CLI 3.2.0 przychodzi z tym krokiem (devDependency `@sarmata/database`).
+
+4. **Sekrety i zmienne środowiskowe.** Pliki `.env*` nigdy nie trafiają do repo. `.env.local` w korzeniu powstaje z `secrets/dev.enc.env` (SOPS):
+   - z direnv: `direnv allow` (raz na worktree). Od tej pory direnv sam odszyfrowuje `.env.local`, gdy plik nie istnieje albo zaszyfrowany plik jest nowszy, i ładuje go do powłoki,
+   - bez direnv: `pnpm secrets:decrypt`.
+
+5. **Baza danych** (wspólna instancja `sarmata` dla wszystkich worktree, nie koliduje z innymi stackami Supabase na portach 54321 do 54323):
+
+       pnpm db:start
+       pnpm db:reset
+
+6. **Sprawdzenie całości** (to samo co CI):
+
+       pnpm check
+       pnpm db:test
 
 Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`.
 
+## Skrypty
+
+| Skrypt | Co robi |
+|---|---|
+| `pnpm run doctor` | sprawdza wymagane narzędzia i podpowiada instalację |
+| `pnpm check` | lint, format, typecheck i testy (to samo co CI) |
+| `pnpm test` | testy wszystkich pakietów przez Turborepo |
+| `pnpm typecheck` | kontrola typów |
+| `pnpm lint`, `pnpm format` | ESLint i Prettier |
+| `pnpm secrets:decrypt` | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
+| `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 |
+| `pnpm db:reset` | migracje od zera i dane demo |
+| `pnpm db:test` | testy pgTAP |
+| `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
+
+## Pliki konfiguracyjne
+
+- W repo: `.envrc`, `.sops.yaml`, `secrets/*.enc.env` (zaszyfrowane), `.mcp.json`, `.claude/`, `.agents/`, `.codex/`, `scripts/termic-*.sh`, `database/supabase/config.toml`.
+- Poza repo: `.env`, `.env.local` i inne `.env*` (powstają z SOPS albo ze skryptów), klucze age, `.termic/customization-manifest.json` (generuje go Termic).
+
 ## Termic
 
-W ustawieniach projektu w Termic ustaw skrypt setup na `./scripts/termic-setup.sh`.
+W ustawieniach projektu sarmata w Termic ustaw skrypt setup na `./scripts/termic-setup.sh`. Robi kroki 3 do 5 automatycznie: instalacja, `direnv allow`, sekrety, start wspólnej bazy, ostrzeżenia z `doctor`.
 
 ## Dokumentacja
 
-Architektura: `docs/architektura.md`, decyzje: `docs/adr/`, słownik: `GLOSSARY.md`, wymagania: `docs/wymagania-i-kontekst.md`.
+Architektura: `docs/architektura.md`, decyzje: `docs/adr/`, słownik: `GLOSSARY.md`, wymagania: `docs/wymagania-i-kontekst.md`, plany implementacji: `docs/superpowers/plans/`, znak i logo: `docs/brand/`.
