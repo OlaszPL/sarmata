@@ -632,7 +632,7 @@ Dlaczego to ważne: organizator wprost wskazuje obieg dokumentów cyfrowych i po
 3. Jakie systemy kadrowe i EZD są najczęstsze w urzędach (do integracji i importu danych pracowników i struktury)?
 4. Czy wolno używać zewnętrznych modeli AI (chmura) przy anonimizacji, czy oczekiwany jest model lokalny?
 5. Co konkretnie zmienia procedowana nowelizacja w ocenach i kiedy ma wejść w życie (jeśli research nie da pełnej odpowiedzi)?
-6. Czy pierwsza ocena (art. 38) ma być w zakresie?
+6. ~~Czy pierwsza ocena (art. 38) ma być w zakresie?~~ Decyzja właściciela produktu 21.11.2026: poza zakresem. Silnik reguł zmieści ją później jako osobny katalog przepisów.
 7. ~~Czy kryterium obowiązkowe może być też wybrane jako dodatkowe?~~ Odpowiedź 21.11.2026: nie, kryteria by się dublowały.
 8. Czy statystyki dla DG mają obejmować rozkład ocen per komórka, terminowość, realizację IPRZ?
 9. Jaką rolę ma pełnić komórka kadrowa w systemie: tylko podgląd i przypomnienia, czy także zakładanie ocen i przypisywanie oceniających?

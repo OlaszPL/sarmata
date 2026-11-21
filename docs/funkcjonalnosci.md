@@ -17,7 +17,8 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 - Widoczność ocen to ustawienie urzędu (`offices.evaluation_visibility`), bo urzędy różnią się tym, czy każdy widzi każdego (mentorzy KPRM):
   - `office` (domyślnie): każde członkostwo w urzędzie czyta wszystkie oceny i ich historię,
   - `tree`: oceniający czyta oceny, które prowadzi, oraz oceny pracowników ze swojego poddrzewa przełożonych. Role `hr` i `admin` czytają wszystkie.
-- Notatki z obserwacji i wyniki modułu HR partnera: czyta autor, rola `hr` i bieżący oceniający tego pracownika (po zmianie oceniającego wszystkie notatki przechodzą na nowego).
+- Drzewo przełożonych (`supervisor_employee_id`) ustawiają i zmieniają tylko role `hr` i `admin`. Inaczej w trybie `tree` oceniający mógłby wpisać siebie jako przełożonego dowolnej osoby i zobaczyć jej oceny. Pozostałe dane pracownika może wpisywać też oceniający.
+- Notatki z obserwacji i wyniki modułu HR partnera: czyta autor, rola `hr` i bieżący oceniający tego pracownika (po zmianie oceniającego wszystkie notatki przechodzą na nowego). W trybie `tree` czytają je także przełożeni w górę drzewa.
 - Cała logika dostępu przechodzi przez jedno miejsce: funkcję SQL `access.can(action, resource, office_id)`, wołaną przez wszystkie polityki RLS. Zmiana modelu (np. na wgląd tylko dla stron oceny) to zmiana tej jednej funkcji i jej testów pgTAP, bez ruszania polityk tabel.
 - Zapis do oceny: jej oceniający i rola `hr`.
 
