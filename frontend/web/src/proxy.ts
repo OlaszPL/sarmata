@@ -31,6 +31,10 @@ export async function proxy(request: NextRequest) {
   const signedIn = Boolean(data?.claims);
   const onSignInPage = request.nextUrl.pathname === routes.signIn;
 
+  // A download or fetch from code gets a status, not the HTML of the sign-in page.
+  if (!signedIn && request.nextUrl.pathname.startsWith('/api/')) {
+    return new NextResponse(null, { status: 401 });
+  }
   if (!signedIn && !onSignInPage) return redirectKeepingSession(request, routes.signIn, response);
   if (signedIn && onSignInPage) return redirectKeepingSession(request, routes.home, response);
   return response;

@@ -99,10 +99,23 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
 
 ## Eksport
 
-- PDF/UA arkusza według wzoru z zał. 2 do 4 rozporządzenia (Typst), gotowy do podpisu poza aplikacją.
-- DOCX arkusza do dalszej obróbki w urzędzie.
-- Teczka sprawy: ZIP z PDF arkusza, dziennikiem zdarzeń, wersjami i zawiadomieniami, na sprzeciw i do sądu.
-- Paczka do EZD: PDF/A plus XML metadanych według instrukcji kancelaryjnej.
+Plik powstaje na żądanie w procesie aplikacji z danych w bazie (bez Storage i bez kopii danych osobowych). Pobieranie: `GET /api/oceny/<id>/eksport/<rodzaj>`, dostęp wynika z RLS (kto widzi ocenę, ten ją pobierze). Pakiet `backend/exports`, interfejs `exportsFor(db).export(evaluationId, request)`.
+
+| Rodzaj w adresie | Kod w pakiecie | Zawartość |
+|---|---|---|
+| `arkusz-pdf` | `sheet_pdf` | arkusz A, B albo C według wzoru z zał. 2 do 4, PDF/UA-1 (Typst) |
+| `arkusz-docx` | `sheet_docx` | ten sam układ w DOCX do dalszej obróbki w urzędzie |
+| `zawiadomienie` | `term_notice` | pismo o zmianie terminu (art. 81 ust. 8 ustawy, § 8 rozporządzenia), parametr `zdarzenie` |
+| `teczka` | `case_file` | ZIP, patrz niżej |
+| `paczka-ezd` | `ezd_package` | ZIP z PDF/A-2a i metadanymi XML, parametr `znak` |
+
+- **Zatwierdzenia zamiast podpisu.** Dokument nie ma podpisu odręcznego. W miejscu podpisów pokazuje zatwierdzenia z dziennika zdarzeń: czynność, datę zdarzenia, czas wpisu (strefa Europe/Warsaw), konto, wersję arkusza i skrót SHA-256 jej treści (ADR 0007). Odmowa podpisu pokazuje notatkę i świadków. Miejscowość i data przy częściach I i II pochodzą z zatwierdzeń.
+- **Ramka na podpis.** Opcja `podpis=1` (`signatureBox`) dodaje puste pola na podpis odręczny dla urzędów, które drukują dokument.
+- **Projekt.** Arkusz w stanie `draft` dostaje napis „PROJEKT” w nagłówku strony. Paczka EZD z projektu jest odrzucana (`not_exportable`, HTTP 409).
+- **Część III** (wniosek o stopień służbowy) jest tylko dla urzędnika służby cywilnej z wnioskiem w treści, w pozostałych przypadkach pole wniosku pokazuje „NIE DOTYCZY” albo „NIE” (przypis 18 wzoru).
+- **Teczka sprawy** (ZIP): `arkusz.pdf` (bieżąca wersja), `wersje/arkusz-v<n>.pdf` (każda wersja ze stanem i powodem, wersje zastąpione z własnymi zatwierdzeniami), `dziennik-zdarzen.pdf` i `.csv` (RFC 4180, UTF-8), `zawiadomienia/zmiana-terminu-<data>.pdf` oraz `manifest.json` ze skrótami SHA-256 plików. Na sprzeciw i do sądu.
+- **Paczka EZD** (ZIP, tylko dla zatwierdzonej wersji): `arkusz.pdf` i zawiadomienia w PDF/A-2a oraz `metadane.xml` (identyfikator, twórca, tytuł, data, format, dostęp, typ, znak sprawy, relacja zawiadomienia do arkusza, język, opis, skrót pliku i skrót arkusza). Znak sprawy wpisuje użytkownik ręcznie. Zestaw elementów trzeba sprawdzić z załącznikiem nr 1 do instrukcji kancelaryjnej, bo jego tabele są obrazami.
+- Kroje dokumentów: do czasu decyzji użytkownika obowiązuje wartość tymczasowa w `backend/exports/src/pdf/font.ts` (jedno miejsce konfiguracji dla PDF i DOCX).
 
 ## Retencja
 

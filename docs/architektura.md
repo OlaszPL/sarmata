@@ -12,6 +12,7 @@ backend/
   domain/         typy, reguły prawne, strategie terminów, schematy zod (bez I/O)
   repositories/   jedyne miejsce z zapytaniami do bazy (supabase-js z JWT użytkownika, klucz serwisowy tylko w workerze)
   services/       logika, woła repositories, jedyne API dla frontend/web
+  exports/        eksport na żądanie: PDF/UA (Typst), DOCX, teczka ZIP, paczka EZD, route handler w frontend/web woła exportsFor(db)
   ai/             klient API zgodnego z OpenAI, prompty, endpoint decyzyjny Bielik-One
   worker/         proces Node: zadania z kolejki pgmq
   regulations/    oficjalne wersje przepisów: <wersja>/rules.json, strategie, testy (ADR 0006)
@@ -37,7 +38,7 @@ flowchart LR
     Q --> S
     S -->|OpenAI API| L[llama-server: tekst, Bielik-11B lub 4.5B]
     S -->|/v1/systemone| D[vLLM albo MLX: Bielik-One]
-    S -->|WASM w procesie| T[Typst: PDF/UA arkusza]
+    S -->|moduł natywny w procesie| T[Typst: PDF/UA arkusza, PDF/A paczki EZD]
 ```
 
 - Supabase działa w kontenerach na Docker Engine (Linux natywnie, Windows przez WSL2). Kreator użyje też istniejącego silnika, np. Docker Desktop, jeśli urząd ma licencję. Można podłączyć zewnętrzną instancję Supabase przez zmienne środowiskowe.

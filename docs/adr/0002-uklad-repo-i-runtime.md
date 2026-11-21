@@ -4,7 +4,7 @@ Repo jest monorepo pnpm z katalogami pogrupowanymi po warstwie: `frontend/` (web
 
 Pakiet `@sarmata/ui` eksportuje oprócz `index.ts` także arkusz `globals.css`: style importuje się po ścieżce (`@sarmata/ui/globals.css`), bo CSS nie przechodzi przez moduł TypeScript.
 
-Prace w tle (długie zadania AI, seryjne PDF, powiadomienia) planuje `pg_cron`, trzyma kolejka pgmq w Postgresie, a wykonuje osobny proces worker na Node z tym samym kodem `backend/services`. Worker działa w osobnym kontenerze w każdym profilu, także w light, bo tylko on dostaje klucz serwisowy (ADR 0003 i 0004). PDF arkuszy (PDF/UA-1) generuje Typst przez WASM w procesie Node, bez osobnego serwisu. DOCX generuje biblioteka `docx` (MIT), też w procesie. Paczka do EZD potrzebuje PDF/A: Typst obsługuje standardy PDF/A, a to, czy PDF/A i PDF/UA-1 dadzą się połączyć w jednym pliku, sprawdzamy przy implementacji PDF. Jeśli nie, paczka EZD dostaje osobny render PDF/A.
+Prace w tle (długie zadania AI, seryjne PDF, powiadomienia) planuje `pg_cron`, trzyma kolejka pgmq w Postgresie, a wykonuje osobny proces worker na Node z tym samym kodem `backend/services`. Worker działa w osobnym kontenerze w każdym profilu, także w light, bo tylko on dostaje klucz serwisowy (ADR 0003 i 0004). PDF arkuszy generuje Typst jako natywny moduł Node (`@myriaddreamin/typst-ts-node-compiler`, napi) w procesie aplikacji, bez osobnego serwisu. Wariant WASM odpada, bo jego API JS nie pozwala ustawić standardu PDF, a moduł natywny ustawia PDF/UA-1 (arkusz do pobrania) i PDF/A-2a (paczka EZD). `pdfStandard` przyjmuje jeden standard, więc PDF/UA-1 i PDF/A nie łączą się w jednym pliku i paczka EZD dostaje osobny render. DOCX generuje biblioteka `docx` (MIT), też w procesie.
 
 ## Odrzucone
 

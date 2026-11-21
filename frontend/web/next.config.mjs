@@ -11,7 +11,10 @@ const nextConfig = {
     '@sarmata/database',
     '@sarmata/domain',
     '@sarmata/regulations',
+    '@sarmata/exports',
   ],
+  // Native Typst module (napi): Next must not bundle it, it loads from node_modules at runtime.
+  serverExternalPackages: ['@myriaddreamin/typst-ts-node-compiler'],
   poweredByHeader: false,
   // Self-contained server for the Docker image (infra/deploy/docker/app.Dockerfile, ADR 0003).
   output: 'standalone',

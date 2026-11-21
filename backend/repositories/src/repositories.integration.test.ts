@@ -366,6 +366,21 @@ describe('evaluations', () => {
     expect(changed?.evaluatorAccountId).toBe(data.user?.id);
   });
 
+  it('lists all sheet versions after an admin correction', async () => {
+    const { evaluation } = await startFor('oceniajacy@kropka.test', 'Kadrowy');
+    await driveToObjection(evaluation.id);
+    const admin = createRepositories(await signedIn('admin@kropka.test'));
+    const content = emptySheetContent();
+    content.partTwo.developmentConclusions = 'Wersja druga';
+    await admin.evaluations.correctSheet(evaluation.id, content, 'literowka');
+    const versions = await admin.sheetVersions.listForEvaluation(evaluation.id);
+    expect(versions.map((v) => [v.version, v.state, v.reason])).toEqual([
+      [1, 'superseded', null],
+      [2, 'locked', 'literowka'],
+    ]);
+    expect(versions[1]?.content.partTwo.developmentConclusions).toBe('Wersja druga');
+  });
+
   it('history merges archived and closed evaluations', async () => {
     const hr = createRepositories(await signedIn('kadry@kropka.test'));
     const employees = await hr.employees.list();

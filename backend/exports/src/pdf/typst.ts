@@ -1,0 +1,37 @@
+import { NodeCompiler } from '@myriaddreamin/typst-ts-node-compiler';
+import { FONTS_DIR, PDF_FONT_FAMILY } from './font';
+
+export interface RenderOptions {
+  /** `ua-1` for the downloadable sheet, `a-2a` for the EZD package. The binding takes one standard. */
+  readonly standard: 'ua-1' | 'a-2a';
+  /** Creation time written to the file. The same input and time give the same bytes. */
+  readonly createdAt: Date;
+}
+
+let compiler: NodeCompiler | undefined;
+
+/** One lazy compiler per process, loading the fonts of the package next to the built-in ones. */
+function sharedCompiler(): NodeCompiler {
+  compiler ??= NodeCompiler.create({ fontArgs: [{ fontPaths: [FONTS_DIR] }] });
+  return compiler;
+}
+
+/**
+ * Renders a template to PDF. The data goes in as one JSON input (`sys.inputs.data`) that the template
+ * reads with `json(bytes(sys.inputs.data))`. `fontFamily` defaults to `PDF_FONT_FAMILY`, so no template
+ * knows a typeface name. Errors of the standard (for example PDF/UA rules) throw.
+ */
+export function renderPdf(template: string, data: unknown, options: RenderOptions): Uint8Array {
+  const input = JSON.stringify({
+    fontFamily: PDF_FONT_FAMILY,
+    ...(data as Record<string, unknown>),
+  });
+  const buffer = sharedCompiler().pdf(
+    { mainFileContent: template, inputs: { data: input } },
+    {
+      pdfStandard: options.standard,
+      creationTimestamp: Math.floor(options.createdAt.getTime() / 1000),
+    },
+  );
+  return new Uint8Array(buffer);
+}

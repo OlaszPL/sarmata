@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@fontsource-variable/open-sans": "5.3.0",
+    "@myriaddreamin/typst-ts-node-compiler": "catalog:",
+    "@sarmata/exports": "workspace:*",
     "@sarmata/services": "workspace:*",
     "@sarmata/ui": "workspace:*",
     "@supabase/ssr": "0.12.7",

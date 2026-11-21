@@ -60,6 +60,7 @@ function inMemoryRepositories(seed: { employees?: Employee[]; official?: Regulat
       history: unavailable,
     },
     archivedEvaluations: { create: unavailable, listForEmployee: unavailable },
+    sheetVersions: { listForEvaluation: unavailable },
   };
   const writer: OfficialRegulationWriter = {
     insertOfficial: (document) => {
