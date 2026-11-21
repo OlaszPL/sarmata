@@ -37,6 +37,110 @@ isOneToOne: false
       referencedColumns: ["user_id","office_id"]
     }
                   ]
+                },"evaluation_deadlines": {
+                  Row: {
+                    "computed_at": string,"due_on": string | null,"evaluation_id": string,"office_id": string,"slot": string,"suspended_since": string | null,"window_start": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "computed_at"?: string,"due_on"?: string | null,"evaluation_id": string,"office_id": string,"slot": string,"suspended_since"?: string | null,"window_start"?: string | null
+                  }
+                  Update: {
+                    "computed_at"?: string,"due_on"?: string | null,"evaluation_id"?: string,"office_id"?: string,"slot"?: string,"suspended_since"?: string | null,"window_start"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "evaluation_deadlines_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "evaluations"
+      referencedColumns: ["id","office_id"]
+    }
+                  ]
+                },"evaluation_events": {
+                  Row: {
+                    "evaluation_id": string,"id": string,"kind": Database["public"]['Enums']["evaluation_event_kind"],"occurred_on": string,"office_id": string,"payload": NonNullable<Json>,"recorded_at": string,"recorded_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "evaluation_id": string,"id"?: string,"kind": Database["public"]['Enums']["evaluation_event_kind"],"occurred_on": string,"office_id": string,"payload"?: NonNullable<Json>,"recorded_at"?: string,"recorded_by"?: string
+                  }
+                  Update: {
+                    "evaluation_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["evaluation_event_kind"],"occurred_on"?: string,"office_id"?: string,"payload"?: NonNullable<Json>,"recorded_at"?: string,"recorded_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "evaluation_events_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "evaluations"
+      referencedColumns: ["id","office_id"]
+    }
+                  ]
+                },"evaluation_sheets": {
+                  Row: {
+                    "content": NonNullable<Json>,"created_at": string,"created_by": string,"evaluation_id": string,"id": string,"office_id": string,"reason": string | null,"state": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content": NonNullable<Json>,"created_at"?: string,"created_by"?: string,"evaluation_id": string,"id"?: string,"office_id": string,"reason"?: string | null,"state": string,"version": number
+                  }
+                  Update: {
+                    "content"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string,"evaluation_id"?: string,"id"?: string,"office_id"?: string,"reason"?: string | null,"state"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "evaluation_sheets_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "evaluations"
+      referencedColumns: ["id","office_id"]
+    }
+                  ]
+                },"evaluations": {
+                  Row: {
+                    "after_negative": boolean,"created_at": string,"created_by": string,"cycle_start": string,"employee_id": string,"evaluator_account_id": string,"id": string,"office_id": string,"previous_evaluation_id": string | null,"regulation_version_id": string,"sheet_id": string,"snapshot": NonNullable<Json>,"status": Database["public"]['Enums']["evaluation_status"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "after_negative"?: boolean,"created_at"?: string,"created_by"?: string,"cycle_start": string,"employee_id": string,"evaluator_account_id": string,"id"?: string,"office_id": string,"previous_evaluation_id"?: string | null,"regulation_version_id": string,"sheet_id": string,"snapshot": NonNullable<Json>,"status"?: Database["public"]['Enums']["evaluation_status"]
+                  }
+                  Update: {
+                    "after_negative"?: boolean,"created_at"?: string,"created_by"?: string,"cycle_start"?: string,"employee_id"?: string,"evaluator_account_id"?: string,"id"?: string,"office_id"?: string,"previous_evaluation_id"?: string | null,"regulation_version_id"?: string,"sheet_id"?: string,"snapshot"?: NonNullable<Json>,"status"?: Database["public"]['Enums']["evaluation_status"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "evaluations_employee_fkey"
+      columns: ["employee_id","office_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluations_evaluator_fkey"
+      columns: ["evaluator_account_id","office_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["user_id","office_id"]
+    },{
+      foreignKeyName: "evaluations_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "evaluations_previous_fkey"
+      columns: ["previous_evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "evaluations"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluations_regulation_version_id_fkey"
+      columns: ["regulation_version_id"]
+isOneToOne: false
+      referencedRelation: "regulation_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"memberships": {
                   Row: {
                     "created_at": string,"office_id": string,"role": Database["public"]['Enums']["office_role"],"user_id": string
@@ -103,7 +207,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "find_similar_employees":
+            "apply_evaluation_transition":
+{ Args: { "p_evaluation_id": string,"p_event_kind": Database["public"]['Enums']["evaluation_event_kind"],"p_expected_status": Database["public"]['Enums']["evaluation_status"],"p_lock_sheet": boolean,"p_next_status": Database["public"]['Enums']["evaluation_status"],"p_occurred_on": string,"p_payload": Json }; Returns: string
+                           },
+"find_similar_employees":
 { Args: { "max_results"?: number,"search": string }; Returns: {
               "first_name": string,"id": string,"last_name": string,"org_unit": string,"position_title": string,"score": number
             }[]
@@ -121,7 +228,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "employment_basis": "indefinite"|"appointment"|"fixed_term","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
+            "employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -237,7 +344,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "employment_basis": ["indefinite", "appointment", "fixed_term"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
+            "employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
           }
         }
 } as const
