@@ -128,4 +128,12 @@ describe('regulation drafts', () => {
     expect(await versions.findByCode('no-such-version')).toBeNull();
     await drafts.deleteDraft(created.id);
   });
+
+  it('demo office has a regulation draft', async () => {
+    const drafts = createRegulationDraftRepository(await signedIn('admin@kropka.test'));
+    const demo = (await drafts.listLocal()).find(
+      (version) => version.document.name === 'Przepisy urzędu, szkic demo',
+    );
+    expect(demo).toMatchObject({ status: 'draft', code: 'regulation-2016-local-1' });
+  });
 });

@@ -93,6 +93,10 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004). Raporty urzędu czytają k
 
 - Wnioski do IPRZ są wymaganym polem oceny (art. 81 ust. 5). Backend podpowiada je z kryteriów z najniższymi poziomami.
 - Rekomendacje z katalogu szkoleń (249 pozycji przypisanych do 14 kryteriów, `docs/sources/szkolenia-katalog/`), najpierw bezpłatne. Działania rozwojowe także poza szkoleniami (mentoring, zadanie rozwojowe, zastępstwo).
+- Serwis `development.recommend(evaluationId, { on? })` bierze do trzech kryteriów z punktami poniżej najwyższego poziomu skali, od najniższych. Dla każdego zwraca do pięciu szkoleń, działania 70-20-10 i szkic wniosków do edycji przez oceniającego. To tylko sugestia, decyzję podejmuje człowiek.
+- Kolejność szkoleń: bezpłatne, potem priorytet Szefa SC w roku daty `on`, potem kanał (e-learning SC, webinary PDW i trenerzy SC, szkolenia centralne i platformy rządowe, KSAP, MOOC), potem zgodność z kryterium głównym pozycji.
+- Filtr roli: pozycje zakończone są pomijane. Kierownik (arkusz A albo B) widzi pozycje dla wszystkich i dla kadry kierowniczej, pracownik na arkuszu C tylko dla wszystkich. Koordynator jest pracownikiem, nie kierownikiem. Urząd nie dodaje własnych szkoleń.
+- Działania 70-20-10: zadanie rozwojowe i zastępstwo to 70 procent, mentoring i informacja zwrotna to 20 procent, szkolenia to pozostałe 10 procent.
 - Bez obiegu akceptacji IPRZ (kierownik komórki, DG). Nie mamy tych ról.
 
 ## Edytor reguł
@@ -101,6 +105,11 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004). Raporty urzędu czytają k
 - W szkicu zmienia parametry (stałe, progi, skale, kryteria, arkusze) i wybiera strategie z zarejestrowanego katalogu w `backend/domain`.
 - Przed publikacją backend uruchamia walidację zod i testy przypadków (liczenie terminów KPRM, 13 wypełnionych przykładów) i zwraca wynik.
 - Opublikowana wersja jest niezmienna, ma datę obowiązywania i podstawę prawną przy każdej regule.
+- Serwis `regulationEditor` ma sześć metod: `list`, `get` (dokument, graf slotów i parametrów oraz wynik walidacji i przypadków liczone przy odczycie), `clone`, `saveDraft`, `publish` i `deleteDraft`. Front nie składa walidacji ani grafu sam.
+- Zapis szkicu niezgodnego ze schematem zwraca `saved: false` i problemy ze ścieżkami (na przykład `overallLevel.bands.1.min`), a w bazie nic się nie zmienia.
+- Publikacja szkicu z nieudanymi przypadkami wymaga `acceptFailingCases: true`. Bez flagi serwis zwraca błąd `regulation_cases_failed` z wynikami wszystkich przypadków. Z flagą wersja się publikuje, a wyniki zaakceptowanych przypadków zapisują się razem z wersją (`acceptedFailingCases`).
+- Kody błędów edytora: `regulation_invalid` (dokument niezgodny ze schematem, data w przeszłości albo zajęta przez inną opublikowaną wersję urzędu, szczegóły w `details.issues`), `regulation_cases_failed`, `regulation_not_draft` (zmiana albo usunięcie opublikowanej wersji), `forbidden` (rolę rozstrzyga RLS, zapisuje tylko admin), `not_found`.
+- Pierwszeństwo wersji urzędu: kandydaci to wersje oficjalne i opublikowane wersje urzędu. Obowiązuje ta z najpóźniejszą datą obowiązywania nie późniejszą niż dzień rozpoczęcia oceny. Przy równej dacie wygrywa wersja urzędu. Nowsza wersja oficjalna wypiera wersję urzędu od swojej daty, więc po zmianie prawa admin klonuje nową wersję. Ocena przypina wersję przy starcie, publikacja nie zmienia ocen w toku. Data obowiązywania nie może być w przeszłości.
 
 ## Eksport
 

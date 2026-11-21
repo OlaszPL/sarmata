@@ -20,6 +20,7 @@ const envSchema = z.object({
 
 const EVALUATOR_EMAIL = 'oceniajacy@kropka.test';
 const HR_EMAIL = 'kadry@kropka.test';
+const ADMIN_EMAIL = 'admin@kropka.test';
 const DEMO_PASSWORD = 'Haslo-Demo-2026';
 const today = calendarDate(new Date().toISOString().slice(0, 10));
 
@@ -233,6 +234,15 @@ async function seedClosedEvaluations(
   });
 }
 
+/** The admin clones the official regulation into a draft, so the rule editor has something to show. */
+async function seedRegulationDraft(admin: AppServices): Promise<void> {
+  const source = (await admin.regulationEditor.list()).find(
+    (version) => version.isOfficial && version.code === 'regulation-2016',
+  );
+  if (source === undefined) throw new Error('The official regulation-2016 is not synced');
+  await admin.regulationEditor.clone({ sourceId: source.id, name: 'Przepisy urzędu, szkic demo' });
+}
+
 async function main(): Promise<void> {
   const env = parseEnv(envSchema, process.env, 'seed-demo-evaluations');
   const db: Db = createClient<Database>(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
@@ -258,8 +268,11 @@ async function main(): Promise<void> {
     karol: await employeeIdByEmail(db, 'kadry@kropka.test'),
     olga: await employeeIdByEmail(db, 'oceniajacy@kropka.test'),
   });
+  await seedRegulationDraft(
+    await signedInServices(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, ADMIN_EMAIL),
+  );
   console.log(
-    'demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview), Stefan Sprzeciwny (objection), four closed evaluations for the statistics',
+    'demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview), Stefan Sprzeciwny (objection), four closed evaluations for the statistics, a regulation draft of the office',
   );
 }
 
