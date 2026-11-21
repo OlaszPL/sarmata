@@ -1,13 +1,28 @@
+import { isIP } from 'node:net';
+import { INSTALL_PROFILES } from '@sarmata/ai-runtime';
 import { z } from 'zod';
+import { PROFILE_TABLE, usesCaddy } from './profiles.ts';
 
-export const profileSchema = z.enum(['light', 'standard', 'server']);
-export type Profile = z.infer<typeof profileSchema>;
+export const profileSchema = z.enum(INSTALL_PROFILES);
 
-/** Host ports. Kong (Supabase API) and the app, both behind Caddy in the server profile. */
+/** Host ports of the app and of Kong (Supabase API), published on 127.0.0.1 only. */
 export const APP_PORT = 3000;
 export const API_PORT = 8000;
-/** llama-server of an installation (the dev server from plan 5 uses 55490). */
+/** llama-server of an installation. The dev server of pnpm ai:start uses 55490, so both can run. */
 export const AI_PORT = 55491;
+/** Native AI listens only here. Containers reach it through CONTAINER_AI_HOST (ADR 0003). */
+export const NATIVE_AI_BIND = '127.0.0.1';
+/** The host's loopback as containers see it: Docker Desktop and Colima map it, ai-relay elsewhere. */
+export const CONTAINER_AI_HOST = 'host.docker.internal';
+
+/** A DNS name or an IP address, nothing a Caddyfile or a URL would read differently. */
+export function isHostName(value: string): boolean {
+  if (isIP(value) !== 0) return true;
+  return (
+    value.length <= 253 &&
+    value.split('.').every((label) => /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i.test(label))
+  );
+}
 
 const tlsSchema = z.discriminatedUnion('mode', [
   z.object({ mode: z.literal('none') }),
@@ -51,7 +66,7 @@ export const installConfigSchema = z
     schemaVersion: z.literal(1),
     profile: profileSchema,
     exposure: z.enum(['localhost', 'lan']),
-    host: z.string().min(1),
+    host: z.string().refine(isHostName, 'Podaj nazwę komputera z DNS albo adres IP.'),
     tls: tlsSchema,
     supabase: supabaseSchema,
     smtp: smtpSchema,
@@ -65,25 +80,19 @@ export const installConfigSchema = z
     shortcut: z.boolean(),
   })
   .superRefine((config, ctx) => {
-    if (config.profile === 'light' && config.exposure !== 'localhost') {
+    const allowed = PROFILE_TABLE[config.profile].exposures;
+    if (!allowed.includes(config.exposure)) {
       ctx.addIssue({
         code: 'custom',
         path: ['exposure'],
-        message: 'Profil light działa tylko na localhost.',
+        message: `Profil ${config.profile} działa tylko z dostępem: ${allowed.join(', ')}.`,
       });
     }
-    if (config.profile === 'server' && config.exposure !== 'lan') {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['exposure'],
-        message: 'Profil server działa w sieci urzędu (lan).',
-      });
-    }
-    if ((config.profile === 'server') !== (config.tls.mode !== 'none')) {
+    if (usesCaddy(config) !== (config.tls.mode !== 'none')) {
       ctx.addIssue({
         code: 'custom',
         path: ['tls'],
-        message: 'HTTPS przez Caddy jest tylko w profilu server.',
+        message: 'Dostęp z sieci urzędu idzie przez HTTPS (Caddy), dostęp z tego komputera bez.',
       });
     }
     if (config.exposure === 'localhost' && config.host !== 'localhost') {
@@ -95,6 +104,8 @@ export const installConfigSchema = z
     }
   });
 export type InstallConfig = z.infer<typeof installConfigSchema>;
+export type AiSettings = InstallConfig['ai'];
+export type EnabledAi = Extract<AiSettings, { enabled: true }>;
 
 /** Wizard answers: the settings plus secrets that never land in sarmata.json. */
 export const answersSchema = z
@@ -131,12 +142,9 @@ export interface PublicUrls {
 }
 
 export function publicUrls(config: InstallConfig): PublicUrls {
-  const appUrl =
-    config.profile === 'server' ? `https://${config.host}` : `http://${config.host}:${APP_PORT}`;
+  const caddy = usesCaddy(config);
+  const appUrl = caddy ? `https://${config.host}` : `http://${config.host}:${APP_PORT}`;
   if (config.supabase.mode === 'external')
     return { appUrl, apiUrl: config.supabase.url.replace(/\/$/, '') };
-  return {
-    appUrl,
-    apiUrl: config.profile === 'server' ? appUrl : `http://${config.host}:${API_PORT}`,
-  };
+  return { appUrl, apiUrl: caddy ? appUrl : `http://${config.host}:${API_PORT}` };
 }

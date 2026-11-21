@@ -16,10 +16,11 @@ describe('desktopShortcut', () => {
     expect(shortcut?.files).toEqual(["C:\\Users\\O'Brien\\Desktop\\Sarmata.lnk"]);
     const script = lastArg(shortcut?.steps[0]?.action);
     expect(script).toContain("CreateShortcut('C:\\Users\\O''Brien\\Desktop\\Sarmata.lnk')");
+    // cmd.exe keeps the window open with the error when start fails.
+    expect(script).toContain('$shortcut.TargetPath = $env:ComSpec');
     expect(script).toContain(
-      "$shortcut.TargetPath = 'C:\\Users\\O''Brien\\AppData\\Local\\Programs\\Sarmata\\sarmata.exe'",
+      '$shortcut.Arguments = \'/c ""C:\\Users\\O\'\'Brien\\AppData\\Local\\Programs\\Sarmata\\sarmata.exe" start --open || pause"\'',
     );
-    expect(script).toContain("$shortcut.Arguments = 'start --open'");
   });
 
   it('Linux: a .desktop file on the desktop and in the application menu', () => {

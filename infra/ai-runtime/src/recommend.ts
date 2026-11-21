@@ -9,7 +9,9 @@ import {
   type ModelId,
 } from './models.ts';
 
-export type InstallProfile = 'light' | 'standard' | 'server';
+/** Installation profiles of ADR 0003, shared with the installer (@sarmata/deploy). */
+export const INSTALL_PROFILES = ['light', 'standard', 'server'] as const;
+export type InstallProfile = (typeof INSTALL_PROFILES)[number];
 
 export interface RuntimeRecommendation {
   /** AI is on by default in every profile except light (ADR 0003, ADR 0005). */
@@ -40,6 +42,8 @@ const MIN_MAC_RAM_MiB = 15 * GiB_IN_MiB;
 const METAL_SHARE = 0.75;
 // KV cache for a 16k context and compute buffers next to the weights on a server.
 const SERVER_HEADROOM_MiB = 4 * GiB_IN_MiB;
+// Compute buffers next to the weights on a workstation: an 8 GB card still takes Q4_K_M.
+const DESKTOP_HEADROOM_MiB = 1 * GiB_IN_MiB;
 // Memory left free when Bielik-One runs next to the text model.
 const BIELIK_ONE_HEADROOM_MiB = 2 * GiB_IN_MiB;
 const SERVER_QUANTS: readonly ModelId[] = [
@@ -77,6 +81,39 @@ export function recommendRuntime(
         : { contextSize: 8192, parallel: 2 },
     reason: bielikOne ? `${reason} Obok zmieści się Bielik-One (${engineName}).` : reason,
   };
+}
+
+const SIZE_ORDER: readonly ModelId[] = [
+  'bielik-4.5b-v3.0-q8_0',
+  'bielik-11b-v3.1-q4_k_m',
+  'bielik-11b-v3.1-q5_k_m',
+  'bielik-11b-v3.1-q6_k',
+  'bielik-11b-v3.1-q8_0',
+];
+
+/**
+ * Every model the machine can run for a profile, as full recommendations: the recommended tier
+ * first, then the other fitting models from the smallest. Empty when nothing fits. The installer
+ * offers this list, so the user may pick a smaller model than the tier (or none at all).
+ */
+export function runtimeChoices(
+  hardware: Hardware,
+  profile: InstallProfile,
+): RuntimeRecommendation[] {
+  const recommended = recommendRuntime(hardware, profile);
+  if (recommended.model === null) return [];
+  const recommendedId = recommended.model.id;
+  const others = SIZE_ORDER.filter((id) => id !== recommendedId && fits(hardware, profile, id));
+  return [recommended, ...others.map((model) => recommendRuntime(hardware, profile, { model }))];
+}
+
+function fits(hardware: Hardware, profile: InstallProfile, id: ModelId): boolean {
+  const model = MODEL_FILES[id];
+  if (id === 'bielik-4.5b-v3.0-q8_0') return hardware.memoryMiB >= MIN_RAM_MiB;
+  const apple = isAppleSilicon(hardware);
+  const budget = apple ? hardware.memoryMiB * METAL_SHARE : dedicatedGpuMiB(hardware);
+  const headroom = profile === 'server' ? SERVER_HEADROOM_MiB : DESKTOP_HEADROOM_MiB;
+  return sizeMiB(model) + headroom <= budget;
 }
 
 const isAppleSilicon = (hardware: Hardware): boolean =>

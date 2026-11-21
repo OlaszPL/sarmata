@@ -16,6 +16,11 @@ export interface BielikOneServer {
   stop(): Promise<void>;
 }
 
+export interface InstallBielikOneOptions {
+  /** The uv executable. Default: uv on PATH. The installer passes the copy it installed. */
+  uv?: string;
+}
+
 const INSTALL_TIMEOUT_MS = 60 * 60 * 1000;
 const READY_TIMEOUT_MS = 60 * 60 * 1000;
 
@@ -38,7 +43,9 @@ const SMOKE_DECISION = {
 export async function installBielikOne(
   engine: BielikOneEngine,
   ctx: RuntimeContext,
+  options: InstallBielikOneOptions = {},
 ): Promise<BielikOneInstall> {
+  const uvCommand = options.uv ?? 'uv';
   const { machine } = ctx;
   const supported =
     engine === 'vllm' ? machine.os === 'linux' : machine.os === 'macos' && machine.arch === 'arm64';
@@ -51,7 +58,7 @@ export async function installBielikOne(
   const marker = join(venv, '.sarmata-install');
   if ((await readTextOrNull(marker)) === BIELIK_ONE_SOURCE.commit) return install;
 
-  const uv = await machine.run('uv', ['--version'], { timeoutMs: 15_000 });
+  const uv = await machine.run(uvCommand, ['--version'], { timeoutMs: 15_000 });
   if (uv.exitCode !== 0) {
     throw new Error('Installing Bielik-One needs uv on PATH (https://docs.astral.sh/uv/)');
   }
@@ -73,7 +80,7 @@ export async function installBielikOne(
   }
   for (const args of steps) {
     ctx.onProgress?.({ kind: 'step', message: `Instalacja Bielik-One: uv ${args[0] ?? ''}` });
-    const result = await machine.run('uv', args, { timeoutMs: INSTALL_TIMEOUT_MS });
+    const result = await machine.run(uvCommand, args, { timeoutMs: INSTALL_TIMEOUT_MS });
     if (result.exitCode !== 0) {
       throw new Error(`uv ${args.join(' ')} failed: ${result.stderr.trim()}`);
     }

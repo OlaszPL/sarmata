@@ -1,4 +1,5 @@
-import type { Host, RunResult } from '../index.ts';
+import type { CommandResult } from '@sarmata/ai-runtime';
+import type { Host } from '../index.ts';
 
 export interface Call {
   readonly host: string;
@@ -10,7 +11,7 @@ export interface Call {
 export interface RecordingHostOptions {
   readonly name: string;
   readonly calls: Call[];
-  readonly respond?: (argv: readonly string[]) => Partial<RunResult>;
+  readonly respond?: (argv: readonly string[]) => Partial<CommandResult>;
   readonly files?: Readonly<Record<string, string>>;
 }
 
@@ -26,11 +27,12 @@ export function recordingHost({
     calls.push(stdin === undefined ? { host: name, op, args } : { host: name, op, args, stdin });
   };
   return {
-    run: (argv, options) => {
+    run: (command, args, options) => {
+      const argv = [command, ...args];
       record('run', argv, options?.stdin);
       const result = respond(argv);
       return Promise.resolve({
-        code: result.code ?? 0,
+        exitCode: result.exitCode === undefined ? 0 : result.exitCode,
         stdout: result.stdout ?? '',
         stderr: result.stderr ?? '',
       });

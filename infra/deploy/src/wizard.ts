@@ -1,8 +1,16 @@
 import { hostname } from 'node:os';
 import { confirm, isCancel, note, password, select, text } from '@clack/prompts';
-import { aiSettings, proposeAi } from './ai.ts';
-import { answersSchema, type Answers, type InstallConfig, type Profile } from './config.ts';
-import type { Environment } from './environment.ts';
+import { INSTALL_PROFILES, type InstallProfile, type Machine } from '@sarmata/ai-runtime';
+import { aiSettings, aiUnsupportedReason, proposeAi } from './ai.ts';
+import {
+  answersSchema,
+  isHostName,
+  type AiSettings,
+  type Answers,
+  type InstallConfig,
+} from './config.ts';
+import { lacksMirroredNetworking, type Environment } from './environment.ts';
+import { PROFILE_TABLE, type Exposure } from './profiles.ts';
 
 export class WizardCancelled extends Error {
   constructor() {
@@ -29,6 +37,11 @@ const email: Check = (value) =>
 const url: Check = (value) =>
   required(value) ??
   (URL.canParse(value ?? '') ? undefined : 'Podaj pełny adres, np. https://abc.supabase.co');
+const hostName: Check = (value) =>
+  required(value) ??
+  (isHostName((value ?? '').trim())
+    ? undefined
+    : 'Podaj nazwę komputera z DNS (litery, cyfry, kropki, myślniki) albo adres IP.');
 const port: Check = (value) => {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 && number < 65536
@@ -151,50 +164,105 @@ async function askSmtp(): Promise<{ config: InstallConfig['smtp']; password: str
   };
 }
 
-async function askAi(profile: Profile): Promise<InstallConfig['ai']> {
-  const recommendation = await proposeAi(profile);
-  const settings = aiSettings(recommendation);
-  if (settings === null) {
-    note(recommendation.reason, 'Moduł AI niedostępny');
+const GB = 1024 ** 3;
+
+/**
+ * The AI module: one of the models that fit this computer (the recommended tier first) or none,
+ * and Bielik-One when it fits next to the chosen model. Also used by "sarmata ai".
+ */
+export async function askAi(
+  env: Environment,
+  machine: Machine,
+  profile: InstallProfile,
+  current: AiSettings = { enabled: false },
+): Promise<AiSettings> {
+  const unsupported = aiUnsupportedReason(env);
+  if (unsupported !== null) {
+    note(unsupported, 'Moduł AI niedostępny');
     return { enabled: false };
   }
-  const enable = answer(
-    await confirm({
-      message: `Włączyć moduł AI? ${recommendation.reason}`,
-      initialValue: recommendation.enabledByDefault,
-    }),
-  );
-  return enable ? settings : { enabled: false };
-}
-
-/** Asks the wizard questions and validates the answers as a whole. */
-export async function askInstallAnswers(env: Environment): Promise<Answers> {
-  const profile = answer(
-    await select<Profile>({
-      message: 'Profil instalacji',
-      initialValue: 'standard',
+  const proposal = await proposeAi(machine, profile);
+  const [recommended] = proposal.choices;
+  if (recommended === undefined || recommended.model === null) {
+    note(proposal.reason, 'Moduł AI niedostępny');
+    return { enabled: false };
+  }
+  note(proposal.reason, 'Zalecany model AI');
+  const initialValue = current.enabled
+    ? current.modelId
+    : proposal.enabledByDefault
+      ? recommended.model.id
+      : 'none';
+  const chosen = answer(
+    await select<string>({
+      message: 'Model AI (pobierany przy instalacji)',
+      initialValue,
       options: [
-        { value: 'light', label: 'light', hint: 'jedno stanowisko, słaby komputer, AI wyłączone' },
-        { value: 'standard', label: 'standard', hint: 'mocniejsze stanowisko albo mały urząd' },
-        { value: 'server', label: 'server', hint: 'serwer w sieci urzędu z HTTPS' },
+        ...proposal.choices.flatMap((choice, index) =>
+          choice.model === null
+            ? []
+            : [
+                {
+                  value: choice.model.id,
+                  label: `${choice.model.label} ${choice.model.quantization} (${(choice.model.sizeBytes / GB).toFixed(1)} GB)`,
+                  ...(index === 0 ? { hint: 'zalecany' } : {}),
+                },
+              ],
+        ),
+        { value: 'none', label: 'bez AI', hint: 'można włączyć później: sarmata ai' },
       ],
     }),
   );
-  const exposure =
-    profile === 'light'
-      ? 'localhost'
-      : profile === 'server'
-        ? 'lan'
-        : answer(
-            await select<'localhost' | 'lan'>({
-              message: 'Kto będzie korzystać z aplikacji?',
-              initialValue: 'localhost',
-              options: [
-                { value: 'localhost', label: 'tylko ten komputer' },
-                { value: 'lan', label: 'komputery w sieci urzędu' },
-              ],
-            }),
-          );
+  const choice = proposal.choices.find((candidate) => candidate.model?.id === chosen);
+  if (choice === undefined) return { enabled: false };
+  const decisions =
+    choice.bielikOne !== null &&
+    answer(
+      await confirm({
+        message: `Zainstalować też Bielik-One (${choice.bielikOne.package.id}) do decyzji? Pobiera kilkadziesiąt GB, bez niego decyzje podejmuje model tekstowy.`,
+        initialValue: true,
+      }),
+    );
+  return aiSettings(choice, decisions) ?? { enabled: false };
+}
+
+/** Asks the wizard questions and validates the answers as a whole. */
+export async function askInstallAnswers(env: Environment, machine: Machine): Promise<Answers> {
+  const profiles = INSTALL_PROFILES.filter((name) => PROFILE_TABLE[name].systems.includes(env.os));
+  const profile = answer(
+    await select<InstallProfile>({
+      message: 'Profil instalacji',
+      initialValue: 'standard',
+      options: profiles.map((name) => ({
+        value: name,
+        label: name,
+        hint: PROFILE_TABLE[name].hint,
+      })),
+    }),
+  );
+  const offered = PROFILE_TABLE[profile].exposures.filter(
+    (choice) => choice === 'localhost' || !lacksMirroredNetworking(env),
+  );
+  if (offered.length < PROFILE_TABLE[profile].exposures.length)
+    note('Dostęp z sieci urzędu przez WSL wymaga Windows 11 22H2 lub nowszego.', 'Windows 10');
+  const [onlyExposure] = offered;
+  const exposure: Exposure =
+    offered.length === 1 && onlyExposure !== undefined
+      ? onlyExposure
+      : answer(
+          await select<Exposure>({
+            message: 'Kto będzie korzystać z aplikacji?',
+            initialValue: 'localhost',
+            options: [
+              { value: 'localhost', label: 'tylko ten komputer' },
+              {
+                value: 'lan',
+                label: 'komputery w sieci urzędu',
+                hint: 'przez HTTPS, certyfikat trzeba rozesłać albo podać',
+              },
+            ],
+          }),
+        );
   const host =
     exposure === 'localhost'
       ? 'localhost'
@@ -205,10 +273,10 @@ export async function askInstallAnswers(env: Environment): Promise<Answers> {
                 ? 'Nazwa serwera w sieci urzędu, np. oceny.urzad.local'
                 : 'Nazwa albo adres IP tego komputera w sieci urzędu',
             initialValue: hostname(),
-            validate: requiredEnvSafe,
+            validate: hostName,
           }),
         ).trim();
-  const tls: InstallConfig['tls'] = profile === 'server' ? await askTls() : { mode: 'none' };
+  const tls: InstallConfig['tls'] = exposure === 'lan' ? await askTls() : { mode: 'none' };
   const supabase = await askSupabase();
   const officeName = answer(await text({ message: 'Nazwa urzędu', validate: required })).trim();
   const firstName = answer(
@@ -236,7 +304,7 @@ export async function askInstallAnswers(env: Environment): Promise<Answers> {
     }),
   );
   const smtp = await askSmtp();
-  const ai = await askAi(profile);
+  const ai = await askAi(env, machine, profile);
   const shortcut =
     env.desktopDir !== null &&
     answer(await confirm({ message: 'Utworzyć skrót na pulpicie?', initialValue: true }));

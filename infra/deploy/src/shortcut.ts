@@ -10,6 +10,10 @@ export interface Shortcut {
 
 export const psQuote = (value: string): string => `'${value.replaceAll("'", "''")}'`;
 
+/** cmd.exe /c strips the outer quotes, so the launcher path keeps its own (spaces in user names). */
+export const windowsShortcutArguments = (launcher: string): string =>
+  `/c ""${launcher}" start --open || pause"`;
+
 /** A desktop shortcut that runs "sarmata start --open": starts the stack and opens the browser. */
 export function desktopShortcut(env: Environment): Shortcut | null {
   if (env.desktopDir === null) return null;
@@ -17,10 +21,11 @@ export function desktopShortcut(env: Environment): Shortcut | null {
   switch (env.os) {
     case 'windows': {
       const file = win32.join(env.desktopDir, 'Sarmata.lnk');
+      // Through cmd.exe, so the window stays open with the message when start fails.
       const script = [
         `$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut(${psQuote(file)})`,
-        `$shortcut.TargetPath = ${psQuote(launcher)}`,
-        "$shortcut.Arguments = 'start --open'",
+        '$shortcut.TargetPath = $env:ComSpec',
+        `$shortcut.Arguments = ${psQuote(windowsShortcutArguments(launcher))}`,
         `$shortcut.WorkingDirectory = ${psQuote(env.binDir)}`,
         "$shortcut.Description = 'Sarmata: oceny okresowe'",
         '$shortcut.Save()',

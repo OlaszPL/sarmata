@@ -1,11 +1,21 @@
 import { parse, stringify } from 'yaml';
+import { z } from 'zod';
 import { API_PORT, APP_PORT, type InstallConfig } from './config.ts';
+import { PROFILE_TABLE, supabaseServicesOf, usesCaddy } from './profiles.ts';
 
 type ComposeService = Record<string, unknown>;
 
-interface UpstreamCompose {
-  readonly services: Readonly<Record<string, ComposeService | undefined>>;
-}
+// Only what the renderer relies on is checked, so a new upstream tag that changes it fails loudly.
+const upstreamSchema = z.object({
+  services: z.record(
+    z.string(),
+    z.looseObject({
+      volumes: z.array(z.string('upstream volumes must use the short string syntax')).optional(),
+      depends_on: z.record(z.string(), z.unknown()).optional(),
+      environment: z.record(z.string(), z.unknown()).optional(),
+    }),
+  ),
+});
 
 export const TOOLS_IMAGE = 'postgres:17.12-alpine3.24';
 export const CADDY_IMAGE = 'caddy:2.11.9';
@@ -13,14 +23,6 @@ export const RELAY_IMAGE = 'alpine/socat:1.8.1.1';
 
 /** Vendored upstream files, relative to the installation directory (compose project directory). */
 const SUPABASE_FILES = './source/infra/deploy/supabase';
-const LIGHT_SUPABASE: readonly string[] = ['db', 'auth', 'rest', 'kong'];
-const FULL_SUPABASE: readonly string[] = [
-  ...LIGHT_SUPABASE,
-  'meta',
-  'studio',
-  'storage',
-  'imgproxy',
-];
 /** Upstream bind mounts with data, moved to named volumes (no host permission issues, also on Windows). */
 const DATA_VOLUMES: Readonly<Record<string, string>> = {
   './volumes/db/data': 'db-data',
@@ -89,34 +91,23 @@ const WORKER: AppImage = { target: 'worker', repository: 'sarmata/worker' };
 /** The same two images in every profile: the worker is a separate container (ADR 0004). */
 export const APP_IMAGES: readonly AppImage[] = [WEB, WORKER];
 
-function supabaseServices(config: InstallConfig): readonly string[] {
-  if (config.supabase.mode === 'external') return [];
-  return config.profile === 'light' ? LIGHT_SUPABASE : FULL_SUPABASE;
-}
-
-/** Every service of the installation, sorted, including the on-demand "tools". */
-export function servicesFor(
+/** Every compose service of the installation, sorted, including the on-demand "tools". */
+export function composeServicesFor(
   config: InstallConfig,
   aiRelayPorts: readonly number[] = [],
 ): readonly string[] {
-  const names = new Set([...supabaseServices(config), 'web', 'worker', 'tools']);
+  const names = new Set([...supabaseServicesOf(config), 'web', 'worker', 'tools']);
   if (aiRelayPorts.length > 0) names.add('ai-relay');
-  if (config.profile === 'server') {
-    names.add('caddy');
-    names.add('backup');
-  }
+  if (usesCaddy(config)) names.add('caddy');
+  if (PROFILE_TABLE[config.profile].nightlyBackups) names.add('backup');
   return [...names].sort();
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const stringList = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : [];
 
-const stringList = (value: unknown): string[] | null =>
-  Array.isArray(value) ? value.map((entry: unknown) => String(entry)) : null;
-
-/** Light, localhost exposure and server bind to loopback. Standard in the LAN binds everywhere. */
-const bindPrefix = (config: InstallConfig): string =>
-  config.profile === 'standard' && config.exposure === 'lan' ? '' : '127.0.0.1:';
+/** Kong and the app publish on loopback only. The LAN reaches the app through Caddy (HTTPS). */
+const LOOPBACK = '127.0.0.1:';
 
 function rewriteVolume(entry: string): string {
   if (!entry.startsWith('./volumes/')) return entry;
@@ -126,26 +117,26 @@ function rewriteVolume(entry: string): string {
   return [`${SUPABASE_FILES}/${hostPath.slice(2)}`, containerPath, ...options].join(':');
 }
 
+type UpstreamService = z.infer<typeof upstreamSchema>['services'][string];
+
 function adaptSupabaseService(
   name: string,
-  original: ComposeService,
+  original: UpstreamService,
   kept: readonly string[],
-  config: InstallConfig,
 ): ComposeService {
   const service: ComposeService = { ...original };
   // Compose names containers after the project, so a second Supabase on the machine does not clash.
   delete service.container_name;
-  if (isRecord(original.depends_on)) {
+  if (original.depends_on !== undefined) {
     const dependencies = Object.entries(original.depends_on).filter(([dependency]) =>
       kept.includes(dependency),
     );
     if (dependencies.length > 0) service.depends_on = Object.fromEntries(dependencies);
     else delete service.depends_on;
   }
-  const volumes = stringList(original.volumes);
-  if (volumes !== null) service.volumes = volumes.map(rewriteVolume);
-  if (name === 'kong') service.ports = [`${bindPrefix(config)}${API_PORT}:8000`];
-  if (name === 'auth' && isRecord(original.environment)) {
+  if (original.volumes !== undefined) service.volumes = original.volumes.map(rewriteVolume);
+  if (name === 'kong') service.ports = [`${LOOPBACK}${API_PORT}:8000`];
+  if (name === 'auth' && original.environment !== undefined) {
     service.environment = { ...original.environment, ...AUTH_HOOK };
   }
   return service;
@@ -212,7 +203,7 @@ function dbToolEnvironment(local: boolean): Record<string, string> {
 function namedVolumes(services: Readonly<Record<string, ComposeService>>): string[] {
   const names = new Set<string>();
   for (const service of Object.values(services)) {
-    for (const entry of stringList(service.volumes) ?? []) {
+    for (const entry of stringList(service.volumes)) {
       const source = entry.split(':')[0] ?? '';
       if (source !== '' && !source.startsWith('.') && !source.startsWith('/')) names.add(source);
     }
@@ -229,17 +220,18 @@ export function renderCompose(
   config: InstallConfig,
   aiRelayPorts: readonly number[] = [],
 ): string {
-  const upstream = parse(upstreamYaml) as UpstreamCompose;
-  const kept = supabaseServices(config);
+  const upstream = upstreamSchema.parse(parse(upstreamYaml));
+  const kept = supabaseServicesOf(config);
   const local = kept.length > 0;
+  const caddy = usesCaddy(config);
   const services: Record<string, ComposeService> = {};
   for (const name of kept) {
     const original = upstream.services[name];
     if (original === undefined) throw new Error(`upstream compose has no service "${name}"`);
-    services[name] = adaptSupabaseService(name, original, kept, config);
+    services[name] = adaptSupabaseService(name, original, kept);
   }
 
-  const webPorts = config.profile === 'server' ? [] : [`${bindPrefix(config)}${APP_PORT}:3000`];
+  const webPorts = caddy ? [] : [`${LOOPBACK}${APP_PORT}:3000`];
   services.web = appService(WEB, local, WEB_ENVIRONMENT, {
     healthcheck: WEB_HEALTHCHECK,
     ...(webPorts.length > 0 ? { ports: webPorts } : {}),
@@ -260,7 +252,7 @@ export function renderCompose(
     ],
   };
 
-  if (config.profile === 'server') {
+  if (caddy) {
     services.caddy = {
       image: CADDY_IMAGE,
       restart: 'unless-stopped',
@@ -276,12 +268,15 @@ export function renderCompose(
         ...(config.tls.mode === 'files' ? ['./certs:/certs:ro'] : []),
       ],
     };
+  }
+  if (PROFILE_TABLE[config.profile].nightlyBackups) {
     services.backup = {
       image: TOOLS_IMAGE,
       restart: 'unless-stopped',
       entrypoint: DBTOOL_ENTRYPOINT,
       command: ['schedule'],
-      environment: dbToolEnvironment(local),
+      // Nightly means 02:00 office time (dbtool.sh schedule).
+      environment: { ...dbToolEnvironment(local), TZ: 'Europe/Warsaw' },
       volumes: [DBTOOL_MOUNT, BACKUPS_MOUNT],
       ...(local ? { depends_on: { db: { condition: 'service_healthy' } } } : {}),
     };

@@ -74,6 +74,18 @@ describe('installBielikOne', () => {
     ]);
   });
 
+  it('runs the uv executable it is given', async () => {
+    const uv = join(dataDir, 'uv', 'uv');
+    const machine = fakeMachine({
+      os: 'macos',
+      arch: 'arm64',
+      totalMemoryGiB: 32,
+      commands: { [uv]: UV_OK },
+    });
+    await installBielikOne('mlx', { machine, dataDir }, { uv });
+    expect(machine.calls.map((call) => call.command)).toEqual([uv, uv, uv]);
+  });
+
   it('asks for uv when it is missing', async () => {
     const machine = fakeMachine({ os: 'linux', arch: 'x64', totalMemoryGiB: 64 });
     await expect(installBielikOne('vllm', { machine, dataDir })).rejects.toThrow(/needs uv/);

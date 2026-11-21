@@ -1,4 +1,3 @@
-import { homedir } from 'node:os';
 import { posix } from 'node:path';
 import {
   bielikOneCommands,
@@ -7,29 +6,29 @@ import {
   installBielikOne,
   installLlamaCpp,
   llamaServerCommand,
-  localMachine,
   MODEL_FILES,
   prepareLlamaServer,
   recommendRuntime,
+  runtimeChoices,
+  type InstallProfile,
+  type Machine,
   type ModelId,
-  type ProgressEvent,
   type RuntimeContext,
   type RuntimeRecommendation,
 } from '@sarmata/ai-runtime';
-import { AI_PORT, type InstallConfig, type Profile } from './config.ts';
+import { AI_PORT, NATIVE_AI_BIND, type EnabledAi } from './config.ts';
 import { sudoPrefix } from './engine.ts';
-import type { Environment } from './environment.ts';
-import { runAction, step, type Plan, type Step } from './plan.ts';
+import { lacksMirroredNetworking, type Environment } from './environment.ts';
+import { haltPlan, runAction, step, type Plan, type Step } from './plan.ts';
 import { psQuote } from './shortcut.ts';
 
-export type EnabledAi = Extract<InstallConfig['ai'], { enabled: true }>;
-
 export type AiServiceId = 'llama-server' | 'bielik-one-backend' | 'bielik-one-frontend';
-const AI_SERVICE_IDS: readonly AiServiceId[] = [
-  'llama-server',
+export const TEXT_SERVICES: readonly AiServiceId[] = ['llama-server'];
+export const DECISION_SERVICES: readonly AiServiceId[] = [
   'bielik-one-backend',
   'bielik-one-frontend',
 ];
+const AI_SERVICE_IDS: readonly AiServiceId[] = [...TEXT_SERVICES, ...DECISION_SERVICES];
 
 /** A native AI process to run as a system service. */
 export interface ServiceCommand {
@@ -40,16 +39,19 @@ export interface ServiceCommand {
   readonly logFile: string;
 }
 
-// Native AI never listens beyond loopback. Containers reach it through host.docker.internal
-// (macOS) or the ai-relay container bound to the docker0 gateway (Linux, WSL).
-const AI_HOST = '127.0.0.1';
+/** uv release the installer downloads when uv is missing (ADR 0003: Python goes through uv). */
+export const UV_INSTALLER = 'https://astral.sh/uv/0.13.9/install.sh';
 
 const unitName = (id: AiServiceId): string => `sarmata-ai-${id}.service`;
 const launchLabel = (id: AiServiceId): string => `pl.sarmata.ai.${id}`;
 const taskName = (id: AiServiceId): string => `Sarmata AI ${id}`;
 const isModelId = (id: string): id is ModelId => Object.hasOwn(MODEL_FILES, id);
+// systemd expands % specifiers everywhere and $VARIABLES in ExecStart: both doubled stay literal.
+// A function replacement: in a replacement string "$$" itself means one dollar sign.
+const systemdEscape = (text: string): string =>
+  text.replaceAll('%', '%%').replaceAll('$', () => '$$');
 const systemdQuote = (arg: string): string =>
-  `"${arg.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+  `"${systemdEscape(arg).replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 const windowsArg = (arg: string): string =>
   /[\s"]/.test(arg) ? `"${arg.replaceAll('"', '\\"')}"` : arg;
 const xml = (text: string): string =>
@@ -61,40 +63,69 @@ const xml = (text: string): string =>
 const launchAgentPath = (env: Environment, id: AiServiceId): string =>
   posix.join(env.userHome, 'Library', 'LaunchAgents', `${launchLabel(id)}.plist`);
 
-function context(onProgress: (event: ProgressEvent) => void): RuntimeContext {
-  const machine = localMachine();
-  return { machine, dataDir: defaultDataDir(machine.os, process.env, homedir()), onProgress };
+/** Where @sarmata/ai-runtime keeps the runtime, the models and the logs of this account. */
+export const aiDataDir = (env: Environment): string =>
+  defaultDataDir(env.os, process.env, env.userHome);
+
+/**
+ * Why AI cannot run on this computer, null when it can. On Windows 10 the WSL engine cannot reach
+ * a native server on the Windows loopback (no mirrored networking).
+ */
+export function aiUnsupportedReason(env: Environment): string | null {
+  return lacksMirroredNetworking(env)
+    ? 'Moduł AI z WSL wymaga Windows 11 22H2 lub nowszego (tryb sieci mirrored).'
+    : null;
 }
 
-/** Tier proposal for the wizard: hardware detection only, no downloads. */
-export async function proposeAi(profile: Profile): Promise<RuntimeRecommendation> {
-  return recommendRuntime(await detectHardware(localMachine()), profile);
+/** Models the wizard offers: the recommended tier first, then the other fitting ones. */
+export interface AiProposal {
+  readonly choices: readonly RuntimeRecommendation[];
+  /** Why the first choice, or why there is none. */
+  readonly reason: string;
+  readonly enabledByDefault: boolean;
 }
 
-/** Installation settings for a proposal, null when the machine is too weak for any model. */
-export function aiSettings(recommendation: RuntimeRecommendation): EnabledAi | null {
+/** Hardware detection only, no downloads. */
+export async function proposeAi(machine: Machine, profile: InstallProfile): Promise<AiProposal> {
+  const hardware = await detectHardware(machine);
+  const recommended = recommendRuntime(hardware, profile);
+  return {
+    choices: runtimeChoices(hardware, profile),
+    reason: recommended.reason,
+    enabledByDefault: recommended.enabledByDefault,
+  };
+}
+
+/** Installation settings for a chosen model, with Bielik-One only when it fits and is wanted. */
+export function aiSettings(
+  recommendation: RuntimeRecommendation,
+  decisions: boolean,
+): EnabledAi | null {
   if (recommendation.model === null) return null;
   return {
     enabled: true,
     modelId: recommendation.model.id,
     alias: recommendation.model.alias,
-    decisionPort: recommendation.bielikOne?.package.port ?? null,
+    decisionPort: decisions ? (recommendation.bielikOne?.package.port ?? null) : null,
   };
 }
 
+function modelOf(ai: EnabledAi): ModelId {
+  if (!isModelId(ai.modelId)) throw new Error(`Unknown AI model ${ai.modelId}`);
+  return ai.modelId;
+}
+
 /**
- * Plan 5 order: hardware, llama.cpp, hardware again (AMD and Intel GPUs show up only now), model
- * download and device benchmark, then Bielik-One when the settings include it. Returns the
- * processes to register as system services.
+ * The text model: hardware, llama.cpp, hardware again (AMD and Intel GPUs show up only through
+ * llama-server --list-devices), model download and device benchmark. Returns llama-server as a
+ * service to register.
  */
-export async function installAiRuntime(
-  profile: Profile,
+export async function installTextRuntime(
+  ctx: RuntimeContext,
+  profile: InstallProfile,
   ai: EnabledAi,
-  onProgress: (event: ProgressEvent) => void,
-): Promise<readonly ServiceCommand[]> {
-  const model = ai.modelId;
-  if (!isModelId(model)) throw new Error(`Unknown AI model ${model}`);
-  const ctx = context(onProgress);
+): Promise<ServiceCommand> {
+  const model = modelOf(ai);
   const first = recommendRuntime(await detectHardware(ctx.machine), profile, { model });
   const llama = await installLlamaCpp(first.llamaCpp, ctx);
   const hardware = await detectHardware(ctx.machine, llama);
@@ -103,26 +134,76 @@ export async function installAiRuntime(
     {
       llama,
       hardware,
-      model: recommendation.model ?? MODEL_FILES[model],
+      model: MODEL_FILES[model],
       port: AI_PORT,
-      host: AI_HOST,
+      host: NATIVE_AI_BIND,
       ...recommendation.server,
     },
     ctx,
   );
   const llamaServer = llamaServerCommand(prepared.config);
-  const services: ServiceCommand[] = [
-    { id: 'llama-server', ...llamaServer, env: {}, logFile: prepared.config.logFile },
+  return { id: 'llama-server', ...llamaServer, env: {}, logFile: prepared.config.logFile };
+}
+
+/** Bielik-One (vLLM or MLX) next to the text model, installed with the given uv. */
+export async function installDecisionRuntime(
+  ctx: RuntimeContext,
+  profile: InstallProfile,
+  ai: EnabledAi,
+  uv: string,
+): Promise<readonly ServiceCommand[]> {
+  const recommendation = recommendRuntime(await detectHardware(ctx.machine), profile, {
+    model: modelOf(ai),
+  });
+  const decision = recommendation.bielikOne;
+  if (decision === null) throw new Error('Bielik-One does not fit next to the text model here');
+  const install = await installBielikOne(decision.engine, ctx, { uv });
+  const commands = bielikOneCommands(install, decision.package, ctx.dataDir);
+  return [
+    { id: 'bielik-one-backend', ...commands.backend },
+    { id: 'bielik-one-frontend', ...commands.frontend },
   ];
-  if (ai.decisionPort !== null && recommendation.bielikOne !== null) {
-    const install = await installBielikOne(recommendation.bielikOne.engine, ctx);
-    const commands = bielikOneCommands(install, recommendation.bielikOne.package, ctx.dataDir);
-    services.push(
-      { id: 'bielik-one-backend', ...commands.backend },
-      { id: 'bielik-one-frontend', ...commands.frontend },
-    );
+}
+
+/** Steps that install uv for Bielik-One, and the uv command to use afterwards. */
+export function uvInstall(env: Environment, dataDir: string): { plan: Plan; command: string } {
+  if (env.os === 'windows')
+    return { plan: haltPlan('Bielik-One nie działa na Windows.'), command: 'uv' };
+  if (env.os === 'macos' && env.brewPrefix !== null) {
+    return {
+      plan: {
+        steps: [
+          step(
+            'Instalacja uv z Homebrew',
+            'system',
+            runAction(['brew', 'install', 'uv'], { interactive: true }),
+          ),
+        ],
+      },
+      command: posix.join(env.brewPrefix, 'bin', 'uv'),
+    };
   }
-  return services;
+  // The official installer of a pinned release, into the AI data directory, without touching PATH.
+  const dir = posix.join(dataDir, 'uv');
+  return {
+    plan: {
+      steps: [
+        step(
+          'Instalacja uv (menedżer Pythona dla Bielik-One)',
+          'system',
+          runAction([
+            'sh',
+            '-c',
+            'curl -LsSf "$1" | env UV_INSTALL_DIR="$2" UV_NO_MODIFY_PATH=1 sh',
+            'sh',
+            UV_INSTALLER,
+            dir,
+          ]),
+        ),
+      ],
+    },
+    command: posix.join(dir, 'uv'),
+  };
 }
 
 function linuxSteps(env: Environment, service: ServiceCommand): Step[] {
@@ -138,10 +219,14 @@ function linuxSteps(env: Environment, service: ServiceCommand): Step[] {
       ([key, value]) => `Environment=${systemdQuote(`${key}=${value}`)}`,
     ),
     `ExecStart=${[service.command, ...service.args].map(systemdQuote).join(' ')}`,
-    `StandardOutput=append:${service.logFile}`,
-    `StandardError=append:${service.logFile}`,
+    `StandardOutput=append:${systemdEscape(service.logFile)}`,
+    `StandardError=append:${systemdEscape(service.logFile)}`,
     'Restart=on-failure',
     'RestartSec=10',
+    // The runtime writes only its data directory and caches in the account's home.
+    'NoNewPrivileges=yes',
+    'ProtectSystem=full',
+    'PrivateTmp=yes',
     '',
     '[Install]',
     'WantedBy=multi-user.target',
@@ -229,7 +314,10 @@ function windowsSteps(service: ServiceCommand): Step[] {
   ];
 }
 
-/** Registers the native AI processes so they start with the system: systemd, launchd or a logon task. */
+/**
+ * Registers native AI processes so they start with the system: systemd units on Linux, launch
+ * agents on macOS, logon tasks on Windows (ADR 0003).
+ */
 export function aiServicePlan(env: Environment, services: readonly ServiceCommand[]): Plan {
   switch (env.os) {
     case 'linux':
@@ -251,13 +339,16 @@ export function aiServicePlan(env: Environment, services: readonly ServiceComman
   }
 }
 
-/** Unregisters every AI service. Models stay in the AI data directory of plan 5. */
-export function aiServiceRemovalPlan(env: Environment): Plan {
+/** Unregisters AI services (all by default). Models stay in the AI data directory. */
+export function aiServiceRemovalPlan(
+  env: Environment,
+  ids: readonly AiServiceId[] = AI_SERVICE_IDS,
+): Plan {
   switch (env.os) {
     case 'linux': {
       const sudo = sudoPrefix(env);
       return {
-        steps: AI_SERVICE_IDS.flatMap((id) => [
+        steps: ids.flatMap((id) => [
           step(
             `Zatrzymanie usługi ${id}`,
             'system',
@@ -275,7 +366,7 @@ export function aiServiceRemovalPlan(env: Environment): Plan {
     }
     case 'macos':
       return {
-        steps: AI_SERVICE_IDS.flatMap((id) => [
+        steps: ids.flatMap((id) => [
           step(
             `Zatrzymanie usługi ${id}`,
             'system',
@@ -289,7 +380,7 @@ export function aiServiceRemovalPlan(env: Environment): Plan {
       };
     case 'windows':
       return {
-        steps: AI_SERVICE_IDS.map((id) =>
+        steps: ids.map((id) =>
           step(
             `Usunięcie zadania ${id}`,
             'system',
@@ -308,7 +399,3 @@ export function aiServiceRemovalPlan(env: Environment): Plan {
       };
   }
 }
-
-/** Where plan 5 keeps the runtime and the models (for messages). */
-export const aiDataDir = (env: Environment): string =>
-  defaultDataDir(env.os, process.env, env.userHome);

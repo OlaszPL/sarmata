@@ -3,65 +3,93 @@ import { homedir } from 'node:os';
 import { posix, resolve, win32 } from 'node:path';
 import { parseArgs } from 'node:util';
 import { cancel, confirm, intro, isCancel, log, note, outro, spinner } from '@clack/prompts';
-import type { ProgressEvent } from '@sarmata/ai-runtime';
+import {
+  isBielikOneReady,
+  isLlamaServerReady,
+  localMachine,
+  type Machine,
+  type ProgressEvent,
+  type RuntimeContext,
+} from '@sarmata/ai-runtime';
+import { pollUntil, setUpAi, type AiSetupDeps } from './ai-setup.ts';
 import {
   aiDataDir,
-  aiRelayPorts,
-  aiServicePlan,
   aiServiceRemovalPlan,
+  installDecisionRuntime,
+  installTextRuntime,
+} from './ai.ts';
+import {
+  AI_PORT,
   answersSchema,
-  binaryName,
-  describePlan,
-  detectEnvironment,
-  executePlan,
-  generateSecrets,
-  installAiRuntime,
   installConfigSchema,
-  layout,
-  localHost,
-  parseEnv,
+  NATIVE_AI_BIND,
+  publicUrls,
+  type AiSettings,
+  type Answers,
+  type InstallConfig,
+} from './config.ts';
+import { wslConfigNote } from './engine.ts';
+import { detectEnvironment, layout, WSL_DISTRO, type Environment } from './environment.ts';
+import {
+  errorMessage,
+  executePlan,
+  type ExecutionEvent,
+  type ExecutionResult,
+  type Hosts,
+} from './execute.ts';
+import { localHost, wslHost } from './host.ts';
+import { describePlan, usesTerminal, type Plan } from './plan.ts';
+import {
+  aiRelayPorts,
+  NOT_INSTALLED,
+  planAiApply,
   planInstall,
+  planRestore,
   planStageSource,
   planStart,
   planStatus,
   planStop,
   planUninstall,
-  planUpdate,
-  publicUrls,
+  withoutAi,
+  type UpdateSource,
+} from './plans.ts';
+import { renderCaddyfile } from './caddy.ts';
+import { renderCompose } from './compose.ts';
+import { usesCaddy } from './profiles.ts';
+import {
+  generateSecrets,
+  parseEnv,
   readSecrets,
-  renderCaddyfile,
-  renderCompose,
   renderEnv,
   secretsFromAnswers,
-  WSL_DISTRO,
-  wslHost,
-  type Answers,
-  type Environment,
-  type ExecutionEvent,
-  type ExecutionResult,
-  type Hosts,
-  type InstallConfig,
-  type Plan,
   type Secrets,
-  type UpdateSource,
-} from './index.ts';
-import { askInstallAnswers, WizardCancelled } from './wizard.ts';
+} from './secrets.ts';
+import {
+  applyStagedUpdate,
+  handOver,
+  stageUpdate,
+  UPSTREAM_COMPOSE,
+  type StagedUpdateResult,
+} from './update.ts';
+import { askAi, askInstallAnswers, WizardCancelled } from './wizard.ts';
 
 const USAGE = `Użycie: sarmata <polecenie> [opcje]
 
   install     kreator instalacji (opcje: --answers PLIK, --dry-run)
   start       uruchomienie (opcja: --open otwiera przeglądarkę)
   stop        zatrzymanie
-  status      stan usług
+  status      wersja i stan usług
   update      aktualizacja (opcje: --from KATALOG albo PLIK.zip, --git URL --ref TAG, --dry-run)
+  ai          instalacja, zmiana albo naprawa modułu AI (opcja: --off wyłącza AI)
+  restore     odtworzenie bazy z kopii: sarmata restore PLIK.dump (opcja: --dry-run)
   uninstall   usunięcie z końcową kopią bazy w backups/ (opcje: --purge, --dry-run)
   render      zapis compose.yaml i .env bez instalacji (opcje: --answers PLIK --out KATALOG)`;
 
-const UPSTREAM_COMPOSE = ['infra', 'deploy', 'supabase', 'docker-compose.yml'] as const;
-const NOT_INSTALLED = 'Nie znaleziono instalacji Sarmaty na tym komputerze.';
 const EXTERNAL_CHECKLIST =
   'W panelu projektu Supabase: włącz hook Custom Access Token z funkcją access.custom_access_token_hook, ' +
   'ustaw Site URL na adres aplikacji i skonfiguruj SMTP dla e-maili logowania.';
+const RETRY_INSTALL =
+  'Po usunięciu przyczyny uruchom kreator ponownie (install.sh albo install.bat): dokończy instalację z tymi samymi hasłami.';
 
 interface Options {
   readonly dryRun: boolean;
@@ -72,6 +100,9 @@ interface Options {
   readonly ref: string | undefined;
   readonly purge: boolean;
   readonly out: string | undefined;
+  readonly staged: boolean;
+  readonly off: boolean;
+  readonly file: string | undefined;
 }
 
 interface Installation {
@@ -79,11 +110,17 @@ interface Installation {
   readonly secrets: Secrets;
 }
 
+interface Context {
+  readonly env: Environment;
+  readonly hosts: Hosts;
+  readonly machine: Machine;
+  readonly options: Options;
+}
+
 const systemPath = (env: Environment): typeof posix => (env.os === 'windows' ? win32 : posix);
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
 const timestamp = (date: Date): string =>
   date.toISOString().slice(0, 19).replaceAll('-', '').replaceAll(':', '').replace('T', '-');
+const freshSecrets = () => generateSecrets(randomBytes, new Date());
 
 function progressText(event: ProgressEvent): string {
   if (event.kind === 'step') return event.message;
@@ -92,45 +129,71 @@ function progressText(event: ProgressEvent): string {
   return `${event.file}: ${percent}%`;
 }
 
-function progress(): (event: ExecutionEvent) => void {
+/** One spinner for plan steps and long phases. Steps that use the terminal get a log line instead. */
+function progress(): {
+  onEvent: (event: ExecutionEvent) => void;
+  phase: (message: string) => void;
+  update: (message: string) => void;
+  settle: () => void;
+} {
   const indicator = spinner();
   let spinning = false;
-  const settle = (message: string): void => {
+  const settle = (message?: string): void => {
     if (spinning) {
       indicator.stop(message);
       spinning = false;
     }
   };
-  return (event) => {
-    switch (event.type) {
-      case 'start':
-        if (event.step.action.kind === 'run' && event.step.action.interactive === true) {
-          log.step(event.step.title);
-        } else {
-          indicator.start(event.step.title);
-          spinning = true;
-        }
-        return;
-      case 'done':
-        settle(event.step.title);
-        return;
-      case 'fail':
-        settle(event.step.title);
-        log.error(`Błąd: ${event.message}`);
-        return;
-      case 'rollback':
-        log.warn(`Wycofywanie: ${event.step.title}`);
-        return;
-      case 'rollback-fail':
-        log.error(`Nie udało się wycofać: ${event.step.title}: ${event.message}`);
-        return;
-    }
+  const begin = (message: string): void => {
+    settle();
+    indicator.start(message);
+    spinning = true;
+  };
+  return {
+    onEvent: (event) => {
+      switch (event.type) {
+        case 'start':
+          if (usesTerminal(event.step)) {
+            settle();
+            log.step(event.step.title);
+          } else begin(event.step.title);
+          return;
+        case 'done':
+          settle(event.step.title);
+          return;
+        case 'fail':
+          settle(event.step.title);
+          log.error(`Błąd: ${event.message}`);
+          return;
+        case 'warning':
+          settle(event.step.title);
+          log.warn(`Nie udało się: ${event.step.title}: ${event.message}`);
+          return;
+        case 'rollback':
+          settle();
+          log.warn(`Wycofywanie: ${event.step.title}`);
+          return;
+        case 'rollback-fail':
+          log.error(`Nie udało się wycofać: ${event.step.title}: ${event.message}`);
+          return;
+      }
+    },
+    phase: begin,
+    update: (message) => {
+      if (spinning) indicator.message(message);
+    },
+    settle: () => {
+      settle();
+    },
   };
 }
 
-function finish(result: ExecutionResult): number {
+function finish(result: ExecutionResult, success = 'Gotowe.'): number {
   switch (result.status) {
     case 'ok':
+      if (result.warnings.length > 0)
+        log.warn('Zakończono, ale porządkowanie nie powiodło się w całości. Można to zostawić.');
+      outro(success);
       return 0;
     case 'halted':
       outro(result.message);
@@ -154,13 +217,18 @@ function dryRun(plan: Plan, message = 'Tryb próbny: nic nie zmieniono.'): numbe
   return 0;
 }
 
-function summary(config: InstallConfig): string {
+function summary(env: Environment, config: InstallConfig): string {
+  const ai = config.ai;
   return [
     `Profil: ${config.profile}`,
     `Supabase: ${config.supabase.mode === 'local' ? 'na tym komputerze' : config.supabase.url}`,
     `Adres aplikacji: ${publicUrls(config).appUrl}`,
     `SMTP: ${config.smtp.enabled ? config.smtp.host : 'brak, powiadomienia tylko w aplikacji'}`,
-    `AI: ${config.ai.enabled ? config.ai.alias : 'wyłączone'}`,
+    `AI: ${ai.enabled ? `${ai.alias}${ai.decisionPort === null ? '' : ' z Bielik-One'}, instalowane po uruchomieniu systemu` : 'wyłączone'}`,
+    ...(usesCaddy(config) && config.tls.mode === 'internal'
+      ? ['Certyfikat: wewnętrzne CA Caddy, plik caddy-root.crt trzeba rozesłać na komputery urzędu']
+      : []),
+    ...[wslConfigNote(env, config)].filter((line) => line !== null),
   ].join('\n');
 }
 
@@ -190,33 +258,102 @@ async function readInstallation(env: Environment, hosts: Hosts): Promise<Install
   if (configText === null || envText === null) return null;
   return {
     config: installConfigSchema.parse(JSON.parse(configText)),
-    secrets: readSecrets(parseEnv(envText)),
+    secrets: readSecrets(parseEnv(envText), freshSecrets()),
   };
 }
 
-/** Installs the AI runtime and registers its system services. AI problems never fail the installation. */
-async function setUpAi(env: Environment, hosts: Hosts, config: InstallConfig): Promise<void> {
-  if (!config.ai.enabled) return;
-  const indicator = spinner();
-  indicator.start('Instalacja modułu AI (pobieranie modelu może potrwać)');
-  let installed = false;
-  try {
-    const services = await installAiRuntime(config.profile, config.ai, (event) => {
-      indicator.message(progressText(event));
-    });
-    installed = true;
-    indicator.stop('Model AI pobrany i sprawdzony');
-    const result = await executePlan(aiServicePlan(env, services), hosts, progress());
-    if (result.status !== 'ok') throw new Error(result.message);
-  } catch (error) {
-    if (!installed) indicator.stop('Moduł AI nie działa');
-    log.warn(
-      `Aplikacja działa bez AI. Szczegóły: ${errorMessage(error)}. Usługi AI można dograć, instalując ponownie z tej paczki.`,
-    );
+/** The common frame of commands on an existing installation. */
+async function withInstallation(
+  ctx: Context,
+  title: string,
+  run: (installation: Installation) => Promise<number>,
+): Promise<number> {
+  intro(title);
+  const installation = await readInstallation(ctx.env, ctx.hosts);
+  if (installation === null) {
+    log.error(NOT_INSTALLED);
+    return 1;
   }
+  return run(installation);
 }
 
-async function install(env: Environment, hosts: Hosts, options: Options): Promise<number> {
+/** Runs a plan with progress and reports the result. */
+async function runPlan(ctx: Context, plan: Plan, success?: string): Promise<number> {
+  return finish(await executePlan(plan, ctx.hosts, progress().onEvent), success);
+}
+
+function aiDeps(
+  ctx: Context,
+  profile: InstallConfig['profile'],
+): AiSetupDeps & { settle: () => void } {
+  const shown = progress();
+  const dataDir = aiDataDir(ctx.env);
+  const runtime: RuntimeContext = {
+    machine: ctx.machine,
+    dataDir,
+    onProgress: (event) => {
+      shown.update(progressText(event));
+    },
+  };
+  return {
+    env: ctx.env,
+    hosts: ctx.hosts,
+    dataDir,
+    installer: {
+      text: (ai) => installTextRuntime(runtime, profile, ai),
+      decision: (ai, uv) => installDecisionRuntime(runtime, profile, ai, uv),
+    },
+    probes: {
+      text: () => isLlamaServerReady(`http://${NATIVE_AI_BIND}:${String(AI_PORT)}/v1`),
+      decision: (port) => isBielikOneReady(`http://${NATIVE_AI_BIND}:${String(port)}`),
+    },
+    waitFor: pollUntil,
+    onEvent: shown.onEvent,
+    onStep: shown.phase,
+    settle: shown.settle,
+  };
+}
+
+/**
+ * Installs the native runtime for the wanted settings, then writes the settings that really work
+ * into the installation and restarts the app. AI never fails the caller.
+ */
+async function applyAi(
+  ctx: Context,
+  installation: Installation,
+  wanted: AiSettings,
+  upstreamCompose: string,
+): Promise<void> {
+  const { env, hosts } = ctx;
+  const previous = installation.config;
+  let ai: AiSettings = { enabled: false };
+  if (wanted.enabled) {
+    const deps = aiDeps(ctx, previous.profile);
+    const result = await setUpAi(deps, wanted);
+    deps.settle();
+    for (const warning of result.warnings) log.warn(warning);
+    ai = result.ai;
+  } else {
+    await executePlan(aiServiceRemovalPlan(env), hosts, progress().onEvent);
+  }
+  if (JSON.stringify(ai) === JSON.stringify(previous.ai)) return;
+  const applied = await executePlan(
+    planAiApply({
+      env,
+      config: { ...previous, ai },
+      previous,
+      secrets: installation.secrets,
+      upstreamCompose,
+    }),
+    hosts,
+    progress().onEvent,
+  );
+  if (applied.status !== 'ok')
+    log.warn('Nie udało się włączyć nowych ustawień AI, aplikacja działa z poprzednimi.');
+}
+
+async function install(ctx: Context): Promise<number> {
+  const { env, hosts, options } = ctx;
   intro('Sarmata: instalacja');
   if (env.installed) {
     log.warn(
@@ -228,26 +365,38 @@ async function install(env: Environment, hosts: Hosts, options: Options): Promis
   if (upstream === null) return 1;
   const answers =
     options.answers === undefined
-      ? await askInstallAnswers(env)
+      ? await askInstallAnswers(env, ctx.machine)
       : await readAnswers(hosts, options.answers);
-  const secrets = secretsFromAnswers(answers, generateSecrets(randomBytes, new Date()));
+  // A repeated install after a failure keeps the passwords the database volume already has.
+  const existing = options.dryRun ? null : await hosts.engine.readFile(layout(env).envFile);
+  const generated = freshSecrets();
+  const secrets = secretsFromAnswers(
+    answers,
+    existing === null ? generated : readSecrets(parseEnv(existing), generated),
+  );
+  const config = answers.config;
   const plan = planInstall({
     env,
-    config: answers.config,
+    config,
     secrets,
     upstreamCompose: upstream,
     adminPassword: answers.adminPassword,
   });
-  if (options.dryRun) return dryRun(plan);
-  note(summary(answers.config), 'Podsumowanie');
+  if (options.dryRun)
+    return dryRun(
+      plan,
+      config.ai.enabled
+        ? 'Tryb próbny: nic nie zmieniono. Moduł AI instaluje się po tych krokach.'
+        : undefined,
+    );
+  note(summary(env, config), 'Podsumowanie');
   if (!(await proceed('Rozpocząć instalację?'))) return 130;
-  const result = await executePlan(plan, hosts, progress());
+  const result = await executePlan(plan, hosts, progress().onEvent);
+  if (result.status === 'failed') log.info(RETRY_INSTALL);
   if (result.status !== 'ok') return finish(result);
-  await setUpAi(env, hosts, answers.config);
-  if (answers.config.supabase.mode === 'external') note(EXTERNAL_CHECKLIST, 'Zewnętrzne Supabase');
-  outro(
-    `Gotowe. Otwórz ${publicUrls(answers.config).appUrl} i zaloguj się jako ${answers.config.admin.email}.`,
-  );
+  await applyAi(ctx, { config: withoutAi(config), secrets }, config.ai, upstream);
+  if (config.supabase.mode === 'external') note(EXTERNAL_CHECKLIST, 'Zewnętrzne Supabase');
+  outro(`Gotowe. Otwórz ${publicUrls(config).appUrl} i zaloguj się jako ${config.admin.email}.`);
   return 0;
 }
 
@@ -261,123 +410,136 @@ function updateSource(env: Environment, options: Options): UpdateSource | null {
   return env.releaseDir === null ? null : { kind: 'dir', path: env.releaseDir };
 }
 
-function newLauncher(env: Environment, source: UpdateSource): string | null {
-  const binary = binaryName(env.os, env.arch);
-  if (source.kind === 'dir')
-    return systemPath(env).join(source.path, 'infra', 'deploy', 'dist', binary);
-  if (source.kind === 'zip' && env.engineHost === 'local') {
-    const paths = layout(env);
-    return paths.join(paths.source, 'infra', 'deploy', 'dist', binary);
-  }
-  return null;
-}
-
-async function update(env: Environment, hosts: Hosts, options: Options): Promise<number> {
-  intro('Sarmata: aktualizacja');
-  const installation = await readInstallation(env, hosts);
-  if (installation === null) {
-    log.error(NOT_INSTALLED);
-    return 1;
-  }
-  const source = updateSource(env, options);
-  if (source === null) {
-    log.error(
-      'Podaj źródło nowej wersji: --from KATALOG, --from PLIK.zip albo --git URL --ref TAG.',
-    );
-    return 2;
-  }
-  const stage = planStageSource(env, source);
-  if (options.dryRun)
-    return dryRun(
-      stage,
-      'Tryb próbny: pokazano pobranie nowej wersji. Pozostałe kroki zależą od jej plików.',
-    );
-  if (!(await proceed('Aktualizacja zatrzyma aplikację na kilka minut. Kontynuować?'))) return 130;
-  const staged = await executePlan(stage, hosts, progress());
-  if (staged.status !== 'ok') return finish(staged);
-  const paths = layout(env);
-  const upstream = await hosts.engine.readFile(paths.join(paths.sourceNext, ...UPSTREAM_COMPOSE));
-  if (upstream === null) {
+function updateFinished(outcome: StagedUpdateResult, config: InstallConfig): number {
+  if (outcome.kind === 'missing-compose') {
     log.error('Nowa wersja nie zawiera infra/deploy/supabase/docker-compose.yml.');
     return 1;
   }
-  const plan = planUpdate({
-    env,
-    ...installation,
-    upstreamCompose: upstream,
-    stamp: timestamp(new Date()),
-    newLauncher: newLauncher(env, source),
-  });
-  const result = await executePlan(plan, hosts, progress());
-  if (result.status !== 'ok') return finish(result);
-  outro(`Zaktualizowano. Aplikacja: ${publicUrls(installation.config).appUrl}`);
-  return 0;
+  return finish(outcome.result, `Zaktualizowano. Aplikacja: ${publicUrls(config).appUrl}`);
 }
 
-async function start(env: Environment, hosts: Hosts, options: Options): Promise<number> {
-  intro('Sarmata: uruchamianie');
-  const installation = await readInstallation(env, hosts);
-  if (installation === null) {
-    log.error(NOT_INSTALLED);
-    return 1;
-  }
-  const { config } = installation;
-  // Native AI runs as system services and starts with the system, nothing to do here.
-  const result = await executePlan(
-    planStart(env, config, { open: options.open }),
-    hosts,
-    progress(),
+async function update(ctx: Context): Promise<number> {
+  const { env, hosts, options } = ctx;
+  return withInstallation(ctx, 'Sarmata: aktualizacja', async (installation) => {
+    const run = (runningIsNew: boolean) =>
+      applyStagedUpdate(
+        { env, hosts, onEvent: progress().onEvent },
+        { ...installation, stamp: timestamp(new Date()), runningIsNew },
+      );
+    // Phase two in the new version's binary, started by the installed one.
+    if (options.staged) return updateFinished(await run(true), installation.config);
+    const source = updateSource(env, options);
+    if (source === null) {
+      log.error(
+        'Podaj źródło nowej wersji: --from KATALOG, --from PLIK.zip albo --git URL --ref TAG.',
+      );
+      return 2;
+    }
+    if (options.dryRun)
+      return dryRun(
+        planStageSource(env, source),
+        'Tryb próbny: pokazano pobranie nowej wersji. Pozostałe kroki planuje nowa wersja.',
+      );
+    if (!(await proceed('Aktualizacja zatrzyma aplikację na kilka minut. Kontynuować?')))
+      return 130;
+    const staged = await stageUpdate({ env, hosts, onEvent: progress().onEvent }, source);
+    switch (staged.kind) {
+      case 'failed':
+        return finish(staged.result);
+      case 'handover':
+        return handOver({ env, hosts }, staged.launcher);
+      case 'continue':
+        if (staged.warning !== null) log.warn(staged.warning);
+        return updateFinished(await run(staged.warning === null), installation.config);
+    }
+  });
+}
+
+async function ai(ctx: Context): Promise<number> {
+  const { env, hosts, machine, options } = ctx;
+  return withInstallation(ctx, 'Sarmata: moduł AI', async (installation) => {
+    const paths = layout(env);
+    const upstream = await hosts.engine.readFile(paths.join(paths.source, ...UPSTREAM_COMPOSE));
+    if (upstream === null) {
+      log.error('W instalacji brakuje infra/deploy/supabase/docker-compose.yml.');
+      return 1;
+    }
+    const current = installation.config.ai;
+    const wanted: AiSettings = options.off
+      ? { enabled: false }
+      : await askAi(env, machine, installation.config.profile, current);
+    await applyAi(ctx, installation, wanted, upstream);
+    outro('Gotowe.');
+    return 0;
+  });
+}
+
+async function start(ctx: Context): Promise<number> {
+  return withInstallation(ctx, 'Sarmata: uruchamianie', ({ config }) =>
+    // Native AI runs as system services that start with the system, nothing to do here.
+    runPlan(
+      ctx,
+      planStart(ctx.env, config, { open: ctx.options.open }),
+      `Sarmata działa: ${publicUrls(config).appUrl}`,
+    ),
   );
-  if (result.status !== 'ok') return finish(result);
-  outro(`Sarmata działa: ${publicUrls(config).appUrl}`);
-  return 0;
 }
 
-async function simple(
-  env: Environment,
-  hosts: Hosts,
-  title: string,
-  planFor: (env: Environment, config: InstallConfig) => Plan,
-): Promise<number> {
-  intro(title);
-  const installation = await readInstallation(env, hosts);
-  if (installation === null) {
-    log.error(NOT_INSTALLED);
-    return 1;
-  }
-  const result = await executePlan(planFor(env, installation.config), hosts, progress());
-  if (result.status !== 'ok') return finish(result);
-  outro('Gotowe.');
-  return 0;
-}
-
-async function uninstall(env: Environment, hosts: Hosts, options: Options): Promise<number> {
-  intro('Sarmata: usuwanie');
-  const installation = await readInstallation(env, hosts);
-  if (installation === null) {
-    log.error(NOT_INSTALLED);
-    return 1;
-  }
-  const plan = planUninstall(env, installation.config, {
-    purge: options.purge,
-    stamp: timestamp(new Date()),
+async function status(ctx: Context): Promise<number> {
+  return withInstallation(ctx, 'Sarmata: stan usług', ({ config }) => {
+    log.info(`Wersja: ${ctx.env.installedVersion ?? 'nieznana (instalacja z repozytorium)'}`);
+    return runPlan(ctx, planStatus(ctx.env, config));
   });
-  if (options.dryRun) return dryRun(plan);
-  const question = options.purge
-    ? 'Usunąć Sarmatę razem z bazą i wszystkimi kopiami? Tego nie da się cofnąć.'
-    : 'Usunąć Sarmatę? Końcowa kopia bazy zostanie w katalogu backups.';
-  if (!(await proceed(question, false))) return 130;
-  const result = await executePlan(plan, hosts, progress());
-  if (result.status !== 'ok') return finish(result);
-  if (installation.config.ai.enabled) {
-    await executePlan(aiServiceRemovalPlan(env), hosts, progress());
-    log.info(`Modele AI zostały w ${aiDataDir(env)}. Można usunąć ten katalog ręcznie.`);
-  }
-  outro(options.purge ? 'Usunięto.' : `Usunięto. Kopie bazy zostały w ${layout(env).backups}.`);
-  return 0;
 }
 
-async function render(env: Environment, hosts: Hosts, options: Options): Promise<number> {
+async function restore(ctx: Context): Promise<number> {
+  const { env, options } = ctx;
+  return withInstallation(ctx, 'Sarmata: odtworzenie bazy', async ({ config }) => {
+    if (options.file === undefined) {
+      log.error('Użycie: sarmata restore PLIK.dump (plik z katalogu backups).');
+      return 2;
+    }
+    const plan = planRestore(env, config, { file: options.file, stamp: timestamp(new Date()) });
+    if (options.dryRun) return dryRun(plan);
+    if (
+      !(await proceed(
+        `Zastąpić bieżące dane kopią ${options.file}? Bieżąca baza trafi najpierw do backups.`,
+        false,
+      ))
+    )
+      return 130;
+    return runPlan(ctx, plan, 'Odtworzono bazę.');
+  });
+}
+
+async function uninstall(ctx: Context): Promise<number> {
+  const { env, hosts, options } = ctx;
+  return withInstallation(ctx, 'Sarmata: usuwanie', async ({ config }) => {
+    const plan = planUninstall(env, config, {
+      purge: options.purge,
+      stamp: timestamp(new Date()),
+    });
+    if (options.dryRun) return dryRun(plan);
+    const question = options.purge
+      ? 'Usunąć Sarmatę razem z bazą i wszystkimi kopiami? Tego nie da się cofnąć.'
+      : 'Usunąć Sarmatę? Końcowa kopia bazy zostanie w katalogu backups.';
+    if (!(await proceed(question, false))) return 130;
+    const result = await executePlan(plan, hosts, progress().onEvent);
+    if (result.status !== 'ok') return finish(result);
+    // Services may exist even with AI off (an interrupted "sarmata ai"), so always remove them.
+    await executePlan(aiServiceRemovalPlan(env), hosts, progress().onEvent);
+    log.info(`Modele AI zostały w ${aiDataDir(env)}. Można usunąć ten katalog ręcznie.`);
+    if (env.engineHost === 'wsl')
+      log.info(
+        `Dystrybucja WSL ${WSL_DISTRO} i ustawienia w %USERPROFILE%\\.wslconfig zostały. Dystrybucję usuwa: wsl --unregister ${WSL_DISTRO}${options.purge ? '' : ' (razem z kopiami w backups, więc najpierw je przenieś)'}.`,
+      );
+    outro(options.purge ? 'Usunięto.' : `Usunięto. Kopie bazy zostały w ${layout(env).backups}.`);
+    return 0;
+  });
+}
+
+async function render(ctx: Context): Promise<number> {
+  const { env, hosts, options } = ctx;
   intro('Sarmata: podgląd konfiguracji');
   if (options.answers === undefined || options.out === undefined) {
     log.error('Użycie: sarmata render --answers PLIK --out KATALOG');
@@ -386,7 +548,7 @@ async function render(env: Environment, hosts: Hosts, options: Options): Promise
   const upstream = await readUpstream(env, hosts);
   if (upstream === null) return 1;
   const answers = await readAnswers(hosts, options.answers);
-  const secrets = secretsFromAnswers(answers, generateSecrets(randomBytes, new Date()));
+  const secrets = secretsFromAnswers(answers, freshSecrets());
   const out = resolve(options.out);
   const join = (...parts: string[]): string => systemPath(env).join(...parts);
   await hosts.system.writeFile(
@@ -394,7 +556,7 @@ async function render(env: Environment, hosts: Hosts, options: Options): Promise
     renderCompose(upstream, answers.config, aiRelayPorts(env, answers.config)),
   );
   await hosts.system.writeFile(join(out, '.env'), renderEnv(answers.config, secrets), 0o600);
-  if (answers.config.profile === 'server')
+  if (usesCaddy(answers.config))
     await hosts.system.writeFile(join(out, 'Caddyfile'), renderCaddyfile(answers.config));
   outro(`Zapisano compose.yaml i .env w ${out}`);
   return 0;
@@ -413,6 +575,8 @@ async function main(args: readonly string[]): Promise<number> {
       ref: { type: 'string' },
       purge: { type: 'boolean', default: false },
       out: { type: 'string' },
+      staged: { type: 'boolean', default: false },
+      off: { type: 'boolean', default: false },
     },
   });
   const command = positionals[0] ?? 'install';
@@ -429,8 +593,13 @@ async function main(args: readonly string[]): Promise<number> {
     ref: values.ref,
     purge: values.purge,
     out: values.out,
+    staged: values.staged,
+    off: values.off,
+    file: positionals[1],
   };
-  const system = localHost();
+  // One adapter for both packages: plans run through it, the AI runtime detects hardware with it.
+  const machine = localMachine();
+  const system = localHost(machine);
   const env = await detectEnvironment(system, {
     platform: process.platform,
     arch: process.arch,
@@ -442,21 +611,28 @@ async function main(args: readonly string[]): Promise<number> {
     system,
     engine: env.engineHost === 'wsl' ? wslHost(WSL_DISTRO, system) : system,
   };
+  const ctx: Context = { env, hosts, machine, options };
   switch (command) {
     case 'install':
-      return install(env, hosts, options);
+      return install(ctx);
     case 'update':
-      return update(env, hosts, options);
+      return update(ctx);
     case 'start':
-      return start(env, hosts, options);
+      return start(ctx);
     case 'stop':
-      return simple(env, hosts, 'Sarmata: zatrzymanie', planStop);
+      return withInstallation(ctx, 'Sarmata: zatrzymanie', ({ config }) =>
+        runPlan(ctx, planStop(env, config)),
+      );
     case 'status':
-      return simple(env, hosts, 'Sarmata: stan usług', planStatus);
+      return status(ctx);
+    case 'ai':
+      return ai(ctx);
+    case 'restore':
+      return restore(ctx);
     case 'uninstall':
-      return uninstall(env, hosts, options);
+      return uninstall(ctx);
     case 'render':
-      return render(env, hosts, options);
+      return render(ctx);
     default:
       console.error(USAGE);
       return 2;

@@ -6,7 +6,7 @@ export type Action =
       readonly kind: 'run';
       readonly argv: readonly string[];
       readonly stdin?: string | undefined;
-      /** Inherit the terminal: sudo and UAC prompts, long installs with their own output. */
+      /** Inherit the terminal: sudo and UAC prompts, long installs and builds with their own output. */
       readonly interactive?: boolean | undefined;
       /** A non-zero exit code does not fail the plan. */
       readonly allowFailure?: boolean | undefined;
@@ -17,7 +17,12 @@ export type Action =
       readonly content: string;
       readonly mode?: number | undefined;
     }
-  | { readonly kind: 'copy'; readonly from: string; readonly to: string }
+  | {
+      readonly kind: 'copy';
+      readonly from: string;
+      readonly to: string;
+      readonly mode?: number | undefined;
+    }
   | { readonly kind: 'remove'; readonly path: string }
   | { readonly kind: 'rename'; readonly from: string; readonly to: string }
   | { readonly kind: 'halt'; readonly message: string };
@@ -33,8 +38,14 @@ export interface Step {
   readonly undo?: readonly Step[] | undefined;
 }
 
+/**
+ * Steps run in order and roll back on failure. Cleanup runs only after every step succeeded: it
+ * removes what the rollback would have needed, so it is never rolled back and its failures are
+ * warnings (the commit point of an update).
+ */
 export interface Plan {
   readonly steps: readonly Step[];
+  readonly cleanup?: readonly Step[] | undefined;
 }
 
 interface StepOptions {
@@ -58,6 +69,18 @@ export function runAction(argv: readonly string[], options: RunActionOptions = {
 
 export function haltStep(message: string): Step {
   return step('Zatrzymanie kreatora', 'system', { kind: 'halt', message });
+}
+
+/** A plan that only stops with a message. */
+export const haltPlan = (message: string): Plan => ({ steps: [haltStep(message)] });
+
+/**
+ * True when the step may write to the terminal while it runs: an interactive step, or sudo, which
+ * asks for the password on the terminal once its timestamp expires during a long install.
+ */
+export function usesTerminal(current: Step): boolean {
+  const action = current.action;
+  return action.kind === 'run' && (action.interactive === true || action.argv[0] === 'sudo');
 }
 
 const TARGET_LABEL: Readonly<Record<Target, string>> = { system: 'system', engine: 'silnik' };
@@ -89,12 +112,22 @@ function describeAction(current: Step): string {
   }
 }
 
+const describeSteps = (steps: readonly Step[], first: number): string[] =>
+  steps.map(
+    (current, index) =>
+      `${first + index}. [${TARGET_LABEL[current.on]}] ${current.title}\n   ${describeAction(current)}`,
+  );
+
 /** Numbered listing for --dry-run. Secrets in stdin and file content never appear. */
 export function describePlan(plan: Plan): string {
-  return plan.steps
-    .map(
-      (current, index) =>
-        `${index + 1}. [${TARGET_LABEL[current.on]}] ${current.title}\n   ${describeAction(current)}`,
-    )
-    .join('\n');
+  const cleanup = plan.cleanup ?? [];
+  return [
+    ...describeSteps(plan.steps, 1),
+    ...(cleanup.length > 0
+      ? [
+          'Po udanym zakończeniu (błędy tylko ostrzegają):',
+          ...describeSteps(cleanup, plan.steps.length + 1),
+        ]
+      : []),
+  ].join('\n');
 }
