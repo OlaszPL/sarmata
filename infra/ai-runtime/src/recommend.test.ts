@@ -99,11 +99,23 @@ describe('recommendRuntime: model tier', () => {
   });
 
   it.each<[string, Hardware]>([
+    ['a Mac with 8 GB', mac(8)],
     ['a Mac with 16 GB', mac(16)],
+    ['a Mac with 18 GB', mac(18)],
     ['an 8 GB RTX 4060', withNvidia('linux', nvidia('NVIDIA GeForce RTX 4060', 8188, 580, 8.9))],
+  ])('gives the fast Bielik-4.5B Q4_K_M on %s', (_name, hardware) => {
+    const recommendation = recommendRuntime(hardware, 'standard');
+    expect(recommendation.model?.id).toBe('bielik-4.5b-v3.0-q4_k_m');
+    expect(recommendation.reason).toContain(
+      'szybszy model na tym sprzęcie, około 2 razy szybsze generowanie, trochę słabsza polszczyzna',
+    );
+  });
+
+  it.each<[string, Hardware]>([
+    ['a Mac with 24 GB', mac(24)],
     ['a 12 GB RTX 4070', withNvidia('linux', RTX_4070)],
     ['a 16 GB Radeon seen through Vulkan', RADEON_WITH_IGPU],
-  ])('gives Bielik-11B Q4_K_M on %s', (_name, hardware) => {
+  ])('gives Bielik-11B Q4_K_M from %s', (_name, hardware) => {
     expect(recommendRuntime(hardware, 'standard').model?.id).toBe('bielik-11b-v3.1-q4_k_m');
   });
 
@@ -118,8 +130,8 @@ describe('recommendRuntime: model tier', () => {
   it.each<[string, Hardware, ModelId]>([
     ['a 12 GB card', withNvidia('linux', RTX_4070), 'bielik-11b-v3.1-q5_k_m'],
     ['a 24 GB card', withNvidia('linux', RTX_4090), 'bielik-11b-v3.1-q8_0'],
-    ['a Mac with 16 GB', mac(16), 'bielik-11b-v3.1-q4_k_m'],
     ['a Mac with 32 GB', mac(32), 'bielik-11b-v3.1-q8_0'],
+    ['a Mac with 16 GB (still the fast tier)', mac(16), 'bielik-4.5b-v3.0-q4_k_m'],
   ])('takes a higher quantization on a server with %s', (_name, hardware, expected) => {
     const recommendation = recommendRuntime(hardware, 'server');
     expect(recommendation.model?.id).toBe(expected);
@@ -210,14 +222,40 @@ describe('recommendRuntime: Bielik-One', () => {
     expect(appleGpuBudgetMiB(36 * GiB)).toBe(27_648);
   });
 
-  it('installs only Bielik-11B Q4_K_M on an M2 with 16 GB and says why, with the fallback', () => {
+  it('installs only Bielik-4.5B Q4_K_M on an M2 with 16 GB and says why, with the fallback', () => {
     const recommendation = recommendRuntime(mac(16), 'standard');
-    expect(recommendation.model?.id).toBe('bielik-11b-v3.1-q4_k_m');
+    expect(recommendation.model?.id).toBe('bielik-4.5b-v3.0-q4_k_m');
     expect(recommendation.bielikOne).toBeNull();
     expect(recommendation.decisionReason).toBe(
-      'Bielik-One nie zmieści się na stałe obok modelu tekstowego: Bielik-One 4B (MLX) z modelem Bielik-11B-v3.1-Instruct Q4_K_M potrzebuje około 17,3 GB, a GPU tego Maca może użyć 10,7 GB. Decyzje podejmuje model tekstowy z wymuszonym formatem JSON. Oba modele naraz mieszczą się od 32 GB pamięci Maca.',
+      'Bielik-One nie zmieści się na stałe obok modelu tekstowego: Bielik-One 4B (MLX) z modelem Bielik-4.5B-v3.0-Instruct Q4_K_M potrzebuje około 13,7 GB, a GPU tego Maca może użyć 10,7 GB. Decyzje podejmuje model tekstowy z wymuszonym formatem JSON. Oba modele naraz mieszczą się od 24 GB pamięci Maca. W trybie przełączanym (jeden model w pamięci naraz) może działać Bielik-One 4B (MLX).',
     );
     expect(recommendation.reason).toContain(recommendation.decisionReason);
+  });
+
+  it('plans the switching mode for Bielik-One on an M2 with 16 GB', () => {
+    expect(recommendRuntime(mac(16), 'standard').bielikOnePlan).toMatchObject({
+      mode: 'switching',
+      choice: { engine: 'mlx', package: { id: 'bielik-one-4b-r1-adapter' } },
+    });
+  });
+
+  it.each<[string, Hardware, InstallProfile, string]>([
+    ['a Mac with 32 GB', mac(32), 'standard', 'concurrent'],
+    ['a Mac with 16 GB in the light profile', mac(16), 'light', 'text-only'],
+    ['Windows with a 24 GB card', withNvidia('windows', RTX_4090), 'standard', 'text-only'],
+    ['a 12 GB card on Linux', withNvidia('linux', RTX_4070), 'standard', 'text-only'],
+    [
+      'a 16 GB card on Linux',
+      withNvidia('linux', nvidia('NVIDIA GeForce RTX 4080', 16376, 580, 8.9)),
+      'standard',
+      'switching',
+    ],
+  ])('plans Bielik-One on %s', (_name, hardware, profile, mode) => {
+    const recommendation = recommendRuntime(hardware, profile);
+    expect(recommendation.bielikOnePlan.mode).toBe(mode);
+    if (recommendation.bielikOnePlan.mode === 'concurrent') {
+      expect(recommendation.bielikOnePlan.choice).toEqual(recommendation.bielikOne);
+    }
   });
 
   it('has no room for Bielik-One next to the smaller model on a Mac with 16 GB either', () => {
@@ -297,14 +335,27 @@ describe('runtimeChoices', () => {
   it('puts the recommended tier first, then the other models that fit, smallest first', () => {
     expect(ids(withNvidia('linux', RTX_4070), 'standard')).toEqual([
       'bielik-11b-v3.1-q4_k_m',
+      'bielik-4.5b-v3.0-q4_k_m',
       'bielik-4.5b-v3.0-q8_0',
       'bielik-11b-v3.1-q5_k_m',
       'bielik-11b-v3.1-q6_k',
     ]);
   });
 
+  it('offers Bielik-11B Q4_K_M right after the fast tier on a Mac with 16 GB', () => {
+    expect(ids(mac(16), 'standard')).toEqual([
+      'bielik-4.5b-v3.0-q4_k_m',
+      'bielik-11b-v3.1-q4_k_m',
+      'bielik-11b-v3.1-q5_k_m',
+      'bielik-11b-v3.1-q6_k',
+    ]);
+  });
+
   it('offers only Bielik-4.5B without a GPU', () => {
-    expect(ids(linuxLaptop, 'standard')).toEqual(['bielik-4.5b-v3.0-q8_0']);
+    expect(ids(linuxLaptop, 'standard')).toEqual([
+      'bielik-4.5b-v3.0-q8_0',
+      'bielik-4.5b-v3.0-q4_k_m',
+    ]);
   });
 
   it('offers nothing below 8 GB of RAM', () => {
@@ -316,7 +367,7 @@ describe('runtimeChoices', () => {
       runtimeChoices(mac(32), 'standard').map((choice) => [choice.model?.id, choice.bielikOne]),
     );
     expect(decisions.get('bielik-11b-v3.1-q4_k_m')?.engine).toBe('mlx');
-    expect(decisions.get('bielik-4.5b-v3.0-q8_0')?.engine).toBe('mlx');
+    expect(decisions.get('bielik-4.5b-v3.0-q4_k_m')?.engine).toBe('mlx');
     expect(decisions.get('bielik-11b-v3.1-q8_0')).toBeNull();
   });
 });

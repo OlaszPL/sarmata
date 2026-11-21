@@ -19,6 +19,17 @@ export interface BielikOneChoice {
   package: BielikOnePackage;
 }
 
+/**
+ * How Bielik-One runs on the machine. `concurrent`: next to the text model. `switching`: it fits only
+ * alone, so one model is in memory at a time and a host-side switcher swaps them (not built yet, the
+ * installer may already offer it as "tryb przełączany"). `text-only`: no Bielik-One, decisions come
+ * from the text model with forced JSON.
+ */
+export type BielikOnePlan =
+  | { mode: 'concurrent'; choice: BielikOneChoice }
+  | { mode: 'switching'; choice: BielikOneChoice }
+  | { mode: 'text-only' };
+
 export interface RuntimeRecommendation {
   /** AI is on by default in every profile except light (ADR 0003, ADR 0005). */
   enabledByDefault: boolean;
@@ -27,6 +38,8 @@ export interface RuntimeRecommendation {
   model: ModelFile | null;
   /** Only on vLLM (Linux, NVIDIA) or MLX (Apple silicon), and only when it fits next to the text model. */
   bielikOne: BielikOneChoice | null;
+  /** Concurrent (the same choice as `bielikOne`), switching, or text only. */
+  bielikOnePlan: BielikOnePlan;
   /**
    * Why Bielik-One is or is not installed next to the text model, with the fallback and the memory
    * it would need. In Polish, for the installer screen. Never empty.
@@ -48,7 +61,13 @@ const GiB_IN_MiB = 1024;
 // Thresholds sit below the nominal sizes: an "8 GB" card reports 8188 MiB, an "8 GB" laptop ~7.6 GiB.
 const MIN_RAM_MiB = 7 * GiB_IN_MiB;
 const MIN_GPU_MiB = 7.5 * GiB_IN_MiB;
-const MIN_MAC_RAM_MiB = 15 * GiB_IN_MiB;
+// Bielik-11B is the default only from a clearly faster tier: a Mac with 24 GB (24576 MiB) or a
+// card with 12 GB (12282 MiB). Below it the fast tier is Bielik-4.5B Q4_K_M: Bielik-11B Q4_K_M
+// generates 8 to 10 tok/s on an M2 with 16 GB, and a full sheet draft took about 4 minutes there.
+const MIN_MAC_11B_RAM_MiB = 23 * GiB_IN_MiB;
+const MIN_GPU_11B_MiB = 11.5 * GiB_IN_MiB;
+const FAST_TIER_REASON =
+  'To szybszy model na tym sprzęcie, około 2 razy szybsze generowanie, trochę słabsza polszczyzna.';
 // KV cache for a 16k context and compute buffers next to the weights on a server.
 const SERVER_HEADROOM_MiB = 4 * GiB_IN_MiB;
 // Compute buffers next to the weights on a workstation: an 8 GB card still takes Q4_K_M.
@@ -75,8 +94,9 @@ const BIELIK_ONE_BY_SIZE: readonly BielikOnePackage[] = [
 
 /**
  * Tier of the local model for a machine and an install profile (ADR 0005). No GPU gives
- * Bielik-4.5B Q8_0, a GPU with 8 GB or a Mac with 16 GB gives Bielik-11B Q4_K_M, and the server
- * profile takes the highest 11B quantization that fits. Pure: no I/O.
+ * Bielik-4.5B Q8_0. A Mac below 24 GB or a card below 12 GB gives Bielik-4.5B Q4_K_M for speed. A
+ * Mac from 24 GB or a card from 12 GB gives Bielik-11B Q4_K_M, and there the server profile takes
+ * the highest 11B quantization that fits. Pure: no I/O.
  */
 export function recommendRuntime(
   hardware: Hardware,
@@ -86,7 +106,11 @@ export function recommendRuntime(
   const { model, reason } = chooseModel(hardware, profile, options);
   const decision = model
     ? chooseBielikOne(hardware, profile, model)
-    : { bielikOne: null, decisionReason: 'Bez modelu tekstowego Bielik-One nie jest instalowany.' };
+    : {
+        bielikOne: null,
+        bielikOnePlan: { mode: 'text-only' } as const,
+        decisionReason: 'Bez modelu tekstowego Bielik-One nie jest instalowany.',
+      };
   return {
     enabledByDefault: profile !== 'light' && model !== null,
     llamaCpp: llamaCppBundle(hardware.os, hardware.arch, hardware.nvidia),
@@ -101,6 +125,7 @@ export function recommendRuntime(
 }
 
 const SIZE_ORDER: readonly ModelId[] = [
+  'bielik-4.5b-v3.0-q4_k_m',
   'bielik-4.5b-v3.0-q8_0',
   'bielik-11b-v3.1-q4_k_m',
   'bielik-11b-v3.1-q5_k_m',
@@ -111,7 +136,8 @@ const SIZE_ORDER: readonly ModelId[] = [
 /**
  * Every model the machine can run for a profile, as full recommendations: the recommended tier
  * first, then the other fitting models from the smallest. Empty when nothing fits. The installer
- * offers this list, so the user may pick a smaller model than the tier (or none at all).
+ * offers this list, so the user may pick another model than the tier (or none at all). On a Mac
+ * with 16 GB the list is Bielik-4.5B Q4_K_M, then Bielik-11B Q4_K_M and the larger 11B files.
  */
 export function runtimeChoices(
   hardware: Hardware,
@@ -126,8 +152,10 @@ export function runtimeChoices(
 
 function fits(hardware: Hardware, profile: InstallProfile, id: ModelId): boolean {
   const model = MODEL_FILES[id];
-  if (id === 'bielik-4.5b-v3.0-q8_0') return hardware.memoryMiB >= MIN_RAM_MiB;
   const apple = isAppleSilicon(hardware);
+  if (id === 'bielik-4.5b-v3.0-q4_k_m') return hardware.memoryMiB >= MIN_RAM_MiB;
+  // On Metal the Q4_K_M file of the same model is faster, and the memory is better spent on 11B.
+  if (id === 'bielik-4.5b-v3.0-q8_0') return !apple && hardware.memoryMiB >= MIN_RAM_MiB;
   const budget = apple ? appleGpuBudgetMiB(hardware.memoryMiB) : dedicatedGpuMiB(hardware);
   const headroom = profile === 'server' ? SERVER_HEADROOM_MiB : DESKTOP_HEADROOM_MiB;
   return sizeMiB(model) + headroom <= budget;
@@ -167,14 +195,21 @@ function chooseModel(
   }
   const apple = isAppleSilicon(hardware);
   const gpuMiB = dedicatedGpuMiB(hardware);
-  if (apple ? hardware.memoryMiB >= MIN_MAC_RAM_MiB : gpuMiB >= MIN_GPU_MiB) {
+  const where = apple
+    ? `Mac z procesorem Apple i ${gb(hardware.memoryMiB)} GB pamięci`
+    : `Karta graficzna z ${gb(gpuMiB)} GB pamięci`;
+  if (apple ? hardware.memoryMiB >= MIN_MAC_11B_RAM_MiB : gpuMiB >= MIN_GPU_11B_MiB) {
     const budget = apple ? appleGpuBudgetMiB(hardware.memoryMiB) : gpuMiB;
     const model =
       profile === 'server' ? largestFitting(budget) : MODEL_FILES['bielik-11b-v3.1-q4_k_m'];
-    const where = apple
-      ? `Mac z procesorem Apple i ${gb(hardware.memoryMiB)} GB pamięci`
-      : `Karta graficzna z ${gb(gpuMiB)} GB pamięci`;
     return { model, reason: `${where}: ${model.label} w kwantyzacji ${model.quantization}.` };
+  }
+  if (apple ? hardware.memoryMiB >= MIN_RAM_MiB : gpuMiB >= MIN_GPU_MiB) {
+    const model = MODEL_FILES['bielik-4.5b-v3.0-q4_k_m'];
+    return {
+      model,
+      reason: `${where}: ${model.label} w kwantyzacji ${model.quantization}. ${FAST_TIER_REASON}`,
+    };
   }
   if (hardware.memoryMiB >= MIN_RAM_MiB) {
     const model = MODEL_FILES['bielik-4.5b-v3.0-q8_0'];
@@ -232,10 +267,11 @@ function chooseBielikOne(
   hardware: Hardware,
   profile: InstallProfile,
   model: ModelFile,
-): Pick<RuntimeRecommendation, 'bielikOne' | 'decisionReason'> {
+): Pick<RuntimeRecommendation, 'bielikOne' | 'bielikOnePlan' | 'decisionReason'> {
   if (profile === 'light') {
     return {
       bielikOne: null,
+      bielikOnePlan: { mode: 'text-only' },
       decisionReason: `W profilu light Bielik-One nie jest instalowany. ${DECISION_FALLBACK}`,
     };
   }
@@ -243,6 +279,7 @@ function chooseBielikOne(
   if (!engine) {
     return {
       bielikOne: null,
+      bielikOnePlan: { mode: 'text-only' },
       decisionReason: `Bielik-One działa tylko na Macu z procesorem Apple (MLX) albo na Linuksie z kartą NVIDIA o compute capability co najmniej 8.0 (vLLM). ${DECISION_FALLBACK}`,
     };
   }
@@ -257,8 +294,10 @@ function chooseBielikOne(
     const gated = pkg.gatedBase
       ? ' Jego model bazowy wymaga konta Hugging Face z zaakceptowaną licencją (ADR 0005).'
       : '';
+    const choice = { engine, package: pkg };
     return {
-      bielikOne: { engine, package: pkg },
+      bielikOne: choice,
+      bielikOnePlan: { mode: 'concurrent', choice },
       decisionReason: `Obok modelu tekstowego zmieści się ${pkg.label} (${engineName(engine)}): razem około ${gbOneDecimal(text + pkg.requiredMiB[engine])} GB, a ${where} ${gbOneDecimal(budget)} GB.${gated}`,
     };
   }
@@ -270,15 +309,21 @@ function chooseBielikOne(
     minimum === null
       ? ''
       : ` Oba modele naraz mieszczą się od ${minimum} GB ${engine === 'mlx' ? 'pamięci Maca' : 'pamięci karty NVIDIA'}.`;
+  const alone = bielikOneAlone(hardware);
+  const switching =
+    alone === null
+      ? ''
+      : ` W trybie przełączanym (jeden model w pamięci naraz) może działać ${alone.package.label} (${engineName(alone.engine)}).`;
   return {
     bielikOne: null,
-    decisionReason: `Bielik-One nie zmieści się na stałe obok modelu tekstowego: ${smallest.label} (${engineName(engine)}) z modelem ${model.label} ${model.quantization} potrzebuje około ${gbOneDecimal(need)} GB, a ${where} ${gbOneDecimal(budget)} GB. ${DECISION_FALLBACK}${threshold}`,
+    bielikOnePlan: alone === null ? { mode: 'text-only' } : { mode: 'switching', choice: alone },
+    decisionReason: `Bielik-One nie zmieści się na stałe obok modelu tekstowego: ${smallest.label} (${engineName(engine)}) z modelem ${model.label} ${model.quantization} potrzebuje około ${gbOneDecimal(need)} GB, a ${where} ${gbOneDecimal(budget)} GB. ${DECISION_FALLBACK}${threshold}${switching}`,
   };
 }
 
 /**
- * The largest Bielik-One package that fits here on its own, with the text model stopped. Dev
- * testing on a machine where the two do not fit together (pnpm ai:setup --with-bielik-one).
+ * The largest Bielik-One package that fits here on its own, with the text model stopped: the
+ * switching mode, and dev testing where the two do not fit together (pnpm ai:setup --with-bielik-one).
  */
 export function bielikOneAlone(hardware: Hardware): BielikOneChoice | null {
   const engine = bielikOneEngine(hardware);

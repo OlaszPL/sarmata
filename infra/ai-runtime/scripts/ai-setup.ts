@@ -23,27 +23,42 @@ import {
   writeBielikOneConfig,
 } from './dev-env.ts';
 
-// Dev default: Bielik-11B Q4_K_M on Metal (a Mac with 16 GB). SARMATA_AI_MODEL picks another file.
-const DEFAULT_DEV_MODEL: ModelId = 'bielik-11b-v3.1-q4_k_m';
+// Dev default: the tier of this machine (recommendRuntime, 'standard'), Bielik-4.5B Q4_K_M on a Mac
+// with 16 GB. `--model <id>` (or SARMATA_AI_MODEL) picks another file, e.g. bielik-11b-v3.1-q4_k_m.
 const WITH_BIELIK_ONE = '--with-bielik-one';
+const MODEL_FLAG = '--model';
 const GB = 1000 ** 3;
 
-function devModelId(): ModelId {
-  const requested = process.env.SARMATA_AI_MODEL ?? DEFAULT_DEV_MODEL;
-  if (!(requested in MODEL_FILES)) {
+interface SetupArgs {
+  withBielikOne: boolean;
+  model: ModelId | null;
+}
+
+function parseArgs(args: readonly string[]): SetupArgs {
+  let withBielikOne = false;
+  const fromEnv = process.env.SARMATA_AI_MODEL;
+  let requested = fromEnv === '' ? undefined : fromEnv;
+  const unknown: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index] ?? '';
+    if (arg === WITH_BIELIK_ONE) withBielikOne = true;
+    else if (arg === MODEL_FLAG) {
+      requested = args[index + 1];
+      index += 1;
+    } else if (arg.startsWith(`${MODEL_FLAG}=`)) requested = arg.slice(MODEL_FLAG.length + 1);
+    else unknown.push(arg);
+  }
+  if (unknown.length > 0) throw new Error(`Unknown arguments: ${unknown.join(' ')}`);
+  if (requested !== undefined && !(requested in MODEL_FILES)) {
     throw new Error(
-      `Unknown SARMATA_AI_MODEL ${requested}, expected one of: ${Object.keys(MODEL_FILES).join(', ')}`,
+      `Unknown model ${requested}, expected one of: ${Object.keys(MODEL_FILES).join(', ')}`,
     );
   }
-  return requested as ModelId;
+  return { withBielikOne, model: (requested as ModelId | undefined) ?? null };
 }
 
 async function main(): Promise<void> {
-  const unknown = process.argv.slice(2).filter((arg) => arg !== WITH_BIELIK_ONE);
-  if (unknown.length > 0) throw new Error(`Unknown arguments: ${unknown.join(' ')}`);
-  const withBielikOne = process.argv.includes(WITH_BIELIK_ONE);
-
-  const model = MODEL_FILES[devModelId()];
+  const args = parseArgs(process.argv.slice(2));
   const machine = localMachine();
   const ctx: RuntimeContext = { machine, dataDir: devDataDir(machine), onProgress: printProgress };
   console.log(`AI data directory (one per user, shared by every worktree): ${ctx.dataDir}`);
@@ -59,9 +74,14 @@ async function main(): Promise<void> {
     (device) => `${device.id} ${device.name} (${device.memoryMiB} MiB)`,
   );
   console.log(`Devices: ${devices.join(', ') || 'CPU only'}`);
-  console.log(`Tier for this machine: ${recommendRuntime(hardware, 'standard').reason}`);
+  const tier = recommendRuntime(hardware, 'standard');
+  console.log(`Tier for this machine: ${tier.reason}`);
+  const model = args.model === null ? tier.model : MODEL_FILES[args.model];
+  if (model === null) throw new Error('This machine is too weak for a local model.');
   const recommendation = recommendRuntime(hardware, 'standard', { model: model.id });
-  console.log(`Dev model: ${model.label} ${model.quantization}`);
+  console.log(
+    `Dev model: ${model.label} ${model.quantization} (${model.id}, ${(model.sizeBytes / GB).toFixed(1)} GB). Another one: pnpm ai:setup ${MODEL_FLAG} <id>, ids: ${Object.keys(MODEL_FILES).join(', ')}`,
+  );
   console.log(`Bielik-One: ${recommendation.decisionReason}`);
 
   const { config, benchmark } = await prepareLlamaServer(
@@ -79,7 +99,7 @@ async function main(): Promise<void> {
   const text = { baseUrl: `http://127.0.0.1:${config.port}/v1`, model: config.alias };
 
   let decision: { url: string; together: boolean } | null = null;
-  if (withBielikOne) {
+  if (args.withBielikOne) {
     decision = await setUpBielikOne(hardware, recommendation, ctx);
   } else {
     console.log(
