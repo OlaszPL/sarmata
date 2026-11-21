@@ -16,11 +16,12 @@ import {
 import { ServiceError } from './errors';
 
 export interface ServiceDependencies {
-  readonly repositories: Pick<Repositories, 'employees' | 'regulationVersions'>;
+  readonly repositories: Repositories;
 }
 
 export interface DeadlineRequest {
-  readonly regulationCode: string;
+  /** Id of the regulation document, e.g. `regulation-2016`. */
+  readonly regulationId: string;
   readonly slot: DeadlineSlot;
   readonly facts: DeadlineFacts;
 }
@@ -37,9 +38,7 @@ export function createServices(dependencies: ServiceDependencies): Services {
   const { repositories } = dependencies;
 
   return {
-    employees: {
-      list: () => repositories.employees.list(),
-    },
+    employees: repositories.employees,
     regulations: {
       async inForceOn(on) {
         const version = versionInForce(await repositories.regulationVersions.listOfficial(), on);
@@ -53,19 +52,19 @@ export function createServices(dependencies: ServiceDependencies): Services {
       },
     },
     deadlines: {
-      async compute({ regulationCode, slot, facts }) {
-        const version = await repositories.regulationVersions.findOfficial(regulationCode);
+      async compute({ regulationId, slot, facts }) {
+        const version = await repositories.regulationVersions.findOfficialById(regulationId);
         if (version === null) {
           throw new ServiceError(
             'unknown_regulation',
-            `Unknown regulation version ${regulationCode}`,
+            `Unknown regulation version ${regulationId}`,
           );
         }
         const rule = version.deadlines[slot];
         if (rule === undefined) {
           throw new ServiceError(
             'missing_deadline_slot',
-            `Regulation version ${regulationCode} has no ${slot} deadline`,
+            `Regulation version ${regulationId} has no ${slot} deadline`,
           );
         }
         return computeDeadline(rule, facts);

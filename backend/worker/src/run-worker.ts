@@ -1,7 +1,8 @@
+import { errorMessage } from '@sarmata/domain';
 import { type JobQueue, type QueuedJob } from '@sarmata/repositories';
 import { z } from 'zod';
 import { type JobHandler } from './job-handler';
-import { type Logger, describeError } from './logger';
+import { type Logger } from './logger';
 
 export interface WorkerOptions {
   readonly queue: JobQueue;
@@ -80,7 +81,7 @@ async function processJob(
     logger.error('job failed, it comes back after the visibility timeout', {
       ...fields,
       type,
-      error: describeError(error),
+      error: errorMessage(error),
     });
   }
 }
@@ -104,7 +105,7 @@ export async function runWorker(options: WorkerOptions, signal: AbortSignal): Pr
     try {
       jobs = await options.queue.read(batchSize, visibilityTimeoutSeconds);
     } catch (error) {
-      options.logger.error('queue read failed', { error: describeError(error) });
+      options.logger.error('queue read failed', { error: errorMessage(error) });
       await sleep(idleDelayMs, signal);
       continue;
     }
@@ -119,7 +120,7 @@ export async function runWorker(options: WorkerOptions, signal: AbortSignal): Pr
       } catch (error) {
         options.logger.error('job bookkeeping failed', {
           jobId: job.id,
-          error: describeError(error),
+          error: errorMessage(error),
         });
       }
     }

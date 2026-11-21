@@ -1,4 +1,4 @@
-import { syncOfficialFromEnv } from './bootstrap';
+import { connectAndSyncRegulations } from './bootstrap';
 
 // Loads official regulation versions into the database (pnpm regulations:sync, installer).
-await syncOfficialFromEnv(process.env);
+await connectAndSyncRegulations(process.env);

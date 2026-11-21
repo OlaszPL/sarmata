@@ -15,12 +15,12 @@ if (regulation2016 === undefined) throw new Error('The official regulation catal
 function inMemoryRepositories(seed: { employees?: Employee[]; official?: RegulationDocument[] }) {
   const official = [...(seed.official ?? [])];
   const inserted: string[] = [];
-  const repositories: Pick<Repositories, 'employees' | 'regulationVersions'> = {
+  const repositories: Repositories = {
     employees: { list: () => Promise.resolve([...(seed.employees ?? [])]) },
     regulationVersions: {
       listOfficial: () => Promise.resolve([...official]),
-      findOfficial: (code) =>
-        Promise.resolve(official.find((document) => document.id === code) ?? null),
+      findOfficialById: (id) =>
+        Promise.resolve(official.find((document) => document.id === id) ?? null),
     },
   };
   const writer: OfficialRegulationWriter = {
@@ -131,7 +131,7 @@ describe('deadlines.compute', () => {
 
   it('computes a slot of the pinned regulation version', async () => {
     const result = await services.deadlines.compute({
-      regulationCode: 'regulation-2016',
+      regulationId: 'regulation-2016',
       slot: 'objection',
       facts: { eventDate: calendarDate('2026-11-14') },
     });
@@ -141,7 +141,7 @@ describe('deadlines.compute', () => {
   it('fails for an unknown regulation version', async () => {
     await expectServiceError(
       services.deadlines.compute({
-        regulationCode: 'regulation-1999',
+        regulationId: 'regulation-1999',
         slot: 'objection',
         facts: { eventDate: calendarDate('2026-11-14') },
       }),
@@ -157,7 +157,7 @@ describe('deadlines.compute', () => {
     });
     await expectServiceError(
       createServices({ repositories: withoutSlot }).deadlines.compute({
-        regulationCode: 'regulation-2016',
+        regulationId: 'regulation-2016',
         slot: 'objection',
         facts: { eventDate: calendarDate('2026-11-14') },
       }),

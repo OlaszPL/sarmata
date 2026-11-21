@@ -1,3 +1,4 @@
+import { parseEnv } from '@sarmata/domain';
 import { z } from 'zod';
 
 export interface AiEndpoint {
@@ -12,7 +13,7 @@ export interface AiConfig {
   readonly timeoutMs: number;
   /** OpenAI-compatible text model (llama-server, vLLM, MLX). */
   readonly text: AiEndpoint | null;
-  /** Bielik-One `/v1/systemone`. Null where the hardware cannot run it (ADR 0005). */
+  /** Bielik-One `/v1/systemone`. Null where the hardware cannot run it: the text model decides then (ADR 0005). */
   readonly decision: AiEndpoint | null;
 }
 
@@ -38,14 +39,7 @@ const endpoint = (
 
 /** Installation settings of AI. Empty variables count as unset. AI is off unless SARMATA_AI_ENABLED=true. */
 export function aiConfigFromEnv(env: Record<string, string | undefined>): AiConfig {
-  const present = Object.fromEntries(
-    Object.entries(env).filter(([, value]) => value !== undefined && value !== ''),
-  );
-  const result = envSchema.safeParse(present);
-  if (!result.success) {
-    throw new Error(`Invalid AI configuration:\n${z.prettifyError(result.error)}`);
-  }
-  const values = result.data;
+  const values = parseEnv(envSchema, env, 'AI');
   return {
     enabled: values.SARMATA_AI_ENABLED === 'true',
     timeoutMs: values.SARMATA_AI_TIMEOUT_MS,

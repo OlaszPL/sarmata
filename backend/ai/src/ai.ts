@@ -1,6 +1,7 @@
 import { type z } from 'zod';
 import { type AiConfig } from './config';
 import { type DecisionAnswers, type DecisionRequest, decide } from './decision';
+import { decideWithTextModel } from './decision-fallback';
 import { type AiResult, failure } from './result';
 import { type ObjectRequest, generateObject } from './text-model';
 
@@ -15,14 +16,16 @@ export function createAi(config: AiConfig): Ai {
   const text = config.enabled ? config.text : null;
   const decision = config.enabled ? config.decision : null;
   return {
-    available: { text: text !== null, decision: decision !== null },
+    // Decisions fall back to the text model where Bielik-One cannot run (ADR 0005).
+    available: { text: text !== null, decision: decision !== null || text !== null },
     generateObject: (request) =>
       text === null
         ? Promise.resolve(failure('disabled', 'AI is disabled or the text model is not configured'))
         : generateObject(text, config.timeoutMs, request),
-    decide: (request) =>
-      decision === null
-        ? Promise.resolve(failure('disabled', 'AI is disabled or Bielik-One is not configured'))
-        : decide(decision, config.timeoutMs, request),
+    decide: (request) => {
+      if (decision !== null) return decide(decision, config.timeoutMs, request);
+      if (text !== null) return decideWithTextModel(text, config.timeoutMs, request);
+      return Promise.resolve(failure('disabled', 'AI is disabled or no model is configured'));
+    },
   };
 }

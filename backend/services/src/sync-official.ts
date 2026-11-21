@@ -12,7 +12,7 @@ export interface SyncReport {
 }
 
 export interface SyncDependencies {
-  readonly reader: Pick<RegulationVersionRepository, 'findOfficial'>;
+  readonly reader: Pick<RegulationVersionRepository, 'findOfficialById'>;
   readonly writer: OfficialRegulationWriter;
   readonly official: readonly RegulationDocument[];
 }
@@ -29,7 +29,7 @@ export async function syncOfficialRegulations({
   const missing: RegulationDocument[] = [];
   const unchanged: string[] = [];
   for (const document of official) {
-    const stored = await reader.findOfficial(document.id);
+    const stored = await reader.findOfficialById(document.id);
     if (stored === null) {
       missing.push(document);
     } else if (sameJson(stored, document)) {

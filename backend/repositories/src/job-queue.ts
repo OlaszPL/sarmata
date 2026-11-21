@@ -3,8 +3,8 @@ import { RepositoryError } from './errors';
 import { toJson } from './json';
 
 /** A message on the `jobs` queue. The worker picks the handler by `type`. */
-export interface JobMessage {
-  readonly type: string;
+export interface JobMessage<Type extends string = string> {
+  readonly type: Type;
   readonly payload: Record<string, unknown>;
 }
 
@@ -17,15 +17,15 @@ export interface QueuedJob {
   readonly message: unknown;
 }
 
-export interface JobQueue {
-  send(message: JobMessage, options?: { readonly delaySeconds?: number }): Promise<number>;
+export interface JobQueue<Type extends string = string> {
+  send(message: JobMessage<Type>, options?: { readonly delaySeconds?: number }): Promise<number>;
   /** Hides the returned jobs for `visibilityTimeoutSeconds`. An unarchived job comes back afterwards. */
   read(batchSize: number, visibilityTimeoutSeconds: number): Promise<QueuedJob[]>;
   archive(id: number): Promise<void>;
 }
 
 /** pgmq through RPC. Needs the service client: accounts have no access to the queue functions. */
-export function createJobQueue(db: ServiceDb): JobQueue {
+export function createJobQueue<Type extends string = string>(db: ServiceDb): JobQueue<Type> {
   return {
     async send(message, options = {}) {
       const { data, error } = await db.rpc('job_queue_send', {

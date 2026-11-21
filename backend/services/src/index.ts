@@ -20,5 +20,7 @@ export {
   type DeadlineResult,
   type DeadlineSlot,
   type RegulationDocument,
+  type OfficeId,
   calendarDate,
+  parseEnv,
 } from '@sarmata/domain';

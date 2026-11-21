@@ -8,7 +8,7 @@ import { jsonLogger } from './logger';
  * the service key and loads the official regulation versions into the database. A drift between
  * the code and the database stops the process (ADR 0006).
  */
-export async function syncOfficialFromEnv(
+export async function connectAndSyncRegulations(
   env: Record<string, string | undefined>,
 ): Promise<{ config: WorkerConfig; client: ServiceDb }> {
   const config = workerConfigFromEnv(env);

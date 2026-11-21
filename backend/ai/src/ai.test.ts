@@ -191,6 +191,101 @@ describe('decide (Bielik-One /v1/systemone)', () => {
   });
 });
 
+describe('decide without Bielik-One (text model fallback)', () => {
+  const questions = {
+    overload: { type: 'noul', instructions: 'Czy jest przeciążenie?' },
+    tone: {
+      type: 'choice',
+      instructions: 'Jaki wydźwięk?',
+      criteria: { positive: 'Pozytywny', negative: 'Negatywny' },
+    },
+    engagement: {
+      type: 'score',
+      instructions: 'Jak oceniasz zaangażowanie?',
+      criteria: ['niskie', 'średnie', 'wysokie'],
+    },
+    signals: {
+      type: 'labels',
+      instructions: 'Które sygnały?',
+      criteria: { overtime: 'Nadgodziny', conflict: 'Konflikt' },
+    },
+  } as const;
+
+  const modelAnswer = {
+    overload: { value: true, confidence: 0.8 },
+    tone: { choice: 'positive', confidence: 0.6 },
+    engagement: { score: 2, confidence: 0.5 },
+    signals: { selected: ['overtime'], confidence: 0.7 },
+  };
+
+  const textOnly = (baseUrl: string): AiConfig => config(baseUrl, { decision: null });
+
+  it('asks the text model with a forced schema and returns the Bielik-One result type', async () => {
+    const fake = await serve(() => completion(JSON.stringify(modelAnswer)));
+    const ai = createAi(textOnly(fake.baseUrl));
+    expect(ai.available.decision).toBe(true);
+    const result = await ai.decide({ state: 'Notatki: nadgodziny.', questions });
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        overload: {
+          type: 'noul',
+          noul: 1,
+          probabilities: { true: 1, false: 0 },
+          confidence: 0.8,
+        },
+        tone: {
+          type: 'choice',
+          choice: 'positive',
+          probabilities: { positive: 1, negative: 0 },
+          confidence: 0.6,
+        },
+        engagement: {
+          type: 'score',
+          score: 2,
+          legend: { '0': 'niskie', '1': 'średnie', '2': 'wysokie' },
+          probabilities: { '0': 0, '1': 0, '2': 1 },
+          confidence: 0.5,
+        },
+        signals: {
+          type: 'labels',
+          selected: ['overtime'],
+          probabilities: { overtime: 1, conflict: 0 },
+          confidence: 0.7,
+        },
+      },
+    });
+    const sent = fake.requests[0];
+    expect(sent?.url).toBe('/v1/chat/completions');
+    expect(sent?.body).toMatchObject({
+      response_format: { type: 'json_schema', json_schema: { strict: true } },
+    });
+    expect(JSON.stringify(sent?.body)).toContain('Notatki: nadgodziny.');
+    expect(JSON.stringify(sent?.body)).toContain('Czy jest przeciążenie?');
+  });
+
+  it('prefers Bielik-One when it is configured', async () => {
+    const fake = await serve(() => ({ status: 200, body: { answers: {} } }));
+    await createAi(config(fake.baseUrl)).decide({ state: 'x', questions: {} });
+    expect(fake.requests[0]?.url).toBe('/v1/systemone');
+  });
+
+  it('rejects a choice outside the criteria', async () => {
+    const fake = await serve(() =>
+      completion(JSON.stringify({ ...modelAnswer, tone: { choice: 'angry', confidence: 1 } })),
+    );
+    const result = await createAi(textOnly(fake.baseUrl)).decide({ state: 'x', questions });
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_response' });
+  });
+
+  it('rejects an empty question list without calling the model', async () => {
+    const fake = await serve(() => completion('{}'));
+    const result = await createAi(textOnly(fake.baseUrl)).decide({ state: 'x', questions: {} });
+    expect(result).toMatchObject({ ok: false, reason: 'rejected' });
+    expect(fake.requests).toHaveLength(0);
+  });
+});
+
 describe('aiConfigFromEnv', () => {
   it('turns AI off by default', () => {
     expect(aiConfigFromEnv({})).toEqual({

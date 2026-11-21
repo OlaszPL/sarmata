@@ -1,27 +1,32 @@
+import { type OfficeId, officeIdSchema } from '@sarmata/domain';
+import {
+  Constants,
+  findOfficeName,
+  readAccountClaims,
+  type Database,
+  type Db,
+} from '@sarmata/repositories';
 import { z } from 'zod';
-import { findOfficeName, readAccountClaims, type Database, type Db } from '@sarmata/repositories';
 
 export type OfficeRole = Database['public']['Enums']['office_role'];
-
-const officeRoles = ['admin', 'hr', 'evaluator'] as const satisfies readonly OfficeRole[];
 
 export interface MemberAccount {
   status: 'member';
   userId: string;
   email: string;
-  office: { id: string; name: string };
+  office: { id: OfficeId; name: string };
   role: OfficeRole;
 }
 
 export type CurrentAccount =
   { status: 'signed-out' } | { status: 'no-office'; userId: string; email: string } | MemberAccount;
 
-// Claim contract set by access.custom_access_token_hook (plan 2).
+// Claim contract set by access.custom_access_token_hook in the database migrations.
 const claimsSchema = z.object({
   sub: z.uuid(),
   email: z.string().default(''),
-  office_id: z.uuid().optional(),
-  office_role: z.enum(officeRoles).optional(),
+  office_id: officeIdSchema.optional(),
+  office_role: z.enum(Constants.public.Enums.office_role).optional(),
 });
 
 /**

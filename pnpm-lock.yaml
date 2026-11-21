@@ -250,6 +250,9 @@ importers:
 
   backend/ai:
     dependencies:
+      '@sarmata/domain':
+        specifier: workspace:*
+        version: link:../domain
       zod:
         specifier: 'catalog:'
         version: 4.6.7
@@ -348,6 +351,9 @@ importers:
 
   backend/worker:
     dependencies:
+      '@sarmata/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@sarmata/repositories':
         specifier: workspace:*
         version: link:../repositories

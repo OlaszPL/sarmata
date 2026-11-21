@@ -1,11 +1,9 @@
+import { errorMessage } from '@sarmata/domain';
 import { type AiEndpoint } from './config';
 import { type AiResult, failure } from './result';
 
 const isTimeout = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'name' in error && error.name === 'TimeoutError';
-
-const describe = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
 
 /** POST with a JSON body. Maps network, timeout and HTTP errors to an `AiResult`. */
 export async function postJson(
@@ -32,7 +30,7 @@ export async function postJson(
     text = await response.text();
   } catch (error) {
     if (isTimeout(error)) return failure('timeout', `No answer within ${timeoutMs} ms`);
-    return failure('unavailable', describe(error));
+    return failure('unavailable', errorMessage(error));
   }
   if (status >= 400 && status < 500)
     return failure('rejected', `HTTP ${status}: ${text.slice(0, 500)}`);

@@ -11,17 +11,17 @@ export type JobOutcome =
   { readonly status: 'done' } | { readonly status: 'invalid_payload'; readonly message: string };
 
 /** A handler as the worker sees it: the payload is still unknown until the handler validates it. */
-export interface JobHandler {
-  readonly type: string;
+export interface JobHandler<Type extends string = string> {
+  readonly type: Type;
   run(payload: unknown, context: JobContext): Promise<JobOutcome>;
 }
 
 /** Defines a handler for one job type with a zod schema of its payload. */
-export function defineJobHandler<S extends z.ZodType>(definition: {
-  readonly type: string;
+export function defineJobHandler<const Type extends string, S extends z.ZodType>(definition: {
+  readonly type: Type;
   readonly payload: S;
   handle(payload: z.output<S>, context: JobContext): Promise<void>;
-}): JobHandler {
+}): JobHandler<Type> {
   return {
     type: definition.type,
     async run(payload, context) {

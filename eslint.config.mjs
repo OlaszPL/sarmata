@@ -213,9 +213,9 @@ export default defineConfig([
         {
           patterns: [
             {
-              group: ['@supabase/*', '@sarmata/*'],
+              group: ['@supabase/*', '@sarmata/*', '!@sarmata/domain'],
               message:
-                'The AI client knows no database and no other layer, services pass it data (ADR 0004).',
+                'The AI client knows no database and no layer above the pure domain, services pass it data (ADR 0004).',
             },
           ],
         },

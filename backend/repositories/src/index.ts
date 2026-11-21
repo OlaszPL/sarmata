@@ -1,4 +1,5 @@
 export type { Database } from '@sarmata/database';
+export { Constants } from '@sarmata/database';
 export type { Db, ServiceDb } from './db';
 export { readAccountClaims } from './auth';
 export { findOfficeName } from './offices';

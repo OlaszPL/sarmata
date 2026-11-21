@@ -71,7 +71,7 @@ describe('regulation versions', () => {
 
   it('returns null for an unknown code', async () => {
     const repositories = createRepositories(await signedIn('oceniajacy@kropka.test'));
-    expect(await repositories.regulationVersions.findOfficial('regulation-1999')).toBeNull();
+    expect(await repositories.regulationVersions.findOfficialById('regulation-1999')).toBeNull();
   });
 
   it('does not let an account write an official version', async () => {

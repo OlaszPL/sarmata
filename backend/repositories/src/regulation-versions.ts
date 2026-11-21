@@ -6,7 +6,8 @@ import { toJson } from './json';
 export interface RegulationVersionRepository {
   /** Official versions, oldest first. */
   listOfficial(): Promise<RegulationDocument[]>;
-  findOfficial(code: string): Promise<RegulationDocument | null>;
+  /** The official version with this document id. The id is stored in the `code` column. */
+  findOfficialById(id: string): Promise<RegulationDocument | null>;
 }
 
 /** Writes official versions. Needs the service client: accounts cannot create them (RLS). */
@@ -26,14 +27,14 @@ export function createRegulationVersionRepository(db: Db | ServiceDb): Regulatio
       return data.map((row) => parseRegulationDocument(row.document));
     },
 
-    async findOfficial(code) {
+    async findOfficialById(id) {
       const { data, error } = await db
         .from('regulation_versions')
         .select('document')
         .eq('is_official', true)
-        .eq('code', code)
+        .eq('code', id)
         .maybeSingle();
-      if (error) throw new RepositoryError('regulationVersions.findOfficial', error);
+      if (error) throw new RepositoryError('regulationVersions.findOfficialById', error);
       return data === null ? null : parseRegulationDocument(data.document);
     },
   };
