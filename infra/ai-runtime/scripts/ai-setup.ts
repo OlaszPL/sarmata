@@ -62,7 +62,7 @@ async function main(): Promise<void> {
     model: config.alias,
   });
   console.log(
-    `Device: ${config.device}. Wrote AI_BASE_URL and AI_MODEL to ${envFile}. Next: pnpm ai:start`,
+    `Device: ${config.device}. Wrote SARMATA_AI_* settings to ${envFile}. Next: pnpm ai:start`,
   );
 }
 

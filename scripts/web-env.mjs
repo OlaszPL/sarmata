@@ -26,12 +26,12 @@ const lines = [
   `SUPABASE_PUBLISHABLE_KEY=${key}`,
 ];
 
-const aiKeys = ['AI_BASE_URL', 'AI_MODEL', 'AI_DECISION_URL'];
+// Every SARMATA_AI_* setting of @sarmata/ai (backend/ai/src/config.ts) written by pnpm ai:env.
 const aiEnvFile = `${root}/.env.ai.local`;
 if (existsSync(aiEnvFile)) {
   for (const line of readFileSync(aiEnvFile, 'utf8').split('\n')) {
     const name = line.split('=')[0]?.trim();
-    if (name && aiKeys.includes(name)) lines.push(line.trim());
+    if (name?.startsWith('SARMATA_AI_')) lines.push(line.trim());
   }
 }
 

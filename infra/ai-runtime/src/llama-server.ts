@@ -12,7 +12,7 @@ import { spawnLogged, waitUntilReady, type StartOptions } from './process.ts';
 export interface LlamaServerConfig {
   serverPath: string;
   modelPath: string;
-  /** Model name in the OpenAI-compatible API, used as AI_MODEL. */
+  /** Model name in the OpenAI-compatible API, used as SARMATA_AI_TEXT_MODEL. */
   alias: string;
   host: string;
   port: number;
@@ -53,7 +53,7 @@ export interface PreparedLlamaServer {
 }
 
 export interface RunningServer {
-  /** OpenAI-compatible base URL ending with /v1, used as AI_BASE_URL. */
+  /** OpenAI-compatible base URL ending with /v1, used as SARMATA_AI_TEXT_BASE_URL. */
   url: string;
   pid: number;
   logFile: string;

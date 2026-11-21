@@ -10,7 +10,7 @@ export interface ModelFile {
   id: ModelId;
   label: string;
   quantization: string;
-  /** Model name in the OpenAI-compatible API (`--alias`), used as AI_MODEL. */
+  /** Model name in the OpenAI-compatible API (`--alias`), used as SARMATA_AI_TEXT_MODEL. */
   alias: string;
   repo: string;
   revision: string;
