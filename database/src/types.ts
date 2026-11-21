@@ -187,6 +187,72 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"note_versions": {
+                  Row: {
+                    "body": string,"communicated": boolean,"criterion_id": string | null,"kind": Database["public"]['Enums']["note_kind"],"note_id": string,"occurred_on": string,"office_id": string,"sign": string | null,"valid_from": string,"valid_to": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"communicated": boolean,"criterion_id"?: string | null,"kind": Database["public"]['Enums']["note_kind"],"note_id": string,"occurred_on": string,"office_id": string,"sign"?: string | null,"valid_from": string,"valid_to": string,"version": number
+                  }
+                  Update: {
+                    "body"?: string,"communicated"?: boolean,"criterion_id"?: string | null,"kind"?: Database["public"]['Enums']["note_kind"],"note_id"?: string,"occurred_on"?: string,"office_id"?: string,"sign"?: string | null,"valid_from"?: string,"valid_to"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "note_versions_note_id_fkey"
+      columns: ["note_id"]
+isOneToOne: false
+      referencedRelation: "notes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notes": {
+                  Row: {
+                    "author_account_id": string,"body": string,"communicated": boolean,"created_at": string,"criterion_id": string | null,"employee_id": string,"id": string,"kind": Database["public"]['Enums']["note_kind"],"occurred_on": string,"office_id": string,"sign": string | null,"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_account_id"?: string,"body": string,"communicated"?: boolean,"created_at"?: string,"criterion_id"?: string | null,"employee_id": string,"id"?: string,"kind": Database["public"]['Enums']["note_kind"],"occurred_on": string,"office_id"?: string,"sign"?: string | null,"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "author_account_id"?: string,"body"?: string,"communicated"?: boolean,"created_at"?: string,"criterion_id"?: string | null,"employee_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["note_kind"],"occurred_on"?: string,"office_id"?: string,"sign"?: string | null,"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notes_employee_fkey"
+      columns: ["employee_id","office_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "notes_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"office_settings": {
+                  Row: {
+                    "ai_enabled": boolean,"notes_retention_months": number,"office_id": string,"reminder_lead_days": (number)[],"smtp_from": string | null,"smtp_host": string | null,"smtp_password_secret_id": string | null,"smtp_password_set": boolean | null,"smtp_port": number | null,"smtp_user": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ai_enabled"?: boolean,"notes_retention_months"?: number,"office_id": string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
+                  }
+                  Update: {
+                    "ai_enabled"?: boolean,"notes_retention_months"?: number,"office_id"?: string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "office_settings_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: true
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"offices": {
                   Row: {
                     "created_at": string,"evaluation_visibility": string,"id": string,"name": string
@@ -266,12 +332,15 @@ isOneToOne: false
 "job_queue_send":
 { Args: { "delay_seconds"?: number,"message": Json }; Returns: number
                            },
+"set_smtp_password":
+{ Args: { "p_password": string }; Returns: undefined
+                           },
 "start_evaluation":
 { Args: { "p_after_negative": boolean,"p_content": Json,"p_cycle_start": string,"p_employee_id": string,"p_evaluator_account_id": string,"p_previous_acquainted_on": string,"p_previous_evaluation_id": string,"p_regulation_version_id": string,"p_sheet_id": string,"p_snapshot": Json }; Returns: string
                            }
           }
           Enums: {
-            "employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
+            "employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","note_kind": "observation"|"ongoing_conversation"|"appreciation"|"workload_fact","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -387,7 +456,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
+            "employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"note_kind": ["observation", "ongoing_conversation", "appreciation", "workload_fact"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
           }
         }
 } as const

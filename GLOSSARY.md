@@ -57,7 +57,7 @@ Fakt z przebiegu oceny (np. rozmowa, podpis, doręczenie, sprzeciw) wpisany z da
 _Avoid_: log, akcja
 
 **Notatka** (`Note`, `note`):
-Obserwacja oceniającego z okresu oceny o konkretnym pracowniku. Czyta ją autor i kadry.
+Obserwacja oceniającego z okresu oceny o konkretnym pracowniku. Czyta ją autor, kadry i bieżący oceniający otwartej oceny tego pracownika, a przy widoczności `tree` także przełożeni w drzewie. Edytuje ją tylko autor.
 _Avoid_: komentarz, uwaga
 
 **Arkusz** (`EvaluationSheet`, `evaluation_sheet`):
@@ -71,3 +71,15 @@ _Avoid_: kopia, edycja
 **Rodzaj stanowiska** (`PositionKind`, `position_kind`):
 Cecha stanowiska pracownika (szef urzędu, stanowisko z kierowaniem ludźmi albo inne), która wyznacza, jaki arkusz obowiązuje.
 _Avoid_: typ stanowiska, poziom
+
+**Rodzaj notatki** (`NoteKind`, `note_kind`):
+Typ notatki: obserwacja, rozmowa bieżąca, docenienie albo fakt obciążenia.
+_Avoid_: kategoria notatki
+
+**Wersja notatki** (`NoteVersion`, `note_versions`):
+Poprzednia treść notatki zachowana po edycji. Czas wpisu notatki się nie zmienia.
+_Avoid_: kopia notatki
+
+**Ustawienia urzędu** (`OfficeSettings`, `office_settings`):
+Jeden wiersz na urząd: przełącznik AI, okres przechowywania notatek, wyprzedzenie przypomnień i SMTP. Zmienia je admin. Hasło SMTP leży w Supabase Vault i nie wraca do klienta.
+_Avoid_: konfiguracja

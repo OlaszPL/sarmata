@@ -17,9 +17,16 @@ import {
   type NewArchivedEvaluation,
   type Repositories,
   type SimilarEmployee,
+  createNoteRepository,
+  createOfficeSettingsRepository,
   createRepositories,
 } from '@sarmata/repositories';
 import { ServiceError } from './errors';
+import { type NoteService, createNoteService } from './notes/note-service';
+import {
+  type OfficeSettingsService,
+  createOfficeSettingsService,
+} from './office-settings/office-settings-service';
 import { type EvaluationService, createEvaluationService } from './evaluations/evaluation-service';
 import { getCurrentAccount } from './account/current-account';
 
@@ -114,9 +121,15 @@ export function createServices(dependencies: ServiceDependencies): Services {
   };
 }
 
+/** `Services` plus the notes and office settings services, which have their own repositories. */
+export type AppServices = Services & {
+  readonly notes: NoteService;
+  readonly officeSettings: OfficeSettingsService;
+};
+
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
-export const servicesFor = (db: Db): Services =>
-  createServices({
+export const servicesFor = (db: Db): AppServices => ({
+  ...createServices({
     repositories: createRepositories(db),
     currentAccountId: async () => {
       const account = await getCurrentAccount(db);
@@ -125,4 +138,7 @@ export const servicesFor = (db: Db): Services =>
       }
       return account.userId;
     },
-  });
+  }),
+  notes: createNoteService(createNoteRepository(db)),
+  officeSettings: createOfficeSettingsService(createOfficeSettingsRepository(db)),
+});

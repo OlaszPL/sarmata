@@ -40,7 +40,9 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 
 - Jedna tabela notatek o pracowniku. Pola: typ (`obserwacja`, `rozmowa_biezaca`, `docenienie`, `fakt_obciazenia`), data zdarzenia, opcjonalne kryterium, znak (plus albo minus), flaga „czy zakomunikowano”.
 - Znacznik czasu wpisu jest niezmienialny, edycje są wersjonowane. To chroni przed dopisywaniem wstecz (IV P 74/26).
-- Strażnik danych wrażliwych (zdrowie, rodzina, religia, diagnozy) prosi autora o przeformułowanie przed zapisem.
+- Strażnik danych wrażliwych (zdrowie, rodzina, religia, diagnozy) prosi autora o przeformułowanie przed zapisem. Teraz to deterministyczna lista rdzeni słów (`sensitiveDataWarnings`), a serwis zwraca błąd `sensitive_data` z listą ostrzeżeń i zapisuje dopiero po potwierdzeniu. Strażnik oparty o AI dojdzie razem z usługami AI (B7).
+- Nazwy w kodzie: typ notatki to `NoteKind` (`observation`, `ongoing_conversation`, `appreciation`, `workload_fact`), wersje edycji to `NoteVersion`. Fakt obciążenia nie ma znaku.
+- Czyta autor, kadry i bieżący oceniający otwartej oceny tego pracownika. Po zmianie oceniającego nowy czyta wszystkie notatki, poprzedni traci wgląd do cudzych. Przy widoczności `tree` czytają też przełożeni w drzewie. Edytuje tylko autor, kadry nie edytują cudzych notatek.
 - Notatki nie mają ocen liczbowych. Rozmowy bieżące realizują system informacji zwrotnej z zarządzenia nr 6.
 
 ## Wersje przepisów
@@ -69,6 +71,7 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 - Bielik-One daje sygnały (sentyment, przeciążenie, spadek zaangażowania, ryzyko wypalenia) z prawdopodobieństwem i fragmentami źródłowymi. Nie konfigurujemy progów pewności: o tym, co jest sygnałem, decyduje Bielik-One, a wynik pokazujemy jako sugestię.
 - Wynik to sugestia: sygnały, pytania do rozmowy, działania według JD-R i HSE. Nigdy diagnoza. Decyduje oceniający (ustalenie z KPRM w `AGENTS.md`).
 - Wynik czyta autor analizy i kadry. Nie trafia do arkusza.
+- Rozbieżność odbiorców wyniku (autor analizy czy kadry) zostaje do rozstrzygnięcia w B7.
 
 ## Statystyki i raporty (rola kadry)
 
@@ -101,7 +104,7 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
 
 ## Retencja
 
-- Okres przechowywania notatek i analiz HR partnera ustawia admin w ustawieniach urzędu. Usuwanie wykonuje zadanie pg_cron.
+- Okres przechowywania notatek i analiz HR partnera ustawia admin w ustawieniach urzędu (`OfficeSettings.notesRetentionMonths`, 1 do 120). Domyślnie 36 miesięcy: to decyzja do potwierdzenia, bo `docs/wymagania-i-kontekst.md` zostawia okres notatek roboczych do ustalenia. Usuwanie wykonuje zadanie pg_cron (B9).
 - Arkusz i dziennik zdarzeń zostają zgodnie z przepisami o dokumentacji pracowniczej (10 lat, art. 94 pkt 9b KP).
 
 ## Sprzeciw
@@ -137,7 +140,8 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
 - Treść bez danych osobowych i bez treści oceny, np. „Masz 2 zadania, najbliższy termin 24.11” i link.
 - pg_cron raz dziennie zbiera terminy i wrzuca zadania do pgmq. Worker wysyła jeden zbiorczy mail na konto, z ponowieniami i dziennikiem wysyłek.
 - Skrzynka powiadomień w aplikacji działa zawsze, także bez SMTP. W demo maile widać w Mailpit z lokalnego Supabase.
-- Przypomnienia domyślnie 14 i 3 dni przed terminem (admin zmienia). Po terminie eskalacja do kadr.
+- Przypomnienia domyślnie 14 i 3 dni przed terminem (admin zmienia w `OfficeSettings.reminderLeadDays`: 1 do 5 wartości z zakresu 1 do 90). Po terminie eskalacja do kadr.
+- Ustawienia SMTP są w `office_settings`. Hasło zapisuje wyłącznie funkcja `set_smtp_password` (admin, Supabase Vault), klient widzi tylko `passwordSet`. Odczyt hasła przez workera wysyłki należy do B4.
 - Kadry dostają zadania: stopień z mocy prawa (30 dni), 14 dni DG na sprzeciw, oceny po terminie.
 
 ## Cykle i terminy
