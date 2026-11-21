@@ -77,3 +77,26 @@ export { effectiveDueOn } from './evaluations/due-date';
 export { errorMessage } from './support/error-message';
 export { parseEnv } from './support/parse-env';
 export { type OfficeId, officeIdSchema } from './identity/office-id';
+export { calendarDateSchema } from './deadlines/calendar-date';
+export {
+  type NewNote,
+  type NewNoteInput,
+  type NoteKind,
+  type NotePatch,
+  type NoteSign,
+  newNoteSchema,
+  noteKindSchema,
+  notePatchSchema,
+} from './notes/note';
+export {
+  type SensitiveCategory,
+  type SensitiveDataWarning,
+  sensitiveDataWarnings,
+} from './notes/sensitive-data';
+export {
+  type EvaluationVisibility,
+  type OfficeSettingsPatch,
+  type OfficeSettingsPatchInput,
+  evaluationVisibilitySchema,
+  officeSettingsPatchSchema,
+} from './office-settings/office-settings';

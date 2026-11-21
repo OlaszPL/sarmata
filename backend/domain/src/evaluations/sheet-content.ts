@@ -1,14 +1,6 @@
 import { z } from 'zod';
-import { type CalendarDate, calendarDate } from '../deadlines/calendar-date';
+import { calendarDateSchema as isoDate } from '../deadlines/calendar-date';
 
-const isoDate = z.string().transform((value, ctx): CalendarDate => {
-  try {
-    return calendarDate(value);
-  } catch {
-    ctx.issues.push({ code: 'custom', message: `invalid date ${value}`, input: value });
-    return z.NEVER;
-  }
-});
 const nullableDate = isoDate.nullable();
 
 const gradeRequestSchema = z.strictObject({
