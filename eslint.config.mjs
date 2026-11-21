@@ -119,6 +119,11 @@ export default defineConfig([
     },
   },
   {
+    // The demo seed script signs in with a plain client, like a browser, and then uses the services.
+    files: ['backend/services/src/seed-demo-evaluations.ts'],
+    rules: { 'no-restricted-imports': ['error', { paths: [serviceClientPath] }] },
+  },
+  {
     files: ['frontend/**'],
     rules: {
       'no-restricted-imports': [

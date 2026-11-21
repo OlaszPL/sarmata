@@ -154,16 +154,16 @@ Każde przejście to zdarzenie w dzienniku z datą faktyczną. Przejścia sprawd
 
 | Stan | Znaczenie | Przejście dalej |
 |---|---|---|
-| `kryteria` | część I w edycji, biegnie termin 30 dni (7 po negatywnej) | oceniający zatwierdza część I po rozmowie rozpoczynającej |
-| `czesc_i_do_podpisu` | część I zatwierdzona, czeka na odnotowanie podpisu ocenianego | odnotowanie podpisu ocenianego z datą |
-| `okres` | kryteria i termin zablokowane, okres oceny | odnotowanie rozmowy oceniającej |
-| `rozmowa` | rozmowa oceniająca odnotowana, część II w edycji | zatwierdzenie oceny (kalkulator, bramki: wnioski IPRZ zawsze, uzasadnienie przy negatywnej) |
-| `sporzadzona` | część II zablokowana, czeka na zapoznanie ocenianego | odnotowanie zapoznania albo odmowy podpisu z datą |
-| `doreczona` | biegnie 7 dni na sprzeciw | 7 dni bez sprzeciwu albo wniesienie sprzeciwu |
-| `zamknieta` | ocena ostateczna | brak |
-| `sprzeciw` | sprzeciw wniesiony, licznik 14 dni DG | `zamknieta`, nowa wersja arkusza albo `anulowana` |
-| `anulowana` | wersja anulowana po sprzeciwie | ocena wraca do `rozmowa` z nowym terminem |
-| `przerwana` | np. ustanie stosunku pracy | brak |
+| `kryteria` (`criteria`) | część I w edycji, biegnie termin 30 dni (7 po negatywnej) | oceniający zatwierdza część I po rozmowie rozpoczynającej |
+| `czesc_i_do_podpisu` (`criteria_awaiting_signature`) | część I zatwierdzona, czeka na odnotowanie podpisu ocenianego | odnotowanie podpisu ocenianego z datą |
+| `okres` (`period`) | kryteria i termin zablokowane, okres oceny | odnotowanie rozmowy oceniającej |
+| `rozmowa` (`interview`) | rozmowa oceniająca odnotowana, część II w edycji | zatwierdzenie oceny (kalkulator, bramki: wnioski IPRZ zawsze, uzasadnienie przy negatywnej) |
+| `sporzadzona` (`drafted`) | część II zablokowana, czeka na zapoznanie ocenianego | odnotowanie zapoznania albo odmowy podpisu z datą |
+| `doreczona` (`delivered`) | biegnie 7 dni na sprzeciw | 7 dni bez sprzeciwu albo wniesienie sprzeciwu |
+| `zamknieta` (`closed`) | ocena ostateczna | brak |
+| `sprzeciw` (`objection`) | sprzeciw wniesiony, licznik 14 dni DG | `zamknieta`, nowa wersja arkusza albo `anulowana` |
+| `anulowana` | wersja arkusza anulowana po sprzeciwie. To nie jest stan oceny, tylko stan wersji arkusza (`cancelled`) | ocena wraca do `rozmowa` (`interview`) z nowym terminem |
+| `przerwana` (`interrupted`) | np. ustanie stosunku pracy | brak |
 
 - W stanie `okres` działają zdarzenia boczne: nieobecność (termin wstrzymany albo przesunięty), zmiana terminu, zmiana oceniającego, zmiana stanowiska.
 - Zmiana stanowiska: oceniający albo kadry wpisują datę i obowiązkową decyzję „istotna zmiana obowiązków: tak/nie” z uzasadnieniem. Przy „tak” backend ustawia termin oceny w oknie ustawowym (art. 81 ust. 6, § 9) i przypomina. Przy „nie” ocena biegnie dalej, a nowe stanowisko trafia do migawki.

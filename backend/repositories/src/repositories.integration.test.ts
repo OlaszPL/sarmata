@@ -42,6 +42,19 @@ async function signedIn(email: string): Promise<Db> {
 const serviceClient = (): ServiceDb =>
   createServiceClient({ url: env('SUPABASE_URL'), secretKey: env('SUPABASE_SECRET_KEY') });
 
+describe('demo seed', () => {
+  it('demo seed has evaluations in period and interview', async () => {
+    const repositories = createRepositories(await signedIn('oceniajacy@kropka.test'));
+    const employees = await repositories.employees.list();
+    const idOf = (lastName: string) => employees.find((e) => e.lastName === lastName)?.id;
+    const evaluations = await repositories.evaluations.listForOffice();
+    const statusesOf = (lastName: string) =>
+      evaluations.filter((e) => e.employeeId === idOf(lastName)).map((e) => e.status);
+    expect(statusesOf('Merytoryczny')).toContain('period');
+    expect(statusesOf('Ewidencyjna')).toContain('interview');
+  });
+});
+
 describe('employees', () => {
   it('lists the employees of the signed-in office sorted by last name', async () => {
     const employees = await createRepositories(

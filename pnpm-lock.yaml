@@ -335,6 +335,9 @@ importers:
       '@sarmata/repositories':
         specifier: workspace:*
         version: link:../repositories
+      '@supabase/supabase-js':
+        specifier: 'catalog:'
+        version: 2.119.2
       zod:
         specifier: 'catalog:'
         version: 4.6.7
@@ -342,6 +345,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
