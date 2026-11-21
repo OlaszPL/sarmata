@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(56);
+select plan(76);
 
 -- Office A: hr, two evaluators, admin, a boss above evaluator one, tops of a 40 and a 60 employee chain.
 -- Tree: boss (account boss) > mid (account evaluator one) > worker. Peer is evaluator two, outside that branch.
@@ -53,7 +53,8 @@ insert into public.regulation_versions (id, code, office_id, is_official, effect
   ('bbbbbbbb-3333-4000-8000-000000000001', 'test-evaluations-b', 'bbbbbbbb-0000-4000-8000-000000000002', false, '2016-04-23',
    '{"id":"test-evaluations-b","effectiveFrom":"2016-04-23"}');
 
--- E1 worker (criteria, draft sheet), E3 locked sheet, E4 period with a draft sheet, E40 and E60 bottoms of the chains.
+-- E1 worker (criteria, draft sheet), E3 locked sheet, E4 period with a draft sheet, E7 interview with a draft sheet,
+-- E8 closed, E9 interview without a sheet, E40 and E60 bottoms of the chains.
 insert into public.evaluations (id, office_id, employee_id, evaluator_account_id, regulation_version_id, sheet_id, status, cycle_start, snapshot, created_by)
 select v.id::uuid, 'aaaaaaaa-0000-4000-8000-000000000001', v.employee_id::uuid, 'aaaaaaaa-1111-4000-8000-000000000002',
        'aaaaaaaa-3333-4000-8000-000000000001', 'A', v.status::public.evaluation_status, '2026-01-01', '{}', 'aaaaaaaa-1111-4000-8000-000000000001'
@@ -61,6 +62,9 @@ select v.id::uuid, 'aaaaaaaa-0000-4000-8000-000000000001', v.employee_id::uuid, 
     ('eeeeeeee-0000-4000-8000-000000000001', 'aaaaaaaa-2222-4000-8000-000000000001', 'criteria'),
     ('eeeeeeee-0000-4000-8000-000000000003', 'aaaaaaaa-2222-4000-8000-000000000001', 'drafted'),
     ('eeeeeeee-0000-4000-8000-000000000004', 'aaaaaaaa-2222-4000-8000-000000000001', 'period'),
+    ('eeeeeeee-0000-4000-8000-000000000007', 'aaaaaaaa-2222-4000-8000-000000000001', 'interview'),
+    ('eeeeeeee-0000-4000-8000-000000000008', 'aaaaaaaa-2222-4000-8000-000000000001', 'closed'),
+    ('eeeeeeee-0000-4000-8000-000000000009', 'aaaaaaaa-2222-4000-8000-000000000001', 'interview'),
     ('eeeeeeee-0000-4000-8000-000000000040', 'cccccccc-2222-4000-8000-000000000001', 'criteria'),
     ('eeeeeeee-0000-4000-8000-000000000060', 'dddddddd-2222-4000-8000-000000000001', 'criteria')
   ) as v(id, employee_id, status);
@@ -73,7 +77,9 @@ insert into public.evaluation_sheets (id, office_id, evaluation_id, version, con
   ('ffffffff-0000-4000-8000-000000000003', 'aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000003', 1,
    '{"partOne":{"criteria":["a"]},"partTwo":{"score":4}}', 'locked', 'aaaaaaaa-1111-4000-8000-000000000002'),
   ('ffffffff-0000-4000-8000-000000000004', 'aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000004', 1,
-   '{"partOne":{"criteria":["a"]},"partTwo":{"score":null}}', 'draft', 'aaaaaaaa-1111-4000-8000-000000000002');
+   '{"partOne":{"criteria":["a"]},"partTwo":{"score":null}}', 'draft', 'aaaaaaaa-1111-4000-8000-000000000002'),
+  ('ffffffff-0000-4000-8000-000000000007', 'aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000007', 1,
+   '{"partOne":{"criteria":["a"]},"partTwo":{"score":4}}', 'draft', 'aaaaaaaa-1111-4000-8000-000000000002');
 insert into public.evaluation_events (id, office_id, evaluation_id, kind, occurred_on, recorded_by) values
   ('99999999-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000040',
    'created', '2026-01-01', 'aaaaaaaa-1111-4000-8000-000000000001');
@@ -81,9 +87,12 @@ insert into public.evaluation_events (id, office_id, evaluation_id, kind, occurr
 -- Grants are the complete Data API surface: no delete anywhere, the event log only grows,
 -- evaluations change only through apply_evaluation_transition.
 select table_privs_are('public', 'evaluations', 'authenticated', array['SELECT', 'INSERT']);
-select table_privs_are('public', 'evaluation_sheets', 'authenticated', array['SELECT', 'INSERT', 'UPDATE']);
+select table_privs_are('public', 'evaluation_sheets', 'authenticated', array['SELECT', 'INSERT']);
+select column_privs_are('public', 'evaluation_sheets', 'content', 'authenticated', array['SELECT', 'INSERT', 'UPDATE']);
+select column_privs_are('public', 'evaluation_sheets', 'evaluation_id', 'authenticated', array['SELECT', 'INSERT']);
 select table_privs_are('public', 'evaluation_events', 'authenticated', array['SELECT', 'INSERT']);
-select table_privs_are('public', 'evaluation_deadlines', 'authenticated', array['SELECT', 'INSERT', 'UPDATE']);
+select table_privs_are('public', 'evaluation_deadlines', 'authenticated', array['SELECT', 'INSERT']);
+select column_privs_are('public', 'evaluation_deadlines', 'evaluation_id', 'authenticated', array['SELECT', 'INSERT']);
 select table_privs_are('public', 'evaluations', 'anon', array[]::text[]);
 select function_privs_are('public', 'apply_evaluation_transition',
   array['uuid', 'evaluation_status', 'evaluation_status', 'evaluation_event_kind', 'date', 'jsonb', 'boolean'],
@@ -181,19 +190,19 @@ select is_empty(
 
 select lives_ok(
   $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000001', 'criteria', 'criteria_awaiting_signature',
-      'part_one_approved', '2026-01-15', '{"note":"first"}', true)$$,
+      'part_one_approved', '2026-01-15', '{"note":"first","sheetVersion":99}', false)$$,
   'transition by the evaluator succeeds'
 );
 select results_eq(
   $$select e.status::text, (select count(*) from public.evaluation_events v where v.evaluation_id = e.id),
            (select s.state from public.evaluation_sheets s where s.evaluation_id = e.id and s.version = 1)
       from public.evaluations e where e.id = 'eeeeeeee-0000-4000-8000-000000000001'$$,
-  $$values ('criteria_awaiting_signature', 1::bigint, 'locked')$$,
-  'transition writes event and locks sheet'
+  $$values ('criteria_awaiting_signature', 1::bigint, 'draft')$$,
+  'a transition without lock writes the event and leaves the sheet a draft'
 );
 select throws_ok(
   $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000001', 'criteria', 'criteria_awaiting_signature',
-      'part_one_approved', '2026-01-15', '{}', true)$$,
+      'part_one_approved', '2026-01-15', '{}', false)$$,
   'P0001', 'stale_status', 'a second concurrent approval gets stale_status'
 );
 select results_eq(
@@ -201,7 +210,7 @@ select results_eq(
       from public.evaluation_events where evaluation_id = 'eeeeeeee-0000-4000-8000-000000000001'$$,
   $$select auth.uid(), 'first', 1, encode(extensions.digest(content::text, 'sha256'), 'hex')
       from public.evaluation_sheets where id = 'ffffffff-0000-4000-8000-000000000001'$$,
-  'transition payload carries sheet version and sha256 of the locked content'
+  'transition payload carries sheet version and sha256 of the current content, not the caller''s'
 );
 select matches(
   (select payload ->> 'sheetSha256' from public.evaluation_events where evaluation_id = 'eeeeeeee-0000-4000-8000-000000000001'),
@@ -209,12 +218,12 @@ select matches(
   'the sheet hash is 64 hex characters'
 );
 
--- A new version with a different part two, locked by the next transition, gets its own hash.
+-- A new version with a different part two gets its own hash in the next transition.
 insert into public.evaluation_sheets (office_id, evaluation_id, version, content, state) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000001', 2,
    '{"partOne":{"criteria":["a"]},"partTwo":{"score":5}}', 'draft');
 select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000001', 'criteria_awaiting_signature', 'period',
-  'part_one_signed', '2026-01-20', '{}', true);
+  'part_one_signed', '2026-01-20', '{}', false);
 select results_eq(
   $$select (payload ->> 'sheetVersion')::int from public.evaluation_events
      where evaluation_id = 'eeeeeeee-0000-4000-8000-000000000001' order by recorded_at, (payload ->> 'sheetVersion')::int$$,
@@ -228,14 +237,112 @@ select is(
   'a content change gives a different hash'
 );
 
--- Author stamps cannot be forged by the client.
-insert into public.evaluation_events (office_id, evaluation_id, kind, occurred_on, recorded_by) values
-  ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000004', 'absence', '2026-03-01',
-   'aaaaaaaa-1111-4000-8000-000000000001');
+-- The sheet approval locks the current draft.
+select lives_ok(
+  $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000007', 'interview', 'drafted',
+      'sheet_approved', '2026-06-01', '{}', true)$$,
+  'sheet approval by the evaluator succeeds'
+);
 select results_eq(
-  $$select recorded_by from public.evaluation_events where evaluation_id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
-  $$values (auth.uid())$$,
-  'an event is recorded by the signed-in account, whatever the client sends'
+  $$select e.status::text, (select count(*) from public.evaluation_events v where v.evaluation_id = e.id),
+           (select s.state from public.evaluation_sheets s where s.evaluation_id = e.id and s.version = 1)
+      from public.evaluations e where e.id = 'eeeeeeee-0000-4000-8000-000000000007'$$,
+  $$values ('drafted', 1::bigint, 'locked')$$,
+  'transition writes event and locks sheet'
+);
+
+-- Author stamps cannot be forged by the client.
+insert into public.evaluation_events (office_id, evaluation_id, kind, occurred_on, recorded_by, recorded_at) values
+  ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000004', 'absence', '2026-03-01',
+   'aaaaaaaa-1111-4000-8000-000000000001', '2000-01-01');
+select results_eq(
+  $$select recorded_by, recorded_at = now() from public.evaluation_events where evaluation_id = 'eeeeeeee-0000-4000-8000-000000000004'$$,
+  $$values (auth.uid(), true)$$,
+  'an event is recorded by the signed-in account at the current time, whatever the client sends'
+);
+
+-- Attack paths through the Data API with the evaluator's own JWT.
+select throws_ok(
+  $$update public.evaluation_sheets set evaluation_id = 'eeeeeeee-0000-4000-8000-000000000002', version = 99
+     where id = 'ffffffff-0000-4000-8000-000000000004'$$,
+  '42501', null, 'a sheet version cannot move to another evaluation'
+);
+select throws_ok(
+  $$update public.evaluation_sheets set created_by = 'aaaaaaaa-1111-4000-8000-000000000001'
+     where id = 'ffffffff-0000-4000-8000-000000000004'$$,
+  '42501', null, 'the author of a sheet version cannot be changed'
+);
+select throws_ok(
+  $$update public.evaluation_sheets set state = 'locked' where id = 'ffffffff-0000-4000-8000-000000000004'$$,
+  'P0001', 'sheet state changes only through apply_evaluation_transition', 'a client cannot lock a sheet directly'
+);
+select throws_ok(
+  $$insert into public.evaluation_sheets (office_id, evaluation_id, version, content, state)
+    values ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000002', 1, '{"partOne":{}}', 'locked')$$,
+  'P0001', 'a new sheet version starts as draft', 'a client cannot insert a locked sheet'
+);
+select throws_ok(
+  $$insert into public.evaluation_sheets (office_id, evaluation_id, version, content, state)
+    values ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000008', 1, '{"partOne":{}}', 'draft')$$,
+  'P0001', 'the sheet of this evaluation is closed for new versions', 'a client cannot add a sheet version after closure'
+);
+insert into public.evaluation_sheets (office_id, evaluation_id, version, content, state) values
+  ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000002', 1, '{"partOne":{}}', 'draft');
+select lives_ok(
+  $$update public.evaluation_sheets set state = 'cancelled'
+     where evaluation_id = 'eeeeeeee-0000-4000-8000-000000000002' and version = 1$$,
+  'a client may cancel a draft'
+);
+
+insert into public.evaluations (id, office_id, employee_id, evaluator_account_id, regulation_version_id, sheet_id, status, cycle_start, snapshot, created_at) values
+  ('eeeeeeee-0000-4000-8000-000000000010', 'aaaaaaaa-0000-4000-8000-000000000001', 'aaaaaaaa-2222-4000-8000-000000000001',
+   'aaaaaaaa-1111-4000-8000-000000000002', 'aaaaaaaa-3333-4000-8000-000000000001', 'A', 'closed', '2026-01-01', '{}', '2000-01-01');
+select results_eq(
+  $$select status::text, created_at = now() from public.evaluations where id = 'eeeeeeee-0000-4000-8000-000000000010'$$,
+  $$values ('criteria', true)$$,
+  'a client opens an evaluation at the criteria stage at the current time, whatever it sends'
+);
+
+select throws_ok(
+  $$insert into public.evaluation_events (office_id, evaluation_id, kind, occurred_on)
+    values ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000004', 'sheet_approved', '2026-03-01')$$,
+  'P0001', 'transition events are recorded only through apply_evaluation_transition',
+  'a client cannot record a transition event directly'
+);
+select throws_ok(
+  $$insert into public.evaluation_events (office_id, evaluation_id, kind, occurred_on, payload)
+    values ('aaaaaaaa-0000-4000-8000-000000000001', 'eeeeeeee-0000-4000-8000-000000000004', 'absence', '2026-03-01',
+            '{"sheetSha256":"forged"}')$$,
+  'P0001', 'sheet version and hash are recorded only through apply_evaluation_transition',
+  'a client cannot forge the sheet hash in an event'
+);
+
+select throws_ok(
+  $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000002', 'criteria', 'closed',
+      'closed', '2026-03-01', '{}', false)$$,
+  'P0001', 'invalid_transition', 'transition criteria to closed is invalid'
+);
+select throws_ok(
+  $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000008', 'closed', 'drafted',
+      'sheet_approved', '2026-03-01', '{}', true)$$,
+  'P0001', 'invalid_transition', 'a closed evaluation cannot be reopened'
+);
+select throws_ok(
+  $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000004', 'period', 'interview',
+      'evaluation_interview_held', '2026-03-01', '{}', true)$$,
+  'P0001', 'invalid_transition', 'the lock flag must match the transition'
+);
+select throws_ok(
+  $$select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000009', 'interview', 'drafted',
+      'sheet_approved', '2026-03-01', '{}', true)$$,
+  'P0001', 'no draft sheet to lock', 'the sheet approval needs a draft to lock'
+);
+select public.apply_evaluation_transition('eeeeeeee-0000-4000-8000-000000000002', 'criteria', 'criteria_awaiting_signature',
+  'part_one_approved', '2026-03-01', '{"sheetVersion":7,"sheetSha256":"forged"}', false);
+select results_eq(
+  $$select payload from public.evaluation_events where evaluation_id = 'eeeeeeee-0000-4000-8000-000000000002'$$,
+  $$values ('{}'::jsonb)$$,
+  'the transition drops sheet keys sent by the caller'
 );
 
 -- Evaluator two: not the evaluator of E1.
@@ -302,13 +409,9 @@ select throws_ok(
      where id = 'ffffffff-0000-4000-8000-000000000003'$$,
   'P0001', 'evaluation sheet version is locked', 'locked sheet is immutable'
 );
-select lives_ok(
-  $$update public.evaluation_sheets set state = 'superseded' where id = 'ffffffff-0000-4000-8000-000000000003'$$,
-  'a locked sheet can be superseded'
-);
 select throws_ok(
-  $$update public.evaluation_sheets set state = 'draft' where id = 'ffffffff-0000-4000-8000-000000000003'$$,
-  'P0001', 'evaluation sheet version is locked', 'a superseded sheet stays as it is'
+  $$update public.evaluation_sheets set state = 'superseded' where id = 'ffffffff-0000-4000-8000-000000000003'$$,
+  'P0001', 'sheet state changes only through apply_evaluation_transition', 'a client cannot supersede a locked sheet'
 );
 
 do $$
@@ -355,6 +458,14 @@ select throws_ok(
 
 -- Tree visibility.
 reset role;
+select lives_ok(
+  $$update public.evaluation_sheets set state = 'superseded' where id = 'ffffffff-0000-4000-8000-000000000003'$$,
+  'a locked sheet can be superseded on the owner path'
+);
+select throws_ok(
+  $$update public.evaluation_sheets set state = 'draft' where id = 'ffffffff-0000-4000-8000-000000000003'$$,
+  'P0001', 'evaluation sheet version is locked', 'a superseded sheet stays as it is'
+);
 update public.offices set evaluation_visibility = 'tree' where id = 'aaaaaaaa-0000-4000-8000-000000000001';
 set local role authenticated;
 
@@ -390,13 +501,13 @@ select results_eq(
 set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000004","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"admin"}';
 select is(
   (select count(*) from public.evaluations),
-  8::bigint,
+  12::bigint,
   'tree visibility keeps admin reading all'
 );
 set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000001","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"hr"}';
 select is(
   (select count(*) from public.evaluations),
-  8::bigint,
+  12::bigint,
   'tree visibility keeps hr reading all'
 );
 

@@ -198,30 +198,82 @@ revoke execute on function access.evaluation_rule(access.action, access.resource
 grant execute on function access.supervises_employee(uuid) to authenticated;
 grant execute on function access.evaluation_rule(access.action, access.resource, uuid) to authenticated;
 
--- Author columns hold the signed-in account, whatever the client sends. Without a JWT subject
--- (service role, seeds) the supplied value stays. The column name is the trigger argument.
+-- Author and time columns hold the signed-in account and now(), whatever the client sends. Without a JWT
+-- subject (service role, seeds) the supplied author stays. Arguments: author column, time column.
+-- Updates cannot touch them: authenticated has no update privilege on these columns.
 create function public.stamp_author()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
+declare
+  stamp jsonb := jsonb_build_object(tg_argv[1], now());
 begin
   if auth.uid() is not null then
-    new := jsonb_populate_record(new, jsonb_build_object(tg_argv[0], auth.uid()));
+    stamp := stamp || jsonb_build_object(tg_argv[0], auth.uid());
   end if;
+  new := jsonb_populate_record(new, stamp);
   return new;
 end;
 $$;
 
 create trigger evaluations_stamp_author
   before insert on public.evaluations
-  for each row execute function public.stamp_author('created_by');
+  for each row execute function public.stamp_author('created_by', 'created_at');
 create trigger evaluation_sheets_stamp_author
   before insert on public.evaluation_sheets
-  for each row execute function public.stamp_author('created_by');
+  for each row execute function public.stamp_author('created_by', 'created_at');
 create trigger evaluation_events_stamp_author
   before insert on public.evaluation_events
-  for each row execute function public.stamp_author('recorded_by');
+  for each row execute function public.stamp_author('recorded_by', 'recorded_at');
+
+-- The allowed transitions: (from, to, event kind, lock of the current sheet version). The single place
+-- apply_evaluation_transition and the event log guard read. It mirrors the domain state machine
+-- (@sarmata/domain), B2 extends both together.
+create function public.evaluation_transitions()
+returns table (
+  from_status public.evaluation_status,
+  to_status public.evaluation_status,
+  event_kind public.evaluation_event_kind,
+  lock_sheet boolean
+)
+language sql
+immutable
+set search_path = ''
+as $$
+  values
+    ('criteria'::public.evaluation_status, 'criteria_awaiting_signature'::public.evaluation_status,
+     'part_one_approved'::public.evaluation_event_kind, false),
+    ('criteria_awaiting_signature', 'period', 'part_one_signed', false),
+    ('period', 'interview', 'evaluation_interview_held', false),
+    ('interview', 'drafted', 'sheet_approved', true),
+    ('drafted', 'delivered', 'acquainted', false),
+    ('drafted', 'delivered', 'signature_refused', false),
+    ('delivered', 'closed', 'closed', false)
+$$;
+
+revoke execute on function public.evaluation_transitions() from public;
+grant execute on function public.evaluation_transitions() to authenticated;
+
+-- Client rules (current_user is authenticated, i.e. a Data API call with the user's JWT). Security
+-- invoker on purpose: inside security definer RPCs current_user is the owner and these rules step aside.
+-- A client opens an evaluation at the criteria stage, whatever status it sends.
+create function public.evaluations_client_rules()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if current_user = 'authenticated' then
+    new.status := 'criteria';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger evaluations_client_rules
+  before insert on public.evaluations
+  for each row execute function public.evaluations_client_rules();
 
 -- An evaluator opens evaluations only for themselves. Security definer: the service role has no
 -- access to schema access.
@@ -350,6 +402,8 @@ create trigger evaluation_sheets_locked_immutable
 -- Security definer: the status is read regardless of what the caller may see. Before triggers run
 -- ahead of the RLS check, so every lookup stays in the row's office: a row pointing at another
 -- office's evaluation learns nothing here and fails on the foreign key.
+-- FOR SHARE waits for a transition in flight on the evaluation, so a sheet write racing it sees the
+-- committed status (here and in evaluation_sheets_state_rules, which fires after this trigger).
 create function public.evaluation_sheets_part_one_frozen()
 returns trigger
 language plpgsql
@@ -363,7 +417,8 @@ begin
   select e.status into evaluation_status
     from public.evaluations e
    where e.id = new.evaluation_id
-     and e.office_id = new.office_id;
+     and e.office_id = new.office_id
+     for share;
 
   if evaluation_status is distinct from 'criteria' then
     if tg_op = 'UPDATE' then
@@ -391,6 +446,71 @@ create trigger evaluation_sheets_part_one_frozen
   before insert or update on public.evaluation_sheets
   for each row execute function public.evaluation_sheets_part_one_frozen();
 
+-- Client rules for sheets (see evaluations_client_rules). A client adds draft versions only while the
+-- sheet is still being written, and may cancel a draft. Locking is the transition's job, so the hash
+-- in the log always matches a version locked by apply_evaluation_transition.
+-- Runs after evaluation_sheets_part_one_frozen (triggers fire in name order), whose row lock makes
+-- the status read below see a committed transition.
+create function public.evaluation_sheets_state_rules()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  evaluation_status public.evaluation_status;
+begin
+  if current_user <> 'authenticated' then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    if new.state <> 'draft' then
+      raise exception 'a new sheet version starts as draft';
+    end if;
+    -- Read through RLS: an evaluation the caller cannot see is left to the policy and the foreign key.
+    select e.status into evaluation_status
+      from public.evaluations e
+     where e.id = new.evaluation_id;
+    if evaluation_status in ('drafted', 'delivered', 'closed', 'objection', 'interrupted') then
+      raise exception 'the sheet of this evaluation is closed for new versions';
+    end if;
+  elsif new.state is distinct from old.state
+        and not (old.state = 'draft' and new.state = 'cancelled') then
+    raise exception 'sheet state changes only through apply_evaluation_transition';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger evaluation_sheets_state_rules
+  before insert or update on public.evaluation_sheets
+  for each row execute function public.evaluation_sheets_state_rules();
+
+-- Client rules for the event log (see evaluations_client_rules). Transition events and the sheet
+-- version and hash keys come only from apply_evaluation_transition. Clients record the other events
+-- (absence, term change and the like).
+create function public.evaluation_events_client_rules()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if current_user <> 'authenticated' then
+    return new;
+  end if;
+  if new.kind in (select t.event_kind from public.evaluation_transitions() t) then
+    raise exception 'transition events are recorded only through apply_evaluation_transition';
+  end if;
+  if new.payload ? 'sheetVersion' or new.payload ? 'sheetSha256' then
+    raise exception 'sheet version and hash are recorded only through apply_evaluation_transition';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger evaluation_events_client_rules
+  before insert on public.evaluation_events
+  for each row execute function public.evaluation_events_client_rules();
+
 alter table public.evaluations enable row level security;
 alter table public.evaluation_sheets enable row level security;
 alter table public.evaluation_events enable row level security;
@@ -398,9 +518,13 @@ alter table public.evaluation_deadlines enable row level security;
 
 -- Later migrations start without Data API grants (plan 2), so this is the complete surface.
 -- No delete anywhere, and the event log takes no updates either. Evaluations take no direct updates:
--- apply_evaluation_transition is the only writer of status. Sheet drafts are updated through RLS.
+-- apply_evaluation_transition is the only writer of status. Sheet drafts are updated through RLS, but
+-- only in their content, reason and state (evaluation_sheets_state_rules): a version never moves to
+-- another evaluation, office or number, and its author and time stay. Deadlines likewise keep their key.
 grant select, insert on public.evaluations, public.evaluation_events to authenticated;
-grant select, insert, update on public.evaluation_sheets, public.evaluation_deadlines to authenticated;
+grant select, insert on public.evaluation_sheets, public.evaluation_deadlines to authenticated;
+grant update (content, reason, state) on public.evaluation_sheets to authenticated;
+grant update (window_start, due_on, suspended_since, computed_at) on public.evaluation_deadlines to authenticated;
 
 create policy "read evaluations" on public.evaluations
   for select to authenticated
@@ -466,7 +590,8 @@ as $$
 declare
   evaluation_office_id uuid;
   sheet record;
-  event_payload jsonb := coalesce(p_payload, '{}'::jsonb);
+  -- The sheet keys are the transition's own record, never the caller's.
+  event_payload jsonb := coalesce(p_payload, '{}'::jsonb) - 'sheetVersion' - 'sheetSha256';
   event_id uuid;
 begin
   -- A missing evaluation and one the caller may not write look the same: no oracle across offices.
@@ -476,6 +601,17 @@ begin
   if not found
      or not coalesce(access.can('update', 'evaluation', evaluation_office_id, p_evaluation_id), false) then
     raise exception 'insufficient_privilege' using errcode = '42501';
+  end if;
+
+  if not exists (
+    select 1
+      from public.evaluation_transitions() t
+     where t.from_status = p_expected_status
+       and t.to_status = p_next_status
+       and t.event_kind = p_event_kind
+       and t.lock_sheet = p_lock_sheet
+  ) then
+    raise exception 'invalid_transition' using errcode = 'P0001';
   end if;
 
   -- The row lock serializes concurrent transitions: the loser re-checks the status and finds none.

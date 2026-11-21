@@ -210,6 +210,11 @@ isOneToOne: false
             "apply_evaluation_transition":
 { Args: { "p_evaluation_id": string,"p_event_kind": Database["public"]['Enums']["evaluation_event_kind"],"p_expected_status": Database["public"]['Enums']["evaluation_status"],"p_lock_sheet": boolean,"p_next_status": Database["public"]['Enums']["evaluation_status"],"p_occurred_on": string,"p_payload": Json }; Returns: string
                            },
+"evaluation_transitions":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "event_kind": Database["public"]['Enums']["evaluation_event_kind"],"from_status": Database["public"]['Enums']["evaluation_status"],"lock_sheet": boolean,"to_status": Database["public"]['Enums']["evaluation_status"]
+            }[]
+                           },
 "find_similar_employees":
 { Args: { "max_results"?: number,"search": string }; Returns: {
               "first_name": string,"id": string,"last_name": string,"org_unit": string,"position_title": string,"score": number
