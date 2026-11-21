@@ -105,6 +105,7 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm test:integration` | testy repozytoriów na lokalnym Supabase, wymagają `pnpm db:reset` |
 | `pnpm regulations:sync` | wstawia brakujące oficjalne wersje przepisów, kończy się błędem, gdy wersja w bazie różni się od kodu |
 | `pnpm notifications:collect` | ręczne zebranie powiadomień na dziś (`-- --day RRRR-MM-DD` dla innego dnia), pg_cron robi to o 5:00 UTC. Raport JSON zawiera `created`, `queued` i `resolved` |
+| `pnpm retention:run` | ręczne uruchomienie retencji danych (`-- --day RRRR-MM-DD` dla innego dnia, np. po upływie 10 lat dla pracownika demo), pg_cron kolejkuje zadanie o 5:30 UTC. Raport JSON zawiera `notes`, `aiRuns`, `anonymized` i `failed` |
 | `pnpm worker:dev` | worker kolejki pgmq z przeładowaniem po zmianie kodu |
 | `pnpm worker:start` | worker kolejki pgmq bez przeładowania |
 | `pnpm ai:setup` | llama.cpp i model Bielik do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local`, z `--with-bielik-one` także Bielik-One |

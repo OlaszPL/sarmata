@@ -27,6 +27,8 @@ const delivery = createNotificationDelivery({
         },
 });
 
+const system = createSystemServices(client);
+
 const controller = new AbortController();
 for (const name of ['SIGTERM', 'SIGINT'] as const) {
   process.once(name, () => {
@@ -40,7 +42,8 @@ await runWorker(
     queue: createJobQueue<JobType>(client),
     handlers: jobHandlersFor({
       delivery,
-      closing: createSystemServices(client).evaluationClosing,
+      closing: system.evaluationClosing,
+      retention: system.retention,
     }),
     logger: jsonLogger,
     idleDelayMs: config.idleDelayMs,
