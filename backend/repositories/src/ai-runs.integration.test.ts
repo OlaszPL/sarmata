@@ -1,5 +1,5 @@
 import type { Database } from '@sarmata/database';
-import { type AiInput } from '@sarmata/domain';
+import { type AiInput, DEFAULT_APPRECIATION_GAP_DAYS } from '@sarmata/domain';
 import { createClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
 import {
@@ -211,5 +211,35 @@ describe('ai runs', () => {
     expect(
       await admin.addDecisions(run.id, [{ fragment: 'question.0', decision: 'rejected' }]),
     ).toBe(false);
+  });
+});
+
+describe('demo seed', () => {
+  it('demo seed has a reviewed sheet draft about Marek', async () => {
+    const evaluator = await signedIn('oceniajacy@kropka.test');
+    const marek = await employeeId(evaluator, 'Merytoryczny');
+    const runs = createAiRunRepository(evaluator);
+    const draft = await runs.get('44444444-4444-4444-8444-000000000001');
+    expect(draft).toMatchObject({ kind: 'sheet_draft', status: 'done', employeeId: marek });
+    if (draft?.kind !== 'sheet_draft' || draft.output === null) throw new Error('No seeded draft');
+    const seededNotes = new Set(draft.inputRefs.noteIds.map((note) => note.id));
+    const sentences = [
+      ...draft.output.ratings.flatMap((rating) => rating.sentences),
+      ...draft.output.justification,
+      ...draft.output.developmentConclusions,
+    ];
+    expect(sentences.length).toBeGreaterThan(0);
+    expect(sentences.every((s) => s.noteIds.every((id) => seededNotes.has(id)))).toBe(true);
+    expect(draft.decisions.map((d) => d.decision).sort()).toEqual(['accepted', 'edited']);
+
+    const signals = await runs.list({ employeeId: marek, kind: 'hr_signals', status: 'done' });
+    const seeded = signals.find((run) => run.id === '44444444-4444-4444-8444-000000000002');
+    expect(
+      seeded?.kind === 'hr_signals' &&
+        seeded.output?.signals.filter((signal) => signal.present).map((signal) => signal.signal),
+    ).toEqual(['overload']);
+
+    const settings = await createOfficeSettingsRepository(evaluator).get();
+    expect(settings?.appreciationGapDays).toBe(DEFAULT_APPRECIATION_GAP_DAYS);
   });
 });
