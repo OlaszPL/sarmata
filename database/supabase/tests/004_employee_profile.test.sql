@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(9);
+select plan(14);
 
 insert into public.offices (id, name) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'Urząd A'),
@@ -62,6 +62,33 @@ set local request.jwt.claims = '{"sub":"bbbbbbbb-1111-4000-8000-000000000002","r
 select is_empty(
   $$select 1 from public.find_similar_employees('Ewa Ewidencyjn')$$,
   'search from an office without matching employees is empty'
+);
+
+-- Supervisor tree: only hr and admin set or change the supervisor. Cezary reports to Marek, Marek to Ewa.
+set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000002","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"evaluator"}';
+select throws_ok(
+  $$insert into public.employees (id, office_id, first_name, last_name, supervisor_employee_id) values ('aaaaaaaa-2222-4000-8000-000000000005', 'aaaaaaaa-0000-4000-8000-000000000001', 'Nowy', 'Podwładny', 'aaaaaaaa-2222-4000-8000-000000000001')$$,
+  '42501', 'supervisor change requires hr or admin', 'evaluator cannot set supervisor on insert'
+);
+select throws_ok(
+  $$update public.employees set supervisor_employee_id = 'aaaaaaaa-2222-4000-8000-000000000001' where id = 'aaaaaaaa-2222-4000-8000-000000000004'$$,
+  '42501', 'supervisor change requires hr or admin', 'evaluator cannot set supervisor on update'
+);
+select lives_ok(
+  $$update public.employees set position_title = 'Starszy referent' where id = 'aaaaaaaa-2222-4000-8000-000000000001'$$,
+  'evaluator can still edit other employee fields'
+);
+
+set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000001","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"hr"}';
+select lives_ok(
+  $$update public.employees set supervisor_employee_id = 'aaaaaaaa-2222-4000-8000-000000000001' where id = 'aaaaaaaa-2222-4000-8000-000000000004'$$,
+  'hr sets supervisor'
+);
+
+set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000004","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"admin"}';
+select lives_ok(
+  $$update public.employees set supervisor_employee_id = 'aaaaaaaa-2222-4000-8000-000000000002' where id = 'aaaaaaaa-2222-4000-8000-000000000004'$$,
+  'admin sets supervisor'
 );
 
 select * from finish();
