@@ -1,0 +1,1389 @@
+rok_danych,temat,wskaznik,wartosc,jednostka,plik,strona,uwagi
+2024,badania_opinii,ankieta_twoja_sc_odpowiedzi,23000,liczba,sprawozdanie-ssc-2024.pdf,25,ponad 23 tys. odpowiedzi (prawie co 5 czlonek korpusu)
+2021,badania_opinii,caf_badanie_urzedy_respondenci,1100,urzedy,sprawozdanie-ssc-2021.pdf,48,"tekst: blisko 1100 urzędów, 33% zna CAF, 45% z nich stosowało do samooceny"
+2024,badania_opinii,ceni_poczucie_sluzby_odsetek,30,%,sprawozdanie-ssc-2024.pdf,25,
+2024,badania_opinii,ceni_stabilnosc_zatrudnienia_odsetek,85,%,sprawozdanie-ssc-2024.pdf,25,
+2024,badania_opinii,ceni_wlb_odsetek,35,%,sprawozdanie-ssc-2024.pdf,25,
+2022,badania_opinii,etyka_uwzgledniana_przy_nagrodach_odsetek,52,%,sprawozdanie-ssc-2022.pdf,50,przestrzeganie zasad przy decyzjach o nagrodach
+2022,badania_opinii,kadra_szacunek_dla_pracownikow_odsetek,81,%,sprawozdanie-ssc-2022.pdf,50,
+2022,badania_opinii,konsekwencje_nieetycznych_zachowan_odsetek,61,%,sprawozdanie-ssc-2022.pdf,50,
+2024,badania_opinii,misja_lepiej_przywodztwo_zarzadzanie_odsetek,15,%,sprawozdanie-ssc-2024.pdf,26,co pomogloby lepiej spelniac misje (wynagrodzenia 18% / kultura 17%)
+2024,badania_opinii,ocena_pracy_w_sc_4_plus_odsetek,82,%,sprawozdanie-ssc-2024.pdf,25,ocena 4 lub wiecej w skali 1-6
+2024,badania_opinii,ocena_pracy_w_sc_srednia,4.36,skala 1-6,sprawozdanie-ssc-2024.pdf,25,
+2024,badania_opinii,ocena_sc_pozytywna_spoleczenstwo_odsetek,45,%,sprawozdanie-ssc-2024.pdf,26,IBRiS CATI n=1000. negatywnie 31%
+2025,badania_opinii,ocena_sc_pozytywna_spoleczenstwo_odsetek,51,%,sprawozdanie-ssc-2025.pdf,7,IBRiS dla KPRM 2025
+2024,badania_opinii,politycy_sc_innowacyjna_odsetek,17,%,sprawozdanie-ssc-2024.pdf,26,ankieta 47 politykow
+2024,badania_opinii,politycy_sc_profesjonalna_odsetek,85,%,sprawozdanie-ssc-2024.pdf,26,
+2022,badania_opinii,pomocnosc_doradcy_etyki_odsetek,78.7,%,sprawozdanie-ssc-2022.pdf,51,
+2022,badania_opinii,pozytywna_ocena_kultury_uczciwosci_odsetek,81.5,%,sprawozdanie-ssc-2022.pdf,51,88% wobec swojego urzedu 75% wobec korpusu
+2022,badania_opinii,pozytywna_ocena_procedur_etycznych_odsetek,52,%,sprawozdanie-ssc-2022.pdf,51,
+2022,badania_opinii,pozytywne_opinie_o_przelozonych_odsetek,70,%,sprawozdanie-ssc-2022.pdf,50,zachowania i postawy przelozonych
+2025,badania_opinii,prosty_jezyk_zgoda_spoleczenstwo_odsetek,38,%,sprawozdanie-ssc-2025.pdf,38,49% przeciwnego zdania
+2022,badania_opinii,przelozony_przestrzega_standardow_etycznych_odsetek,74,%,sprawozdanie-ssc-2022.pdf,50,
+2025,badania_opinii,rozpoznawalnosc_sc_odsetek,40,%,sprawozdanie-ssc-2025.pdf,7,ok. 40% spoleczenstwa
+2025,badania_opinii,trafne_skojarzenie_sc_odsetek,28,%,sprawozdanie-ssc-2025.pdf,38,2024: 22%
+2017,badania_opinii,urzednicy_kompetentni_odsetek,73,%,sprawozdanie-ssc-2017.pdf,58,CBOS 2017 cytowany w sprawozdaniu
+2017,badania_opinii,urzednicy_pracuja_rzetelnie_odsetek,58,%,sprawozdanie-ssc-2017.pdf,58,CBOS 2017
+2022,badania_opinii,wskaznik_kultury_uczciwosci_odsetek,74,%,sprawozdanie-ssc-2022.pdf,13,Diagnoza poziomu kultury uczciwosci w sc
+2022,badania_opinii,wsparcie_kierownictwa_w_trudnych_sytuacjach_odsetek,72,%,sprawozdanie-ssc-2022.pdf,50,
+2016,badania_opinii,zaufanie_do_urzednikow_odsetek,50,%,sprawozdanie-ssc-2016.pdf,37,dane CBOS cytowane w sprawozdaniu (33% nie ufa urzednikom)
+2024,badania_opinii,zmiana_warunkow_kultury_atmosfery_odsetek,13,%,sprawozdanie-ssc-2024.pdf,25,
+2024,badania_opinii,zmiana_wlb_czasu_trybu_pracy_odsetek,15,%,sprawozdanie-ssc-2024.pdf,25,
+2024,badania_opinii,zmiana_wynagrodzen_dla_atrakcyjnosci_odsetek,42,%,sprawozdanie-ssc-2024.pdf,25,co zmienic by sc byla atrakcyjniejsza
+2022,badania_opinii,znajomosc_zasad_sc_odsetek,85.5,%,sprawozdanie-ssc-2022.pdf,50,Diagnoza kultury uczciwosci
+2020,cyfryzacja_hr,praca_zdalna_administracja_terenowa_kwiecien_odsetek,26,%,sprawozdanie-ssc-2020.pdf,36,
+2020,cyfryzacja_hr,praca_zdalna_korpus_koniec_roku_odsetek,25,%,sprawozdanie-ssc-2020.pdf,36,rynek pracy ogółem 11%
+2020,cyfryzacja_hr,praca_zdalna_korpus_listopad_odsetek,35,%,sprawozdanie-ssc-2020.pdf,36,
+2021,cyfryzacja_hr,praca_zdalna_korpus_listopad_odsetek,13,%,sprawozdanie-ssc-2021.pdf,26,urzędy: 18%
+2020,cyfryzacja_hr,praca_zdalna_korpus_szczyt_odsetek,42,%,sprawozdanie-ssc-2020.pdf,11,kwiecień 2020
+2021,cyfryzacja_hr,praca_zdalna_korpus_szczyt_odsetek,34,%,sprawozdanie-ssc-2021.pdf,26,"marzec 2021, rynek pracy 14%"
+2020,cyfryzacja_hr,praca_zdalna_ministerstwa_kwiecien_odsetek,73,%,sprawozdanie-ssc-2020.pdf,36,
+2020,cyfryzacja_hr,praca_zdalna_urzedy_koniec_roku_odsetek,44,%,sprawozdanie-ssc-2020.pdf,83,"OGÓŁEM 31.12.2020, odczyt z wykresu"
+2020,cyfryzacja_hr,praca_zdalna_urzedy_szczyt_odsetek,58,%,sprawozdanie-ssc-2020.pdf,11,w szczytowym momencie 58% urzędów stosowało pracę zdalną
+2021,cyfryzacja_hr,praca_zdalna_urzedy_szczyt_odsetek,51,%,sprawozdanie-ssc-2021.pdf,26,marzec 2021
+2025,cyfryzacja_hr,projekt_tsi_urzedy,28,liczba,sprawozdanie-ssc-2025.pdf,26,projekt TSI zarzadzanie procesowe 2025-2027
+2024,cyfryzacja_hr,rekrutacje_gov_pl_uruchomiony,0,liczba,sprawozdanie-ssc-2024.pdf,86,system nie byl gotowy w 2024
+2025,cyfryzacja_hr,rekrutacje_gov_pl_uruchomiony,0,liczba,sprawozdanie-ssc-2025.pdf,40,system nie byl gotowy w 2025 (cel 1. zrealizowany czesciowo)
+2020,cyfryzacja_hr,serwis_sc_unikalne_wejscia,500000,wejścia,sprawozdanie-ssc-2020.pdf,61,tekst: blisko pół miliona w ok. 6 mies. od migracji na gov.pl
+2024,cyfryzacja_hr,urzedy_bez_hybrydowej_z_powodu_braku_ezd,249,liczba urzedow,sprawozdanie-ssc-2024.pdf,60,brak elektronicznego obiegu dokumentow. etykieta wykresu
+2025,cyfryzacja_hr,urzedy_bez_hybrydowej_z_powodu_braku_ezd,218,liczba urzedow,sprawozdanie-ssc-2025.pdf,60,przyczyna niekorzystania z pracy zdalnej hybrydowej: brak elektronicznego obiegu dokumentow
+2024,cyfryzacja_hr,urzedy_bez_hybrydowej_z_powodu_braku_sprzetu,302,liczba urzedow,sprawozdanie-ssc-2024.pdf,60,etykieta wykresu
+2025,cyfryzacja_hr,urzedy_bez_hybrydowej_z_powodu_braku_sprzetu,341,liczba urzedow,sprawozdanie-ssc-2025.pdf,60,brak mozliwosci technicznych
+2023,dobrostan,forum_hr_spotkania,3,spotkania,sprawozdanie-ssc-2023.pdf,12,
+2015,dobrostan,godziny_nadliczbowe,828000,godziny,sprawozdanie-ssc-2017.pdf,50,przypis 53 (ok. 828 tys.)
+2016,dobrostan,godziny_nadliczbowe,870000,godziny,sprawozdanie-ssc-2016.pdf,34,podano ok. 870 tys. (2015 ok. 828 tys.) czas pracy jako sygnal obciazenia
+2017,dobrostan,godziny_nadliczbowe,899000,godziny,sprawozdanie-ssc-2017.pdf,50,podano ok. 899 tys.
+2021,dobrostan,godziny_nadliczbowe,652000,godziny,sprawozdanie-ssc-2022.pdf,44,
+2022,dobrostan,godziny_nadliczbowe,738000,godziny,sprawozdanie-ssc-2022.pdf,44,ponad 738 tys. (2021: 652 tys.)
+2023,dobrostan,godziny_nadliczbowe,742000,godziny,sprawozdanie-ssc-2023.pdf,58,prawie 742 tys.
+2023,dobrostan,konkurs_wlb_urzedy,23,urzedy,sprawozdanie-ssc-2023.pdf,12,34 praktyki zgloszone
+2021,dobrostan,konkurs_wlb_zgloszone_praktyki,46,praktyki,sprawozdanie-ssc-2021.pdf,13,"16 urzędów, pierwsza edycja"
+2022,dobrostan,nadgodziny_kas_odsetek,43,%,sprawozdanie-ssc-2022.pdf,44,ok. 314 tys. godzin
+2023,dobrostan,nadgodziny_kas_odsetek,46,%,sprawozdanie-ssc-2023.pdf,58,ok. 338 tys. godzin
+2022,dobrostan,nadgodziny_nierozliczone,126000,godziny,sprawozdanie-ssc-2022.pdf,44,ok. 126 tys. (17%)
+2023,dobrostan,nadgodziny_nierozliczone,82000,godziny,sprawozdanie-ssc-2023.pdf,58,ok. 82 tys.
+2024,dobrostan,nadgodziny_nierozliczone,85000,godziny,sprawozdanie-ssc-2024.pdf,72,13% wypracowanych
+2025,dobrostan,nadgodziny_nierozliczone,109000,godziny,sprawozdanie-ssc-2025.pdf,30,15% wypracowanych (2024: 85 tys.)
+2022,dobrostan,nadgodziny_nierozliczone_odsetek,17,%,sprawozdanie-ssc-2022.pdf,44,2021: 19%
+2023,dobrostan,nadgodziny_nierozliczone_odsetek,11,%,sprawozdanie-ssc-2023.pdf,58,
+2025,dobrostan,nadgodziny_nierozliczone_odsetek,15,%,sprawozdanie-ssc-2025.pdf,30,
+2024,dobrostan,nadgodziny_pracownicy_liczba,38000,osoby,sprawozdanie-ssc-2024.pdf,72,ok. 38 tys. (2023: ponad 39 tys.)
+2025,dobrostan,nadgodziny_pracownicy_liczba,40000,osoby,sprawozdanie-ssc-2025.pdf,30,ok. 40 tys. (2024: ponad 38 tys.)
+2022,dobrostan,nadgodziny_przyczyna_braki_kadrowe_odsetek,46,% urzedow,sprawozdanie-ssc-2022.pdf,44,
+2023,dobrostan,nadgodziny_przyczyna_braki_kadrowe_odsetek,43,% urzedow,sprawozdanie-ssc-2023.pdf,59,
+2022,dobrostan,nadgodziny_przyczyna_nadmiar_obowiazkow_odsetek,66,% urzedow,sprawozdanie-ssc-2022.pdf,44,przyczyna nierozliczenia
+2023,dobrostan,nadgodziny_przyczyna_nadmiar_obowiazkow_odsetek,63,% urzedow,sprawozdanie-ssc-2023.pdf,59,
+2023,dobrostan,nadgodziny_wypracowane,742000,godziny,sprawozdanie-ssc-2024.pdf,72,
+2024,dobrostan,nadgodziny_wypracowane,641000,godziny,sprawozdanie-ssc-2024.pdf,72,prawie 641 tys. w 644 urzedach (37%). 2023: 742 tys.
+2025,dobrostan,nadgodziny_wypracowane,713000,godziny,sprawozdanie-ssc-2025.pdf,30,prawie 713 tys. w 658 urzedach (37%)
+2017,dobrostan,nierozliczone_godziny_nadliczbowe,156000,godziny,sprawozdanie-ssc-2017.pdf,51,ok. 156 tys. (17%) w 344 urzedach (ok. 52%)
+2022,dobrostan,osoby_w_nadgodzinach,38000,osoby,sprawozdanie-ssc-2022.pdf,44,ponad 38 tys. (2021: 34 tys.)
+2023,dobrostan,osoby_w_nadgodzinach,39000,osoby,sprawozdanie-ssc-2023.pdf,58,ponad 39 tys.
+2017,dobrostan,osoby_z_nadgodzinami,42700,osoby,sprawozdanie-ssc-2017.pdf,51,podano 42.7 tys. (2016 43.7 tys.) srednio 21 godzin na osobe
+2024,dobrostan,postepowania_dyscyplinarne_wszczete,156,liczba,sprawozdanie-ssc-2024.pdf,74,2023: 130
+2025,dobrostan,postepowania_dyscyplinarne_wszczete,139,liczba,sprawozdanie-ssc-2025.pdf,31,2024: 156 (temat umowny: odpowiedzialnosc dyscyplinarna)
+2024,dobrostan,postepowania_wyjasniajace_wszczete,378,liczba,sprawozdanie-ssc-2024.pdf,74,2023: 274
+2025,dobrostan,postepowania_wyjasniajace_wszczete,345,liczba,sprawozdanie-ssc-2025.pdf,31,2024: 378
+2024,dobrostan,pracownicy_praca_zdalna_calkowita,1844,osoby,sprawozdanie-ssc-2024.pdf,60,etykieta wykresu
+2025,dobrostan,pracownicy_praca_zdalna_calkowita,2675,osoby,sprawozdanie-ssc-2025.pdf,59,
+2024,dobrostan,pracownicy_praca_zdalna_hybrydowa,19393,osoby,sprawozdanie-ssc-2024.pdf,60,etykieta wykresu
+2025,dobrostan,pracownicy_praca_zdalna_hybrydowa,24996,osoby,sprawozdanie-ssc-2025.pdf,59,w tym do 1/3 czasu 11134 / 1/3 do 2/3 10796 / powyzej 2/3 3066
+2024,dobrostan,pracownicy_praca_zdalna_na_wniosek_uprawnionego,3615,osoby,sprawozdanie-ssc-2024.pdf,60,etykieta wykresu
+2025,dobrostan,pracownicy_praca_zdalna_na_wniosek_uprawnionego,3582,osoby,sprawozdanie-ssc-2025.pdf,59,
+2024,dobrostan,pracownicy_praca_zdalna_okazjonalna,39089,osoby,sprawozdanie-ssc-2024.pdf,60,etykieta wykresu
+2025,dobrostan,pracownicy_praca_zdalna_okazjonalna,42946,osoby,sprawozdanie-ssc-2025.pdf,59,
+2017,dobrostan,przyczyna_nierozliczenia_nadmiar_obowiazkow_odsetek,24,%,sprawozdanie-ssc-2017.pdf,51,koniec okresu rozliczeniowego 35%
+2019,dobrostan,szkolenia_centralne_wlb_kadry_osoby,247,osoby,sprawozdanie-ssc-2019.pdf,11,pracownicy komorek kadrowych przeszkoleni z WLB
+2016,dobrostan,urzedy_bez_okresow_rozliczeniowych_odsetek,10,%,sprawozdanie-ssc-2016.pdf,34,ok. 10% urzedow nie ustalilo okresow rozliczeniowych
+2019,dobrostan,urzedy_min_1_narzedzie_wlb_odsetek,96,%,sprawozdanie-ssc-2020.pdf,66,przypis 52
+2022,dobrostan,urzedy_min_5_narzedzi_wlb_bez_pracy_zdalnej_odsetek,49,%,sprawozdanie-ssc-2023.pdf,13,wartosc 2022 bez pracy zdalnej
+2020,dobrostan,urzedy_min_5_narzedzi_wlb_odsetek,49.89,%,sprawozdanie-ssc-2020.pdf,66,"pozakodeksowe narzędzia WLB, cel 2021: 50%"
+2021,dobrostan,urzedy_min_5_narzedzi_wlb_odsetek,55,%,sprawozdanie-ssc-2021.pdf,56,cel 50%
+2022,dobrostan,urzedy_min_5_narzedzi_wlb_odsetek,56,%,sprawozdanie-ssc-2022.pdf,10,co najmniej 5 pozakodeksowych narzedzi WLB
+2023,dobrostan,urzedy_min_5_narzedzi_wlb_odsetek,52,%,sprawozdanie-ssc-2023.pdf,13,spadek z 56% bo praca zdalna weszla do Kodeksu pracy (7.04.2023)
+2023,dobrostan,urzedy_min_5_narzedzi_wlb_odsetek,52,%,sprawozdanie-ssc-2024.pdf,20,
+2024,dobrostan,urzedy_min_5_narzedzi_wlb_odsetek,55,%,sprawozdanie-ssc-2024.pdf,20,2023: 52%
+2025,dobrostan,urzedy_min_5_narzedzi_wlb_odsetek,57,%,sprawozdanie-ssc-2025.pdf,20,2024: 55%
+2024,dobrostan,urzedy_nierozliczone_nadmiar_obowiazkow_odsetek,64,%,sprawozdanie-ssc-2024.pdf,72,
+2025,dobrostan,urzedy_nierozliczone_nadmiar_obowiazkow_odsetek,69,%,sprawozdanie-ssc-2025.pdf,30,przyczyna nierozliczenia: nadmiar obowiazkow sluzbowych (wsrod urzedow z nierozliczonymi)
+2024,dobrostan,urzedy_praca_zdalna_calkowita_odsetek,7,%,sprawozdanie-ssc-2024.pdf,58,
+2025,dobrostan,urzedy_praca_zdalna_calkowita_odsetek,6,%,sprawozdanie-ssc-2025.pdf,59,
+2025,dobrostan,urzedy_praca_zdalna_hybrydowa_odsetek,12,%,sprawozdanie-ssc-2025.pdf,59,
+2025,dobrostan,urzedy_praca_zdalna_na_wniosek_uprawnionego_odsetek,11,%,sprawozdanie-ssc-2025.pdf,59,art. 67(19) par. 6 i 7 KP
+2025,dobrostan,urzedy_praca_zdalna_okazjonalna_odsetek,26,%,sprawozdanie-ssc-2025.pdf,59,
+2022,dobrostan,urzedy_system_podstawowy_czasu_pracy_odsetek,88.9,%,sprawozdanie-ssc-2022.pdf,45,
+2023,dobrostan,urzedy_system_podstawowy_czasu_pracy_odsetek,91,%,sprawozdanie-ssc-2023.pdf,59,1590 urzedow
+2023,dobrostan,urzedy_system_zadaniowy_liczba,27,urzedy,sprawozdanie-ssc-2023.pdf,59,1.6% nowy system po nowelizacji
+2025,dobrostan,urzedy_wczasy_pod_grusza_odsetek,93,%,sprawozdanie-ssc-2025.pdf,60,najczestsze narzedzie WLB
+2017,dobrostan,urzedy_z_nadgodzinami,666,urzedy,sprawozdanie-ssc-2017.pdf,50,36% urzedow
+2023,dobrostan,urzedy_z_nadgodzinami,559,urzedy,sprawozdanie-ssc-2023.pdf,58,32% urzedow
+2019,dobrostan,urzedy_z_praca_zdalna_odsetek,4,%,sprawozdanie-ssc-2025.pdf,59,etykieta wykresu 2019-2025
+2020,dobrostan,urzedy_z_praca_zdalna_odsetek,52,%,sprawozdanie-ssc-2025.pdf,59,etykieta wykresu 2019-2025
+2021,dobrostan,urzedy_z_praca_zdalna_odsetek,54,%,sprawozdanie-ssc-2025.pdf,59,etykieta wykresu 2019-2025
+2022,dobrostan,urzedy_z_praca_zdalna_odsetek,40,%,sprawozdanie-ssc-2025.pdf,59,etykieta wykresu 2019-2025
+2023,dobrostan,urzedy_z_praca_zdalna_odsetek,38,%,sprawozdanie-ssc-2025.pdf,59,etykieta wykresu 2019-2025
+2024,dobrostan,urzedy_z_praca_zdalna_odsetek,30,%,sprawozdanie-ssc-2025.pdf,59,etykieta wykresu 2019-2025
+2025,dobrostan,urzedy_z_praca_zdalna_odsetek,30,%,sprawozdanie-ssc-2025.pdf,20,bez zmian wobec 2024
+2022,dobrostan,wlb_grupowe_ubezpieczenie_odsetek_urzedow,84,%,sprawozdanie-ssc-2022.pdf,10,
+2023,dobrostan,wlb_grupowe_ubezpieczenie_odsetek_urzedow,84,%,sprawozdanie-ssc-2023.pdf,13,
+2023,dobrostan,wlb_miejsce_parkingowe_odsetek_urzedow,80,%,sprawozdanie-ssc-2023.pdf,13,
+2025,dobrostan,wlb_przedsiewziecia_zdrowie_psychiczne,4,liczba,sprawozdanie-ssc-2025.pdf,41,wskaznik planu: cel 3
+2022,dobrostan,wlb_wczasy_pod_grusza_odsetek_urzedow,93,%,sprawozdanie-ssc-2022.pdf,10,
+2023,dobrostan,wlb_wczasy_pod_grusza_odsetek_urzedow,93,%,sprawozdanie-ssc-2023.pdf,13,
+2022,dobrostan,wlb_wyjscie_za_odpracowaniem_odsetek_urzedow,81,%,sprawozdanie-ssc-2022.pdf,10,
+2023,dobrostan,wlb_wyjscie_za_odpracowaniem_odsetek_urzedow,84,%,sprawozdanie-ssc-2023.pdf,13,
+2023,dobrostan,wlb_zapomoga_odsetek_urzedow,75,%,sprawozdanie-ssc-2023.pdf,13,
+2022,fluktuacja,fluktuacja_bez_kas_odsetek,9.3,%,sprawozdanie-ssc-2022.pdf,26,KAS zatrudnia ok. 45 tys. czlonkow korpusu
+2024,fluktuacja,fluktuacja_kas,4.1,%,sprawozdanie-ssc-2024.pdf,90,
+2025,fluktuacja,fluktuacja_kas,3.4,%,sprawozdanie-ssc-2025.pdf,45,
+2018,fluktuacja,fluktuacja_kas_odsetek,5.8,%,sprawozdanie-ssc-2018.pdf,79,
+2019,fluktuacja,fluktuacja_kas_odsetek,5.9,%,sprawozdanie-ssc-2019.pdf,74,
+2022,fluktuacja,fluktuacja_kas_odsetek,6.0,%,sprawozdanie-ssc-2022.pdf,25,
+2023,fluktuacja,fluktuacja_kas_odsetek,5.9,%,sprawozdanie-ssc-2023.pdf,36,
+2024,fluktuacja,fluktuacja_ministerstwa_kprm,10.3,%,sprawozdanie-ssc-2024.pdf,42,bez placowek zagranicznych
+2025,fluktuacja,fluktuacja_ministerstwa_kprm,8.6,%,sprawozdanie-ssc-2025.pdf,9,od 2025 placowki zagraniczne wliczone do ministerstw i KPRM
+2018,fluktuacja,fluktuacja_ministerstwa_kprm_odsetek,14.4,%,sprawozdanie-ssc-2018.pdf,79,
+2019,fluktuacja,fluktuacja_ministerstwa_kprm_odsetek,10.7,%,sprawozdanie-ssc-2019.pdf,74,
+2022,fluktuacja,fluktuacja_ministerstwa_kprm_odsetek,11.4,%,sprawozdanie-ssc-2022.pdf,25,
+2023,fluktuacja,fluktuacja_ministerstwa_kprm_odsetek,9.8,%,sprawozdanie-ssc-2023.pdf,36,
+2024,fluktuacja,fluktuacja_ministerstwa_kprm_z_placowkami,10.5,%,sprawozdanie-ssc-2025.pdf,9,przeliczenie 2024 z placowkami zagranicznymi (przypis 8)
+2024,fluktuacja,fluktuacja_placowki_zagraniczne,12.4,%,sprawozdanie-ssc-2024.pdf,42,
+2022,fluktuacja,fluktuacja_placowki_zagraniczne_odsetek,2.6,%,sprawozdanie-ssc-2022.pdf,25,
+2023,fluktuacja,fluktuacja_placowki_zagraniczne_odsetek,18.7,%,sprawozdanie-ssc-2023.pdf,36,4-letnie okresy rotacji
+2024,fluktuacja,fluktuacja_powiatowa_adm_zespolona,5.9,%,sprawozdanie-ssc-2024.pdf,42,
+2025,fluktuacja,fluktuacja_powiatowa_adm_zespolona,6.0,%,sprawozdanie-ssc-2025.pdf,9,
+2018,fluktuacja,fluktuacja_powiatowa_zespolona_odsetek,8.9,%,sprawozdanie-ssc-2018.pdf,79,
+2019,fluktuacja,fluktuacja_powiatowa_zespolona_odsetek,8.1,%,sprawozdanie-ssc-2019.pdf,74,
+2022,fluktuacja,fluktuacja_powiatowa_zespolona_odsetek,8.4,%,sprawozdanie-ssc-2022.pdf,25,
+2023,fluktuacja,fluktuacja_powiatowa_zespolona_odsetek,8.4,%,sprawozdanie-ssc-2023.pdf,37,
+2022,fluktuacja,fluktuacja_poza_warszawa_odsetek,7.0,%,sprawozdanie-ssc-2022.pdf,25,
+2024,fluktuacja,fluktuacja_pozostala_adm_niezespolona,6.1,%,sprawozdanie-ssc-2024.pdf,42,
+2025,fluktuacja,fluktuacja_pozostala_adm_niezespolona,5.4,%,sprawozdanie-ssc-2025.pdf,45,
+2018,fluktuacja,fluktuacja_pozostala_niezespolona_odsetek,9.4,%,sprawozdanie-ssc-2018.pdf,79,
+2019,fluktuacja,fluktuacja_pozostala_niezespolona_odsetek,9.0,%,sprawozdanie-ssc-2019.pdf,74,
+2023,fluktuacja,fluktuacja_pozostala_niezespolona_odsetek,7.8,%,sprawozdanie-ssc-2023.pdf,37,
+2018,fluktuacja,fluktuacja_stanowiska_specjalistyczne_odsetek,9.3,%,sprawozdanie-ssc-2018.pdf,81,
+2018,fluktuacja,fluktuacja_stanowiska_wspomagajace_odsetek,11.7,%,sprawozdanie-ssc-2018.pdf,81,
+2024,fluktuacja,fluktuacja_urzedy_centralne,8.0,%,sprawozdanie-ssc-2024.pdf,42,
+2025,fluktuacja,fluktuacja_urzedy_centralne,7.0,%,sprawozdanie-ssc-2025.pdf,9,
+2018,fluktuacja,fluktuacja_urzedy_centralne_odsetek,12.7,%,sprawozdanie-ssc-2018.pdf,79,
+2019,fluktuacja,fluktuacja_urzedy_centralne_odsetek,11.8,%,sprawozdanie-ssc-2019.pdf,74,max w pojedynczym urzedzie centralnym ok. 37%
+2022,fluktuacja,fluktuacja_urzedy_centralne_odsetek,11.0,%,sprawozdanie-ssc-2022.pdf,25,
+2023,fluktuacja,fluktuacja_urzedy_centralne_odsetek,9.9,%,sprawozdanie-ssc-2023.pdf,36,
+2024,fluktuacja,fluktuacja_urzedy_wojewodzkie,7.5,%,sprawozdanie-ssc-2024.pdf,42,
+2025,fluktuacja,fluktuacja_urzedy_wojewodzkie,5.4,%,sprawozdanie-ssc-2025.pdf,45,
+2018,fluktuacja,fluktuacja_urzedy_wojewodzkie_odsetek,13.6,%,sprawozdanie-ssc-2018.pdf,79,
+2019,fluktuacja,fluktuacja_urzedy_wojewodzkie_odsetek,11.5,%,sprawozdanie-ssc-2019.pdf,74,
+2022,fluktuacja,fluktuacja_urzedy_wojewodzkie_odsetek,9.1,%,sprawozdanie-ssc-2022.pdf,25,
+2023,fluktuacja,fluktuacja_urzedy_wojewodzkie_odsetek,8.3,%,sprawozdanie-ssc-2023.pdf,37,
+2022,fluktuacja,fluktuacja_warszawa_odsetek,10.6,%,sprawozdanie-ssc-2022.pdf,25,
+2024,fluktuacja,fluktuacja_wojewodzka_adm_zespolona,7.4,%,sprawozdanie-ssc-2024.pdf,42,
+2025,fluktuacja,fluktuacja_wojewodzka_adm_zespolona,6.9,%,sprawozdanie-ssc-2025.pdf,9,
+2018,fluktuacja,fluktuacja_wojewodzka_zespolona_odsetek,10.7,%,sprawozdanie-ssc-2018.pdf,79,
+2019,fluktuacja,fluktuacja_wojewodzka_zespolona_odsetek,10.0,%,sprawozdanie-ssc-2019.pdf,74,
+2022,fluktuacja,fluktuacja_wojewodzka_zespolona_odsetek,8.8,%,sprawozdanie-ssc-2022.pdf,25,
+2018,fluktuacja,fluktuacja_wyzsze_stanowiska_odsetek,12.2,%,sprawozdanie-ssc-2018.pdf,81,
+2022,fluktuacja,odejscia_liczba,9655,osoby,sprawozdanie-ssc-2022.pdf,25,
+2023,fluktuacja,odejscia_liczba,9584,osoby,sprawozdanie-ssc-2023.pdf,36,
+2024,fluktuacja,odejscia_liczba,7891,osoby,sprawozdanie-ssc-2024.pdf,41,
+2025,fluktuacja,odejscia_liczba,6854,osoby,sprawozdanie-ssc-2025.pdf,9,
+2021,fluktuacja,odejscia_z_inicjatywy_pracownika_odsetek,65,%,sprawozdanie-ssc-2021.pdf,11,tekst: około 65% odejść
+2021,fluktuacja,urzedy_odejscia_wysokie_zagrozenie_odsetek,33,%,sprawozdanie-ssc-2021.pdf,23,tekst: niemal 1/3 urzędów
+2019,fluktuacja,urzedy_powyzej_sredniej_fluktuacji,660,urzedy,sprawozdanie-ssc-2019.pdf,35,ponad 660 urzedow (36%)
+2020,fluktuacja,urzedy_z_fluktuacja_powyzej_sredniej_odsetek,30,%,sprawozdanie-ssc-2020.pdf,33,tekst: w niemal 30% urzędów
+2017,fluktuacja,wskaznik_fluktuacji_kas_odsetek,13.7,%,sprawozdanie-ssc-2017.pdf,25,
+2020,fluktuacja,wskaznik_fluktuacji_kas_odsetek,8.8,%,sprawozdanie-ssc-2020.pdf,33,"2019: 5,9%"
+2020,fluktuacja,wskaznik_fluktuacji_ministerstwa_kprm_odsetek,13.4,%,sprawozdanie-ssc-2020.pdf,33,
+2021,fluktuacja,wskaznik_fluktuacji_ministerstwa_kprm_odsetek,12.7,%,sprawozdanie-ssc-2021.pdf,23,
+2016,fluktuacja,wskaznik_fluktuacji_ministerstwa_odsetek,12.9,%,sprawozdanie-ssc-2016.pdf,21,ministerstwa z KPRM
+2007,fluktuacja,wskaznik_fluktuacji_odsetek,12.8,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017 (przypisanie lat wg wspolrzednych etykiet)
+2007,fluktuacja,wskaznik_fluktuacji_odsetek,12.8,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2008,fluktuacja,wskaznik_fluktuacji_odsetek,11.1,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017
+2008,fluktuacja,wskaznik_fluktuacji_odsetek,11.1,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2009,fluktuacja,wskaznik_fluktuacji_odsetek,7.4,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017
+2009,fluktuacja,wskaznik_fluktuacji_odsetek,7.4,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2010,fluktuacja,wskaznik_fluktuacji_odsetek,7.1,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017
+2010,fluktuacja,wskaznik_fluktuacji_odsetek,7.1,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2011,fluktuacja,wskaznik_fluktuacji_odsetek,7.3,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017
+2011,fluktuacja,wskaznik_fluktuacji_odsetek,7.3,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2012,fluktuacja,wskaznik_fluktuacji_odsetek,6.2,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017
+2012,fluktuacja,wskaznik_fluktuacji_odsetek,6.2,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2013,fluktuacja,wskaznik_fluktuacji_odsetek,5.1,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017
+2013,fluktuacja,wskaznik_fluktuacji_odsetek,5.1,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2014,fluktuacja,wskaznik_fluktuacji_odsetek,6.2,%,sprawozdanie-ssc-2017.pdf,80,wykres 2007-2017
+2014,fluktuacja,wskaznik_fluktuacji_odsetek,6.2,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2015,fluktuacja,wskaznik_fluktuacji_odsetek,7.3,%,sprawozdanie-ssc-2016.pdf,19,
+2015,fluktuacja,wskaznik_fluktuacji_odsetek,7.3,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2015,fluktuacja,wskaznik_fluktuacji_odsetek,7.3,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2016,fluktuacja,wskaznik_fluktuacji_odsetek,7.0,%,sprawozdanie-ssc-2016.pdf,19,wskaznik fluktuacji zatrudnienia (odejsc)
+2016,fluktuacja,wskaznik_fluktuacji_odsetek,7.0,%,sprawozdanie-ssc-2018.pdf,78,odczyt z wykresu 9
+2016,fluktuacja,wskaznik_fluktuacji_odsetek,7.0,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2017,fluktuacja,wskaznik_fluktuacji_odsetek,11.1,%,sprawozdanie-ssc-2017.pdf,25,najwyzszy od 2008
+2017,fluktuacja,wskaznik_fluktuacji_odsetek,11.1,%,sprawozdanie-ssc-2018.pdf,42,glownie odejscia zwiazane z reforma KAS
+2017,fluktuacja,wskaznik_fluktuacji_odsetek,11.1,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2018,fluktuacja,wskaznik_fluktuacji_odsetek,9.3,%,sprawozdanie-ssc-2018.pdf,42,wskaznik odejsc z urzedow
+2018,fluktuacja,wskaznik_fluktuacji_odsetek,9.3,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2019,fluktuacja,wskaznik_fluktuacji_odsetek,8.5,%,sprawozdanie-ssc-2019.pdf,35,obejmuje tez przejscia do innego urzedu SC (przypis 89 s. 73)
+2019,fluktuacja,wskaznik_fluktuacji_odsetek,8.5,%,sprawozdanie-ssc-2020.pdf,33,
+2019,fluktuacja,wskaznik_fluktuacji_odsetek,8.5,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2020,fluktuacja,wskaznik_fluktuacji_odsetek,9.3,%,sprawozdanie-ssc-2020.pdf,33,
+2020,fluktuacja,wskaznik_fluktuacji_odsetek,9.3,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2021,fluktuacja,wskaznik_fluktuacji_odsetek,8.8,%,sprawozdanie-ssc-2021.pdf,22,
+2021,fluktuacja,wskaznik_fluktuacji_odsetek,8.8,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2022,fluktuacja,wskaznik_fluktuacji_odsetek,8.1,%,sprawozdanie-ssc-2022.pdf,25,obejmuje kazde odejscie w tym przeniesienia do innego urzedu sc
+2022,fluktuacja,wskaznik_fluktuacji_odsetek,8.1,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2023,fluktuacja,wskaznik_fluktuacji_odsetek,7.9,%,sprawozdanie-ssc-2023.pdf,36,definicja obejmuje tez zmiane statusu zatrudnienia poza sc
+2023,fluktuacja,wskaznik_fluktuacji_odsetek,7.9,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2024,fluktuacja,wskaznik_fluktuacji_odsetek,6.4,%,sprawozdanie-ssc-2024.pdf,41,najnizszy od 10 lat. obejmuje przejscia do innego urzedu sc
+2024,fluktuacja,wskaznik_fluktuacji_odsetek,6.4,%,sprawozdanie-ssc-2025.pdf,45,etykieta wykresu serii 2015-2025
+2025,fluktuacja,wskaznik_fluktuacji_odsetek,5.5,%,sprawozdanie-ssc-2025.pdf,9,najnizszy od 2015 r.
+2021,fluktuacja,wskaznik_fluktuacji_placowki_zagraniczne_odsetek,12.6,%,sprawozdanie-ssc-2021.pdf,23,
+2020,fluktuacja,wskaznik_fluktuacji_powiatowa_zespolona_odsetek,6.6,%,sprawozdanie-ssc-2020.pdf,33,
+2021,fluktuacja,wskaznik_fluktuacji_powiatowa_zespolona_odsetek,8.1,%,sprawozdanie-ssc-2021.pdf,23,
+2017,fluktuacja,wskaznik_fluktuacji_srednie_kierownictwo_odsetek,10.0,%,sprawozdanie-ssc-2017.pdf,83,
+2017,fluktuacja,wskaznik_fluktuacji_stanowiska_koordynujace_odsetek,7.0,%,sprawozdanie-ssc-2017.pdf,83,
+2017,fluktuacja,wskaznik_fluktuacji_stanowiska_samodzielne_odsetek,11.5,%,sprawozdanie-ssc-2017.pdf,83,
+2017,fluktuacja,wskaznik_fluktuacji_stanowiska_specjalistyczne_odsetek,11.8,%,sprawozdanie-ssc-2017.pdf,83,
+2017,fluktuacja,wskaznik_fluktuacji_stanowiska_wspomagajace_odsetek,11.1,%,sprawozdanie-ssc-2017.pdf,83,
+2016,fluktuacja,wskaznik_fluktuacji_urzedy_centralne_odsetek,9.2,%,sprawozdanie-ssc-2016.pdf,49,wykres 3 zalacznik 1
+2020,fluktuacja,wskaznik_fluktuacji_urzedy_centralne_odsetek,11.4,%,sprawozdanie-ssc-2020.pdf,33,
+2021,fluktuacja,wskaznik_fluktuacji_urzedy_centralne_odsetek,9.1,%,sprawozdanie-ssc-2021.pdf,23,
+2016,fluktuacja,wskaznik_fluktuacji_urzedy_wojewodzkie_odsetek,10.3,%,sprawozdanie-ssc-2016.pdf,21,
+2017,fluktuacja,wskaznik_fluktuacji_urzedy_wojewodzkie_odsetek,12.0,%,sprawozdanie-ssc-2017.pdf,25,
+2020,fluktuacja,wskaznik_fluktuacji_urzedy_wojewodzkie_odsetek,8.0,%,sprawozdanie-ssc-2020.pdf,33,"2019: 11,5%"
+2021,fluktuacja,wskaznik_fluktuacji_urzedy_wojewodzkie_odsetek,9.3,%,sprawozdanie-ssc-2021.pdf,23,
+2016,fluktuacja,wskaznik_fluktuacji_wyzsze_stanowiska_odsetek,17.9,%,sprawozdanie-ssc-2016.pdf,21,efekt zmiany sposobu obsadzania wyzszych stanowisk (powolanie od 23.01.2016)
+2017,fluktuacja,wskaznik_fluktuacji_wyzsze_stanowiska_odsetek,9.0,%,sprawozdanie-ssc-2017.pdf,83,
+2025,mianowania,kandydaci_postepowanie_kwalifikacyjne,1000,osoby,sprawozdanie-ssc-2025.pdf,25,ponad 1000 (wzrost 25%) / s.24 podaje ponad 24%
+2016,mianowania,limit_mianowan,200,osoby,sprawozdanie-ssc-2016.pdf,32,
+2017,mianowania,limit_mianowan,280,osoby,sprawozdanie-ssc-2017.pdf,48,2013-2016 limit 200 a na 2018 r. 350
+2018,mianowania,limit_mianowan,350,osoby,sprawozdanie-ssc-2018.pdf,54,wzrost o 25%
+2019,mianowania,limit_mianowan,420,osoby,sprawozdanie-ssc-2019.pdf,46,wzrost o 20%
+2020,mianowania,limit_mianowan,490,osoby,sprawozdanie-ssc-2020.pdf,49,"nie wykorzystany, mianowano 34 absolwentów KSAP"
+2021,mianowania,limit_mianowan,30,osoby,sprawozdanie-ssc-2021.pdf,37,wykorzystany w 70%
+2021,mianowania,limit_mianowan,30,osoby,sprawozdanie-ssc-2022.pdf,10,
+2022,mianowania,limit_mianowan,245,osoby,sprawozdanie-ssc-2022.pdf,10,wzrost z 30 w 2021
+2023,mianowania,limit_mianowan,275,osoby,sprawozdanie-ssc-2023.pdf,10,
+2024,mianowania,limit_mianowan,400,liczba,sprawozdanie-ssc-2024.pdf,69,wykorzystanie ok. 63%
+2025,mianowania,limit_mianowan,500,liczba,sprawozdanie-ssc-2025.pdf,24,
+2024,mianowania,limit_mianowan_plan,400,osoby,sprawozdanie-ssc-2023.pdf,11,trzyletni plan 2024-2026
+2025,mianowania,limit_mianowan_plan,500,osoby,sprawozdanie-ssc-2023.pdf,11,
+2026,mianowania,limit_mianowan_plan,600,osoby,sprawozdanie-ssc-2023.pdf,11,
+2022,mianowania,limit_mianowan_wykorzystanie_odsetek,98,%,sprawozdanie-ssc-2022.pdf,41,
+2023,mianowania,limit_mianowan_wykorzystanie_odsetek,73,%,sprawozdanie-ssc-2023.pdf,55,ok. 73%
+2016,mianowania,mianowani_kobiety_odsetek,63.6,%,sprawozdanie-ssc-2016.pdf,76,
+2017,mianowania,mianowani_kobiety_odsetek,56,%,sprawozdanie-ssc-2017.pdf,131,
+2018,mianowania,mianowani_liczba,241,osoby,sprawozdanie-ssc-2018.pdf,54,206 z postepowania kwalifikacyjnego i 35 absolwentow KSAP
+2019,mianowania,mianowani_liczba,415,osoby,sprawozdanie-ssc-2019.pdf,46,381 z postepowania i 34 absolwentow KSAP. Blisko 2/3 kobiety
+2024,mianowania,mianowani_liczba,251,osoby,sprawozdanie-ssc-2024.pdf,69,229 z postepowania kwalifikacyjnego + 22 absolwentow KSAP
+2025,mianowania,mianowani_liczba,468,osoby,sprawozdanie-ssc-2025.pdf,24,wykorzystanie limitu ok. 94% / najwyzej od 2013 poza 2019
+2016,mianowania,mianowani_ogolem,154,osoby,sprawozdanie-ssc-2016.pdf,32,120 z postepowania kwalifikacyjnego i 34 absolwentow KSAP
+2017,mianowania,mianowani_ogolem,275,osoby,sprawozdanie-ssc-2017.pdf,48,236 z postepowania kwalifikacyjnego i 39 absolwentow KSAP
+2016,mianowania,mianowani_sredni_wiek,33.18,lata,sprawozdanie-ssc-2016.pdf,76,
+2017,mianowania,mianowani_sredni_wiek,35.7,lata,sprawozdanie-ssc-2017.pdf,131,
+2022,mianowania,mianowania_absolwenci_ksap,21,osoby,sprawozdanie-ssc-2022.pdf,41,
+2023,mianowania,mianowania_absolwenci_ksap,28,osoby,sprawozdanie-ssc-2023.pdf,55,
+2020,mianowania,mianowania_liczba,34,osoby,sprawozdanie-ssc-2020.pdf,10,"o prawie 92% mniej niż rok wcześniej, odwołane postępowanie kwalifikacyjne"
+2021,mianowania,mianowania_liczba,21,osoby,sprawozdanie-ssc-2021.pdf,38,"wyłącznie absolwenci KSAP, limit 30"
+2022,mianowania,mianowania_liczba,240,osoby,sprawozdanie-ssc-2022.pdf,10,mianowanie uzyskalo 240 osob
+2023,mianowania,mianowania_liczba,201,osoby,sprawozdanie-ssc-2023.pdf,55,
+2022,mianowania,mianowania_z_postepowania,219,osoby,sprawozdanie-ssc-2022.pdf,41,uczestnicy postepowania kwalifikacyjnego
+2023,mianowania,mianowania_z_postepowania,173,osoby,sprawozdanie-ssc-2023.pdf,55,s. 10 podaje 174 osoby z pozytywnym wynikiem sprawdzianu
+2022,mianowania,nowi_urzednicy_kobiety_odsetek,54,%,sprawozdanie-ssc-2022.pdf,41,nieco ponad 54%
+2023,mianowania,nowi_urzednicy_kobiety_odsetek,53,%,sprawozdanie-ssc-2023.pdf,55,nieco ponad 53%
+2024,mianowania,nowo_mianowani_kobiety_odsetek,61,%,sprawozdanie-ssc-2024.pdf,69,blisko 61%
+2025,mianowania,nowo_mianowani_kobiety_odsetek,67,%,sprawozdanie-ssc-2025.pdf,25,blisko 67%
+2019,mianowania,oplata_postepowanie_kwalifikacyjne_zl,630,zl,sprawozdanie-ssc-2018.pdf,14,od 2019 r. o ponad 100 zl mniej
+2015,mianowania,postepowanie_kwalifikacyjne_przystapilo,828,osoby,sprawozdanie-ssc-2016.pdf,76,
+2016,mianowania,postepowanie_kwalifikacyjne_przystapilo,607,osoby,sprawozdanie-ssc-2016.pdf,76,
+2017,mianowania,postepowanie_kwalifikacyjne_przystapilo,563,osoby,sprawozdanie-ssc-2017.pdf,131,
+2016,mianowania,postepowanie_kwalifikacyjne_wynik_pozytywny,121,osoby,sprawozdanie-ssc-2016.pdf,76,19.9% przystepujacych
+2017,mianowania,postepowanie_kwalifikacyjne_wynik_pozytywny,236,osoby,sprawozdanie-ssc-2017.pdf,131,41.9% przystepujacych
+2023,mianowania,postepowanie_pozytywny_wynik,174,osoby,sprawozdanie-ssc-2023.pdf,10,pozytywny wynik ze sprawdzianu
+2023,mianowania,przyrost_urzednikow_z_mianowan,201,osoby,sprawozdanie-ssc-2023.pdf,10,absolwenci KSAP i postepowanie kwalifikacyjne
+2019,mianowania,przystepujacy_do_postepowania_kwalifikacyjnego,876,osoby,sprawozdanie-ssc-2019.pdf,46,wzrost o ponad 45%
+2018,mianowania,srednia_wieku_nowo_mianowanych,35.5,lata,sprawozdanie-ssc-2018.pdf,54,
+2016,mianowania,wykorzystanie_limitu_mianowan_odsetek,77,%,sprawozdanie-ssc-2016.pdf,32,
+2017,mianowania,wykorzystanie_limitu_mianowan_odsetek,98.2,%,sprawozdanie-ssc-2017.pdf,48,
+2025,mianowania,zdawalnosc_odsetek,47,%,sprawozdanie-ssc-2025.pdf,25,ok. 47% (2024: 28%)
+2018,mianowania,zgloszeni_do_postepowania_kwalifikacyjnego,609,osoby,sprawozdanie-ssc-2019.pdf,63,wartosc bazowa wskaznika 2.5
+2019,mianowania,zgloszeni_do_postepowania_kwalifikacyjnego,885,osoby,sprawozdanie-ssc-2019.pdf,63,wskaznik 2.5
+2022,nabor,cudzoziemcy_zatrudnieni,9,osoby,sprawozdanie-ssc-2022.pdf,36,36 cudzoziemcow zlozylo oferty
+2016,nabor,kandydaci_kobiety_odsetek,72,%,sprawozdanie-ssc-2016.pdf,29,
+2017,nabor,kandydaci_kobiety_odsetek,71,%,sprawozdanie-ssc-2017.pdf,42,
+2020,nabor,kandydaci_kobiety_odsetek,75,%,sprawozdanie-ssc-2020.pdf,43,wygrane nabory przez kobiety ok. 75%
+2021,nabor,kandydaci_kobiety_odsetek,74,%,sprawozdanie-ssc-2021.pdf,33,
+2022,nabor,kandydaci_kobiety_odsetek,72.9,%,sprawozdanie-ssc-2022.pdf,35,
+2023,nabor,kandydaci_kobiety_odsetek,73.6,%,sprawozdanie-ssc-2023.pdf,46,
+2013,nabor,kandydaci_na_nabor_srednio,36,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2014,nabor,kandydaci_na_nabor_srednio,24,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2015,nabor,kandydaci_na_nabor_srednio,19,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2016,nabor,kandydaci_na_nabor_srednio,13,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2017,nabor,kandydaci_na_nabor_srednio,11,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2018,nabor,kandydaci_na_nabor_srednio,8,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2019,nabor,kandydaci_na_nabor_srednio,7,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2020,nabor,kandydaci_na_nabor_srednio,10,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2021,nabor,kandydaci_na_nabor_srednio,9,osoby,sprawozdanie-ssc-2022.pdf,34,
+2021,nabor,kandydaci_na_nabor_srednio,9,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2022,nabor,kandydaci_na_nabor_srednio,5,osoby,sprawozdanie-ssc-2022.pdf,7,na stanowiska niebedace wyzszymi stanowiskami
+2022,nabor,kandydaci_na_nabor_srednio,5,osoby,sprawozdanie-ssc-2022.pdf,34,
+2022,nabor,kandydaci_na_nabor_srednio,5,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2023,nabor,kandydaci_na_nabor_srednio,7,osoby,sprawozdanie-ssc-2023.pdf,7,
+2023,nabor,kandydaci_na_nabor_srednio,7,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2024,nabor,kandydaci_na_nabor_srednio,12,liczba,sprawozdanie-ssc-2024.pdf,9,2023: 7
+2024,nabor,kandydaci_na_nabor_srednio,12,liczba,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2025,nabor,kandydaci_na_nabor_srednio,16,liczba,sprawozdanie-ssc-2025.pdf,6,stanowiska niebedace wyzszymi
+2018,nabor,kobiety_wsrod_kandydatow_odsetek,70,%,sprawozdanie-ssc-2018.pdf,50,
+2019,nabor,kobiety_wsrod_kandydatow_odsetek,73,%,sprawozdanie-ssc-2019.pdf,42,
+2016,nabor,nabory_dla_cudzoziemcow,419,nabory,sprawozdanie-ssc-2016.pdf,29,4% naborow (7 ofert cudzoziemcow)
+2017,nabor,nabory_dla_cudzoziemcow,625,nabory,sprawozdanie-ssc-2017.pdf,43,13 ofert cudzoziemcow 1 zatrudniony
+2018,nabor,nabory_liczba,18693,nabory,sprawozdanie-ssc-2019.pdf,41,
+2019,nabor,nabory_liczba,18299,nabory,sprawozdanie-ssc-2019.pdf,41,
+2019,nabor,nabory_liczba,18299,nabory,sprawozdanie-ssc-2020.pdf,42,
+2020,nabor,nabory_liczba,12467,nabory,sprawozdanie-ssc-2020.pdf,42,spadek o ok. 32%
+2021,nabor,nabory_liczba,16163,nabory,sprawozdanie-ssc-2021.pdf,32,wzrost o ok. 30%
+2021,nabor,nabory_liczba,16163,nabory,sprawozdanie-ssc-2022.pdf,34,
+2022,nabor,nabory_liczba,21254,nabory,sprawozdanie-ssc-2022.pdf,34,wzrost o 31.5%
+2023,nabor,nabory_liczba,18002,nabory,sprawozdanie-ssc-2023.pdf,45,spadek o 15.3%
+2023,nabor,nabory_liczba,18002,liczba,sprawozdanie-ssc-2024.pdf,56,
+2024,nabor,nabory_liczba,13605,liczba,sprawozdanie-ssc-2024.pdf,56,2023: 18002 (spadek 24.4%)
+2025,nabor,nabory_liczba,12350,liczba,sprawozdanie-ssc-2025.pdf,16,2024: 13605 (spadek 9.4%)
+2017,nabor,nabory_nieobsadzone_odsetek,36.7,%,sprawozdanie-ssc-2018.pdf,50,
+2018,nabor,nabory_nieobsadzone_odsetek,41.5,%,sprawozdanie-ssc-2018.pdf,50,
+2019,nabor,nabory_nieobsadzone_odsetek,43,%,sprawozdanie-ssc-2019.pdf,41,ok. 43%
+2020,nabor,nabory_nieobsadzone_odsetek,40,%,sprawozdanie-ssc-2020.pdf,42,"ok. 40%, 2019: ok. 43%"
+2021,nabor,nabory_nieobsadzone_odsetek,46,%,sprawozdanie-ssc-2021.pdf,32,ok. 46%
+2021,nabor,nabory_nieobsadzone_odsetek,45.7,%,sprawozdanie-ssc-2022.pdf,34,
+2022,nabor,nabory_nieobsadzone_odsetek,53.2,%,sprawozdanie-ssc-2022.pdf,34,
+2023,nabor,nabory_nieobsadzone_odsetek,47.5,%,sprawozdanie-ssc-2023.pdf,10,
+2024,nabor,nabory_nieudane_brak_ofert_odsetek,32.9,%,sprawozdanie-ssc-2024.pdf,56,udzial wsrod naborow nieudanych
+2025,nabor,nabory_nieudane_brak_ofert_odsetek,26.6,%,sprawozdanie-ssc-2025.pdf,16,udzial wsrod naborow nieudanych
+2025,nabor,nabory_nieudane_odsetek,37.9,%,sprawozdanie-ssc-2025.pdf,16,2024: 40.9%
+2013,nabor,nabory_obsadzone_odsetek,76,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2014,nabor,nabory_obsadzone_odsetek,73,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2015,nabor,nabory_obsadzone_odsetek,69,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2016,nabor,nabory_obsadzone_odsetek,66,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2017,nabor,nabory_obsadzone_odsetek,63,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2018,nabor,nabory_obsadzone_odsetek,58,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2019,nabor,nabory_obsadzone_odsetek,57,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2020,nabor,nabory_obsadzone_odsetek,60,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2021,nabor,nabory_obsadzone_odsetek,54,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2022,nabor,nabory_obsadzone_odsetek,47,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2023,nabor,nabory_obsadzone_odsetek,53,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025 (raport 2024 s.56 podaje 52.5%)
+2024,nabor,nabory_obsadzone_odsetek,59,%,sprawozdanie-ssc-2024.pdf,56,2023: 52.5%
+2024,nabor,nabory_obsadzone_odsetek,59,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2025,nabor,nabory_obsadzone_odsetek,62,%,sprawozdanie-ssc-2025.pdf,56,etykieta wykresu 2013-2025
+2016,nabor,nabory_zakonczone_obsadzeniem_odsetek,66,%,sprawozdanie-ssc-2016.pdf,29,podano prawie 66% (2015 69%)
+2017,nabor,nabory_zakonczone_obsadzeniem_odsetek,63,%,sprawozdanie-ssc-2017.pdf,42,
+2022,nabor,nieobsadzenie_brak_ofert_odsetek,42.5,%,sprawozdanie-ssc-2022.pdf,34,przyczyna nieobsadzenia (2021: 33.7%)
+2023,nabor,nieobsadzenie_brak_ofert_odsetek,35.5,%,sprawozdanie-ssc-2023.pdf,45,
+2022,nabor,nieobsadzenie_niewylonienie_odsetek,29.1,%,sprawozdanie-ssc-2022.pdf,34,(2021: 32.4%)
+2023,nabor,nieobsadzenie_niewylonienie_odsetek,31.5,%,sprawozdanie-ssc-2023.pdf,45,
+2017,nabor,oferty_zlozone,123305,liczba,sprawozdanie-ssc-2018.pdf,50,
+2018,nabor,oferty_zlozone,156977,liczba,sprawozdanie-ssc-2018.pdf,50,
+2019,nabor,oferty_zlozone,136934,liczba,sprawozdanie-ssc-2019.pdf,41,
+2022,nabor,ogloszenia_dla_cudzoziemcow,630,ogloszenia,sprawozdanie-ssc-2022.pdf,35,
+2023,nabor,ogloszenia_dla_cudzoziemcow,489,ogloszenia,sprawozdanie-ssc-2023.pdf,46,
+2017,nabor,ogloszenia_z_klauzula_rownosciowa,9600,ogloszenia,sprawozdanie-ssc-2017.pdf,26,podano ok. 9.6 tys. (83% ogloszen)
+2011,nabor,osoby_po_raz_pierwszy_w_sc,4364,osoby,sprawozdanie-ssc-2017.pdf,43,wykres 2011-2017
+2012,nabor,osoby_po_raz_pierwszy_w_sc,4526,osoby,sprawozdanie-ssc-2017.pdf,43,wykres 2011-2017
+2013,nabor,osoby_po_raz_pierwszy_w_sc,3934,osoby,sprawozdanie-ssc-2017.pdf,43,wykres 2011-2017
+2014,nabor,osoby_po_raz_pierwszy_w_sc,3611,osoby,sprawozdanie-ssc-2017.pdf,43,wykres 2011-2017 (przypisanie lat wg wspolrzednych etykiet)
+2015,nabor,osoby_po_raz_pierwszy_w_sc,4957,osoby,sprawozdanie-ssc-2016.pdf,30,przypis 27
+2015,nabor,osoby_po_raz_pierwszy_w_sc,4957,osoby,sprawozdanie-ssc-2017.pdf,43,wykres 2011-2017
+2016,nabor,osoby_po_raz_pierwszy_w_sc,5183,osoby,sprawozdanie-ssc-2017.pdf,43,przypis 40 (sprawozdanie 2016 podawalo ponad 5 tys.)
+2017,nabor,osoby_po_raz_pierwszy_w_sc,5948,osoby,sprawozdanie-ssc-2017.pdf,43,umowy na czas okreslony 12 mies. (art. 35 ust. 3) tekst: blisko 6 tys. (ok. 76% zatrudnionych z naboru)
+2013,nabor,srednia_liczba_kandydatow,36,osoby na nabor,sprawozdanie-ssc-2018.pdf,10,przypis 6
+2014,nabor,srednia_liczba_kandydatow,24,osoby na nabor,sprawozdanie-ssc-2018.pdf,50,odczyt z wykresu (seria malejaca 2013-2018)
+2015,nabor,srednia_liczba_kandydatow,19,osoby na nabor,sprawozdanie-ssc-2018.pdf,50,odczyt z wykresu
+2016,nabor,srednia_liczba_kandydatow,13,osoby na nabor,sprawozdanie-ssc-2018.pdf,50,odczyt z wykresu
+2017,nabor,srednia_liczba_kandydatow,11,osoby na nabor,sprawozdanie-ssc-2018.pdf,50,
+2018,nabor,srednia_liczba_kandydatow,8,osoby na nabor,sprawozdanie-ssc-2018.pdf,50,stanowiska niebedace wyzszymi
+2019,nabor,srednia_liczba_kandydatow,7,osoby na nabor,sprawozdanie-ssc-2019.pdf,41,
+2019,nabor,srednia_liczba_kandydatow,7,osoby,sprawozdanie-ssc-2020.pdf,42,
+2020,nabor,srednia_liczba_kandydatow,10,osoby,sprawozdanie-ssc-2020.pdf,42,"na stanowiska niebędące wyższymi, 2019: 7"
+2021,nabor,srednia_liczba_kandydatow,9,osoby,sprawozdanie-ssc-2021.pdf,32,
+2011,nabor,srednia_liczba_ofert_na_stanowisko,35,oferty,sprawozdanie-ssc-2017.pdf,42,wykres 2011-2017
+2012,nabor,srednia_liczba_ofert_na_stanowisko,35,oferty,sprawozdanie-ssc-2017.pdf,42,wykres 2011-2017
+2013,nabor,srednia_liczba_ofert_na_stanowisko,36,oferty,sprawozdanie-ssc-2016.pdf,29,wykres 2013-2016
+2014,nabor,srednia_liczba_ofert_na_stanowisko,24,oferty,sprawozdanie-ssc-2016.pdf,29,wykres 2013-2016
+2015,nabor,srednia_liczba_ofert_na_stanowisko,19,oferty,sprawozdanie-ssc-2016.pdf,19,
+2016,nabor,srednia_liczba_ofert_na_stanowisko,13,oferty,sprawozdanie-ssc-2016.pdf,19,stanowiska niebedace wyzszymi
+2017,nabor,srednia_liczba_ofert_na_stanowisko,11,oferty,sprawozdanie-ssc-2017.pdf,42,KAS 17 urzedy centralne 7
+2024,nabor,srednie_kierownicze_z_badaniem_kompetencji_odsetek,68.71,%,sprawozdanie-ssc-2024.pdf,20,stanowiska sredniego szczebla zarzadzania
+2016,nabor,umowa_na_czas_nieokreslony_po_pierwszej_ocenie_odsetek,97.9,%,sprawozdanie-ssc-2016.pdf,30,odsetek nowych pracownikow kontynuujacych zatrudnienie na czas nieokreslony
+2024,nabor,urzedy_badajace_kompetencje_miekkie_odsetek,60,%,sprawozdanie-ssc-2024.pdf,19,ponad 60% urzedow prowadzacych nabory. prawie 55% zawsze
+2025,nabor,urzedy_badajace_kompetencje_miekkie_odsetek,65,%,sprawozdanie-ssc-2025.pdf,16,ponad 65% (2024: 60%) prawie 60% zawsze
+2024,nabor,urzedy_wynagrodzenie_w_ogloszeniu_zawsze_odsetek,45,%,sprawozdanie-ssc-2024.pdf,14,standard ZZL. tyle samo nigdy nie podaje
+2022,nabor,wylonieni_kobiety_odsetek,73.3,%,sprawozdanie-ssc-2022.pdf,35,
+2023,nabor,wylonieni_kobiety_odsetek,73.5,%,sprawozdanie-ssc-2023.pdf,46,
+2024,nabor,wyzsze_procesy_z_badaniem_kompetencji_kierowniczych_odsetek,70,%,sprawozdanie-ssc-2024.pdf,19,powolania na wyzsze stanowiska
+2025,nabor,wyzsze_procesy_z_badaniem_kompetencji_kierowniczych_odsetek,70,%,sprawozdanie-ssc-2025.pdf,18,niespelna 70% (27.5% bez badania)
+2024,nabor,wyzsze_stanowiska_liczba,3790,liczba,sprawozdanie-ssc-2024.pdf,57,2023: 3664
+2025,nabor,wyzsze_stanowiska_liczba,3803,liczba,sprawozdanie-ssc-2025.pdf,18,stan na 31.12.2025
+2024,nabor,wyzsze_stanowiska_odwolania,1406,liczba,sprawozdanie-ssc-2024.pdf,57,2023: 774
+2025,nabor,wyzsze_stanowiska_odwolania,662,liczba,sprawozdanie-ssc-2025.pdf,18,2024: 1406
+2024,nabor,wyzsze_stanowiska_powolania,1544,liczba,sprawozdanie-ssc-2024.pdf,57,2023: 717
+2025,nabor,wyzsze_stanowiska_powolania,688,liczba,sprawozdanie-ssc-2025.pdf,18,2024: 1544
+2024,nabor,wyzsze_stanowiska_spoza_korpusu_odsetek,18.1,%,sprawozdanie-ssc-2024.pdf,57,2023: 14.4%
+2025,nabor,wyzsze_stanowiska_spoza_korpusu_odsetek,19.3,%,sprawozdanie-ssc-2025.pdf,18,osoby zajmujace wyzsze stanowiska
+2016,oceny_okresowe,druga_kolejna_negatywna_urzednicy,0,osoby,sprawozdanie-ssc-2016.pdf,78,
+2017,oceny_okresowe,druga_kolejna_negatywna_urzednicy,2,osoby,sprawozdanie-ssc-2017.pdf,119,
+2018,oceny_okresowe,druga_kolejna_negatywna_urzednicy,1,osoby,sprawozdanie-ssc-2018.pdf,106,
+2019,oceny_okresowe,druga_kolejna_negatywna_urzednicy,1,osoby,sprawozdanie-ssc-2019.pdf,96,
+2020,oceny_okresowe,druga_kolejna_negatywna_urzednicy,1,osoby,sprawozdanie-ssc-2020.pdf,105,urzędnicy SC z drugą kolejną negatywną oceną
+2016,oceny_okresowe,dwa_najwyzsze_poziomy_odsetek,59.29,%,sprawozdanie-ssc-2020.pdf,51,"przypis 37, od 2016 systematyczny spadek"
+2019,oceny_okresowe,dwa_najwyzsze_poziomy_odsetek,47.87,%,sprawozdanie-ssc-2020.pdf,51,przypis 37
+2020,oceny_okresowe,dwa_najwyzsze_poziomy_odsetek,49.62,%,sprawozdanie-ssc-2021.pdf,40,przypis 26 raportu 2021
+2021,oceny_okresowe,dwa_najwyzsze_poziomy_odsetek,47.97,%,sprawozdanie-ssc-2021.pdf,40,
+2024,oceny_okresowe,dwa_najwyzsze_poziomy_odsetek,51.5,%,sprawozdanie-ssc-2024.pdf,70,
+2025,oceny_okresowe,dwa_najwyzsze_poziomy_odsetek,49.7,%,sprawozdanie-ssc-2025.pdf,28,znacznie powyzej + powyzej oczekiwan
+2018,oceny_okresowe,kas_poziom_znacznie_powyzej_liczba,176,oceny,sprawozdanie-ssc-2018.pdf,107,na 10033 oceny w KAS
+2019,oceny_okresowe,kas_poziom_znacznie_powyzej_liczba,466,oceny,sprawozdanie-ssc-2019.pdf,97,na 29136 ocen w KAS (ok. 1.6%)
+2011,oceny_okresowe,liczba_ocen_okresowych,86718,oceny,sprawozdanie-ssc-2017.pdf,50,wykres 2011-2017 (przypisanie lat wg wspolrzednych etykiet)
+2011,oceny_okresowe,liczba_ocen_okresowych,86718,oceny,sprawozdanie-ssc-2018.pdf,55,odczyt z wykresu 2011-2018
+2012,oceny_okresowe,liczba_ocen_okresowych,22121,oceny,sprawozdanie-ssc-2017.pdf,50,wykres 2011-2017
+2012,oceny_okresowe,liczba_ocen_okresowych,22121,oceny,sprawozdanie-ssc-2018.pdf,55,odczyt z wykresu
+2013,oceny_okresowe,liczba_ocen_okresowych,81813,oceny,sprawozdanie-ssc-2017.pdf,50,wykres 2011-2017
+2013,oceny_okresowe,liczba_ocen_okresowych,81813,oceny,sprawozdanie-ssc-2018.pdf,55,odczyt z wykresu
+2014,oceny_okresowe,liczba_ocen_okresowych,28250,oceny,sprawozdanie-ssc-2017.pdf,50,wykres 2011-2017
+2014,oceny_okresowe,liczba_ocen_okresowych,28250,oceny,sprawozdanie-ssc-2018.pdf,55,odczyt z wykresu
+2015,oceny_okresowe,liczba_ocen_okresowych,73853,oceny,sprawozdanie-ssc-2017.pdf,50,wykres 2011-2017
+2015,oceny_okresowe,liczba_ocen_okresowych,73853,oceny,sprawozdanie-ssc-2018.pdf,55,odczyt z wykresu
+2016,oceny_okresowe,liczba_ocen_okresowych,30919,oceny,sprawozdanie-ssc-2016.pdf,78,liczba osob ktorym sporzadzono oceny okresowe (zal. 6 tab. 1)
+2016,oceny_okresowe,liczba_ocen_okresowych,30919,oceny,sprawozdanie-ssc-2018.pdf,55,odczyt z wykresu
+2016,oceny_okresowe,liczba_ocen_okresowych,30919,oceny,sprawozdanie-ssc-2022.pdf,43,wykres Liczba ocen okresowych 2016-2022
+2017,oceny_okresowe,liczba_ocen_okresowych,70334,oceny,sprawozdanie-ssc-2017.pdf,119,zal. 7 tab. 2 (wykres na s. 50 podaje 70311)
+2017,oceny_okresowe,liczba_ocen_okresowych,70334,oceny,sprawozdanie-ssc-2018.pdf,54,przypis 51
+2017,oceny_okresowe,liczba_ocen_okresowych,70334,oceny,sprawozdanie-ssc-2022.pdf,43,wykres Liczba ocen okresowych 2016-2022
+2017,oceny_okresowe,liczba_ocen_okresowych,70334,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu
+2018,oceny_okresowe,liczba_ocen_okresowych,28399,oceny,sprawozdanie-ssc-2018.pdf,106,Tabela 2 zalacznik 5
+2018,oceny_okresowe,liczba_ocen_okresowych,28399,oceny,sprawozdanie-ssc-2022.pdf,43,wykres Liczba ocen okresowych 2016-2022
+2018,oceny_okresowe,liczba_ocen_okresowych,28399,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu
+2019,oceny_okresowe,liczba_ocen_okresowych,62469,oceny,sprawozdanie-ssc-2019.pdf,96,Tabela 2 zalacznik 5
+2019,oceny_okresowe,liczba_ocen_okresowych,62469,oceny,sprawozdanie-ssc-2020.pdf,51,"przypis 36, cykliczność co 2 lata"
+2019,oceny_okresowe,liczba_ocen_okresowych,62469,oceny,sprawozdanie-ssc-2022.pdf,43,wykres Liczba ocen okresowych 2016-2022
+2019,oceny_okresowe,liczba_ocen_okresowych,62469,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu
+2020,oceny_okresowe,liczba_ocen_okresowych,29302,oceny,sprawozdanie-ssc-2020.pdf,105,
+2020,oceny_okresowe,liczba_ocen_okresowych,29302,oceny,sprawozdanie-ssc-2022.pdf,43,wykres Liczba ocen okresowych 2016-2022
+2020,oceny_okresowe,liczba_ocen_okresowych,29302,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu
+2021,oceny_okresowe,liczba_ocen_okresowych,56140,oceny,sprawozdanie-ssc-2021.pdf,40,
+2021,oceny_okresowe,liczba_ocen_okresowych,56140,oceny,sprawozdanie-ssc-2022.pdf,42,
+2021,oceny_okresowe,liczba_ocen_okresowych,56140,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu
+2022,oceny_okresowe,liczba_ocen_okresowych,34892,oceny,sprawozdanie-ssc-2022.pdf,42,
+2022,oceny_okresowe,liczba_ocen_okresowych,34892,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu
+2023,oceny_okresowe,liczba_ocen_okresowych,54823,oceny,sprawozdanie-ssc-2023.pdf,56,
+2023,oceny_okresowe,liczba_ocen_okresowych,54823,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu i przypis 57
+2024,oceny_okresowe,liczba_ocen_okresowych,39727,liczba,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu 2017-2024
+2025,oceny_okresowe,liczba_ocen_okresowych,56770,liczba,sprawozdanie-ssc-2025.pdf,28,wzrost o 43% wobec 2024 (cykl dwuletni)
+2018,oceny_okresowe,ministerstwa_poziom_znacznie_powyzej_liczba,858,oceny,sprawozdanie-ssc-2018.pdf,107,na 4343 oceny w ministerstwach i KPRM
+2019,oceny_okresowe,ministerstwa_poziom_znacznie_powyzej_liczba,1120,oceny,sprawozdanie-ssc-2019.pdf,97,na 5846 ocen w ministerstwach i KPRM (ok. 19%)
+2024,oceny_okresowe,na_poziomie_i_powyzej_odsetek,90,%,sprawozdanie-ssc-2024.pdf,71,ponad 90% od lat (opis slowny)
+2020,oceny_okresowe,oceny_ministerstwa_znacznie_powyzej_liczba,969,oceny,sprawozdanie-ssc-2020.pdf,106,"ministerstwa z KPRM: 969 z 4109 (23,6% wyliczone) to znacznie powyżej, KAS 184 z 10651"
+2016,oceny_okresowe,oceny_negatywne_liczba,82,oceny,sprawozdanie-ssc-2016.pdf,78,78 pracownikow SC i 4 urzednikow SC
+2017,oceny_okresowe,oceny_negatywne_liczba,204,oceny,sprawozdanie-ssc-2017.pdf,119,194 pracownikow SC i 10 urzednikow SC
+2018,oceny_okresowe,oceny_negatywne_liczba,85,oceny,sprawozdanie-ssc-2018.pdf,106,78 pracownikow SC i 7 urzednikow SC. Suma poziomow ponizej + znacznie ponizej w Tabeli 3 = 78 (rozbieznosc w zrodle)
+2019,oceny_okresowe,oceny_negatywne_liczba,214,oceny,sprawozdanie-ssc-2019.pdf,96,202 pracownikow SC i 12 urzednikow SC. Suma poziomow ponizej + znacznie ponizej w Tabeli 3 = 194 (rozbieznosc w zrodle)
+2020,oceny_okresowe,oceny_negatywne_liczba,105,oceny,sprawozdanie-ssc-2020.pdf,105,"99 pracownicy SC, 6 urzędnicy SC"
+2021,oceny_okresowe,oceny_negatywne_liczba,188,oceny,sprawozdanie-ssc-2021.pdf,40,
+2022,oceny_okresowe,oceny_negatywne_liczba,158,oceny,sprawozdanie-ssc-2022.pdf,42,
+2023,oceny_okresowe,oceny_negatywne_liczba,164,oceny,sprawozdanie-ssc-2023.pdf,56,
+2015,oceny_okresowe,oceny_negatywne_odsetek,0.2,%,sprawozdanie-ssc-2016.pdf,33,
+2016,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2016.pdf,33,
+2017,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2017.pdf,49,od 2011 odsetek negatywnych miedzy 0.2% a 0.6%
+2018,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025 (ponizej + znacznie ponizej oczekiwan)
+2019,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2019.pdf,47,
+2019,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025 (etykieta czesciowo zaslonieta)
+2020,oceny_okresowe,oceny_negatywne_odsetek,0.36,%,sprawozdanie-ssc-2020.pdf,51,
+2020,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2021,oceny_okresowe,oceny_negatywne_odsetek,0.33,%,sprawozdanie-ssc-2021.pdf,40,
+2021,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2022,oceny_okresowe,oceny_negatywne_odsetek,0.45,%,sprawozdanie-ssc-2022.pdf,42,
+2022,oceny_okresowe,oceny_negatywne_odsetek,0.4,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2023,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2023.pdf,56,
+2023,oceny_okresowe,oceny_negatywne_odsetek,0.3,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2024,oceny_okresowe,oceny_negatywne_odsetek,0.5,%,sprawozdanie-ssc-2024.pdf,70,niespelna 0.5%
+2024,oceny_okresowe,oceny_negatywne_odsetek,0.4,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025 (tekst raportu 2024 s.70: niespelna 0.5%)
+2025,oceny_okresowe,oceny_negatywne_odsetek,0.39,%,sprawozdanie-ssc-2025.pdf,28,wykres s.66: 0.4%
+2018,oceny_okresowe,oceny_negatywne_pracownicy_sc,78,oceny,sprawozdanie-ssc-2018.pdf,106,
+2019,oceny_okresowe,oceny_negatywne_pracownicy_sc,202,oceny,sprawozdanie-ssc-2019.pdf,96,
+2018,oceny_okresowe,oceny_negatywne_urzednicy_sc,7,oceny,sprawozdanie-ssc-2018.pdf,106,
+2019,oceny_okresowe,oceny_negatywne_urzednicy_sc,12,oceny,sprawozdanie-ssc-2019.pdf,96,
+2016,oceny_okresowe,oceny_pozytywne_liczba,30837,oceny,sprawozdanie-ssc-2016.pdf,78,
+2017,oceny_okresowe,oceny_pozytywne_liczba,70130,oceny,sprawozdanie-ssc-2017.pdf,119,
+2018,oceny_okresowe,oceny_pozytywne_liczba,28314,oceny,sprawozdanie-ssc-2018.pdf,106,
+2019,oceny_okresowe,oceny_pozytywne_liczba,62255,oceny,sprawozdanie-ssc-2019.pdf,96,
+2020,oceny_okresowe,oceny_pozytywne_liczba,29197,oceny,sprawozdanie-ssc-2020.pdf,105,
+2012,oceny_okresowe,oceny_pozytywne_odsetek,99.4,%,sprawozdanie-ssc-2016.pdf,33,przypis 40
+2013,oceny_okresowe,oceny_pozytywne_odsetek,99.7,%,sprawozdanie-ssc-2016.pdf,33,przypis 40
+2014,oceny_okresowe,oceny_pozytywne_odsetek,99.6,%,sprawozdanie-ssc-2016.pdf,33,przypis 40
+2015,oceny_okresowe,oceny_pozytywne_odsetek,99.8,%,sprawozdanie-ssc-2016.pdf,33,przypis 40
+2016,oceny_okresowe,oceny_pozytywne_odsetek,99.7,%,sprawozdanie-ssc-2016.pdf,33,
+2017,oceny_okresowe,oceny_pozytywne_odsetek,99.7,%,sprawozdanie-ssc-2017.pdf,49,
+2018,oceny_okresowe,oceny_pozytywne_odsetek,99.7,%,sprawozdanie-ssc-2018.pdf,54,
+2016,oceny_okresowe,odwolania_do_sadu_pracy,16,odwolania,sprawozdanie-ssc-2016.pdf,80,
+2017,oceny_okresowe,odwolania_do_sadu_pracy,24,odwolania,sprawozdanie-ssc-2017.pdf,121,
+2020,oceny_okresowe,odwolania_do_sadu_pracy,12,odwołania,sprawozdanie-ssc-2020.pdf,107,w sprawach dotyczących ocen okresowych
+2011,oceny_okresowe,odwolania_sad_pracy_liczba,69,odwolania,sprawozdanie-ssc-2018.pdf,55,przypis 56
+2016,oceny_okresowe,odwolania_sad_pracy_liczba,16,odwolania,sprawozdanie-ssc-2018.pdf,55,przypis 56
+2018,oceny_okresowe,odwolania_sad_pracy_liczba,15,odwolania,sprawozdanie-ssc-2018.pdf,108,najnizsza od 2011 r.
+2019,oceny_okresowe,odwolania_sad_pracy_liczba,15,odwolania,sprawozdanie-ssc-2019.pdf,98,
+2016,oceny_okresowe,poziom_dwa_najwyzsze_odsetek,59.3,%,sprawozdanie-ssc-2016.pdf,33,powyzej i znacznie powyzej oczekiwan (wzrost o 4.1 p.p.)
+2017,oceny_okresowe,poziom_dwa_najwyzsze_odsetek,55.4,%,sprawozdanie-ssc-2017.pdf,120,wyliczone: (8132+30862)/70334 (tekst s.49: spadek o 3.9 p.p.)
+2018,oceny_okresowe,poziom_dwa_najwyzsze_odsetek,51.8,%,sprawozdanie-ssc-2018.pdf,54,najnizszy od 2012 r.
+2019,oceny_okresowe,poziom_dwa_najwyzsze_odsetek,47.9,%,sprawozdanie-ssc-2019.pdf,48,najnizszy od 2012 r.
+2022,oceny_okresowe,poziom_dwa_najwyzsze_odsetek,48.67,%,sprawozdanie-ssc-2022.pdf,43,powyzej oczekiwan + znacznie powyzej oczekiwan
+2023,oceny_okresowe,poziom_dwa_najwyzsze_odsetek,48.9,%,sprawozdanie-ssc-2023.pdf,57,
+2016,oceny_okresowe,poziom_na_poziomie_liczba,12514,oceny,sprawozdanie-ssc-2016.pdf,79,
+2017,oceny_okresowe,poziom_na_poziomie_liczba,31169,oceny,sprawozdanie-ssc-2017.pdf,120,
+2018,oceny_okresowe,poziom_na_poziomie_liczba,13608,oceny,sprawozdanie-ssc-2018.pdf,107,
+2019,oceny_okresowe,poziom_na_poziomie_liczba,32368,oceny,sprawozdanie-ssc-2019.pdf,97,
+2020,oceny_okresowe,poziom_na_poziomie_liczba,14664,oceny,sprawozdanie-ssc-2020.pdf,106,
+2021,oceny_okresowe,poziom_na_poziomie_liczba,29043,oceny,sprawozdanie-ssc-2021.pdf,40,
+2022,oceny_okresowe,poziom_na_poziomie_liczba,17760,oceny,sprawozdanie-ssc-2022.pdf,43,poziom: na poziomie oczekiwan
+2023,oceny_okresowe,poziom_na_poziomie_liczba,27857,oceny,sprawozdanie-ssc-2023.pdf,57,
+2015,oceny_okresowe,poziom_na_poziomie_odsetek,44.6,%,sprawozdanie-ssc-2016.pdf,33,przypis 42
+2016,oceny_okresowe,poziom_na_poziomie_odsetek,40.5,%,sprawozdanie-ssc-2016.pdf,33,
+2016,oceny_okresowe,poziom_na_poziomie_odsetek,40,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu rozklad pozytywnych ocen
+2017,oceny_okresowe,poziom_na_poziomie_odsetek,44.3,%,sprawozdanie-ssc-2017.pdf,120,wyliczone: 31169/70334
+2017,oceny_okresowe,poziom_na_poziomie_odsetek,44,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu rozklad pozytywnych ocen
+2017,oceny_okresowe,poziom_na_poziomie_odsetek,44,%,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu 2017-2024
+2018,oceny_okresowe,poziom_na_poziomie_odsetek,47.9,%,sprawozdanie-ssc-2018.pdf,54,najwyzszy od 2012 r.
+2018,oceny_okresowe,poziom_na_poziomie_odsetek,48,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu rozklad pozytywnych ocen
+2018,oceny_okresowe,poziom_na_poziomie_odsetek,48,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2019,oceny_okresowe,poziom_na_poziomie_odsetek,51.8,%,sprawozdanie-ssc-2019.pdf,48,najwyzszy od 2012 r.
+2019,oceny_okresowe,poziom_na_poziomie_odsetek,52,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu rozklad pozytywnych ocen
+2019,oceny_okresowe,poziom_na_poziomie_odsetek,52,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2020,oceny_okresowe,poziom_na_poziomie_odsetek,50.04,%,sprawozdanie-ssc-2020.pdf,106,"wyliczone: 14664/29302, wykres s.52: 50%"
+2020,oceny_okresowe,poziom_na_poziomie_odsetek,50,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu rozklad pozytywnych ocen
+2020,oceny_okresowe,poziom_na_poziomie_odsetek,50,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2021,oceny_okresowe,poziom_na_poziomie_odsetek,51.73,%,sprawozdanie-ssc-2021.pdf,40,
+2021,oceny_okresowe,poziom_na_poziomie_odsetek,52,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu rozklad pozytywnych ocen
+2021,oceny_okresowe,poziom_na_poziomie_odsetek,52,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2022,oceny_okresowe,poziom_na_poziomie_odsetek,50.9,%,sprawozdanie-ssc-2022.pdf,43,
+2022,oceny_okresowe,poziom_na_poziomie_odsetek,51,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2023,oceny_okresowe,poziom_na_poziomie_odsetek,50.8,%,sprawozdanie-ssc-2023.pdf,57,
+2023,oceny_okresowe,poziom_na_poziomie_odsetek,51,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2024,oceny_okresowe,poziom_na_poziomie_odsetek,48,%,sprawozdanie-ssc-2024.pdf,70,
+2024,oceny_okresowe,poziom_na_poziomie_odsetek,48,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2025,oceny_okresowe,poziom_na_poziomie_odsetek,50,%,sprawozdanie-ssc-2025.pdf,28,poziom: na poziomie oczekiwan
+2016,oceny_okresowe,poziom_ponizej_liczba,66,oceny,sprawozdanie-ssc-2016.pdf,79,suma ponizej i znacznie ponizej (74) rozni sie od liczby ocen negatywnych w tab. 1 (82)
+2017,oceny_okresowe,poziom_ponizej_liczba,162,oceny,sprawozdanie-ssc-2017.pdf,120,
+2018,oceny_okresowe,poziom_ponizej_liczba,70,oceny,sprawozdanie-ssc-2018.pdf,107,
+2019,oceny_okresowe,poziom_ponizej_liczba,187,oceny,sprawozdanie-ssc-2019.pdf,97,
+2020,oceny_okresowe,poziom_ponizej_liczba,96,oceny,sprawozdanie-ssc-2020.pdf,106,
+2016,oceny_okresowe,poziom_powyzej_liczba,16128,oceny,sprawozdanie-ssc-2016.pdf,79,
+2017,oceny_okresowe,poziom_powyzej_liczba,30862,oceny,sprawozdanie-ssc-2017.pdf,120,
+2018,oceny_okresowe,poziom_powyzej_liczba,12774,oceny,sprawozdanie-ssc-2018.pdf,107,
+2019,oceny_okresowe,poziom_powyzej_liczba,26443,oceny,sprawozdanie-ssc-2019.pdf,97,
+2020,oceny_okresowe,poziom_powyzej_liczba,12431,oceny,sprawozdanie-ssc-2020.pdf,106,
+2016,oceny_okresowe,poziom_powyzej_odsetek,52,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2017,oceny_okresowe,poziom_powyzej_odsetek,44,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2017,oceny_okresowe,poziom_powyzej_odsetek,44,%,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu 2017-2024
+2018,oceny_okresowe,poziom_powyzej_odsetek,45,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2018,oceny_okresowe,poziom_powyzej_odsetek,45,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2019,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2019,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2020,oceny_okresowe,poziom_powyzej_odsetek,42.42,%,sprawozdanie-ssc-2020.pdf,106,"wyliczone: 12431/29302, wykres s.52: 42%"
+2020,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2020,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2021,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2021.pdf,40,"odczyt z wykresu, zaokrąglone"
+2021,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2021,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2022,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2022,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2023,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2023.pdf,57,odczyt z wykresu
+2023,oceny_okresowe,poziom_powyzej_odsetek,42,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2024,oceny_okresowe,poziom_powyzej_odsetek,44,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2025,oceny_okresowe,poziom_powyzej_odsetek,43,%,sprawozdanie-ssc-2025.pdf,66,poziom: powyzej oczekiwan. etykieta wykresu
+2016,oceny_okresowe,poziom_znacznie_ponizej_liczba,8,oceny,sprawozdanie-ssc-2016.pdf,79,
+2017,oceny_okresowe,poziom_znacznie_ponizej_liczba,9,oceny,sprawozdanie-ssc-2017.pdf,120,
+2018,oceny_okresowe,poziom_znacznie_ponizej_liczba,8,oceny,sprawozdanie-ssc-2018.pdf,107,
+2019,oceny_okresowe,poziom_znacznie_ponizej_liczba,7,oceny,sprawozdanie-ssc-2019.pdf,97,
+2020,oceny_okresowe,poziom_znacznie_ponizej_liczba,3,oceny,sprawozdanie-ssc-2020.pdf,106,
+2016,oceny_okresowe,poziom_znacznie_powyzej_liczba,2203,oceny,sprawozdanie-ssc-2016.pdf,79,poziomy: znacznie powyzej oczekiwan / powyzej oczekiwan / na poziomie oczekiwan / ponizej oczekiwan / znacznie ponizej oczekiwan
+2017,oceny_okresowe,poziom_znacznie_powyzej_liczba,8132,oceny,sprawozdanie-ssc-2017.pdf,120,
+2018,oceny_okresowe,poziom_znacznie_powyzej_liczba,1939,oceny,sprawozdanie-ssc-2018.pdf,107,poziomy: znacznie powyzej oczekiwan / powyzej oczekiwan / na poziomie oczekiwan / ponizej oczekiwan / znacznie ponizej oczekiwan
+2019,oceny_okresowe,poziom_znacznie_powyzej_liczba,3464,oceny,sprawozdanie-ssc-2019.pdf,97,
+2020,oceny_okresowe,poziom_znacznie_powyzej_liczba,2108,oceny,sprawozdanie-ssc-2020.pdf,106,"poziomy: znacznie powyżej oczekiwań, powyżej oczekiwań, na poziomie oczekiwań, poniżej oczekiwań, znacznie poniżej oczekiwań"
+2016,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7.1,%,sprawozdanie-ssc-2016.pdf,79,wyliczone: 2203/30919
+2016,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2017,oceny_okresowe,poziom_znacznie_powyzej_odsetek,11.6,%,sprawozdanie-ssc-2017.pdf,120,wyliczone: 8132/70334
+2017,oceny_okresowe,poziom_znacznie_powyzej_odsetek,12,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2017,oceny_okresowe,poziom_znacznie_powyzej_odsetek,12,%,sprawozdanie-ssc-2024.pdf,71,etykieta wykresu 2017-2024
+2018,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2018,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2019,oceny_okresowe,poziom_znacznie_powyzej_odsetek,6,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2019,oceny_okresowe,poziom_znacznie_powyzej_odsetek,6,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2020,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7.19,%,sprawozdanie-ssc-2020.pdf,106,"wyliczone: 2108/29302, wykres s.52: 7%"
+2020,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2020,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2021,oceny_okresowe,poziom_znacznie_powyzej_odsetek,6,%,sprawozdanie-ssc-2021.pdf,40,"odczyt z wykresu, zaokrąglone"
+2021,oceny_okresowe,poziom_znacznie_powyzej_odsetek,6,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2021,oceny_okresowe,poziom_znacznie_powyzej_odsetek,6,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2022,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2022.pdf,43,odczyt z wykresu
+2022,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2023,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2023.pdf,57,odczyt z wykresu
+2023,oceny_okresowe,poziom_znacznie_powyzej_odsetek,7,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2024,oceny_okresowe,poziom_znacznie_powyzej_odsetek,8,%,sprawozdanie-ssc-2025.pdf,66,etykieta wykresu 2018-2025
+2025,oceny_okresowe,poziom_znacznie_powyzej_odsetek,6.6,%,sprawozdanie-ssc-2025.pdf,28,poziom: znacznie powyzej oczekiwan. Wykres s.66: 7%
+2016,oceny_okresowe,pozytywne_na_poziomie_odsetek,41,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2017,oceny_okresowe,pozytywne_na_poziomie_odsetek,44,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2018,oceny_okresowe,pozytywne_na_poziomie_odsetek,48,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2019,oceny_okresowe,pozytywne_na_poziomie_odsetek,52,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2016,oceny_okresowe,pozytywne_powyzej_odsetek,52,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2017,oceny_okresowe,pozytywne_powyzej_odsetek,44,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2018,oceny_okresowe,pozytywne_powyzej_odsetek,45,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2019,oceny_okresowe,pozytywne_powyzej_odsetek,42,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2016,oceny_okresowe,pozytywne_znacznie_powyzej_odsetek,7,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu rozkladu ocen pozytywnych 2016-2019
+2017,oceny_okresowe,pozytywne_znacznie_powyzej_odsetek,12,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2018,oceny_okresowe,pozytywne_znacznie_powyzej_odsetek,7,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2019,oceny_okresowe,pozytywne_znacznie_powyzej_odsetek,6,% ocen pozytywnych,sprawozdanie-ssc-2019.pdf,48,odczyt z wykresu
+2011,oceny_okresowe,sprzeciwy_liczba,506,sprzeciwy,sprawozdanie-ssc-2018.pdf,54,maksimum w latach 2011-2017 (przypis 55)
+2014,oceny_okresowe,sprzeciwy_liczba,137,sprzeciwy,sprawozdanie-ssc-2018.pdf,54,przypis 55
+2016,oceny_okresowe,sprzeciwy_liczba,137,sprzeciwy,sprawozdanie-ssc-2016.pdf,80,
+2016,oceny_okresowe,sprzeciwy_liczba,137,sprzeciwy,sprawozdanie-ssc-2018.pdf,54,przypis 55
+2017,oceny_okresowe,sprzeciwy_liczba,205,sprzeciwy,sprawozdanie-ssc-2017.pdf,121,
+2018,oceny_okresowe,sprzeciwy_liczba,115,sprzeciwy,sprawozdanie-ssc-2018.pdf,108,najnizsza od 2011 r.
+2019,oceny_okresowe,sprzeciwy_liczba,139,sprzeciwy,sprawozdanie-ssc-2019.pdf,98,
+2020,oceny_okresowe,sprzeciwy_liczba,95,sprzeciwy,sprawozdanie-ssc-2020.pdf,107,
+2020,oceny_okresowe,sprzeciwy_na_1000_ocen,3.24,sprzeciwy,sprawozdanie-ssc-2020.pdf,107,wyliczone: 95/29302*1000
+2016,oceny_okresowe,sprzeciwy_nierozpatrzone,2,sprzeciwy,sprawozdanie-ssc-2016.pdf,80,
+2017,oceny_okresowe,sprzeciwy_nierozpatrzone,26,sprzeciwy,sprawozdanie-ssc-2017.pdf,121,
+2018,oceny_okresowe,sprzeciwy_nierozpatrzone,3,sprzeciwy,sprawozdanie-ssc-2018.pdf,108,
+2019,oceny_okresowe,sprzeciwy_nierozpatrzone,1,sprzeciwy,sprawozdanie-ssc-2019.pdf,98,
+2020,oceny_okresowe,sprzeciwy_nierozpatrzone,2,sprzeciwy,sprawozdanie-ssc-2020.pdf,107,
+2016,oceny_okresowe,sprzeciwy_nieuwzglednione,80,sprzeciwy,sprawozdanie-ssc-2016.pdf,80,
+2017,oceny_okresowe,sprzeciwy_nieuwzglednione,109,sprzeciwy,sprawozdanie-ssc-2017.pdf,121,
+2018,oceny_okresowe,sprzeciwy_nieuwzglednione,67,sprzeciwy,sprawozdanie-ssc-2018.pdf,108,
+2019,oceny_okresowe,sprzeciwy_nieuwzglednione,95,sprzeciwy,sprawozdanie-ssc-2019.pdf,98,
+2020,oceny_okresowe,sprzeciwy_nieuwzglednione,53,sprzeciwy,sprawozdanie-ssc-2020.pdf,107,
+2016,oceny_okresowe,sprzeciwy_uwzglednione,55,sprzeciwy,sprawozdanie-ssc-2016.pdf,80,
+2017,oceny_okresowe,sprzeciwy_uwzglednione,70,sprzeciwy,sprawozdanie-ssc-2017.pdf,121,
+2018,oceny_okresowe,sprzeciwy_uwzglednione,45,sprzeciwy,sprawozdanie-ssc-2018.pdf,108,
+2019,oceny_okresowe,sprzeciwy_uwzglednione,43,sprzeciwy,sprawozdanie-ssc-2019.pdf,98,
+2020,oceny_okresowe,sprzeciwy_uwzglednione,40,sprzeciwy,sprawozdanie-ssc-2020.pdf,107,
+2023,pierwsze_oceny,pierwsze_oceny_kas,1941,oceny,sprawozdanie-ssc-2023.pdf,56,
+2024,pierwsze_oceny,pierwsze_oceny_kas,2152,liczba,sprawozdanie-ssc-2024.pdf,70,2023: 1941
+2025,pierwsze_oceny,pierwsze_oceny_kas,1602,liczba,sprawozdanie-ssc-2025.pdf,66,
+2016,pierwsze_oceny,pierwsze_oceny_liczba,4446,oceny,sprawozdanie-ssc-2016.pdf,75,
+2017,pierwsze_oceny,pierwsze_oceny_liczba,4290,oceny,sprawozdanie-ssc-2017.pdf,118,
+2017,pierwsze_oceny,pierwsze_oceny_liczba,4290,oceny,sprawozdanie-ssc-2018.pdf,55,przypis 60
+2018,pierwsze_oceny,pierwsze_oceny_liczba,5342,oceny,sprawozdanie-ssc-2018.pdf,105,
+2019,pierwsze_oceny,pierwsze_oceny_liczba,7899,oceny,sprawozdanie-ssc-2019.pdf,95,o 2557 wiecej niz w 2018
+2019,pierwsze_oceny,pierwsze_oceny_liczba,7899,oceny,sprawozdanie-ssc-2020.pdf,50,
+2020,pierwsze_oceny,pierwsze_oceny_liczba,7374,oceny,sprawozdanie-ssc-2020.pdf,104,
+2021,pierwsze_oceny,pierwsze_oceny_liczba,6181,oceny,sprawozdanie-ssc-2021.pdf,39,"-16,2% vs 2020"
+2021,pierwsze_oceny,pierwsze_oceny_liczba,6181,oceny,sprawozdanie-ssc-2022.pdf,42,
+2022,pierwsze_oceny,pierwsze_oceny_liczba,6027,oceny,sprawozdanie-ssc-2022.pdf,42,spadek o 2.5%
+2023,pierwsze_oceny,pierwsze_oceny_liczba,7133,oceny,sprawozdanie-ssc-2023.pdf,56,wzrost o 18.4%
+2023,pierwsze_oceny,pierwsze_oceny_liczba,7133,liczba,sprawozdanie-ssc-2024.pdf,70,etykieta wykresu
+2024,pierwsze_oceny,pierwsze_oceny_liczba,7046,liczba,sprawozdanie-ssc-2024.pdf,70,etykieta wykresu. spadek 1.25%
+2025,pierwsze_oceny,pierwsze_oceny_liczba,6206,liczba,sprawozdanie-ssc-2025.pdf,66,spadek o 12% wobec 2024
+2023,pierwsze_oceny,pierwsze_oceny_ministerstwa_kprm,701,oceny,sprawozdanie-ssc-2023.pdf,56,
+2024,pierwsze_oceny,pierwsze_oceny_ministerstwa_kprm,675,liczba,sprawozdanie-ssc-2024.pdf,70,2023: 701
+2025,pierwsze_oceny,pierwsze_oceny_ministerstwa_kprm,817,liczba,sprawozdanie-ssc-2025.pdf,66,
+2016,pierwsze_oceny,pierwsze_oceny_negatywne_liczba,93,oceny,sprawozdanie-ssc-2016.pdf,75,
+2017,pierwsze_oceny,pierwsze_oceny_negatywne_liczba,75,oceny,sprawozdanie-ssc-2017.pdf,118,
+2017,pierwsze_oceny,pierwsze_oceny_negatywne_liczba,75,oceny,sprawozdanie-ssc-2018.pdf,55,przypis 60
+2018,pierwsze_oceny,pierwsze_oceny_negatywne_liczba,86,oceny,sprawozdanie-ssc-2018.pdf,105,
+2019,pierwsze_oceny,pierwsze_oceny_negatywne_liczba,155,oceny,sprawozdanie-ssc-2019.pdf,95,
+2019,pierwsze_oceny,pierwsze_oceny_negatywne_liczba,155,oceny,sprawozdanie-ssc-2020.pdf,50,"1,96%"
+2020,pierwsze_oceny,pierwsze_oceny_negatywne_liczba,183,oceny,sprawozdanie-ssc-2020.pdf,104,
+2016,pierwsze_oceny,pierwsze_oceny_negatywne_odsetek,2.1,%,sprawozdanie-ssc-2016.pdf,75,wyliczone: 93/4446
+2019,pierwsze_oceny,pierwsze_oceny_negatywne_odsetek,1.96,%,sprawozdanie-ssc-2020.pdf,50,
+2020,pierwsze_oceny,pierwsze_oceny_negatywne_odsetek,2.48,%,sprawozdanie-ssc-2020.pdf,50,
+2023,pierwsze_oceny,pierwsze_oceny_negatywne_odsetek,2,%,sprawozdanie-ssc-2024.pdf,70,
+2024,pierwsze_oceny,pierwsze_oceny_negatywne_odsetek,3,%,sprawozdanie-ssc-2024.pdf,70,2023: 2%
+2025,pierwsze_oceny,pierwsze_oceny_negatywne_odsetek,3,%,sprawozdanie-ssc-2025.pdf,28,
+2024,pierwsze_oceny,pierwsze_oceny_powiatowa_adm_zespolona,621,liczba,sprawozdanie-ssc-2024.pdf,70,2023: 543
+2025,pierwsze_oceny,pierwsze_oceny_powiatowa_adm_zespolona,521,liczba,sprawozdanie-ssc-2025.pdf,66,
+2023,pierwsze_oceny,pierwsze_oceny_powiatowa_zespolona,543,oceny,sprawozdanie-ssc-2023.pdf,56,
+2024,pierwsze_oceny,pierwsze_oceny_pozostala_adm_niezespolona,844,liczba,sprawozdanie-ssc-2024.pdf,70,2023: 1301
+2025,pierwsze_oceny,pierwsze_oceny_pozostala_adm_niezespolona,684,liczba,sprawozdanie-ssc-2025.pdf,66,
+2023,pierwsze_oceny,pierwsze_oceny_pozostala_niezespolona,1301,oceny,sprawozdanie-ssc-2023.pdf,56,
+2016,pierwsze_oceny,pierwsze_oceny_pozytywne_liczba,4353,oceny,sprawozdanie-ssc-2016.pdf,75,
+2017,pierwsze_oceny,pierwsze_oceny_pozytywne_liczba,4215,oceny,sprawozdanie-ssc-2017.pdf,118,
+2018,pierwsze_oceny,pierwsze_oceny_pozytywne_liczba,5256,oceny,sprawozdanie-ssc-2018.pdf,105,
+2019,pierwsze_oceny,pierwsze_oceny_pozytywne_liczba,7744,oceny,sprawozdanie-ssc-2019.pdf,95,
+2020,pierwsze_oceny,pierwsze_oceny_pozytywne_liczba,7191,oceny,sprawozdanie-ssc-2020.pdf,104,
+2017,pierwsze_oceny,pierwsze_oceny_pozytywne_odsetek,98.3,%,sprawozdanie-ssc-2017.pdf,44,
+2023,pierwsze_oceny,pierwsze_oceny_urzedy_centralne,1002,oceny,sprawozdanie-ssc-2023.pdf,56,
+2024,pierwsze_oceny,pierwsze_oceny_urzedy_centralne,996,liczba,sprawozdanie-ssc-2024.pdf,70,2023: 1002
+2025,pierwsze_oceny,pierwsze_oceny_urzedy_centralne,1030,liczba,sprawozdanie-ssc-2025.pdf,66,
+2023,pierwsze_oceny,pierwsze_oceny_urzedy_wojewodzkie,726,oceny,sprawozdanie-ssc-2023.pdf,56,
+2024,pierwsze_oceny,pierwsze_oceny_urzedy_wojewodzkie,765,liczba,sprawozdanie-ssc-2024.pdf,70,2023: 726
+2025,pierwsze_oceny,pierwsze_oceny_urzedy_wojewodzkie,703,liczba,sprawozdanie-ssc-2025.pdf,66,
+2024,pierwsze_oceny,pierwsze_oceny_wojewodzka_adm_zespolona,993,liczba,sprawozdanie-ssc-2024.pdf,70,2023: 919
+2025,pierwsze_oceny,pierwsze_oceny_wojewodzka_adm_zespolona,849,liczba,sprawozdanie-ssc-2025.pdf,66,
+2023,pierwsze_oceny,pierwsze_oceny_wojewodzka_zespolona,919,oceny,sprawozdanie-ssc-2023.pdf,56,
+2023,pierwsze_oceny,pierwsze_zatrudnienia_w_sc,8027,osoby,sprawozdanie-ssc-2024.pdf,70,etykieta wykresu
+2024,pierwsze_oceny,pierwsze_zatrudnienia_w_sc,6791,osoby,sprawozdanie-ssc-2024.pdf,70,etykieta wykresu
+2025,pierwsze_oceny,pierwsze_zatrudnienia_w_sc,6490,osoby,sprawozdanie-ssc-2025.pdf,66,osoby podejmujace po raz pierwszy prace w sc (spadek 4.5%)
+2016,pierwsze_oceny,umowy_na_czas_okreslony_art35,5183,osoby,sprawozdanie-ssc-2016.pdf,75,osoby z ktorymi podpisano umowe na czas okreslony zgodnie z art. 35 ust. 3
+2017,pierwsze_oceny,umowy_na_czas_okreslony_art35,5948,osoby,sprawozdanie-ssc-2017.pdf,118,
+2011,pierwsze_oceny,umowy_pierwsza_praca_sc,4364,umowy,sprawozdanie-ssc-2018.pdf,56,odczyt z wykresu 2011-2018
+2012,pierwsze_oceny,umowy_pierwsza_praca_sc,4526,umowy,sprawozdanie-ssc-2018.pdf,56,odczyt z wykresu
+2013,pierwsze_oceny,umowy_pierwsza_praca_sc,3934,umowy,sprawozdanie-ssc-2018.pdf,56,odczyt z wykresu
+2014,pierwsze_oceny,umowy_pierwsza_praca_sc,3611,umowy,sprawozdanie-ssc-2018.pdf,56,odczyt z wykresu
+2015,pierwsze_oceny,umowy_pierwsza_praca_sc,4957,umowy,sprawozdanie-ssc-2018.pdf,56,odczyt z wykresu
+2016,pierwsze_oceny,umowy_pierwsza_praca_sc,5183,umowy,sprawozdanie-ssc-2018.pdf,56,odczyt z wykresu
+2017,pierwsze_oceny,umowy_pierwsza_praca_sc,5948,umowy,sprawozdanie-ssc-2018.pdf,56,odczyt z wykresu
+2018,pierwsze_oceny,umowy_pierwsza_praca_sc,9583,umowy,sprawozdanie-ssc-2018.pdf,105,umowy na czas okreslony 12 mies. (art. 35 ust. 3). Wykres na s. 56 podaje 9582
+2019,pierwsze_oceny,umowy_pierwsza_praca_sc,9011,umowy,sprawozdanie-ssc-2019.pdf,95,spadek o 5.9%
+2019,pierwsze_oceny,umowy_pierwsze_zatrudnienie,9011,umowy,sprawozdanie-ssc-2020.pdf,50,"wykres, spadek o 1819 umów w 2020"
+2020,pierwsze_oceny,umowy_pierwsze_zatrudnienie,7192,umowy,sprawozdanie-ssc-2020.pdf,104,umowy na czas określony 12 mies. (art. 35 ust. 3)
+2021,pierwsze_oceny,umowy_pierwsze_zatrudnienie,8387,umowy,sprawozdanie-ssc-2021.pdf,39,"+16,6%"
+2023,plec_wiek,do_29_lat_gospodarka_narodowa_odsetek,15.2,%,sprawozdanie-ssc-2023.pdf,39,odczyt z wykresu (GUS)
+2022,plec_wiek,do_29_lat_liczba,8719,osoby,sprawozdanie-ssc-2022.pdf,28,
+2023,plec_wiek,do_29_lat_liczba,8096,osoby,sprawozdanie-ssc-2023.pdf,38,spadek o 623
+2022,plec_wiek,do_29_lat_odsetek,7.1,%,sprawozdanie-ssc-2022.pdf,28,
+2023,plec_wiek,do_29_lat_odsetek,6.5,%,sprawozdanie-ssc-2023.pdf,38,
+2019,plec_wiek,do_29_sektor_prywatny_odsetek,20.5,%,sprawozdanie-ssc-2019.pdf,37,porownanie GUS. Gospodarka narodowa 17.8% i sektor publiczny 9.2%
+2015,plec_wiek,kobiety_odsetek,69.9,%,sprawozdanie-ssc-2016.pdf,19,
+2016,plec_wiek,kobiety_odsetek,70.0,%,sprawozdanie-ssc-2016.pdf,19,stan na 31.12.2016
+2017,plec_wiek,kobiety_odsetek,69.7,%,sprawozdanie-ssc-2017.pdf,27,stan na 31.12.2017
+2018,plec_wiek,kobiety_odsetek,70.7,%,sprawozdanie-ssc-2018.pdf,9,stan na 31.12 w osobach
+2019,plec_wiek,kobiety_odsetek,71,%,sprawozdanie-ssc-2019.pdf,69,stan na 31.12 w osobach
+2020,plec_wiek,kobiety_odsetek,71.1,%,sprawozdanie-ssc-2020.pdf,73,"stan 31.12.2020, w osobach"
+2022,plec_wiek,kobiety_odsetek,73,%,sprawozdanie-ssc-2022.pdf,7,stan na 31.12.2022 w osobach (infografika)
+2023,plec_wiek,kobiety_odsetek,73,%,sprawozdanie-ssc-2023.pdf,7,stan na 31.12.2023 w osobach
+2024,plec_wiek,kobiety_odsetek,73,%,sprawozdanie-ssc-2024.pdf,9,stan 31.12.2024 w osobach
+2025,plec_wiek,kobiety_odsetek,74,%,sprawozdanie-ssc-2025.pdf,6,stan na 31.12.2025 w osobach
+2018,plec_wiek,kobiety_sredni_szczebel_zarzadzania_odsetek,51.1,%,sprawozdanie-ssc-2018.pdf,73,odczyt z wykresu 4
+2019,plec_wiek,kobiety_sredni_szczebel_zarzadzania_odsetek,54,%,sprawozdanie-ssc-2019.pdf,70,
+2016,plec_wiek,kobiety_srednie_kierownictwo_odsetek,53.9,%,sprawozdanie-ssc-2016.pdf,23,udzial kobiet na stanowiskach sredniego szczebla zarzadzania (wzrost o 5.2 p.p.)
+2018,plec_wiek,kobiety_stanowiska_wspomagajace_odsetek,77.7,%,sprawozdanie-ssc-2018.pdf,73,odczyt z wykresu 4
+2019,plec_wiek,kobiety_stanowiska_wspomagajace_odsetek,78,%,sprawozdanie-ssc-2019.pdf,70,
+2020,plec_wiek,kobiety_stanowiska_wspomagajace_odsetek,78.1,%,sprawozdanie-ssc-2020.pdf,74,
+2017,plec_wiek,kobiety_wyzsze_stanowiska_odsetek,50.3,%,sprawozdanie-ssc-2017.pdf,27,
+2018,plec_wiek,kobiety_wyzsze_stanowiska_odsetek,51.6,%,sprawozdanie-ssc-2018.pdf,73,odczyt z wykresu 4
+2019,plec_wiek,kobiety_wyzsze_stanowiska_odsetek,51,%,sprawozdanie-ssc-2019.pdf,70,
+2020,plec_wiek,kobiety_wyzsze_stanowiska_odsetek,51.9,%,sprawozdanie-ssc-2020.pdf,74,
+2017,plec_wiek,mediana_wieku,44,lata,sprawozdanie-ssc-2017.pdf,36,stan na 30.06.2017 (kobiety 43 mezczyzni 45) pierwsze badanie indywidualnych stanowisk
+2024,plec_wiek,mediana_wieku,46,lata,sprawozdanie-ssc-2024.pdf,45,badanie indywidualnych stanowisk stan 30.04.2024. wzrost o 2 lata od 2017
+2017,plec_wiek,mediana_wieku_kobiety,43,lata,sprawozdanie-ssc-2024.pdf,45,porownanie z badaniem 2017
+2024,plec_wiek,mediana_wieku_kobiety,45,lata,sprawozdanie-ssc-2024.pdf,45,2017: 43
+2017,plec_wiek,mediana_wieku_mezczyzni,45,lata,sprawozdanie-ssc-2024.pdf,45,porownanie z badaniem 2017
+2024,plec_wiek,mediana_wieku_mezczyzni,48,lata,sprawozdanie-ssc-2024.pdf,45,2017: 45
+2022,plec_wiek,od_50_lat_liczba,40006,osoby,sprawozdanie-ssc-2022.pdf,28,
+2021,plec_wiek,od_50_lat_odsetek,32.2,%,sprawozdanie-ssc-2022.pdf,28,
+2022,plec_wiek,od_50_lat_odsetek,32.7,%,sprawozdanie-ssc-2022.pdf,28,
+2023,plec_wiek,od_50_lat_odsetek,34.5,%,sprawozdanie-ssc-2023.pdf,38,2022: 32.7%
+2023,plec_wiek,od_50_lat_przyrost,3152,osoby,sprawozdanie-ssc-2023.pdf,38,wzrost o 7.9%
+2024,plec_wiek,osoby_do_29_lat,7623,osoby,sprawozdanie-ssc-2024.pdf,44,spadek o 473 wobec 2023
+2025,plec_wiek,osoby_do_29_lat,7195,osoby,sprawozdanie-ssc-2025.pdf,10,spadek o 428 osob wobec 2024
+2025,plec_wiek,osoby_do_29_lat_gospodarka_narodowa_odsetek,14.6,%,sprawozdanie-ssc-2025.pdf,10,GUS BAEL III kw. 2025
+2020,plec_wiek,osoby_do_29_lat_liczba,8899,osoby,sprawozdanie-ssc-2020.pdf,35,spadek o 271 osób
+2021,plec_wiek,osoby_do_29_lat_liczba,8533,osoby,sprawozdanie-ssc-2021.pdf,25,
+2019,plec_wiek,osoby_do_29_lat_odsetek,7.4,%,sprawozdanie-ssc-2020.pdf,35,
+2020,plec_wiek,osoby_do_29_lat_odsetek,7.3,%,sprawozdanie-ssc-2020.pdf,35,"2019: 7,4%, gospodarka narodowa 2020: 16,1%"
+2021,plec_wiek,osoby_do_29_lat_odsetek,7.1,%,sprawozdanie-ssc-2021.pdf,25,"gospodarka narodowa 15,6%"
+2023,plec_wiek,osoby_do_29_lat_odsetek,6.5,%,sprawozdanie-ssc-2024.pdf,44,etykieta wykresu
+2024,plec_wiek,osoby_do_29_lat_odsetek,6.0,%,sprawozdanie-ssc-2024.pdf,44,2023: 6.5%. gospodarka narodowa 14.8%
+2025,plec_wiek,osoby_do_29_lat_odsetek,5.7,%,sprawozdanie-ssc-2025.pdf,10,rynek pracy (gospodarka narodowa) 14.6%
+2018,plec_wiek,wiek_30_39_odsetek,27.2,%,sprawozdanie-ssc-2018.pdf,76,odczyt z wykresu 7 ogolem KSC
+2019,plec_wiek,wiek_30_39_odsetek,27,%,sprawozdanie-ssc-2019.pdf,71,odczyt z wykresu 7 ogolem
+2023,plec_wiek,wiek_30_39_zmiana,-1300,osoby,sprawozdanie-ssc-2023.pdf,38,spadek o 4.5%
+2009,plec_wiek,wiek_31_50_odsetek,52.8,%,sprawozdanie-ssc-2016.pdf,23,
+2016,plec_wiek,wiek_31_50_odsetek,59.7,%,sprawozdanie-ssc-2016.pdf,23,
+2017,plec_wiek,wiek_31_50_odsetek,60.3,%,sprawozdanie-ssc-2017.pdf,28,
+2018,plec_wiek,wiek_40_49_odsetek,32.8,%,sprawozdanie-ssc-2018.pdf,76,odczyt z wykresu 7 ogolem KSC
+2019,plec_wiek,wiek_40_49_odsetek,34,%,sprawozdanie-ssc-2019.pdf,71,odczyt z wykresu 7 ogolem
+2018,plec_wiek,wiek_50_59_odsetek,23.8,%,sprawozdanie-ssc-2018.pdf,76,odczyt z wykresu 7 ogolem KSC
+2019,plec_wiek,wiek_50_59_odsetek,23,%,sprawozdanie-ssc-2019.pdf,71,odczyt z wykresu 7 ogolem
+2017,plec_wiek,wiek_56_62_odsetek,17,%,sprawozdanie-ssc-2017.pdf,36,ponad 22 tys. osob w wieku 56-62 lata (ryzyko odejsc emerytalnych)
+2018,plec_wiek,wiek_60_plus_odsetek,9.1,%,sprawozdanie-ssc-2018.pdf,76,odczyt z wykresu 7 ogolem KSC
+2019,plec_wiek,wiek_60_plus_odsetek,9,%,sprawozdanie-ssc-2019.pdf,71,odczyt z wykresu 7 ogolem
+2019,plec_wiek,wiek_do_29_liczba,9170,osoby,sprawozdanie-ssc-2019.pdf,37,
+2017,plec_wiek,wiek_do_29_odsetek,6.5,%,sprawozdanie-ssc-2017.pdf,29,nowy przedzial wieku (gospodarka narodowa 18.8%)
+2018,plec_wiek,wiek_do_29_odsetek,7.1,%,sprawozdanie-ssc-2018.pdf,44,
+2019,plec_wiek,wiek_do_29_odsetek,7.4,%,sprawozdanie-ssc-2019.pdf,36,9170 osob
+2009,plec_wiek,wiek_do_30_odsetek,20.3,%,sprawozdanie-ssc-2016.pdf,23,stan na 31.12.2009
+2016,plec_wiek,wiek_do_30_odsetek,8.3,%,sprawozdanie-ssc-2016.pdf,23,stan na 31.12.2016
+2017,plec_wiek,wiek_do_30_odsetek,7.5,%,sprawozdanie-ssc-2017.pdf,28,stan na 31.12.2017
+2009,plec_wiek,wiek_powyzej_50_odsetek,26.9,%,sprawozdanie-ssc-2016.pdf,23,
+2016,plec_wiek,wiek_powyzej_50_odsetek,32.0,%,sprawozdanie-ssc-2016.pdf,23,
+2017,plec_wiek,wiek_powyzej_50_odsetek,32.2,%,sprawozdanie-ssc-2017.pdf,28,
+2022,standardy_zzl,asesorzy_wewnetrzni_ac_liczba,50,osoby,sprawozdanie-ssc-2022.pdf,11,ponad 50 asesorow
+2023,standardy_zzl,badanie_standardow_odsetek_odpowiedzi,95,%,sprawozdanie-ssc-2023.pdf,11,
+2023,standardy_zzl,badanie_standardow_urzedy_odpowiedzi,1628,urzedy,sprawozdanie-ssc-2023.pdf,11,ok. 95% grupy docelowej (100% urzedow >50 czlonkow korpusu)
+2020,standardy_zzl,etyka_obowiazkowa_w_sluzbie_przygotowawczej_urzedy,874,urzedy,sprawozdanie-ssc-2020.pdf,57,48% urzędów
+2021,standardy_zzl,etyka_obowiazkowa_w_sluzbie_przygotowawczej_urzedy,1087,urzedy,sprawozdanie-ssc-2021.pdf,45,blisko 60% urzędów
+2018,standardy_zzl,ewaluacja_standardow_urzedy_ankiety,1169,urzedy,sprawozdanie-ssc-2018.pdf,13,zwrot 63.4%
+2018,standardy_zzl,ewaluacja_standardow_zwrot_odsetek,63.4,%,sprawozdanie-ssc-2018.pdf,13,prawie polowa urzedow wskazala potrzebe rozbudowy standardow WLB
+2022,standardy_zzl,metoda_probki_pracy_odsetek,27,%,sprawozdanie-ssc-2022.pdf,11,
+2022,standardy_zzl,metoda_wywiad_behawioralny_odsetek,67,%,sprawozdanie-ssc-2022.pdf,11,metody badania kompetencji miekkich
+2022,standardy_zzl,metoda_wywiad_sytuacyjny_odsetek,62,%,sprawozdanie-ssc-2022.pdf,11,
+2019,standardy_zzl,min_centr_woj_badanie_kompetencji_miekkich_odsetek,96,%,sprawozdanie-ssc-2019.pdf,62,ministerstwa i urzedy centralne i wojewodzkie (przypis 82)
+2025,standardy_zzl,porady_doradcow_etyki,1441,liczba,sprawozdanie-ssc-2025.pdf,34,
+2023,standardy_zzl,samoocena_kultury_uczciwosci_uczestnicy,10800,osoby,sprawozdanie-ssc-2023.pdf,67,o 4700 wiecej niz 2022
+2019,standardy_zzl,standardy_przydatne_urzedy_odsetek,90,%,sprawozdanie-ssc-2019.pdf,12,dla 90% urzedow standardy sa przydatne albo moga byc po zmianach (ewaluacja 2018)
+2024,standardy_zzl,szkolenia_z_etyki_liczba,3423,liczba,sprawozdanie-ssc-2024.pdf,78,2023: 2761. w 837 urzedach
+2025,standardy_zzl,szkolenia_z_etyki_liczba,5654,liczba,sprawozdanie-ssc-2025.pdf,34,2024: 3423
+2023,standardy_zzl,urzedy_alternatywny_mechanizm_wsparcia_etycznego,118,urzedy,sprawozdanie-ssc-2023.pdf,66,2022: 147
+2019,standardy_zzl,urzedy_badanie_kompetencji_miekkich_odsetek,60.4,%,sprawozdanie-ssc-2019.pdf,62,wybrane urzedy bez szczebla powiatowego. Cel 2021: 80%
+2022,standardy_zzl,urzedy_badanie_kompetencji_miekkich_odsetek,80,%,sprawozdanie-ssc-2022.pdf,11,bez urzedow szczebla powiatowego
+2024,standardy_zzl,urzedy_bez_procedur_wartosci,387,liczba,sprawozdanie-ssc-2024.pdf,109,
+2025,standardy_zzl,urzedy_bez_procedur_wartosci,409,liczba,sprawozdanie-ssc-2025.pdf,71,zadna procedura z zakresu kultury opartej na wartosciach
+2023,standardy_zzl,urzedy_bez_procedury_kultury_uczciwosci_liczba,480,urzedy,sprawozdanie-ssc-2023.pdf,67,28% urzedow bez zadnej procedury w tym zakresie
+2023,standardy_zzl,urzedy_bez_procedury_kultury_uczciwosci_odsetek,28,%,sprawozdanie-ssc-2023.pdf,67,
+2020,standardy_zzl,urzedy_doradca_etyki_liczba,200,urzedy,sprawozdanie-ssc-2020.pdf,58,+56% vs 2019 (128)
+2021,standardy_zzl,urzedy_doradca_etyki_liczba,318,urzedy,sprawozdanie-ssc-2021.pdf,45,+118 vs 2020
+2023,standardy_zzl,urzedy_dzialania_wizerunkowe_odsetek,68,%,sprawozdanie-ssc-2023.pdf,67,1185 urzedow
+2024,standardy_zzl,urzedy_etyka_w_sluzbie_przygotowawczej,1166,liczba,sprawozdanie-ssc-2024.pdf,78,67% urzedow
+2025,standardy_zzl,urzedy_etyka_w_sluzbie_przygotowawczej,1208,liczba,sprawozdanie-ssc-2025.pdf,34,
+2022,standardy_zzl,urzedy_etyka_w_sluzbie_przygotowawczej_odsetek,61,%,sprawozdanie-ssc-2022.pdf,52,1056 urzedow
+2023,standardy_zzl,urzedy_etyka_w_sluzbie_przygotowawczej_odsetek,66,%,sprawozdanie-ssc-2023.pdf,64,1141 urzedow
+2025,standardy_zzl,urzedy_forum_hr_wdrozyly_narzedzia_hr_odsetek,69.56,%,sprawozdanie-ssc-2025.pdf,42,69 urzedow Forum HR. najczesciej dobrostan i zdrowie psychiczne (66.67% respondentow)
+2019,standardy_zzl,urzedy_jakiekolwiek_narzedzie_wlb_odsetek,96,%,sprawozdanie-ssc-2019.pdf,62,pozakodeksowe narzedzie WLB (przypis 81)
+2021,standardy_zzl,urzedy_komisja_dyscyplinarna_odsetek,73,%,sprawozdanie-ssc-2021.pdf,42,2020: 60%
+2019,standardy_zzl,urzedy_min_5_narzedzi_wlb_odsetek,39.57,%,sprawozdanie-ssc-2019.pdf,62,cel na 2021: 50%
+2024,standardy_zzl,urzedy_modele_jakosci_caf_odsetek,32,%,sprawozdanie-ssc-2024.pdf,10,niecale 32% (210 urzedow) badanie CAF 2024
+2019,standardy_zzl,urzedy_narzedzia_kompetencje_miekkie_odsetek,96,%,sprawozdanie-ssc-2020.pdf,67,"tylko ministerstwa, urzędy centralne i wojewódzkie"
+2020,standardy_zzl,urzedy_narzedzia_kompetencje_miekkie_odsetek,95,%,sprawozdanie-ssc-2020.pdf,67,"wybrane urzędy, bez szczebla powiatowego i WKU, cel 80%"
+2021,standardy_zzl,urzedy_narzedzia_kompetencje_miekkie_odsetek,84,%,sprawozdanie-ssc-2021.pdf,57,"urzędy z naborami, wywiad behawioralny 88%, sytuacyjny 75%, próbki pracy 30%"
+2024,standardy_zzl,urzedy_procedura_antymobbingowa,1310,liczba,sprawozdanie-ssc-2024.pdf,109,na 1742 urzedy
+2025,standardy_zzl,urzedy_procedura_antymobbingowa,1176,liczba,sprawozdanie-ssc-2025.pdf,71,na 1742 urzedy
+2023,standardy_zzl,urzedy_procedura_antymobbingowa_liczba,1197,urzedy,sprawozdanie-ssc-2023.pdf,66,standard obligatoryjny ale brak w niemal 1/3 urzedow
+2021,standardy_zzl,urzedy_procedury_kultury_uczciwosci_odsetek,65,%,sprawozdanie-ssc-2021.pdf,45,1186 urzędów
+2022,standardy_zzl,urzedy_procedury_kultury_uczciwosci_odsetek,67,%,sprawozdanie-ssc-2022.pdf,52,1158 urzedow
+2023,standardy_zzl,urzedy_procedury_kultury_uczciwosci_odsetek,72,%,sprawozdanie-ssc-2023.pdf,66,1261 urzedow
+2023,standardy_zzl,urzedy_promocja_sc_odsetek,79,%,sprawozdanie-ssc-2023.pdf,69,2022: 77%
+2020,standardy_zzl,urzedy_prosty_jezyk_odsetek,22,%,sprawozdanie-ssc-2020.pdf,60,2019: 13%
+2021,standardy_zzl,urzedy_prosty_jezyk_odsetek,55,%,sprawozdanie-ssc-2021.pdf,50,"2019: 13%, 2020: 22%"
+2024,standardy_zzl,urzedy_prosty_jezyk_odsetek,69,%,sprawozdanie-ssc-2024.pdf,84,
+2025,standardy_zzl,urzedy_prosty_jezyk_odsetek,66,%,sprawozdanie-ssc-2025.pdf,38,2024: 69%
+2020,standardy_zzl,urzedy_samoocena_kultury_uczciwosci,91,urzedy,sprawozdanie-ssc-2020.pdf,57,"ponad 12 tys. uczestników, 2019: 116 urzędów"
+2021,standardy_zzl,urzedy_samoocena_kultury_uczciwosci,112,urzedy,sprawozdanie-ssc-2021.pdf,45,6118 uczestników
+2024,standardy_zzl,urzedy_samoocena_kultury_uczciwosci,208,liczba,sprawozdanie-ssc-2024.pdf,80,ponad 7500 uczestnikow. 2023: 123
+2022,standardy_zzl,urzedy_samoocena_kultury_uczciwosci_liczba,117,urzedy,sprawozdanie-ssc-2022.pdf,52,6.8% urzedow
+2023,standardy_zzl,urzedy_samoocena_kultury_uczciwosci_liczba,123,urzedy,sprawozdanie-ssc-2023.pdf,67,2022: 116 wg raportu 2023 (raport 2022 podaje 117)
+2022,standardy_zzl,urzedy_samoocena_kultury_uczciwosci_odsetek,6.8,%,sprawozdanie-ssc-2022.pdf,52,
+2019,standardy_zzl,urzedy_standardy_prostego_jezyka_odsetek,12.95,%,sprawozdanie-ssc-2019.pdf,64,cel 50%
+2022,standardy_zzl,urzedy_szkolenia_z_etyki_liczba,585,urzedy,sprawozdanie-ssc-2022.pdf,54,34% urzedow
+2022,standardy_zzl,urzedy_szkolenia_z_etyki_odsetek,34,%,sprawozdanie-ssc-2022.pdf,54,
+2023,standardy_zzl,urzedy_szkolenia_z_etyki_odsetek,40,%,sprawozdanie-ssc-2023.pdf,64,wzrost o 6 p.p.
+2024,standardy_zzl,urzedy_z_doradca_etyki,495,liczba,sprawozdanie-ssc-2024.pdf,78,
+2025,standardy_zzl,urzedy_z_doradca_etyki,506,liczba,sprawozdanie-ssc-2025.pdf,34,29% urzedow w korpusie (cel 30% s.44)
+2021,standardy_zzl,urzedy_z_doradca_etyki_liczba,318,urzedy,sprawozdanie-ssc-2022.pdf,53,
+2022,standardy_zzl,urzedy_z_doradca_etyki_liczba,412,urzedy,sprawozdanie-ssc-2022.pdf,53,2021: 318
+2023,standardy_zzl,urzedy_z_doradca_etyki_liczba,456,urzedy,sprawozdanie-ssc-2023.pdf,65,7-krotny wzrost od 2017
+2016,stopnie_sluzbowe,stopnie_przyznane_art89_ust1,280,osoby,sprawozdanie-ssc-2016.pdf,81,39.66% wnioskowanych
+2016,stopnie_sluzbowe,stopnie_przyznane_art89_ust2,1084,osoby,sprawozdanie-ssc-2016.pdf,81,
+2016,stopnie_sluzbowe,wnioski_o_kolejny_stopien_art89_ust1,706,osoby,sprawozdanie-ssc-2016.pdf,81,
+2016,szkolenia,budzet_szkolen_centralnych_tys_zl,500,tys. zl,sprawozdanie-ssc-2016.pdf,31,ok. 4 zl na osobe (s.7)
+2017,szkolenia,budzet_szkolen_centralnych_tys_zl,500,tys. zl,sprawozdanie-ssc-2017.pdf,46,wykonanie ponad 99%
+2019,szkolenia,e_learning_kprm_uzytkownicy,30000,uzytkownicy,sprawozdanie-ssc-2019.pdf,44,ponad 30 tys. (2018 prawie 19 tys.)
+2017,szkolenia,e_learning_udzial,16,%,sprawozdanie-ssc-2018.pdf,53,ok. 16%
+2018,szkolenia,e_learning_udzial,34,%,sprawozdanie-ssc-2018.pdf,53,ok. 34% szkolen
+2019,szkolenia,e_learning_udzial,25,%,sprawozdanie-ssc-2019.pdf,45,ponad 1/4 wszystkich szkolen
+2025,szkolenia,elearning_kursy,80,liczba,sprawozdanie-ssc-2025.pdf,23,ponad 80 kursow
+2022,szkolenia,elearning_nowe_kursy,6,kursy,sprawozdanie-ssc-2022.pdf,12,
+2023,szkolenia,elearning_nowe_kursy,11,kursy,sprawozdanie-ssc-2023.pdf,16,
+2024,szkolenia,elearning_nowe_kursy,20,liczba,sprawozdanie-ssc-2024.pdf,66,78 kursow dostepnych (s.19)
+2022,szkolenia,elearning_nowi_uzytkownicy,12000,osoby,sprawozdanie-ssc-2022.pdf,40,
+2023,szkolenia,elearning_nowi_uzytkownicy,12000,osoby,sprawozdanie-ssc-2023.pdf,53,
+2022,szkolenia,elearning_uzytkownicy,81100,osoby,sprawozdanie-ssc-2022.pdf,12,81.1 tys.
+2023,szkolenia,elearning_uzytkownicy,87600,osoby,sprawozdanie-ssc-2023.pdf,16,87.6 tys.
+2024,szkolenia,elearning_uzytkownicy,88500,osoby,sprawozdanie-ssc-2024.pdf,65,
+2025,szkolenia,elearning_uzytkownicy,92000,osoby,sprawozdanie-ssc-2025.pdf,23,ponad 92 tys.
+2023,szkolenia,elearning_zaktualizowane_kursy,9,kursy,sprawozdanie-ssc-2023.pdf,53,
+2022,szkolenia,elearning_zaswiadczenia,23200,zaswiadczenia,sprawozdanie-ssc-2022.pdf,12,23.2 tys.
+2023,szkolenia,elearning_zaswiadczenia,30000,zaswiadczenia,sprawozdanie-ssc-2023.pdf,16,ponad 30 tys.
+2024,szkolenia,elearning_zaswiadczenia,34700,liczba,sprawozdanie-ssc-2024.pdf,65,ok. 34.7 tys. (raport 2025 s.43: 34718)
+2025,szkolenia,elearning_zaswiadczenia,34503,liczba,sprawozdanie-ssc-2025.pdf,43,2024: 34718 / 2023: 30001
+2024,szkolenia,mentoring_pilotaz_mentorzy,54,osoby,sprawozdanie-ssc-2024.pdf,20,11 urzedow i 11 koordynatorow
+2025,szkolenia,mentoring_pilotaz_urzedy,10,liczba,sprawozdanie-ssc-2025.pdf,26,pilotaz w 10 urzedach / przeszkolono 15 trenerow
+2016,szkolenia,miejsca_szkoleniowe_wykorzystane,248010,miejsca,sprawozdanie-ssc-2016.pdf,31,
+2017,szkolenia,miejsca_szkoleniowe_wykorzystane,264645,miejsca,sprawozdanie-ssc-2017.pdf,126,zal. 8 tab. 3
+2018,szkolenia,nowe_e_kursy_kprm,11,kursy,sprawozdanie-ssc-2018.pdf,53,w tym 9 z OSR i umiejetnosci analitycznych
+2019,szkolenia,nowe_e_kursy_kprm,9,kursy,sprawozdanie-ssc-2019.pdf,44,
+2016,szkolenia,osoby_przeszkolone,86457,osoby,sprawozdanie-ssc-2016.pdf,31,w szkoleniach organizowanych przez DG i kierownikow urzedow
+2017,szkolenia,osoby_przeszkolone,102865,osoby,sprawozdanie-ssc-2017.pdf,128,wyliczone: 2942 (wyzsze stanowiska) + 99923 (pozostale) z zal. 8 tab. 4
+2018,szkolenia,osoby_przeszkolone,125651,osoby,sprawozdanie-ssc-2018.pdf,102,wyliczone: 3683 + 121968
+2019,szkolenia,osoby_przeszkolone,127203,osoby,sprawozdanie-ssc-2019.pdf,93,wyliczone: 3449 + 123754
+2020,szkolenia,osoby_przeszkolone,111650,osoby,sprawozdanie-ssc-2020.pdf,102,wyliczone: 3011 wyższe stanowiska + 108639 pozostałe
+2022,szkolenia,osoby_przeszkolone,112751,osoby,sprawozdanie-ssc-2022.pdf,79,wyliczone: suma osob przeszkolonych z wykresu 2 wg kategorii urzedow
+2023,szkolenia,osoby_przeszkolone,108205,osoby,sprawozdanie-ssc-2023.pdf,91,wyliczone: suma osob przeszkolonych z wykresu 2 wg kategorii urzedow
+2024,szkolenia,osoby_przeszkolone,117025,osoby,sprawozdanie-ssc-2024.pdf,106,wyliczone: suma 7 kategorii z wykresu 2
+2025,szkolenia,osoby_przeszkolone,120873,osoby,sprawozdanie-ssc-2025.pdf,63,wyliczone: suma 7 kategorii urzedow z wykresu (16746+12983+10621+13017+6258+12583+48665)
+2015,szkolenia,osoby_przeszkolone_odsetek_korpusu,84.8,%,sprawozdanie-ssc-2016.pdf,31,przypis 36
+2016,szkolenia,osoby_przeszkolone_odsetek_korpusu,72,%,sprawozdanie-ssc-2016.pdf,31,
+2018,szkolenia,osoby_przeszkolone_pozostale_stanowiska,121968,osoby,sprawozdanie-ssc-2018.pdf,102,
+2019,szkolenia,osoby_przeszkolone_pozostale_stanowiska,123754,osoby,sprawozdanie-ssc-2019.pdf,93,
+2018,szkolenia,osoby_przeszkolone_wyzsze_stanowiska,3683,osoby,sprawozdanie-ssc-2018.pdf,102,
+2019,szkolenia,osoby_przeszkolone_wyzsze_stanowiska,3449,osoby,sprawozdanie-ssc-2019.pdf,93,
+2025,szkolenia,program_dzielenia_sie_wiedza_uczestnicy,122137,osoby,sprawozdanie-ssc-2025.pdf,42,68 inicjatyw w tym 49 webinarow
+2019,szkolenia,przeszkoleni_elearning,115600,osoby,sprawozdanie-ssc-2020.pdf,47,
+2020,szkolenia,przeszkoleni_elearning,232600,osoby,sprawozdanie-ssc-2020.pdf,47,"2019: 115,6 tys., ponad 60% przeszkolonych"
+2020,szkolenia,przeszkoleni_z_etyki,41191,osoby,sprawozdanie-ssc-2020.pdf,58,"2019: 59417, 80% e-learning"
+2021,szkolenia,przeszkoleni_z_etyki,32262,osoby,sprawozdanie-ssc-2021.pdf,46,"-22%, 61% e-learning, 15% stacjonarnie, 24% online"
+2020,szkolenia,system_elearning_uzytkownicy,51339,osoby,sprawozdanie-ssc-2020.pdf,47,"koniec 2020, +86% r/r, ponad 25 tys. nowych"
+2021,szkolenia,system_elearning_uzytkownicy,69000,osoby,sprawozdanie-ssc-2021.pdf,36,"ok. 18 tys. nowych, +35%"
+2023,szkolenia,szkolenia_analiza_danych_osr_uczestnicy,435,osoby,sprawozdanie-ssc-2023.pdf,15,wyliczone: 218 podstawowy + 217 zaawansowany
+2022,szkolenia,szkolenia_centralne_liczba,90,szkolenia,sprawozdanie-ssc-2022.pdf,12,
+2023,szkolenia,szkolenia_centralne_liczba,44,szkolenia,sprawozdanie-ssc-2023.pdf,14,
+2022,szkolenia,szkolenia_centralne_nowa_wiedza_odsetek,97.4,%,sprawozdanie-ssc-2022.pdf,39,wszystkie zdalnie przez KSAP
+2023,szkolenia,szkolenia_centralne_nowa_wiedza_odsetek,98.6,%,sprawozdanie-ssc-2023.pdf,52,
+2024,szkolenia,szkolenia_centralne_nowa_wiedza_odsetek,94.55,%,sprawozdanie-ssc-2024.pdf,65,91.90% podnioslo kompetencje
+2025,szkolenia,szkolenia_centralne_nowa_wiedza_odsetek,94.18,%,sprawozdanie-ssc-2025.pdf,23,s.43 podaje 96.91% (inna definicja wskaznika)
+2018,szkolenia,szkolenia_centralne_podniesienie_kompetencji_odsetek,95.2,%,sprawozdanie-ssc-2018.pdf,63,tabela wskaznikow cel 2 (plan 87%)
+2019,szkolenia,szkolenia_centralne_podniesienie_kompetencji_odsetek,95,%,sprawozdanie-ssc-2019.pdf,46,
+2020,szkolenia,szkolenia_centralne_podniesione_kompetencje_odsetek,94,%,sprawozdanie-ssc-2020.pdf,48,
+2021,szkolenia,szkolenia_centralne_podniesione_kompetencje_odsetek,98,%,sprawozdanie-ssc-2021.pdf,37,"ocena trenerów 5,9 w skali 1-6"
+2022,szkolenia,szkolenia_centralne_podniesione_kompetencje_odsetek,94.4,%,sprawozdanie-ssc-2022.pdf,39,
+2023,szkolenia,szkolenia_centralne_podniesione_kompetencje_odsetek,96.2,%,sprawozdanie-ssc-2023.pdf,52,
+2023,szkolenia,szkolenia_centralne_pokrycie_zgloszen_odsetek,17,%,sprawozdanie-ssc-2023.pdf,14,odsetek zgloszonych ktorzy zostali przeszkoleni
+2024,szkolenia,szkolenia_centralne_przeszkoleni,8013,osoby,sprawozdanie-ssc-2024.pdf,65,52 szkolenia i 19 webinarow. 87% z administracji terenowej
+2025,szkolenia,szkolenia_centralne_przeszkoleni,14098,osoby,sprawozdanie-ssc-2025.pdf,23,88 szkolen centralnych. Cel planu 20000 (s.42)
+2016,szkolenia,szkolenia_centralne_uczestnicy,456,osoby,sprawozdanie-ssc-2016.pdf,32,4 tematy szkolen centralnych
+2017,szkolenia,szkolenia_centralne_uczestnicy,678,osoby,sprawozdanie-ssc-2017.pdf,47,3 tematy (w tym Zarzadzanie talentami 132 osoby)
+2018,szkolenia,szkolenia_centralne_uczestnicy,674,osoby,sprawozdanie-ssc-2018.pdf,53,3 szkolenia centralne
+2019,szkolenia,szkolenia_centralne_uczestnicy,591,osoby,sprawozdanie-ssc-2019.pdf,46,WLB 247 i zarzadzanie zespolem 250 i warsztat HR kompetencje miekkie 94
+2019,szkolenia,szkolenia_centralne_uczestnicy,591,osoby,sprawozdanie-ssc-2020.pdf,48,
+2020,szkolenia,szkolenia_centralne_uczestnicy,1131,osoby,sprawozdanie-ssc-2020.pdf,48,"2019: 591, pierwszy raz online"
+2021,szkolenia,szkolenia_centralne_uczestnicy,871,osoby,sprawozdanie-ssc-2021.pdf,37,68 szkoleń
+2022,szkolenia,szkolenia_centralne_uczestnicy,1154,osoby,sprawozdanie-ssc-2022.pdf,12,
+2023,szkolenia,szkolenia_centralne_uczestnicy,784,osoby,sprawozdanie-ssc-2023.pdf,14,
+2022,szkolenia,szkolenia_centralne_uczestnicy_z_terenu_odsetek,71,%,sprawozdanie-ssc-2022.pdf,12,ponad 71%
+2023,szkolenia,szkolenia_centralne_uczestnicy_z_terenu_odsetek,91,%,sprawozdanie-ssc-2023.pdf,14,ponad 91%
+2022,szkolenia,szkolenia_centralne_uczestnicy_z_terenu_odsetek_dokladny,71.1,%,sprawozdanie-ssc-2022.pdf,40,
+2018,szkolenia,szkolenia_centralne_wdrozenie_usprawnien_odsetek,92,%,sprawozdanie-ssc-2018.pdf,54,
+2016,szkolenia,szkolenia_centralne_wydatki_tys_zl,459,tys. zl,sprawozdanie-ssc-2016.pdf,68,wykonanie
+2016,szkolenia,szkolenia_centralne_wzrost_kompetencji_odsetek,92.8,%,sprawozdanie-ssc-2016.pdf,32,odsetek deklarujacych podniesienie kompetencji (s.38 podaje zaokraglone 93% przy celu 89%)
+2017,szkolenia,szkolenia_centralne_wzrost_kompetencji_odsetek,94,%,sprawozdanie-ssc-2017.pdf,48,
+2023,szkolenia,szkolenia_centralne_zgloszenia,4613,osoby,sprawozdanie-ssc-2023.pdf,53,przeszkolono 784 (17%)
+2017,szkolenia,szkolenia_e_learning_odsetek_miejsc,16,%,sprawozdanie-ssc-2017.pdf,47,ok. 16% miejsc (KAS blisko 40%)
+2019,szkolenia,szkolenia_etyka_uczestnicy,90326,uczestnicy,sprawozdanie-ssc-2019.pdf,45,
+2019,szkolenia,szkolenia_informatyczne_uczestnicy,71474,uczestnicy,sprawozdanie-ssc-2019.pdf,45,
+2019,szkolenia,szkolenia_interpersonalne_uczestnicy,22976,uczestnicy,sprawozdanie-ssc-2019.pdf,92,
+2023,szkolenia,szkolenia_konsultacje_publiczne_uczestnicy,215,osoby,sprawozdanie-ssc-2023.pdf,16,wyliczone: 130 + 85
+2018,szkolenia,szkolenia_miekkie_uczestnicy,35662,uczestnicy,sprawozdanie-ssc-2018.pdf,100,kategoria miekkie
+2022,szkolenia,szkolenia_na_czlonka_srednio,4,szkolenia,sprawozdanie-ssc-2022.pdf,11,
+2023,szkolenia,szkolenia_na_czlonka_srednio,3,szkolenia,sprawozdanie-ssc-2023.pdf,13,
+2025,szkolenia,szkolenia_na_osobe_srednio,5,liczba,sprawozdanie-ssc-2025.pdf,22,
+2017,szkolenia,szkolenia_specjalistyczne_odsetek_miejsc,46,%,sprawozdanie-ssc-2017.pdf,46,
+2018,szkolenia,szkolenia_specjalistyczne_udzial_uczestnikow,47,%,sprawozdanie-ssc-2018.pdf,53,
+2017,szkolenia,szkolenia_uczestnicy,265000,uczestnicy,sprawozdanie-ssc-2018.pdf,53,ok. 265 tys.
+2018,szkolenia,szkolenia_uczestnicy,388078,uczestnicy,sprawozdanie-ssc-2018.pdf,100,Tabela 3 zalacznik 4
+2019,szkolenia,szkolenia_uczestnicy,438435,uczestnicy,sprawozdanie-ssc-2019.pdf,92,Tabela 3
+2019,szkolenia,szkolenia_uczestnicy,438435,osoby,sprawozdanie-ssc-2020.pdf,101,
+2020,szkolenia,szkolenia_uczestnicy,381893,osoby,sprawozdanie-ssc-2020.pdf,101,"tekst s.47: 382 tys., spadek o 13%"
+2021,szkolenia,szkolenia_uczestnicy,369080,osoby,sprawozdanie-ssc-2021.pdf,76,
+2021,szkolenia,szkolenia_uczestnicy,369000,uczestnicy,sprawozdanie-ssc-2022.pdf,39,369 tys.
+2022,szkolenia,szkolenia_uczestnicy,419600,uczestnicy,sprawozdanie-ssc-2022.pdf,11,419.6 tys. (o 14% wiecej niz 2021)
+2023,szkolenia,szkolenia_uczestnicy,398300,uczestnicy,sprawozdanie-ssc-2023.pdf,13,398.3 tys. (o 5% mniej)
+2023,szkolenia,szkolenia_uczestnicy,398300,uczestnictwa,sprawozdanie-ssc-2024.pdf,63,398.3 tys.
+2024,szkolenia,szkolenia_uczestnicy,626040,uczestnictwa,sprawozdanie-ssc-2024.pdf,104,tekst s.63: 626 tys. wzrost 57%
+2025,szkolenia,szkolenia_uczestnicy,647732,uczestnictwa,sprawozdanie-ssc-2025.pdf,62,tabela 2 RAZEM. Tekst s.22: 648 tys.
+2022,szkolenia,szkolenia_uczestnicy_tabela,419643,uczestnicy,sprawozdanie-ssc-2022.pdf,77,Tabela 2 RAZEM
+2023,szkolenia,szkolenia_uczestnicy_tabela,398291,uczestnicy,sprawozdanie-ssc-2023.pdf,89,Tabela 2 RAZEM
+2020,szkolenia,szkolenia_wewnetrzne_odsetek,24,%,sprawozdanie-ssc-2020.pdf,47,2019: 35%
+2021,szkolenia,szkolenia_wewnetrzne_odsetek,40,%,sprawozdanie-ssc-2021.pdf,36,
+2018,szkolenia,szkolenia_wewnetrzne_udzial,39,%,sprawozdanie-ssc-2018.pdf,53,ok. 39%
+2019,szkolenia,szkolenia_wewnetrzne_udzial,34.4,%,sprawozdanie-ssc-2019.pdf,94,tekst s. 45 ok. 35%
+2022,szkolenia,szkolenia_z_etyki_liczba,3229,szkolenia,sprawozdanie-ssc-2022.pdf,54,
+2023,szkolenia,szkolenia_z_etyki_liczba,2761,szkolenia,sprawozdanie-ssc-2023.pdf,64,2022: 3229
+2023,szkolenia,szkolenia_z_etyki_wyzsze_stanowiska,355,szkolenia,sprawozdanie-ssc-2023.pdf,65,2022: 258
+2019,szkolenia,szkolenia_zarzadzanie_uczestnicy,7702,uczestnicy,sprawozdanie-ssc-2019.pdf,92,nowa klasyfikacja tematyczna od 2019
+2022,szkolenia,uczestnicy_bhp_ppoz,37300,uczestnicy,sprawozdanie-ssc-2022.pdf,39,
+2023,szkolenia,uczestnicy_bhp_ppoz,53000,uczestnicy,sprawozdanie-ssc-2023.pdf,51,
+2025,szkolenia,uczestnicy_bhp_ppoz,85592,uczestnictwa,sprawozdanie-ssc-2025.pdf,62,
+2022,szkolenia,uczestnicy_bhp_ppoz_tabela,31345,uczestnicy,sprawozdanie-ssc-2022.pdf,77,tabela (tekst s. 39 podaje 37.3 tys.)
+2022,szkolenia,uczestnicy_ekonomia_finanse,12100,uczestnicy,sprawozdanie-ssc-2022.pdf,77,
+2023,szkolenia,uczestnicy_ekonomia_finanse,14400,uczestnicy,sprawozdanie-ssc-2023.pdf,51,
+2022,szkolenia,uczestnicy_elearning,158997,uczestnicy,sprawozdanie-ssc-2022.pdf,81,38%
+2023,szkolenia,uczestnicy_elearning,104742,uczestnicy,sprawozdanie-ssc-2023.pdf,93,26%
+2024,szkolenia,uczestnicy_elearning,286835,uczestnictwa,sprawozdanie-ssc-2024.pdf,108,46% (wzrost o 20 p.p.)
+2025,szkolenia,uczestnicy_elearning,243417,uczestnictwa,sprawozdanie-ssc-2025.pdf,63,37%
+2020,szkolenia,uczestnicy_etyka,46993,osoby,sprawozdanie-ssc-2020.pdf,101,
+2021,szkolenia,uczestnicy_etyka,31613,osoby,sprawozdanie-ssc-2021.pdf,76,
+2024,szkolenia,uczestnicy_etyka,85447,uczestnictwa,sprawozdanie-ssc-2024.pdf,104,
+2025,szkolenia,uczestnicy_etyka,52032,uczestnictwa,sprawozdanie-ssc-2025.pdf,62,
+2022,szkolenia,uczestnicy_etyka_uczciwosc,38800,uczestnicy,sprawozdanie-ssc-2022.pdf,39,
+2023,szkolenia,uczestnicy_etyka_uczciwosc,38000,uczestnicy,sprawozdanie-ssc-2023.pdf,51,
+2020,szkolenia,uczestnicy_informatyczne,82449,osoby,sprawozdanie-ssc-2020.pdf,101,
+2021,szkolenia,uczestnicy_informatyczne,69806,osoby,sprawozdanie-ssc-2021.pdf,76,
+2024,szkolenia,uczestnicy_informatyczne,127834,uczestnictwa,sprawozdanie-ssc-2024.pdf,104,
+2025,szkolenia,uczestnicy_informatyczne,76905,uczestnictwa,sprawozdanie-ssc-2025.pdf,62,
+2020,szkolenia,uczestnicy_interpersonalne,38130,osoby,sprawozdanie-ssc-2020.pdf,101,
+2021,szkolenia,uczestnicy_interpersonalne,52590,osoby,sprawozdanie-ssc-2021.pdf,76,
+2022,szkolenia,uczestnicy_interpersonalne,36951,uczestnicy,sprawozdanie-ssc-2022.pdf,77,
+2023,szkolenia,uczestnicy_interpersonalne,37200,uczestnicy,sprawozdanie-ssc-2023.pdf,51,
+2024,szkolenia,uczestnicy_interpersonalne,66601,uczestnictwa,sprawozdanie-ssc-2024.pdf,104,
+2025,szkolenia,uczestnicy_interpersonalne,66650,uczestnictwa,sprawozdanie-ssc-2025.pdf,62,
+2022,szkolenia,uczestnicy_kas,214024,uczestnicy,sprawozdanie-ssc-2022.pdf,77,51% uczestnikow
+2023,szkolenia,uczestnicy_kas,175346,uczestnicy,sprawozdanie-ssc-2023.pdf,89,44% uczestnikow
+2022,szkolenia,uczestnicy_ochrona_danych,31579,uczestnicy,sprawozdanie-ssc-2022.pdf,77,Tabela 2 kolejnosc kolumn potwierdzona tabela 2023
+2023,szkolenia,uczestnicy_ochrona_danych,28800,uczestnicy,sprawozdanie-ssc-2023.pdf,51,
+2020,szkolenia,uczestnicy_prawo_administracja,80690,osoby,sprawozdanie-ssc-2020.pdf,101,
+2021,szkolenia,uczestnicy_prawo_administracja,49519,osoby,sprawozdanie-ssc-2021.pdf,76,
+2022,szkolenia,uczestnicy_prawo_administracja,64400,uczestnicy,sprawozdanie-ssc-2022.pdf,39,
+2023,szkolenia,uczestnicy_prawo_administracja,72100,uczestnicy,sprawozdanie-ssc-2023.pdf,51,
+2024,szkolenia,uczestnicy_prawo_administracja,118883,uczestnictwa,sprawozdanie-ssc-2024.pdf,104,
+2025,szkolenia,uczestnicy_prawo_administracja,181408,uczestnictwa,sprawozdanie-ssc-2025.pdf,62,
+2022,szkolenia,uczestnicy_sluzba_przygotowawcza,11500,uczestnicy,sprawozdanie-ssc-2022.pdf,39,
+2023,szkolenia,uczestnicy_sluzba_przygotowawcza,11500,uczestnicy,sprawozdanie-ssc-2023.pdf,51,tekst: wzrost o 40% do 11.5 tys. (jak w 2022 tekst identyczny)
+2023,szkolenia,uczestnicy_sluzba_przygotowawcza_tabela,13456,uczestnicy,sprawozdanie-ssc-2023.pdf,89,tabela (tekst s. 51 podaje 11.5 tys.)
+2022,szkolenia,uczestnicy_stacjonarne,112985,uczestnicy,sprawozdanie-ssc-2022.pdf,81,27%
+2023,szkolenia,uczestnicy_stacjonarne,159160,uczestnicy,sprawozdanie-ssc-2023.pdf,93,40%
+2024,szkolenia,uczestnicy_stacjonarne,157506,uczestnictwa,sprawozdanie-ssc-2024.pdf,108,25% (2023: 40%)
+2025,szkolenia,uczestnicy_stacjonarne,185143,uczestnictwa,sprawozdanie-ssc-2025.pdf,63,29%
+2023,szkolenia,uczestnicy_stacjonarne_odsetek,40,%,sprawozdanie-ssc-2023.pdf,13,2022: 27%
+2022,szkolenia,uczestnicy_szkolenia_informatyczne,112800,uczestnicy,sprawozdanie-ssc-2022.pdf,39,
+2023,szkolenia,uczestnicy_szkolenia_informatyczne,70400,uczestnicy,sprawozdanie-ssc-2023.pdf,51,o 38% mniej niz 2022
+2022,szkolenia,uczestnicy_szkolenia_wewnetrzne,156900,uczestnicy,sprawozdanie-ssc-2022.pdf,39,2021: 148.3 tys.
+2020,szkolenia,uczestnicy_zarzadzanie,6100,osoby,sprawozdanie-ssc-2020.pdf,101,
+2021,szkolenia,uczestnicy_zarzadzanie,7502,osoby,sprawozdanie-ssc-2021.pdf,76,
+2022,szkolenia,uczestnicy_zarzadzanie,6487,uczestnicy,sprawozdanie-ssc-2022.pdf,77,kolumna z zarzadzania
+2023,szkolenia,uczestnicy_zarzadzanie,10700,uczestnicy,sprawozdanie-ssc-2023.pdf,51,wzrost o 66%
+2024,szkolenia,uczestnicy_zarzadzanie,15173,uczestnictwa,sprawozdanie-ssc-2024.pdf,104,
+2025,szkolenia,uczestnicy_zarzadzanie,60504,uczestnictwa,sprawozdanie-ssc-2025.pdf,62,2024: 15173 (prawie trzykrotny wzrost)
+2022,szkolenia,uczestnicy_zdalne,147661,uczestnicy,sprawozdanie-ssc-2022.pdf,81,35%
+2023,szkolenia,uczestnicy_zdalne,134389,uczestnicy,sprawozdanie-ssc-2023.pdf,93,34%
+2024,szkolenia,uczestnicy_zdalne,181699,uczestnictwa,sprawozdanie-ssc-2024.pdf,108,29%
+2025,szkolenia,uczestnicy_zdalne,219172,uczestnictwa,sprawozdanie-ssc-2025.pdf,63,34%
+2023,szkolenia,urzedy_arkusz_indywidualnej_oceny_szkolenia_odsetek,19,%,sprawozdanie-ssc-2023.pdf,54,
+2024,szkolenia,urzedy_arkusz_indywidualnej_oceny_szkolenia_odsetek,23,%,sprawozdanie-ssc-2024.pdf,68,
+2025,szkolenia,urzedy_arkusz_indywidualnej_oceny_szkolenia_odsetek,25,%,sprawozdanie-ssc-2025.pdf,24,
+2023,szkolenia,urzedy_badajace_potrzeby_szkoleniowe_odsetek,49,%,sprawozdanie-ssc-2023.pdf,54,92% centralnych i wojewodzkich 47% terenowych
+2024,szkolenia,urzedy_badanie_potrzeb_przed_planem_odsetek,85,%,sprawozdanie-ssc-2024.pdf,68,
+2025,szkolenia,urzedy_badanie_potrzeb_przed_planem_odsetek,84,%,sprawozdanie-ssc-2025.pdf,24,wsrod urzedow ktore przygotowaly plan
+2024,szkolenia,urzedy_ocena_efektywnosci_szkolen_odsetek,7,%,sprawozdanie-ssc-2024.pdf,68,
+2025,szkolenia,urzedy_ocena_efektywnosci_szkolen_odsetek,8,%,sprawozdanie-ssc-2025.pdf,24,ocena na kolejnym etapie (po kilku miesiacach)
+2023,szkolenia,urzedy_ocena_efektywnosci_szkolenia_odsetek,6,%,sprawozdanie-ssc-2023.pdf,54,13% centralnych i wojewodzkich 3% terenowych
+2024,szkolenia,urzedy_ocena_szkolen_odsetek,31,%,sprawozdanie-ssc-2024.pdf,68,75% centralnych i wojewodzkich / 29% terenowych
+2025,szkolenia,urzedy_ocena_szkolen_odsetek,31,%,sprawozdanie-ssc-2025.pdf,24,63% centralnych i wojewodzkich / 29% terenowych
+2023,szkolenia,urzedy_ocena_szkolenia_odsetek,13,%,sprawozdanie-ssc-2023.pdf,54,tekst podaje tez 42% centralnych i wojewodzkich oraz 47% terenowych (niespojne z 13%)
+2024,szkolenia,urzedy_plan_szkolen_terenowe_odsetek,47,%,sprawozdanie-ssc-2024.pdf,68,97% ministerstw urzedow centralnych i wojewodzkich
+2025,szkolenia,urzedy_plan_szkolen_terenowe_odsetek,48,%,sprawozdanie-ssc-2025.pdf,24,plany szkolen przygotowala polowa instytucji
+2023,szkolenia,urzedy_z_planem_szkolen_odsetek,50,%,sprawozdanie-ssc-2023.pdf,54,polowa urzedow (97% ministerstw/centralnych/wojewodzkich 48% terenowych)
+2023,szkolenia,urzedy_zaswiadczenia_po_szkoleniu_odsetek,67,%,sprawozdanie-ssc-2023.pdf,54,
+2023,szkolenia,wydatki_etyka_tys_zl,357,tys. zl,sprawozdanie-ssc-2023.pdf,92,
+2023,szkolenia,wydatki_interpersonalne_tys_zl,9146,tys. zl,sprawozdanie-ssc-2023.pdf,92,
+2022,szkolenia,wydatki_interpersonalne_zl,6379932,zl,sprawozdanie-ssc-2022.pdf,80,
+2025,szkolenia,wydatki_interpersonalne_zl,12375058,zl,sprawozdanie-ssc-2025.pdf,64,jak wyzej
+2022,szkolenia,wydatki_kss_kas_tys_zl,9100,tys. zl,sprawozdanie-ssc-2022.pdf,38,Krajowa Szkola Skarbowosci dla KAS 9.1 mln zl
+2023,szkolenia,wydatki_kss_kas_tys_zl,8500,tys. zl,sprawozdanie-ssc-2023.pdf,50,8.5 mln zl
+2023,szkolenia,wydatki_kss_kas_tys_zl_dokladne,8453,tys. zl,sprawozdanie-ssc-2023.pdf,88,
+2025,szkolenia,wydatki_kss_tys_zl,7284,tys. zl,sprawozdanie-ssc-2025.pdf,61,Krajowa Szkola Skarbowosci poza suma
+2024,szkolenia,wydatki_na_osobe_ministerstwa_kprm_zl,1260,zl,sprawozdanie-ssc-2024.pdf,63,
+2025,szkolenia,wydatki_na_osobe_ministerstwa_kprm_zl,1388,zl,sprawozdanie-ssc-2025.pdf,22,
+2024,szkolenia,wydatki_na_osobe_powiatowa_adm_zespolona_zl,78,zl,sprawozdanie-ssc-2024.pdf,63,
+2025,szkolenia,wydatki_na_osobe_powiatowa_adm_zespolona_zl,93,zl,sprawozdanie-ssc-2025.pdf,22,
+2023,szkolenia,wydatki_projekty_ue_kprm_tys_zl,17416,tys. zl,sprawozdanie-ssc-2023.pdf,88,5 projektow z dofinansowaniem UE
+2022,szkolenia,wydatki_szkolenia_centralne_tys_zl,617,tys. zl,sprawozdanie-ssc-2022.pdf,76,
+2023,szkolenia,wydatki_szkolenia_centralne_tys_zl,617,tys. zl,sprawozdanie-ssc-2023.pdf,14,od lat na tym poziomie
+2024,szkolenia,wydatki_szkolenia_centralne_tys_zl,616.1,tys. zl,sprawozdanie-ssc-2024.pdf,103,kwota od lat 617 tys. zl (s.18)
+2025,szkolenia,wydatki_szkolenia_centralne_tys_zl,601.4,tys. zl,sprawozdanie-ssc-2025.pdf,61,
+2023,szkolenia,wydatki_szkolenia_centralne_tys_zl_wykonanie,616.35,tys. zl,sprawozdanie-ssc-2023.pdf,88,
+2017,szkolenia,wydatki_szkolenia_dg_i_centralne_tys_zl,45122,tys. zl,sprawozdanie-ssc-2018.pdf,52,bez KSS
+2018,szkolenia,wydatki_szkolenia_dg_i_centralne_tys_zl,49093,tys. zl,sprawozdanie-ssc-2018.pdf,52,bez KSS
+2019,szkolenia,wydatki_szkolenia_dg_i_centralne_tys_zl,58391,tys. zl,sprawozdanie-ssc-2019.pdf,90,Tabela 1 ogolem (DG 57893 + SSC 498). Tekst s. 44 podaje 57893 tys. jako DG i centralne
+2018,szkolenia,wydatki_szkolenia_informatyczne_udzial,8.8,%,sprawozdanie-ssc-2018.pdf,52,
+2017,szkolenia,wydatki_szkolenia_kss_tys_zl,8936,tys. zl,sprawozdanie-ssc-2018.pdf,52,
+2018,szkolenia,wydatki_szkolenia_kss_tys_zl,11240,tys. zl,sprawozdanie-ssc-2018.pdf,52,Krajowa Szkola Skarbowosci dla KAS
+2019,szkolenia,wydatki_szkolenia_kss_tys_zl,10003,tys. zl,sprawozdanie-ssc-2019.pdf,45,
+2020,szkolenia,wydatki_szkolenia_kss_tys_zl,4065,tys. zł,sprawozdanie-ssc-2020.pdf,99,"Krajowa Szkoła Skarbowości, 2019: 10003"
+2021,szkolenia,wydatki_szkolenia_kss_tys_zl,6696,tys. zł,sprawozdanie-ssc-2021.pdf,75,
+2018,szkolenia,wydatki_szkolenia_miekkie_udzial,9.2,%,sprawozdanie-ssc-2018.pdf,52,
+2023,szkolenia,wydatki_szkolenia_ministerstwa_kprm_tys_zl,31045,tys. zl,sprawozdanie-ssc-2023.pdf,50,2022: 17038
+2022,szkolenia,wydatki_szkolenia_na_osobe_administracja_terenowa_zl,276,zl,sprawozdanie-ssc-2022.pdf,11,
+2023,szkolenia,wydatki_szkolenia_na_osobe_administracja_terenowa_zl,335,zl,sprawozdanie-ssc-2023.pdf,14,
+2017,szkolenia,wydatki_szkolenia_na_osobe_kas_zl,104,zl,sprawozdanie-ssc-2017.pdf,46,
+2018,szkolenia,wydatki_szkolenia_na_osobe_kas_zl,340,zl,sprawozdanie-ssc-2018.pdf,52,
+2022,szkolenia,wydatki_szkolenia_na_osobe_ministerstwa_kprm_zl,1160,zl,sprawozdanie-ssc-2022.pdf,38,odczyt z wykresu (etykiety)
+2023,szkolenia,wydatki_szkolenia_na_osobe_ministerstwa_kprm_zl,2045,zl,sprawozdanie-ssc-2023.pdf,50,odczyt z wykresu (najwyzsza wartosc przypisana ministerstwom wg tekstu)
+2017,szkolenia,wydatki_szkolenia_na_osobe_ministerstwa_zl,1102,zl,sprawozdanie-ssc-2017.pdf,46,
+2018,szkolenia,wydatki_szkolenia_na_osobe_ministerstwa_zl,1199,zl,sprawozdanie-ssc-2018.pdf,52,
+2019,szkolenia,wydatki_szkolenia_na_osobe_ministerstwa_zl,1952,zl,sprawozdanie-ssc-2019.pdf,45,
+2020,szkolenia,wydatki_szkolenia_na_osobe_ministerstwa_zl,614,zł,sprawozdanie-ssc-2020.pdf,46,"odczyt z wykresu, najwyższa kategoria"
+2021,szkolenia,wydatki_szkolenia_na_osobe_ministerstwa_zl,1092,zł,sprawozdanie-ssc-2021.pdf,35,odczyt z wykresu
+2017,szkolenia,wydatki_szkolenia_na_osobe_powiatowa_adm_zl,52,zl,sprawozdanie-ssc-2017.pdf,46,
+2018,szkolenia,wydatki_szkolenia_na_osobe_powiatowa_zespolona_zl,50,zl,sprawozdanie-ssc-2018.pdf,52,
+2019,szkolenia,wydatki_szkolenia_na_osobe_powiatowa_zespolona_zl,52,zl,sprawozdanie-ssc-2019.pdf,45,
+2022,szkolenia,wydatki_szkolenia_na_osobe_powiatowa_zespolona_zl,55,zl,sprawozdanie-ssc-2022.pdf,11,
+2023,szkolenia,wydatki_szkolenia_na_osobe_powiatowa_zespolona_zl,72,zl,sprawozdanie-ssc-2023.pdf,14,
+2022,szkolenia,wydatki_szkolenia_na_osobe_powiatowa_zespolona_zl_wykres,55,zl,sprawozdanie-ssc-2022.pdf,38,odczyt z wykresu
+2017,szkolenia,wydatki_szkolenia_na_osobe_urzedy_centralne_zl,1153,zl,sprawozdanie-ssc-2017.pdf,46,
+2018,szkolenia,wydatki_szkolenia_na_osobe_urzedy_centralne_zl,1270,zl,sprawozdanie-ssc-2018.pdf,52,
+2019,szkolenia,wydatki_szkolenia_na_osobe_urzedy_centralne_zl,1086,zl,sprawozdanie-ssc-2019.pdf,45,
+2022,szkolenia,wydatki_szkolenia_na_osobe_urzedy_centralne_zl,1083,zl,sprawozdanie-ssc-2022.pdf,11,ministerstwa KPRM i urzedy centralne
+2023,szkolenia,wydatki_szkolenia_na_osobe_urzedy_centralne_zl,1573,zl,sprawozdanie-ssc-2023.pdf,14,ministerstwa KPRM i urzedy centralne
+2015,szkolenia,wydatki_szkolenia_na_osobe_zl,315,zl/etat,sprawozdanie-ssc-2016.pdf,19,dane ostateczne (wczesniej podano 304 zl)
+2016,szkolenia,wydatki_szkolenia_na_osobe_zl,373,zl/etat,sprawozdanie-ssc-2016.pdf,19,liczone na przecietne zatrudnienie 118848 etatow
+2017,szkolenia,wydatki_szkolenia_na_osobe_zl,377,zl/etat,sprawozdanie-ssc-2017.pdf,45,
+2017,szkolenia,wydatki_szkolenia_na_osobe_zl,457,zl na etat,sprawozdanie-ssc-2018.pdf,52,
+2018,szkolenia,wydatki_szkolenia_na_osobe_zl,511,zl na etat,sprawozdanie-ssc-2018.pdf,52,z uwzglednieniem KSS
+2019,szkolenia,wydatki_szkolenia_na_osobe_zl,576,zl na etat,sprawozdanie-ssc-2019.pdf,45,z uwzglednieniem KSS
+2019,szkolenia,wydatki_szkolenia_na_osobe_zl,576,zł,sprawozdanie-ssc-2020.pdf,46,
+2020,szkolenia,wydatki_szkolenia_na_osobe_zl,252,zł,sprawozdanie-ssc-2020.pdf,46,"2019: 576 zł, liczone na etat z uwzględnieniem KSS"
+2020,szkolenia,wydatki_szkolenia_na_osobe_zl,237,zł,sprawozdanie-ssc-2021.pdf,35,"korekta, raport 2020 podawał 252 zł"
+2021,szkolenia,wydatki_szkolenia_na_osobe_zl,368,zł,sprawozdanie-ssc-2021.pdf,35,2020 wg raportu 2021: 237 zł
+2021,szkolenia,wydatki_szkolenia_na_osobe_zl,368,zl,sprawozdanie-ssc-2022.pdf,11,
+2022,szkolenia,wydatki_szkolenia_na_osobe_zl,470,zl,sprawozdanie-ssc-2022.pdf,11,ok. 470 zl
+2023,szkolenia,wydatki_szkolenia_na_osobe_zl,632,zl,sprawozdanie-ssc-2023.pdf,13,ok. 632 zl
+2023,szkolenia,wydatki_szkolenia_na_osobe_zl,632,zl,sprawozdanie-ssc-2024.pdf,62,
+2024,szkolenia,wydatki_szkolenia_na_osobe_zl,505,zl,sprawozdanie-ssc-2024.pdf,62,2023: 632 zl
+2025,szkolenia,wydatki_szkolenia_na_osobe_zl,560,zl,sprawozdanie-ssc-2025.pdf,22,ok. 560 zl (2024: 505 zl)
+2023,szkolenia,wydatki_szkolenia_niewydatkowane_tys_zl,8119,tys. zl,sprawozdanie-ssc-2023.pdf,15,74% (5805) w ministerstwach i urzedach centralnych
+2015,szkolenia,wydatki_szkolenia_ogolem_tys_zl,37589,tys. zl,sprawozdanie-ssc-2016.pdf,68,tabela 3 zalacznik 2 (wykonanie 2015)
+2016,szkolenia,wydatki_szkolenia_ogolem_tys_zl,44350,tys. zl,sprawozdanie-ssc-2016.pdf,31,wstepne dane; srodki krajowe i unijne
+2017,szkolenia,wydatki_szkolenia_ogolem_tys_zl,45492,tys. zl,sprawozdanie-ssc-2017.pdf,45,szkolenia organizowane przez DG (bez szkolen centralnych)
+2019,szkolenia,wydatki_szkolenia_ogolem_tys_zl,60487,tys. zł,sprawozdanie-ssc-2020.pdf,99,tabela: wykonanie 2019
+2020,szkolenia,wydatki_szkolenia_ogolem_tys_zl,25911,tys. zł,sprawozdanie-ssc-2020.pdf,99,"tabela: wykonanie 2020, szkolenia centralne 616,9 + organizowane przez DG 25294, bez KSS"
+2020,szkolenia,wydatki_szkolenia_ogolem_tys_zl,24153,tys. zł,sprawozdanie-ssc-2021.pdf,75,korekta danych 2020 w raporcie 2021 (raport 2020 podawał 25911)
+2021,szkolenia,wydatki_szkolenia_ogolem_tys_zl,36703,tys. zł,sprawozdanie-ssc-2021.pdf,75,"tekst s.35: 36,7 mln zł, +52%, bez KSS"
+2021,szkolenia,wydatki_szkolenia_ogolem_tys_zl,37300,tys. zl,sprawozdanie-ssc-2022.pdf,38,37.3 mln zl
+2022,szkolenia,wydatki_szkolenia_ogolem_tys_zl,46700,tys. zl,sprawozdanie-ssc-2022.pdf,11,46.7 mln zl (wzrost o 25.2%)
+2023,szkolenia,wydatki_szkolenia_ogolem_tys_zl,67700,tys. zl,sprawozdanie-ssc-2023.pdf,13,67.7 mln zl (wzrost o 44.3%)
+2023,szkolenia,wydatki_szkolenia_ogolem_tys_zl,67142,tys. zl,sprawozdanie-ssc-2024.pdf,103,tekst s.61: 67.7 mln zl
+2024,szkolenia,wydatki_szkolenia_ogolem_tys_zl,55663,tys. zl,sprawozdanie-ssc-2024.pdf,103,tekst s.61: 55.7 mln zl. spadek 17.8%. bez KSS 5756 tys. zl
+2024,szkolenia,wydatki_szkolenia_ogolem_tys_zl,56006.1,tys. zl,sprawozdanie-ssc-2025.pdf,61,wykonanie 2024 wg raportu 2025 (raport 2024 s.103: 55663 tys. zl). Tekst 2025 s.22 podaje 55.4 mln zl
+2025,szkolenia,wydatki_szkolenia_ogolem_tys_zl,61796,tys. zl,sprawozdanie-ssc-2025.pdf,61,wykonanie 2025 (szkolenia centralne + dyrektorzy generalni) bez KSS 7284 tys. zl. Tekst s.22: 61.8 mln zl
+2021,szkolenia,wydatki_szkolenia_ogolem_tys_zl_tabela,37280,tys. zl,sprawozdanie-ssc-2022.pdf,76,wykonanie 2021
+2022,szkolenia,wydatki_szkolenia_ogolem_tys_zl_tabela,46731,tys. zl,sprawozdanie-ssc-2022.pdf,76,wykonanie 2022 (dane wstepne MF) bez KSS 9078 tys. zl
+2023,szkolenia,wydatki_szkolenia_ogolem_tys_zl_tabela,67682,tys. zl,sprawozdanie-ssc-2023.pdf,88,wykonanie 2023 (dane wstepne MF) bez KSS 8453 tys. zl i bez projektow UE KPRM 17416 tys. zl
+2022,szkolenia,wydatki_szkolenia_ogolem_tys_zl_tabela_wg_2023,46901,tys. zl,sprawozdanie-ssc-2023.pdf,88,wykonanie 2022 wg raportu 2023 (raport 2022: 46731)
+2022,szkolenia,wydatki_szkolenia_ogolem_tys_zl_wg_2023,46900,tys. zl,sprawozdanie-ssc-2023.pdf,49,raport 2023 podaje 46.9 mln zl dla 2022 (raport 2022: 46.7 mln)
+2016,szkolenia,wydatki_szkolenia_ogolem_z_centralnymi_tys_zl,43818,tys. zl,sprawozdanie-ssc-2017.pdf,123,wykonanie 2016 wg zal. 8 (sprawozdanie 2016 podawalo wstepnie 44350)
+2017,szkolenia,wydatki_szkolenia_ogolem_z_centralnymi_tys_zl,45991,tys. zl,sprawozdanie-ssc-2017.pdf,123,zal. 8 tab. 1 wstepne dane MF
+2019,szkolenia,wydatki_szkolenia_ogolem_zl,60500000,zł,sprawozdanie-ssc-2020.pdf,46,"tekst: 60,5 mln zł"
+2020,szkolenia,wydatki_szkolenia_ogolem_zl,26000000,zł,sprawozdanie-ssc-2020.pdf,46,"tekst: 26 mln zł, spadek o 51% vs 2019, bez KSS"
+2023,szkolenia,wydatki_szkolenia_par4557_tys_zl,11893,tys. zl,sprawozdanie-ssc-2023.pdf,14,srodki UE perspektywa 2014-2020 (2022: 2623)
+2023,szkolenia,wydatki_szkolenia_plan_po_zmianach_tys_zl,75185,tys. zl,sprawozdanie-ssc-2023.pdf,15,
+2024,szkolenia,wydatki_szkolenia_plan_po_zmianach_tys_zl,63395,tys. zl,sprawozdanie-ssc-2024.pdf,103,wykonanie 87.8% (tekst s.61: 89% z 62.3 mln zl)
+2025,szkolenia,wydatki_szkolenia_plan_po_zmianach_tys_zl,73532,tys. zl,sprawozdanie-ssc-2025.pdf,61,wykonanie 84.04% planu
+2023,szkolenia,wydatki_szkolenia_plan_tys_zl,50519,tys. zl,sprawozdanie-ssc-2023.pdf,15,plany finansowe urzedow (po zmianach 75185)
+2022,szkolenia,wydatki_szkolenia_plan_wykonanie_odsetek,84.3,%,sprawozdanie-ssc-2022.pdf,76,wykonanie wobec planu po zmianach
+2023,szkolenia,wydatki_szkolenia_plan_wykonanie_odsetek,89,%,sprawozdanie-ssc-2023.pdf,49,67.7 mln z 75.8 mln planu (2022: 84%)
+2023,szkolenia,wydatki_szkolenia_powiatowa_zespolona_tys_zl,618,tys. zl,sprawozdanie-ssc-2023.pdf,50,2022: 481
+2017,szkolenia,wydatki_szkolenia_specjalistyczne_odsetek,51,%,sprawozdanie-ssc-2017.pdf,46,udzial w wydatkach (miekkie 10% jezykowe 8% IT 12%)
+2018,szkolenia,wydatki_szkolenia_specjalistyczne_udzial,60.5,%,sprawozdanie-ssc-2018.pdf,52,
+2023,szkolenia,wydatki_szkolenia_wykonanie_tys_zl,67066,tys. zl,sprawozdanie-ssc-2023.pdf,15,
+2020,szkolenia,wydatki_tematyka_prawo_administracja_odsetek,18.1,%,sprawozdanie-ssc-2020.pdf,100,"udział w wydatkach, inne 40,2%"
+2023,szkolenia,wydatki_zarzadzanie_tys_zl,4500,tys. zl,sprawozdanie-ssc-2023.pdf,92,Tabela 3
+2022,szkolenia,wydatki_zarzadzanie_zl,2882220,zl,sprawozdanie-ssc-2022.pdf,80,Tabela 3 kolumna z zarzadzania (kolejnosc kolumn jak w tabeli 2)
+2025,szkolenia,wydatki_zarzadzanie_zl,6868440,zl,sprawozdanie-ssc-2025.pdf,64,tabela 3 naglowek w tys. zl ale wartosci odpowiadaja zl (suma 61194264)
+2016,szkolenia,wykonanie_planu_srodkow_szkoleniowych_odsetek,77.0,%,sprawozdanie-ssc-2016.pdf,31,srodki UE wykonane w 47.1% krajowe w 87%
+2017,szkolenia,wykonanie_planu_srodkow_szkoleniowych_odsetek,74,%,sprawozdanie-ssc-2017.pdf,45,srodki UE 39% krajowe 87%
+2015,urzedy,urzedy_liczba,1881,urzedy,sprawozdanie-ssc-2016.pdf,19,
+2016,urzedy,urzedy_liczba,1882,urzedy,sprawozdanie-ssc-2016.pdf,19,liczba urzedow zatrudniajacych czlonkow korpusu wg sprawozdan DG
+2018,urzedy,urzedy_liczba,1832,urzedy,sprawozdanie-ssc-2018.pdf,9,infografika Korpus sluzby cywilnej w liczbach
+2019,urzedy,urzedy_liczba,1833,urzedy,sprawozdanie-ssc-2019.pdf,9,infografika Sluzba cywilna w liczbach
+2022,urzedy,urzedy_liczba,1727,urzedy,sprawozdanie-ssc-2022.pdf,7,infografika Sluzba cywilna w liczbach (obraz)
+2023,urzedy,urzedy_liczba,1741,urzedy,sprawozdanie-ssc-2023.pdf,7,infografika Sluzba cywilna w liczbach (obraz)
+2024,urzedy,urzedy_liczba,1742,liczba,sprawozdanie-ssc-2024.pdf,9,
+2025,urzedy,urzedy_liczba,1742,liczba,sprawozdanie-ssc-2025.pdf,6,infografika Sluzba cywilna w liczbach
+2020,urzedy,urzedy_liczba_przyblizona,1800,urzedy,sprawozdanie-ssc-2020.pdf,7,tekst: ponad 1800 urzędów
+2024,wyksztalcenie,wyksztalcenie_srednie_odsetek,12.9,%,sprawozdanie-ssc-2024.pdf,45,
+2017,wyksztalcenie,wyksztalcenie_wyzsze_odsetek,82,%,sprawozdanie-ssc-2017.pdf,38,ok. 82% (gospodarka narodowa ok. 34%) stan na 30.06.2017
+2024,wyksztalcenie,wyksztalcenie_wyzsze_odsetek,87.1,%,sprawozdanie-ssc-2024.pdf,45,gospodarka narodowa ok. 43.5%
+2017,wyksztalcenie,wyksztalcenie_wyzsze_stanowiska_wspomagajace_odsetek,58,%,sprawozdanie-ssc-2017.pdf,40,prawie 58% (ok. 13 tys. osob) mozliwe zatrudnienie ponizej kwalifikacji
+2018,wynagrodzenia,czlonkowie_korpusu_w_nadgodzinach_tys,42.7,tys. osob,sprawozdanie-ssc-2018.pdf,56,
+2019,wynagrodzenia,czlonkowie_korpusu_w_nadgodzinach_tys,43.2,tys. osob,sprawozdanie-ssc-2019.pdf,49,
+2023,wynagrodzenia,czlonkowie_ponizej_gn_liczba,26000,osoby,sprawozdanie-ssc-2023.pdf,8,ok. 26 tys. (ok. 22% zatrudnienia)
+2024,wynagrodzenia,dynamika_nominalna,21.2,%,sprawozdanie-ssc-2024.pdf,50,kwota bazowa +20%
+2025,wynagrodzenia,dynamika_nominalna,8.9,%,sprawozdanie-ssc-2025.pdf,14,gospodarka narodowa 9.1%
+2024,wynagrodzenia,dynamika_realna,16.9,%,sprawozdanie-ssc-2024.pdf,51,
+2025,wynagrodzenia,dynamika_realna,5.3,%,sprawozdanie-ssc-2025.pdf,14,
+2022,wynagrodzenia,dynamika_wynagrodzen_gn_odsetek,12.1,%,sprawozdanie-ssc-2022.pdf,30,gospodarka narodowa
+2023,wynagrodzenia,dynamika_wynagrodzen_gn_odsetek,12.8,%,sprawozdanie-ssc-2023.pdf,41,gospodarka narodowa
+2023,wynagrodzenia,fundusz_wynagrodzen_mld_zl,12.7,mld zl,sprawozdanie-ssc-2023.pdf,8,ustawa budzetowa 2023 (2022: 11.2 mld zl)
+2024,wynagrodzenia,fundusz_wynagrodzen_tys_zl,16537879,tys. zl,sprawozdanie-ssc-2024.pdf,50,wzrost 23.2% (s.23 podaje fundusz 16.5 mld zl wzrost 30.4%)
+2025,wynagrodzenia,fundusz_wynagrodzen_tys_zl,18253541,tys. zl,sprawozdanie-ssc-2025.pdf,14,wzrost o 10.4% wobec 2024
+2016,wynagrodzenia,fundusz_wynagrodzen_wykonanie_tys_zl,7511264,tys. zl,sprawozdanie-ssc-2016.pdf,27,
+2017,wynagrodzenia,fundusz_wynagrodzen_wykonanie_tys_zl,7913414,tys. zl,sprawozdanie-ssc-2017.pdf,31,
+2018,wynagrodzenia,godziny_nadliczbowe_nierozliczone_tys,184,tys. godzin,sprawozdanie-ssc-2018.pdf,56,19% wypracowanych
+2019,wynagrodzenia,godziny_nadliczbowe_nierozliczone_tys,135,tys. godzin,sprawozdanie-ssc-2019.pdf,49,15%
+2018,wynagrodzenia,godziny_nadliczbowe_tys,944,tys. godzin,sprawozdanie-ssc-2018.pdf,56,kontekst przeciazenia
+2019,wynagrodzenia,godziny_nadliczbowe_tys,911,tys. godzin,sprawozdanie-ssc-2019.pdf,49,
+2019,wynagrodzenia,kwota_bazowa_zl,1916.94,zl,sprawozdanie-ssc-2018.pdf,12,pierwszy od 10 lat wzrost (+2.3%)
+2020,wynagrodzenia,kwota_bazowa_zl,2031.96,zl,sprawozdanie-ssc-2019.pdf,10,wzrost o 6.0%
+2020,wynagrodzenia,kwota_bazowa_zl,2031.96,zł,sprawozdanie-ssc-2020.pdf,38,"wzrost o 6%, najwyższy od 2001 r."
+2024,wynagrodzenia,mediana_mnoznika_kwoty_bazowej,2.8,mnoznik,sprawozdanie-ssc-2024.pdf,54,badanie indywidualnych stanowisk 30.04.2024
+2017,wynagrodzenia,mediana_wynagrodzenia_zasadniczego_zl,3129,zl brutto,sprawozdanie-ssc-2017.pdf,40,stan na 30.06.2017 (wyzsze 3257 srednie 3017)
+2024,wynagrodzenia,minimalne_wynagrodzenie_zasadnicze_zl,4731.37,zl brutto,sprawozdanie-ssc-2023.pdf,9,mnoznik minimalny 1.8 od 2024
+2020,wynagrodzenia,niewydatkowany_fundusz_wynagrodzen_odsetek,2.1,%,sprawozdanie-ssc-2020.pdf,40,207 mln zł
+2016,wynagrodzenia,podwyzki_najmniej_zarabiajacy_osoby,31658,osoby,sprawozdanie-ssc-2016.pdf,28,ok. 97% osob z wynagrodzeniem zasadniczym ponizej 2500 zl
+2023,wynagrodzenia,powiatowa_zespolona_ponizej_gn_odsetek,68.8,%,sprawozdanie-ssc-2023.pdf,43,2022: 78.5%
+2015,wynagrodzenia,przecietne_wynagrodzenie_brutto_zl,4964,zl/mies.,sprawozdanie-ssc-2016.pdf,19,
+2016,wynagrodzenia,przecietne_wynagrodzenie_brutto_zl,5266,zl/mies.,sprawozdanie-ssc-2016.pdf,19,
+2017,wynagrodzenia,przecietne_wynagrodzenie_brutto_zl,5524,zl/mies.,sprawozdanie-ssc-2017.pdf,29,
+2017,wynagrodzenia,przecietne_wynagrodzenie_calkowite_zl,5524,zl brutto miesiecznie,sprawozdanie-ssc-2018.pdf,45,
+2018,wynagrodzenia,przecietne_wynagrodzenie_calkowite_zl,5863,zl brutto miesiecznie,sprawozdanie-ssc-2018.pdf,45,
+2019,wynagrodzenia,przecietne_wynagrodzenie_calkowite_zl,6403,zl brutto miesiecznie,sprawozdanie-ssc-2019.pdf,38,wzrost 9.2% najwyzszy od 2008
+2020,wynagrodzenia,przecietne_wynagrodzenie_calkowite_zl,6879,zł brutto,sprawozdanie-ssc-2020.pdf,38,"nominalnie +7,4% vs 2019"
+2021,wynagrodzenia,przecietne_wynagrodzenie_calkowite_zl,7419,zł brutto,sprawozdanie-ssc-2021.pdf,29,"+7,8% nominalnie, realnie +2,6%"
+2022,wynagrodzenia,przecietne_wynagrodzenie_gn_zl,6346,zl brutto,sprawozdanie-ssc-2022.pdf,32,komunikat Prezesa GUS
+2023,wynagrodzenia,przecietne_wynagrodzenie_gn_zl,7155,zl brutto,sprawozdanie-ssc-2023.pdf,43,komunikat Prezesa GUS
+2016,wynagrodzenia,przecietne_wynagrodzenie_gospodarka_zl,4047,zl/mies.,sprawozdanie-ssc-2016.pdf,26,przecietne wynagrodzenie w gospodarce narodowej
+2017,wynagrodzenia,przecietne_wynagrodzenie_gospodarka_zl,4272,zl/mies.,sprawozdanie-ssc-2017.pdf,29,
+2025,wynagrodzenia,przecietne_wynagrodzenie_kp_policji_zl,7496,zl brutto,sprawozdanie-ssc-2025.pdf,50,komendy powiatowe (miejskie) Policji najnizsze
+2025,wynagrodzenia,przecietne_wynagrodzenie_ministerstwa_kprm_zl,15928,zl brutto,sprawozdanie-ssc-2025.pdf,50,
+2025,wynagrodzenia,przecietne_wynagrodzenie_zasadnicze_zl,8023,zl brutto,sprawozdanie-ssc-2025.pdf,50,przecietny mnoznik kwoty bazowej 2.9
+2022,wynagrodzenia,przecietne_wynagrodzenie_zl,8083,zl brutto,sprawozdanie-ssc-2022.pdf,7,przecietne calkowite wynagrodzenie brutto
+2023,wynagrodzenia,przecietne_wynagrodzenie_zl,9353,zl brutto,sprawozdanie-ssc-2023.pdf,7,
+2024,wynagrodzenia,przecietne_wynagrodzenie_zl,11337,zl brutto,sprawozdanie-ssc-2024.pdf,9,wzrost nominalny 21.2%
+2025,wynagrodzenia,przecietne_wynagrodzenie_zl,12347,zl brutto,sprawozdanie-ssc-2025.pdf,6,przecietne miesieczne wynagrodzenie calkowite
+2025,wynagrodzenia,urzedy_ponizej_80proc_gospodarki_narodowej,149,liczba,sprawozdanie-ssc-2025.pdf,15,2024: 114
+2020,wynagrodzenia,urzedy_ponizej_gospodarki_narodowej_liczba,901,urzedy,sprawozdanie-ssc-2020.pdf,40,49% urzędów
+2021,wynagrodzenia,urzedy_ponizej_gospodarki_narodowej_liczba,1005,urzedy,sprawozdanie-ssc-2021.pdf,31,"ponad połowa urzędów, +104"
+2024,wynagrodzenia,urzedy_ponizej_gospodarki_narodowej_odsetek,41.6,%,sprawozdanie-ssc-2024.pdf,53,725 urzedow (2023: 46.3% 806 urzedow)
+2025,wynagrodzenia,urzedy_ponizej_gospodarki_narodowej_odsetek,43.5,%,sprawozdanie-ssc-2025.pdf,14,757 urzedow
+2017,wynagrodzenia,urzedy_ponizej_sredniej_krajowej_liczba,1092,urzedy,sprawozdanie-ssc-2017.pdf,29,ok. 60% urzedow (2016 ok. 57%)
+2022,wynagrodzenia,urzedy_wynagrodzenie_ponizej_gn_liczba,931,urzedy,sprawozdanie-ssc-2022.pdf,32,przecietne w gospodarce narodowej 6346 zl
+2023,wynagrodzenia,urzedy_wynagrodzenie_ponizej_gn_liczba,806,urzedy,sprawozdanie-ssc-2023.pdf,43,
+2021,wynagrodzenia,urzedy_wynagrodzenie_ponizej_gn_odsetek,55,%,sprawozdanie-ssc-2022.pdf,8,
+2022,wynagrodzenia,urzedy_wynagrodzenie_ponizej_gn_odsetek,54,%,sprawozdanie-ssc-2022.pdf,8,odsetek urzedow ze srednim wynagrodzeniem ponizej gospodarki narodowej
+2023,wynagrodzenia,urzedy_wynagrodzenie_ponizej_gn_odsetek,46.3,%,sprawozdanie-ssc-2023.pdf,8,2022: 53.9%
+2022,wynagrodzenia,urzedy_wynagrodzenie_ponizej_gn_odsetek_wg_2023,53.9,%,sprawozdanie-ssc-2023.pdf,8,raport 2022 podaje 54%
+2020,wynagrodzenia,wydatki_na_wynagrodzenia_tys_zl,9814291,tys. zł,sprawozdanie-ssc-2020.pdf,38,
+2021,wynagrodzenia,wydatki_na_wynagrodzenia_tys_zl,10510415,tys. zł,sprawozdanie-ssc-2021.pdf,29,
+2022,wynagrodzenia,wydatki_na_wynagrodzenia_tys_zl,11395436,tys. zl,sprawozdanie-ssc-2022.pdf,30,
+2023,wynagrodzenia,wydatki_na_wynagrodzenia_tys_zl,13422688,tys. zl,sprawozdanie-ssc-2023.pdf,41,wzrost o 17.8%
+2018,wynagrodzenia,wynagrodzenie_administracja_terenowa_zl,4421,zl brutto miesiecznie,sprawozdanie-ssc-2018.pdf,46,bez KAS
+2018,wynagrodzenia,wynagrodzenie_gospodarka_narodowa_zl,4585,zl brutto miesiecznie,sprawozdanie-ssc-2018.pdf,46,porownanie GUS
+2024,wynagrodzenia,wzrost_kwoty_bazowej_plan_odsetek,20,%,sprawozdanie-ssc-2023.pdf,8,ustawa budzetowa na 2024
+2022,wynagrodzenia,wzrost_wynagrodzenia_nominalny_odsetek,8.9,%,sprawozdanie-ssc-2022.pdf,8,
+2023,wynagrodzenia,wzrost_wynagrodzenia_nominalny_odsetek,15.7,%,sprawozdanie-ssc-2023.pdf,8,
+2022,wynagrodzenia,zmiana_wynagrodzenia_realna_odsetek,-4.6,%,sprawozdanie-ssc-2022.pdf,8,inflacja dla gospodarstw pracownikow 14.1%
+2023,wynagrodzenia,zmiana_wynagrodzenia_realna_odsetek,4,%,sprawozdanie-ssc-2023.pdf,8,inflacja 11.3%
+2025,zatrudnienie,etaty_administratorzy_poza_sc,1308,etaty,sprawozdanie-ssc-2025.pdf,11,stan na 01.01.2026
+2025,zatrudnienie,etaty_eksperci_poza_sc,1273,etaty,sprawozdanie-ssc-2025.pdf,11,stan na 01.01.2026
+2019,zatrudnienie,etaty_kas,47313,etaty,sprawozdanie-ssc-2019.pdf,65,przecietne zatrudnienie wykres 1
+2025,zatrudnienie,etaty_koordynujace,12545,etaty,sprawozdanie-ssc-2025.pdf,45,
+2019,zatrudnienie,etaty_ministerstwa_kprm,13014,etaty,sprawozdanie-ssc-2019.pdf,65,
+2024,zatrudnienie,etaty_poza_sc,24773,etaty,sprawozdanie-ssc-2024.pdf,46,2023: 24685
+2025,zatrudnienie,etaty_poza_sc,24653,etaty,sprawozdanie-ssc-2025.pdf,11,stanowiska niemnozikowe poza sluzba cywilna (2024: 24773)
+2025,zatrudnienie,etaty_samodzielne,39238,etaty,sprawozdanie-ssc-2025.pdf,45,
+2025,zatrudnienie,etaty_specjalistyczne,53720,etaty,sprawozdanie-ssc-2025.pdf,45,
+2025,zatrudnienie,etaty_srednie_kierownicze,1267,etaty,sprawozdanie-ssc-2025.pdf,45,stanowiska sredniego szczebla zarzadzania
+2019,zatrudnienie,etaty_stanowiska_specjalistyczne,48249,etaty,sprawozdanie-ssc-2019.pdf,67,
+2025,zatrudnienie,etaty_wspomagajace,12753,etaty,sprawozdanie-ssc-2025.pdf,45,
+2025,zatrudnienie,etaty_wyzsze_stanowiska,3678,etaty,sprawozdanie-ssc-2025.pdf,45,przecietne zatrudnienie wg grup stanowisk
+2010,zatrudnienie,korpus_etaty,122989,etaty,sprawozdanie-ssc-2016.pdf,21,odczyt z wykresu 2010-2016 zgodny z tekstem (spadek o 4141 etatow wzgledem 2010)
+2011,zatrudnienie,korpus_etaty,122882,etaty,sprawozdanie-ssc-2017.pdf,23,wykres 2010-2017
+2012,zatrudnienie,korpus_etaty,121541,etaty,sprawozdanie-ssc-2017.pdf,23,wykres 2010-2017
+2013,zatrudnienie,korpus_etaty,121376,etaty,sprawozdanie-ssc-2017.pdf,23,wykres 2010-2017
+2014,zatrudnienie,korpus_etaty,120412,etaty,sprawozdanie-ssc-2017.pdf,23,wykres 2010-2017
+2015,zatrudnienie,korpus_etaty,119257,etaty,sprawozdanie-ssc-2016.pdf,19,przecietne zatrudnienie (porownanie w sprawozdaniu 2016)
+2016,zatrudnienie,korpus_etaty,118848,etaty,sprawozdanie-ssc-2016.pdf,19,przecietne zatrudnienie czlonkow korpusu
+2016,zatrudnienie,korpus_etaty,118848,etaty,sprawozdanie-ssc-2017.pdf,23,wykres 2010-2017 (zgodne ze sprawozdaniem 2016)
+2017,zatrudnienie,korpus_etaty,119382,etaty,sprawozdanie-ssc-2017.pdf,23,przecietne zatrudnienie (wykres 2010-2017) wzrost o 534 etaty glownie przez reforme KAS
+2024,zatrudnienie,korpus_etaty_kas,46035,etaty,sprawozdanie-ssc-2024.pdf,88,
+2025,zatrudnienie,korpus_etaty_kas,46513,etaty,sprawozdanie-ssc-2025.pdf,45,
+2025,zatrudnienie,korpus_etaty_ministerstwa_kprm,15683,etaty,sprawozdanie-ssc-2025.pdf,45,przecietne zatrudnienie
+2024,zatrudnienie,korpus_etaty_placowki_zagraniczne,1248,etaty,sprawozdanie-ssc-2024.pdf,88,
+2025,zatrudnienie,korpus_etaty_powiatowa_adm_zespolona,8647,etaty,sprawozdanie-ssc-2025.pdf,45,
+2025,zatrudnienie,korpus_etaty_pozostala_adm_niezespolona,13564,etaty,sprawozdanie-ssc-2025.pdf,45,
+2017,zatrudnienie,korpus_etaty_przecietne,119382,etaty,sprawozdanie-ssc-2018.pdf,42,wyliczone: 117964 + 1418
+2018,zatrudnienie,korpus_etaty_przecietne,117964,etaty,sprawozdanie-ssc-2018.pdf,42,przecietne zatrudnienie w etatach
+2019,zatrudnienie,korpus_etaty_przecietne,119750,etaty,sprawozdanie-ssc-2019.pdf,34,wzrost o 1785 etatow (1.5%)
+2022,zatrudnienie,korpus_etaty_przecietne,117488,etaty,sprawozdanie-ssc-2022.pdf,7,przecietne zatrudnienie w 2022 w etatach (infografika)
+2023,zatrudnienie,korpus_etaty_przecietne,119591,etaty,sprawozdanie-ssc-2023.pdf,7,przecietne zatrudnienie 2023 w etatach (infografika)
+2024,zatrudnienie,korpus_etaty_przecietne,121559,etaty,sprawozdanie-ssc-2024.pdf,9,
+2025,zatrudnienie,korpus_etaty_przecietne,123201,etaty,sprawozdanie-ssc-2025.pdf,6,przecietne zatrudnienie w etatach
+2022,zatrudnienie,korpus_etaty_przecietne_zmiana,-572,etaty,sprawozdanie-ssc-2022.pdf,24,spadek o 0.5% trzeci rok z rzedu
+2023,zatrudnienie,korpus_etaty_przecietne_zmiana,2104,etaty,sprawozdanie-ssc-2023.pdf,35,wzrost o 1.8% pierwszy po 3 latach spadkow
+2024,zatrudnienie,korpus_etaty_przecietne_zmiana,1967,etaty,sprawozdanie-ssc-2024.pdf,41,wzrost 1.6%
+2025,zatrudnienie,korpus_etaty_przecietne_zmiana,1642,etaty,sprawozdanie-ssc-2025.pdf,9,wzrost wobec 2024 (1.4%)
+2025,zatrudnienie,korpus_etaty_urzedy_centralne,14309,etaty,sprawozdanie-ssc-2025.pdf,45,
+2025,zatrudnienie,korpus_etaty_urzedy_wojewodzkie,10226,etaty,sprawozdanie-ssc-2025.pdf,45,
+2025,zatrudnienie,korpus_etaty_wojewodzka_adm_zespolona,14258,etaty,sprawozdanie-ssc-2025.pdf,45,
+2020,zatrudnienie,korpus_osoby_przyblizone,118000,osoby,sprawozdanie-ssc-2020.pdf,7,tekst: jest nas ok. 118 tys.
+2020,zatrudnienie,nadgodziny_liczba,722000,godziny,sprawozdanie-ssc-2020.pdf,53,"ponad 722 tys., 38,2 tys. osób, 2019: 911 tys."
+2021,zatrudnienie,nadgodziny_liczba,652000,godziny,sprawozdanie-ssc-2021.pdf,41,ponad 34 tys. osób
+2020,zatrudnienie,nadgodziny_nierozliczone_odsetek,22,%,sprawozdanie-ssc-2020.pdf,53,158 tys. godzin
+2021,zatrudnienie,nadgodziny_nierozliczone_odsetek,19,%,sprawozdanie-ssc-2021.pdf,41,"126 tys. godzin, przyczyny: koniec okresu 34%, nadmiar obowiązków 26%, braki kadrowe 19%"
+2016,zatrudnienie,niepelnosprawni_liczba,4870,osoby,sprawozdanie-ssc-2016.pdf,22,koniec 2016
+2017,zatrudnienie,niepelnosprawni_liczba,4637,osoby,sprawozdanie-ssc-2017.pdf,26,stan na 31.12.2017
+2018,zatrudnienie,niepelnosprawni_liczba,5363,osoby,sprawozdanie-ssc-2018.pdf,43,stan na 31.12
+2019,zatrudnienie,niepelnosprawni_liczba,5894,osoby,sprawozdanie-ssc-2019.pdf,36,
+2022,zatrudnienie,niepelnosprawni_liczba,6929,osoby,sprawozdanie-ssc-2022.pdf,27,
+2023,zatrudnienie,niepelnosprawni_liczba,7504,osoby,sprawozdanie-ssc-2023.pdf,37,
+2015,zatrudnienie,niepelnosprawni_odsetek,3.9,%,sprawozdanie-ssc-2016.pdf,19,
+2016,zatrudnienie,niepelnosprawni_odsetek,4.0,%,sprawozdanie-ssc-2016.pdf,19,
+2017,zatrudnienie,niepelnosprawni_odsetek,3.9,%,sprawozdanie-ssc-2017.pdf,26,
+2018,zatrudnienie,niepelnosprawni_odsetek,4.4,%,sprawozdanie-ssc-2018.pdf,43,
+2019,zatrudnienie,niepelnosprawni_odsetek,4.8,%,sprawozdanie-ssc-2019.pdf,36,
+2022,zatrudnienie,niepelnosprawni_odsetek,5.7,%,sprawozdanie-ssc-2022.pdf,7,osoby z niepelnosprawnoscia stan na 31.12.2022 w osobach
+2023,zatrudnienie,niepelnosprawni_odsetek,6,%,sprawozdanie-ssc-2023.pdf,7,
+2023,zatrudnienie,niepelnosprawni_odsetek_dokladny,6.0,%,sprawozdanie-ssc-2023.pdf,37,
+2017,zatrudnienie,odwolania_wyzsze_stanowiska,744,liczba,sprawozdanie-ssc-2018.pdf,51,
+2018,zatrudnienie,odwolania_wyzsze_stanowiska,973,liczba,sprawozdanie-ssc-2018.pdf,51,
+2019,zatrudnienie,odwolania_wyzsze_stanowiska,662,liczba,sprawozdanie-ssc-2019.pdf,43,
+2024,zatrudnienie,osoby_z_niepelnosprawnoscia,7600,osoby,sprawozdanie-ssc-2024.pdf,9,
+2025,zatrudnienie,osoby_z_niepelnosprawnoscia,7823,osoby,sprawozdanie-ssc-2025.pdf,6,stan na 31.12.2025
+2024,zatrudnienie,osoby_z_niepelnosprawnoscia_odsetek,6.0,%,sprawozdanie-ssc-2024.pdf,43,
+2025,zatrudnienie,osoby_z_niepelnosprawnoscia_odsetek,6.1,%,sprawozdanie-ssc-2025.pdf,10,
+2020,zatrudnienie,osoby_z_niepelnosprawnosciami_liczba,5757,osoby,sprawozdanie-ssc-2020.pdf,34,
+2021,zatrudnienie,osoby_z_niepelnosprawnosciami_liczba,6581,osoby,sprawozdanie-ssc-2021.pdf,24,
+2020,zatrudnienie,osoby_z_niepelnosprawnosciami_odsetek,4.7,%,sprawozdanie-ssc-2020.pdf,34,"2019: 4,8%"
+2021,zatrudnienie,osoby_z_niepelnosprawnosciami_odsetek,5.4,%,sprawozdanie-ssc-2021.pdf,24,
+2021,zatrudnienie,pierwsze_umowy_12_mies_liczba,8387,umowy,sprawozdanie-ssc-2022.pdf,27,
+2022,zatrudnienie,pierwsze_umowy_12_mies_liczba,8855,umowy,sprawozdanie-ssc-2022.pdf,26,osoby podejmujace po raz pierwszy prace w sc (art. 35 ust. 3)
+2018,zatrudnienie,powolani_z_korpusu_odsetek,74,%,sprawozdanie-ssc-2018.pdf,51,787 osob
+2019,zatrudnienie,powolani_z_korpusu_odsetek,76,%,sprawozdanie-ssc-2019.pdf,43,503 osoby
+2017,zatrudnienie,powolania_wyzsze_stanowiska,1622,liczba,sprawozdanie-ssc-2018.pdf,51,
+2018,zatrudnienie,powolania_wyzsze_stanowiska,1069,liczba,sprawozdanie-ssc-2018.pdf,51,
+2019,zatrudnienie,powolania_wyzsze_stanowiska,665,liczba,sprawozdanie-ssc-2019.pdf,43,
+2020,zatrudnienie,przecietne_zatrudnienie_etaty,118885,etaty,sprawozdanie-ssc-2020.pdf,33,"spadek o 865 etatów (0,7%) względem 2019"
+2021,zatrudnienie,przecietne_zatrudnienie_etaty,118060,etaty,sprawozdanie-ssc-2021.pdf,22,"spadek o 825 etatów (0,7%)"
+2020,zatrudnienie,przecietne_zatrudnienie_kas_etaty,46345,etaty,sprawozdanie-ssc-2020.pdf,69,największa kategoria urzędów
+2023,zatrudnienie,stanowiska_eksperci_poza_sc_etaty,1500,etaty,sprawozdanie-ssc-2023.pdf,9,1.2% zatrudnienia w sc
+2023,zatrudnienie,stanowiska_eksperci_poza_sc_etaty_dokladne,1516,etaty,sprawozdanie-ssc-2023.pdf,39,718 w ministerstwach z KPRM (5.0% korpusu tam)
+2023,zatrudnienie,stanowiska_niemnoznikowe_etaty,24700,etaty,sprawozdanie-ssc-2023.pdf,9,20.3% zatrudnienia korpusu stan 31.12.2023
+2023,zatrudnienie,stanowiska_niemnoznikowe_etaty_dokladne,24685,etaty,sprawozdanie-ssc-2023.pdf,39,
+2023,zatrudnienie,stanowiska_pomocnicze_techniczne_etaty,14421,etaty,sprawozdanie-ssc-2023.pdf,39,
+2022,zatrudnienie,urzednicy_sc,7464,etaty,sprawozdanie-ssc-2022.pdf,7,stan na 31.12.2022 w etatach (infografika)
+2023,zatrudnienie,urzednicy_sc,7674,etaty,sprawozdanie-ssc-2023.pdf,7,stan na 31.12.2023 w etatach
+2023,zatrudnienie,urzednicy_sc,7674,etaty,sprawozdanie-ssc-2024.pdf,15,
+2024,zatrudnienie,urzednicy_sc,7652,etaty,sprawozdanie-ssc-2024.pdf,9,stan 31.12.2024
+2025,zatrudnienie,urzednicy_sc,7988,etaty,sprawozdanie-ssc-2025.pdf,6,stan na 31.12.2025 w etatach
+2015,zatrudnienie,urzednicy_sc_etaty,7744,etaty,sprawozdanie-ssc-2016.pdf,19,
+2016,zatrudnienie,urzednicy_sc_etaty,7728,etaty,sprawozdanie-ssc-2016.pdf,19,stan na 31.12.2016
+2018,zatrudnienie,urzednicy_sc_liczba,7593,etaty,sprawozdanie-ssc-2018.pdf,43,stan na 31.12 w etatach
+2019,zatrudnienie,urzednicy_sc_liczba,7890,etaty,sprawozdanie-ssc-2019.pdf,35,stan na 31.12 w etatach. Wzrost o 297
+2019,zatrudnienie,urzednicy_sc_liczba,7890,etaty,sprawozdanie-ssc-2020.pdf,49,koniec 2019
+2020,zatrudnienie,urzednicy_sc_liczba,7659,etaty,sprawozdanie-ssc-2020.pdf,34,"stan 31.12.2020, o 231 (2,9%) mniej niż 2019"
+2021,zatrudnienie,urzednicy_sc_liczba,7415,etaty,sprawozdanie-ssc-2021.pdf,24,"stan 31.12.2021, -245 (3,2%)"
+2024,zatrudnienie,urzednicy_sc_odsetek,6.2,%,sprawozdanie-ssc-2024.pdf,15,2023: 7674 (6.3%)
+2025,zatrudnienie,urzednicy_sc_odsetek,6.4,%,sprawozdanie-ssc-2025.pdf,10,udzial urzednikow w korpusie
+2018,zatrudnienie,urzednicy_sc_odsetek_korpusu,6.4,%,sprawozdanie-ssc-2018.pdf,43,
+2019,zatrudnienie,urzednicy_sc_odsetek_korpusu,6.6,%,sprawozdanie-ssc-2019.pdf,36,
+2017,zatrudnienie,urzednicy_sc_osoby,7544,osoby,sprawozdanie-ssc-2017.pdf,25,stan na 31.12.2017
+2022,zatrudnienie,urzednicy_sc_przyrost,49,etaty,sprawozdanie-ssc-2022.pdf,10,wzrost liczby urzednikow wobec 2021
+2023,zatrudnienie,urzednicy_sc_przyrost,210,etaty,sprawozdanie-ssc-2023.pdf,37,o 2.8%
+2016,zatrudnienie,urzednicy_sc_udzial_odsetek,6.5,%,sprawozdanie-ssc-2016.pdf,22,w przeliczeniu na pelnozatrudnionych (2015 tez 6.5%)
+2017,zatrudnienie,urzednicy_sc_udzial_odsetek,6.3,%,sprawozdanie-ssc-2017.pdf,25,
+2019,zatrudnienie,urzednicy_sc_udzial_odsetek,6.6,%,sprawozdanie-ssc-2020.pdf,34,
+2020,zatrudnienie,urzednicy_sc_udzial_odsetek,6.4,%,sprawozdanie-ssc-2020.pdf,34,
+2021,zatrudnienie,urzednicy_sc_udzial_odsetek,6.3,%,sprawozdanie-ssc-2021.pdf,24,
+2022,zatrudnienie,urzednicy_sc_udzial_odsetek,6.3,%,sprawozdanie-ssc-2022.pdf,27,
+2023,zatrudnienie,urzednicy_sc_udzial_odsetek,6.3,%,sprawozdanie-ssc-2023.pdf,37,trzeci rok z rzedu
+2025,zatrudnienie,urzednicy_sc_zmiana,336,liczba,sprawozdanie-ssc-2025.pdf,10,wzrost wobec 2024 (4.4%)
+2016,zatrudnienie,urzedy_redukujace_zatrudnienie_odsetek,40.6,%,sprawozdanie-ssc-2016.pdf,20,odsetek urzedow ktore zmniejszyly zatrudnienie wzgledem 2015
+2016,zatrudnienie,wyzsze_stanowiska_liczba,2103,stanowiska,sprawozdanie-ssc-2017.pdf,44,koniec 2016 (przypis 42)
+2017,zatrudnienie,wyzsze_stanowiska_liczba,3197,stanowiska,sprawozdanie-ssc-2017.pdf,44,koniec 2017 (rozszerzenie katalogu o stanowiska KAS)
+2022,zatrudnienie,wyzsze_stanowiska_liczba,3630,stanowiska,sprawozdanie-ssc-2022.pdf,37,stan na 31.12.2022
+2023,zatrudnienie,wyzsze_stanowiska_liczba,3664,stanowiska,sprawozdanie-ssc-2023.pdf,48,
+2021,zatrudnienie,wyzsze_stanowiska_liczba_stanowisk,3552,stanowiska,sprawozdanie-ssc-2021.pdf,34,
+2017,zatrudnienie,wyzsze_stanowiska_odwolania,744,osoby,sprawozdanie-ssc-2017.pdf,44,
+2022,zatrudnienie,wyzsze_stanowiska_odwolania,902,osoby,sprawozdanie-ssc-2022.pdf,37,
+2023,zatrudnienie,wyzsze_stanowiska_odwolania,774,osoby,sprawozdanie-ssc-2023.pdf,48,
+2017,zatrudnienie,wyzsze_stanowiska_osoby,3256,osoby,sprawozdanie-ssc-2018.pdf,51,stan na 31.12
+2018,zatrudnienie,wyzsze_stanowiska_osoby,3296,osoby,sprawozdanie-ssc-2018.pdf,51,stan na 31.12
+2019,zatrudnienie,wyzsze_stanowiska_osoby,3297,osoby,sprawozdanie-ssc-2019.pdf,43,stan na 31.12
+2020,zatrudnienie,wyzsze_stanowiska_osoby,3389,osoby,sprawozdanie-ssc-2020.pdf,44,"stan 31.12.2020, 2019: 3297"
+2021,zatrudnienie,wyzsze_stanowiska_osoby,3452,osoby,sprawozdanie-ssc-2021.pdf,34,
+2020,zatrudnienie,wyzsze_stanowiska_powolani_z_korpusu_odsetek,70,%,sprawozdanie-ssc-2020.pdf,44,702 osoby
+2017,zatrudnienie,wyzsze_stanowiska_powolania,1622,osoby,sprawozdanie-ssc-2017.pdf,44,
+2020,zatrudnienie,wyzsze_stanowiska_powolania,1009,powołania,sprawozdanie-ssc-2020.pdf,44,"2019: 665, odwołania 943 (2019: 662)"
+2021,zatrudnienie,wyzsze_stanowiska_powolania,852,powołania,sprawozdanie-ssc-2021.pdf,34,odwołania 767
+2022,zatrudnienie,wyzsze_stanowiska_powolania,980,osoby,sprawozdanie-ssc-2022.pdf,37,
+2023,zatrudnienie,wyzsze_stanowiska_powolania,717,osoby,sprawozdanie-ssc-2023.pdf,48,
+2022,zatrudnienie,wyzsze_stanowiska_z_korpusu_powolani_odsetek,78.3,%,sprawozdanie-ssc-2022.pdf,37,
+2023,zatrudnienie,wyzsze_stanowiska_z_korpusu_powolani_odsetek,69.7,%,sprawozdanie-ssc-2023.pdf,48,500 osob
+2018,zatrudnienie,zmiana_zatrudnienia_etaty,-1418,etaty,sprawozdanie-ssc-2018.pdf,42,spadek o 1.2% wzgledem 2017 glownie przez wylaczenie KZGW z SC
