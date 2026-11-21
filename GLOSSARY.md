@@ -38,6 +38,10 @@ _Avoid_: przełożony, ewaluator, kierownik
 Komplet reguł oceny (arkusze, kryteria, skala, terminy) obowiązujący od określonej daty. Każda ocena podlega jednej wersji przepisów, ustalonej w dniu jej rozpoczęcia.
 _Avoid_: konfiguracja, ustawienia, polityka
 
+**Wersja przepisów urzędu** (`regulation_versions` z `office_id`, `is_official = false`):
+Lokalna wersja przepisów powstała w edytorze reguł jako klon wersji oficjalnej i opublikowana z datą obowiązywania. Obowiązuje ta wersja (oficjalna albo urzędu) z najpóźniejszą datą nie późniejszą niż dzień rozpoczęcia oceny, przy równej dacie wygrywa wersja urzędu. Wersja oficjalna (`is_official = true`, bez `office_id`) jest wspólna dla urzędów i niezmienna.
+_Avoid_: własne przepisy, nadpisanie reguł
+
 **Szkic przepisów** (`status 'draft'` w `regulation_versions`):
 Lokalna wersja przepisów urzędu w edycji. Admin klonuje do niego opublikowaną wersję, zmienia parametry i publikuje z datą obowiązywania. Szkic nie może być przypięty do oceny. Po publikacji wersja jest niezmienna.
 _Avoid_: kopia robocza, wersja testowa
@@ -64,9 +68,50 @@ _Avoid_: szef, kierownik komórki
 Pracownik, którego dotyczy ocena. Nie ma dostępu do aplikacji.
 _Avoid_: użytkownik
 
-**Zdarzenie oceny** (`EvaluationEvent`, `evaluation_event`):
-Fakt z przebiegu oceny (np. rozmowa, podpis, doręczenie, sprzeciw) wpisany z datą faktyczną przez oceniającego albo kadry. Od dat zdarzeń liczy się terminy.
+**Zdarzenie oceny** (`EvaluationEvent`, `evaluation_events`):
+Fakt z przebiegu oceny (np. rozmowa, podpis, doręczenie, sprzeciw) wpisany z datą faktyczną przez oceniającego albo kadry. Od dat zdarzeń liczy się terminy. Zdarzenia tworzą dziennik zdarzeń oceny, który jest tylko do dopisywania.
 _Avoid_: log, akcja
+
+**Stan oceny** (`EvaluationStatus`, `evaluations.status`):
+Etap oceny: `criteria`, `criteria_awaiting_signature`, `period`, `interview`, `drafted`, `delivered`, `closed`, `objection` albo `interrupted`. Każde przejście to zdarzenie w dzienniku z datą faktyczną, a tabela przejść jest jedna (`evaluationTransitions` w `@sarmata/domain` i `evaluation_transitions()` w SQL). `closed` i `interrupted` są końcowe.
+_Avoid_: status oceny, faza
+
+**Zatwierdzenie** (`part_one_approved`, `sheet_approved` i pokrewne zdarzenia):
+Czynność oceniającego w systemie zamiast podpisu (ADR 0007): zalogowane konto, znacznik czasu, numer wersji arkusza i skrót SHA-256 jego treści. Potwierdzenia ocenianego (podpis części I, zapoznanie, odmowa podpisu) oceniający odnotowuje z faktyczną datą.
+_Avoid_: podpis elektroniczny, podpis cyfrowy
+
+**Sprzeciw** (`objection`, zdarzenie `objection_filed`, stan `objection`):
+Sprzeciw ocenianego od oceny wniesiony w 7 dni od zapoznania (art. 83 ust. 1 ustawy). Całą ścieżkę rejestrują kadry. Wynik (`ObjectionOutcome`) to `rejected` (ocena zostaje), `changed` (nowa wersja arkusza, bez obniżenia oceny, zamyka ocenę) albo `redraft` (wersja anulowana, ocena wraca do rozmowy oceniającej). Adresat sprzeciwu to parametr arkusza.
+_Avoid_: odwołanie (odwołanie do sądu pracy to osobne pojęcie), reklamacja
+
+**Termin** (`DeadlineSlot`, `evaluation_deadlines`):
+Zapisany termin kroku oceny (np. rozmowa rozpoczynająca, sporządzenie oceny, sprzeciw, decyzja DG, stopień z mocy prawa) liczony silnikiem terminów z dat faktycznych według strategii z wersji przepisów. Zbieracz powiadomień czyta zapisane terminy, nie liczy ich od nowa. Termin może być wstrzymany (długotrwała nieobecność).
+_Avoid_: deadline, data graniczna
+
+**Ocena archiwalna** (`ArchivedEvaluation`):
+Ocena sprzed wdrożenia systemu wpisana ręcznie przez kadry albo oceniającego: data sporządzenia, wynik, poziom, opcjonalnie oceny cząstkowe. Nie ma przebiegu ani arkusza, wlicza się do sygnału stopnia z mocy prawa i do statystyk.
+_Avoid_: import historii, skan oceny
+
+**Teczka sprawy** (`case_file`, adres `teczka`):
+Archiwum ZIP jednej oceny do sprzeciwu i sądu: bieżący arkusz, wszystkie wersje arkusza, dziennik zdarzeń w PDF i CSV, zawiadomienia o zmianie terminu i `manifest.json` ze skrótami SHA-256. Powstaje na żądanie, nie jest przechowywana.
+_Avoid_: akta, paczka dokumentów
+
+**Archiwum teczek pracownika** (`exportEmployeeArchive`):
+ZIP z teczką sprawy każdej oceny pracownika i manifestem. Kadry pobierają je przed anonimizacją po ustaniu zatrudnienia.
+_Avoid_: kopia zapasowa
+
+**Paczka EZD** (`ezd_package`, adres `paczka-ezd`):
+ZIP zatwierdzonej oceny z arkuszem i zawiadomieniami w PDF/A-2a oraz metadanymi XML (w tym znak sprawy wpisany ręcznie). Przekazanie do systemu EZD urzędu.
+_Avoid_: eksport do EZD
+
+**Długotrwała nieobecność** (`recordAbsence`, art. 81 ust. 7 ustawy):
+Okres nieobecności ocenianego albo oceniającego wpisany jako zdarzenie boczne oceny: od, opcjonalnie do. Okresy rozdzielone tylko dniami wolnymi się sklejają. Bez daty końca termin jest wstrzymany, po powrocie przesuwa się o dni nieobecności.
+_Avoid_: urlop, zwolnienie lekarskie
+
+**Strażnik danych wrażliwych** (`sensitiveDataWarnings`, usługa AI `sensitive_data`):
+Kontrola treści notatki pod kątem zdrowia, rodziny, religii i diagnoz. Zapis notatki używa deterministycznej listy słów kluczowych i wymaga potwierdzenia ostrzeżenia (`sensitive_data`). Wariant AI to osobny przebieg.
+_Avoid_: cenzura, filtr
+
 
 **Notatka** (`Note`, `note`):
 Obserwacja oceniającego z okresu oceny o konkretnym pracowniku. Czyta ją autor, kadry i bieżący oceniający otwartej oceny tego pracownika, a przy widoczności `tree` także przełożeni w drzewie. Edytuje ją tylko autor.
@@ -76,8 +121,8 @@ _Avoid_: komentarz, uwaga
 Treść arkusza A, B albo C jednej oceny, wypełniana w trakcie oceny. Dokument oceny, nie sama ocena.
 _Avoid_: formularz, ankieta
 
-**Wersja arkusza** (`version`):
-Numer wersji arkusza. Edycje roboczej wersji nadpisują ją w miejscu. Zablokowanie arkusza nie zmienia numeru. Nowa wersja powstaje dopiero przy korekcie albo sprzeciwie, a poprzednie zostają do odczytu.
+**Wersja arkusza** (`version`, stany `draft`, `locked`, `superseded`, `cancelled`):
+Numer wersji arkusza. Edycje roboczej wersji nadpisują ją w miejscu. Zablokowanie arkusza nie zmienia numeru. Nowa wersja powstaje dopiero przy korekcie zablokowanych pól (tylko admin, z powodem) albo sprzeciwie, a poprzednie zostają do odczytu jako zastąpione (`superseded`) albo anulowane po ponownym sporządzeniu (`cancelled`).
 _Avoid_: kopia, edycja
 
 **Rodzaj stanowiska** (`PositionKind`, `position_kind`):
@@ -93,7 +138,7 @@ Poprzednia treść notatki zachowana po edycji. Czas wpisu notatki się nie zmie
 _Avoid_: kopia notatki
 
 **Ustawienia urzędu** (`OfficeSettings`, `office_settings`):
-Jeden wiersz na urząd: przełącznik AI, okres przechowywania notatek, wyprzedzenie przypomnień, SMTP, domyślna miejscowość i adresat sprzeciwu na arkuszu A. Zmienia je admin. Hasło SMTP leży w Supabase Vault i nie wraca do klienta.
+Jeden wiersz na urząd: przełącznik AI, okres przechowywania notatek, wyprzedzenie przypomnień, próg „długo bez docenienia”, progi flag per oceniający, SMTP, domyślna miejscowość i adresat sprzeciwu na arkuszu A. Zmienia je admin. Hasło SMTP leży w Supabase Vault i nie wraca do klienta.
 _Avoid_: konfiguracja
 
 **Powiadomienie** (`Notification`, `notifications`):

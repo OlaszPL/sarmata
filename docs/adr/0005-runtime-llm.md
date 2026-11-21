@@ -48,3 +48,7 @@ Wszystkie pliki AI leżą w jednym katalogu danych na konto i system: `~/Library
 - Bielik-Minitron i Bielik-Guard: decyzja właściciela produktu (Minitron odpada, Guard nie jest wart zasobów).
 - Własny endpoint decyzyjny na społecznościowym GGUF Bielik-One: kalibracja niesprawdzona.
 - Bielik-One skwantyzowany na MLX, żeby zmieścił się obok modelu tekstowego na Macu 16 GB: wymaga łatki na bielik-one i nowej walidacji kalibracji (sekcja wyżej).
+
+## Uzupełnienie 21.11.2026
+
+Zdanie o profilu server na Macu z 16 GB opisuje tylko zachowanie `recommendRuntime`. Profil server instaluje kreator wyłącznie na Linuksie (ADR 0003), więc tier szybki dla Maca obowiązuje w praktyce w profilach light i standard. Zastrzeżenie o Bielik-One (tylko gdy mieści się obok modelu tekstowego) dotyczy też profilu server.

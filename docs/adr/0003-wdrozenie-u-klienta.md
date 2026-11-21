@@ -69,3 +69,7 @@ Rzeczy sprawdzalne tylko na prawdziwych komputerach albo maszynach wirtualnych:
 18. `sarmata ai` na działającej instalacji: wybór mniejszego modelu, instalacja `uv`, gdy go brakuje, Bielik-One, który nie wstaje (zostaje sam model tekstowy), `sarmata ai --off`.
 19. [ ] Bielik-One na vLLM z kartą NVIDIA (Linux, compute capability co najmniej 8.0, karta od 24 GB): instalacja `bielik-one[vllm]` i wtyczki `systemone-vllm-heads` przez `uv`, pierwsze pobranie pakietu i modelu bazowego do `<katalog danych AI>/huggingface`, `pnpm ai:smoke` zwraca decyzję z `/v1/systemone`, usługa systemd po restarcie. Na Macu M2 16 GB tego nie sprawdzimy.
 20. [ ] Bielik-One 11B (MLX na Macu od 48 GB albo vLLM): model bazowy `speakleash/Bielik-11B-v3.1-Instruct` jest bramkowany, pobranie wymaga tokenu zapisanego w `<katalog danych AI>/huggingface`.
+
+## Uzupełnienie 21.11.2026
+
+Opis profilu server („Bielik-One na vLLM”) czytaj z zastrzeżeniem z ADR 0005: Bielik-One instaluje się tylko tam, gdzie mieści się na stałe obok modelu tekstowego (na vLLM karta NVIDIA od 24 GB), a gdzie nie, decyzje podejmuje model tekstowy. Profil server jest tylko dla Linuksa.

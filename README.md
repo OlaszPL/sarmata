@@ -29,7 +29,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm db:start
        pnpm db:reset
 
-   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa).
+   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy otwarte oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa), cztery zamknięte oceny do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu oraz przyznanie stopnia), byłego pracownika Romana Dawnego z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu. Notatki Marka, dwa przebiegi AI (szkic arkusza z edytowanym fragmentem i sygnały HR) oraz ustawienia SMTP wskazujące na Mailpit pochodzą z `database/supabase/seed.sql`.
 
 6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp z Metal (17 MB) i model zalecany dla tego komputera z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai`. Na Macu z 16 GB (np. M2) to Bielik-4.5B-v3.0 Q4_K_M (2,9 GB):
 
@@ -102,7 +102,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
     Prawdziwą instalację (`install` bez `--dry-run`) uruchamiaj tylko na maszynie wirtualnej albo osobnym komputerze: zakłada `~/Sarmata` (macOS) albo `/opt/sarmata` (Linux), kontenery projektu `sarmata` i porty 3000 i 8000.
 
-Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`. Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`.
+Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej”): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test` (Olga Oceniająca, przełożona Marka, Ewy i Stefana). Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`. Pracownicy demo (Marek, Ewa, Stefan, Roman) nie mają kont, bo oceniany nie używa aplikacji.
 
 ## Skrypty
 
@@ -110,9 +110,11 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 |---|---|
 | `pnpm run doctor` | sprawdza wymagane narzędzia i podpowiada instalację |
 | `pnpm check` | lint, format, typecheck i testy (to samo co CI) |
+| `pnpm build` | build wszystkich pakietów przez Turborepo |
 | `pnpm test` | testy wszystkich pakietów przez Turborepo |
 | `pnpm typecheck` | kontrola typów |
-| `pnpm lint`, `pnpm format` | ESLint i Prettier |
+| `pnpm lint`, `pnpm lint:fix` | ESLint, z poprawianiem |
+| `pnpm format`, `pnpm format:check` | Prettier, z zapisem i tylko sprawdzenie |
 | `pnpm secrets:decrypt` | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
 | `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 (SMTP 55425) |
 | `pnpm db:reset` | migracje od zera, dane demo, synchronizacja oficjalnych wersji przepisów i oceny demo |
@@ -143,7 +145,7 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA) |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409) |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
@@ -161,7 +163,7 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 | `PORT` | `pnpm dev` | domyślnie 3000, `scripts/termic-run.sh` ustawia port taska |
 | `SARMATA_AI_ENABLED` | `@sarmata/ai` | domyślnie `false`, AI wyłączone |
 | `SARMATA_AI_TIMEOUT_MS` | `@sarmata/ai` | domyślnie `60000` |
-| `SARMATA_AI_TEXT_BASE_URL`, `SARMATA_AI_TEXT_MODEL` | `@sarmata/ai`, model tekstowy zgodny z OpenAI | np. `http://127.0.0.1:55490/v1` i `bielik-11b-v3.1-instruct` przy lokalnym llama-server z `pnpm ai:start`, bez nich model tekstowy jest wyłączony |
+| `SARMATA_AI_TEXT_BASE_URL`, `SARMATA_AI_TEXT_MODEL` | `@sarmata/ai`, model tekstowy zgodny z OpenAI | np. `http://127.0.0.1:55490/v1` i `bielik-4.5b-v3.0-instruct` (albo `bielik-11b-v3.1-instruct`, zależnie od modelu wybranego przez `pnpm ai:setup`) przy lokalnym llama-server z `pnpm ai:start`, bez nich model tekstowy jest wyłączony |
 | `SARMATA_AI_DECISION_BASE_URL`, `SARMATA_AI_DECISION_MODEL` | `@sarmata/ai`, Bielik-One `/v1/systemone` | np. `http://127.0.0.1:8026/v1` i `decision`, bez nich decyzje są wyłączone |
 | `SARMATA_AI_TEXT_API_KEY`, `SARMATA_AI_DECISION_API_KEY` | `@sarmata/ai` | tylko gdy serwer modelu wymaga klucza. To sekret: dopisz go do `secrets/dev.enc.env` przez `sops secrets/dev.enc.env`, nigdy jawnie do repo |
 | `SARMATA_WORKER_IDLE_DELAY_MS` | worker | domyślnie `1000`, przerwa po pustym odczycie kolejki |
@@ -236,7 +238,7 @@ Kreator pyta o adres projektu, klucz publiczny, klucz serwisowy i adres połącz
 
 ### Moduł AI
 
-Kreator wykrywa sprzęt i proponuje modele Bielik, które się zmieszczą: najpierw zalecany, potem mniejsze i większe, albo „bez AI”. Gdy obok modelu tekstowego zmieści się na stałe Bielik-One (Mac z Apple Silicon od 32 GB, Linux z kartą NVIDIA od 24 GB), kreator pyta, czy go zainstalować. W przeciwnym razie pisze, dlaczego go pomija, ile pamięci by potrzebował i od jakiego sprzętu się zmieści, a decyzje podejmuje model tekstowy z wymuszonym formatem JSON. Na Macu z 16 GB instaluje się więc tylko Bielik-11B Q4_K_M. Model bazowy Bielik-One 11B (Mac od 48 GB, karta od 48 GB) wymaga konta Hugging Face z zaakceptowaną licencją: token zapisuje `HF_HOME="<katalog danych AI>/huggingface" uvx --from huggingface_hub hf auth login`. Modele pobierają się raz na maszynę do katalogu danych AI konta (szczegóły w części dev wyżej). Bielik-One instaluje się przez `uv`, a gdy go brakuje, kreator instaluje `uv` sam (Homebrew na macOS, oficjalny instalator przypiętej wersji do katalogu danych AI na Linuksie).
+Kreator wykrywa sprzęt i proponuje modele Bielik, które się zmieszczą: najpierw zalecany, potem mniejsze i większe, albo „bez AI”. Gdy obok modelu tekstowego zmieści się na stałe Bielik-One (Mac z Apple Silicon od 32 GB, Linux z kartą NVIDIA od 24 GB), kreator pyta, czy go zainstalować. W przeciwnym razie pisze, dlaczego go pomija, ile pamięci by potrzebował i od jakiego sprzętu się zmieści, a decyzje podejmuje model tekstowy z wymuszonym formatem JSON. Na Macu z 16 GB instaluje się więc tylko Bielik-4.5B Q4_K_M. Model bazowy Bielik-One 11B (Mac od 48 GB, karta od 48 GB) wymaga konta Hugging Face z zaakceptowaną licencją: token zapisuje `HF_HOME="<katalog danych AI>/huggingface" uvx --from huggingface_hub hf auth login`. Modele pobierają się raz na maszynę do katalogu danych AI konta (szczegóły w części dev wyżej). Bielik-One instaluje się przez `uv`, a gdy go brakuje, kreator instaluje `uv` sam (Homebrew na macOS, oficjalny instalator przypiętej wersji do katalogu danych AI na Linuksie).
 
 AI instaluje się po uruchomieniu systemu. Kreator rejestruje najpierw serwer modelu tekstowego i włącza AI w aplikacji dopiero wtedy, gdy ten serwer odpowiada. Bielik-One jest dodatkiem: gdy się nie uda, AI działa z samym modelem tekstowym. Gdy nie uda się nic, aplikacja działa bez AI. Polecenie `sarmata ai` doinstalowuje, zmienia albo naprawia moduł AI na działającej instalacji, a `sarmata ai --off` go wyłącza. Usługi AI startują z systemem: systemd na Linuksie, launchd na macOS, zadanie przy zalogowaniu na Windows.
 
@@ -271,4 +273,4 @@ Kreator można uruchomić ponownie z tej samej paczki: każdy krok da się powt�
 
 ## Dokumentacja
 
-Architektura: `docs/architektura.md`, decyzje: `docs/adr/`, słownik: `GLOSSARY.md`, wymagania: `docs/wymagania-i-kontekst.md`, znak i logo: `docs/brand/`.
+Architektura: `docs/architektura.md`, specyfikacja funkcjonalności backendu: `docs/funkcjonalnosci.md`, decyzje: `docs/adr/`, słownik: `GLOSSARY.md`, wymagania: `docs/wymagania-i-kontekst.md`, znak i logo: `docs/brand/`.

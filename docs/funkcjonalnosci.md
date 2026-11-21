@@ -1,6 +1,18 @@
 # Funkcjonalności: specyfikacja backendu
 
-Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, operacje serwisów, uprawnienia, usługi AI, eksport i statystyki. Ekrany ustalimy później, gdy backend będzie gotowy. Pojęcia są w `GLOSSARY.md`, decyzje architektury w `docs/adr/`. Pojęcia piszemy po polsku, identyfikatory w kodzie po angielsku (ustalenie z wątkiem architektury).
+Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, operacje serwisów, uprawnienia, usługi AI, eksport i statystyki. Pojęcia są w `GLOSSARY.md`, decyzje architektury w `docs/adr/`. Pojęcia piszemy po polsku, identyfikatory w kodzie po angielsku (ustalenie z wątkiem architektury).
+
+## Stan realizacji
+
+Backend jest zaimplementowany w zakresie planów B1 do B9: dostęp i role (RLS, `access.can`), pracownicy i oceny ze stanami i terminami, zdarzenia boczne, notatki i ustawienia urzędu, powiadomienia z zamknięciem automatycznym, statystyki i rejestr kadr, eksporty, usługi AI przez kolejkę, edytor reguł i katalog szkoleń, ustanie zatrudnienia z retencją i anonimizacją. Tekst poniżej opisuje to, co działa. Czego nie ma w kodzie, jest oznaczone jako „nie zaimplementowane”. Zbiorcza lista:
+
+- **Ekrany.** Frontend ma tylko logowanie, stronę `/brak-urzedu`, stronę startową z powitaniem i route handler eksportu. Reszta ekranów, w tym obsługa decyzji o fragmentach AI i graf reguł, jest przed nami.
+- **Konta.** Nie zaimplementowane: zaproszenia kont i nadawanie ról w aplikacji. Konta zakłada kreator i seed funkcją `access.create_account`. SSO i AD/LDAP poza MVP.
+- **Import CSV pracowników**: nie zaimplementowany.
+- **Strażnik danych wrażliwych oparty o AI przy zapisie notatki**: nie podpięty. Zapis notatki używa listy słów kluczowych, a usługa AI `sensitive_data` istnieje jako osobny przebieg do wywołania przez front.
+- **Ostrzeżenia z przepisów**: o stopniu, który przysługuje z mocy prawa mimo wniosku, i o konflikcie ról, gdy oceniającym jest DG rozpatrujący sprzeciw, nie są zaimplementowane.
+- **Pobieranie archiwum teczek pracownika**: jest serwis (`archiveFor(db).exportEmployeeArchive`), nie ma jeszcze route handlera ani przycisku.
+- **Udostępnianie oceny ocenianemu**: poza zakresem.
 
 ## Użytkownicy i role
 
@@ -27,7 +39,7 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 - Oceniający wpisuje dane ocenianego: imię, nazwisko, stanowisko, komórkę (komórka jako tekst, bez struktury organizacyjnej). Bez PESEL.
 - Backend szuka podobnych rekordów pracowników (pg_trgm) i proponuje połączenie. Decyzję o połączeniu podejmuje człowiek.
 - Stanowisko i komórka zapisują się w ocenie jako migawka z dnia oceny, bo z czasem się zmieniają.
-- Import CSV pracowników przez kadry jako dodatek.
+- Import CSV pracowników przez kadry miał być dodatkiem. Nie zaimplementowany.
 
 ## Zdarzenia oceny
 
@@ -42,7 +54,7 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 
 - Jedna tabela notatek o pracowniku. Pola: typ (`obserwacja`, `rozmowa_biezaca`, `docenienie`, `fakt_obciazenia`), data zdarzenia, opcjonalne kryterium, znak (plus albo minus), flaga „czy zakomunikowano”.
 - Znacznik czasu wpisu jest niezmienialny, edycje są wersjonowane. To chroni przed dopisywaniem wstecz (IV P 74/26).
-- Strażnik danych wrażliwych (zdrowie, rodzina, religia, diagnozy) prosi autora o przeformułowanie przed zapisem. Teraz to deterministyczna lista rdzeni słów (`sensitiveDataWarnings`), a serwis zwraca błąd `sensitive_data` z listą ostrzeżeń i zapisuje dopiero po potwierdzeniu. Strażnik oparty o AI dojdzie razem z usługami AI (B7).
+- Strażnik danych wrażliwych (zdrowie, rodzina, religia, diagnozy) prosi autora o przeformułowanie przed zapisem. Teraz to deterministyczna lista rdzeni słów (`sensitiveDataWarnings`), a serwis zwraca błąd `sensitive_data` z listą ostrzeżeń i zapisuje dopiero po potwierdzeniu. Wariant oparty o AI to osobna usługa `sensitive_data` (sekcja „Usługi AI”), która nie jest podpięta pod zapis notatki.
 - Nazwy w kodzie: typ notatki to `NoteKind` (`observation`, `ongoing_conversation`, `appreciation`, `workload_fact`), wersje edycji to `NoteVersion`. Fakt obciążenia nie ma znaku.
 - Czyta autor, kadry i bieżący oceniający otwartej oceny tego pracownika. Po zmianie oceniającego nowy czyta wszystkie notatki, poprzedni traci wgląd do cudzych. Przy widoczności `tree` czytają też przełożeni w drzewie. Edytuje tylko autor, kadry nie edytują cudzych notatek.
 - Notatki nie mają ocen liczbowych. Rozmowy bieżące realizują system informacji zwrotnej z zarządzenia nr 6.
@@ -219,7 +231,7 @@ Każde przejście to zdarzenie w dzienniku z datą faktyczną. Przejścia sprawd
 
 ## Scenariusz demo
 
-Ustalimy przy frontendzie.
+Dane demo ładuje `pnpm db:reset` (seed SQL plus `pnpm db:seed:demo`), opis kont i danych jest w README. Urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej” ma konta admina, kadr i oceniającego. Pracownicy Marek, Ewa i Stefan mają otwarte oceny w stanach `okres`, `rozmowa` (bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia) i `sprzeciw` (z oceną archiwalną i sygnałem stopnia z mocy prawa). Do tego trzy notatki Marka z wersjonowaną edycją, dwa przebiegi AI (szkic arkusza z edytowanym fragmentem i sygnały HR), cztery zamknięte oceny do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu oraz przyznanie stopnia), były pracownik z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu. Scenariusz ekranów ustalimy przy frontendzie.
 
 ## Usługi AI (pełna lista)
 
@@ -246,7 +258,7 @@ Retencja: treść przebiegów AI (wejście, wynik, komunikat porażki, tekst po 
 
 ## Konta i logowanie
 
-- Supabase Auth, e-mail i hasło. Admin zaprasza konto e-mailem i nadaje rolę. Bez SMTP admin ustawia hasło tymczasowe.
+- Supabase Auth, e-mail i hasło. Docelowo admin zaprasza konto e-mailem i nadaje rolę, a bez SMTP ustawia hasło tymczasowe. Nie zaimplementowane: dziś konto zakłada funkcja `access.create_account` (kreator i seed).
 - Pierwsze konto admina tworzy kreator instalacji.
 - AD/LDAP i SSO to dalszy krok, poza MVP.
 
@@ -278,7 +290,7 @@ Te funkcje wynikają wprost z prawa i materiałów KPRM, więc wchodzą bez dysk
 - Silnik terminów: Kodeks cywilny (koniec miesiąca, przesunięcie z soboty i dnia wolnego na następny dzień roboczy), kalendarz świąt z Wigilią od 2025, testy z `liczenie terminów.docx`. Termin sporządzenia jest wyliczany, a oceniający może go tylko skrócić.
 - Ścieżka negatywna: rozmowa rozpoczynająca w 7 dni, ponowna ocena po 6 miesiącach, nieobecność nie przedłuża tych 6 miesięcy (art. 81 ust. 9).
 - Zmiana terminu przez oceniającego tylko z jednej z 4 przyczyn i po 6 miesiącach (art. 81 ust. 8, § 8). Backend generuje pisemne zawiadomienie (PDF) z kopią do arkusza.
-- Część III (wniosek o stopień) tylko dla urzędnika przy ocenie pozytywnej, z umotywowaniem. Przy IX stopniu wniosek zablokowany. Ostrzeżenie, gdy stopień i tak przysługuje z mocy prawa.
+- Część III (wniosek o stopień) tylko dla urzędnika przy ocenie pozytywnej, z umotywowaniem. Przy IX stopniu wniosek zablokowany (bramka `grade_request_max_grade`), wniosek tylko o stopień o jeden wyższy. Ostrzeżenie, gdy stopień i tak przysługuje z mocy prawa, nie jest zaimplementowane.
 - Sygnał dla kadr o drugiej kolejnej ocenie negatywnej (art. 71).
-- Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG, który rozpatruje sprzeciw.
+- Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG, który rozpatruje sprzeciw. Nie zaimplementowane.
 - Odmowa podpisu przy zapoznaniu jest zdarzeniem z datą i adnotacją na arkuszu („oceniany odmówił podpisania”), uruchamia te same terminy co zapoznanie.

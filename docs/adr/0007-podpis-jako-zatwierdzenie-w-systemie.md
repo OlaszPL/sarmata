@@ -22,3 +22,8 @@ To odpowiada wymaganiom rozliczalności i integralności: § 20 rozporządzenia 
 
 - **Podpis zaufany albo kwalifikowany (PAdES) przez gov.pl:** zależność zewnętrzna, nie działa offline, PESEL zapisany w pliku, a mentorzy go nie wymagają.
 - **Lekkie konto ocenianego do potwierdzeń:** odrzucone przez właściciela produktu. Aplikacja służy oceniającemu.
+
+## Uzupełnienie 21.11.2026
+
+- Wydruk „jako opcja dla urzędu” ma postać parametru `podpis=1` (`signatureBox`) w eksporcie arkusza i zawiadomienia: dokument dostaje puste pola na podpis odręczny, a zatwierdzenia z dziennika zostają w treści (`docs/funkcjonalnosci.md`, sekcja „Eksport”).
+- Sformułowanie „tylko dopisywanie” ma jeden wyjątek: po 10 latach od końca roku ustania zatrudnienia anonimizacja pracownika usuwa jego dziennik zdarzeń w transakcji ze znacznikiem `lifecycle.purge_marker`, który ustawia wyłącznie funkcja `anonymize_employee` dla roli serwisowej. Zatwierdzenia są więc nieusuwalne przez klientów i przez właściciela bazy poza tą drogą.
