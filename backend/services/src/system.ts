@@ -10,3 +10,4 @@ export {
   type NotificationDeliveryDependencies,
   createNotificationDelivery,
 } from './notifications/digest-delivery';
+export { type EvaluationClosing } from './evaluations/evaluation-closing';

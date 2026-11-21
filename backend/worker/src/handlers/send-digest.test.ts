@@ -37,7 +37,10 @@ describe('sendDigestHandler', () => {
   });
 
   it('registry contains the digest job type', () => {
-    const types = jobHandlersFor({ delivery: fakeDelivery() }).map((handler) => handler.type);
+    const types = jobHandlersFor({
+      delivery: fakeDelivery(),
+      closing: { closeUnobjected: () => Promise.resolve({ closed: 0 }) },
+    }).map((handler) => handler.type);
     expect(types).toContain(DIGEST_JOB_TYPE);
   });
 });

@@ -360,6 +360,11 @@ isOneToOne: false
 "change_evaluator":
 { Args: { "p_evaluation_id": string,"p_new_evaluator_account_id": string,"p_occurred_on": string,"p_reason": string }; Returns: string
                            },
+"close_unobjected_evaluations":
+{ Args: { "p_today": string }; Returns: {
+              "evaluation_id": string,"office_id": string
+            }[]
+                           },
 "collect_notifications":
 { Args: { "p_today": string }; Returns: {
               "created": number,"queued": number,"resolved": number

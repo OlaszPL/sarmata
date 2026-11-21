@@ -1,5 +1,5 @@
 import { createJobQueue, createNotificationDeliveryStore } from '@sarmata/repositories';
-import { createNotificationDelivery } from '@sarmata/services/system';
+import { createNotificationDelivery, createSystemServices } from '@sarmata/services/system';
 import { connectAndSyncRegulations } from './bootstrap';
 import { type JobType, jobHandlersFor } from './handlers/index';
 import { jsonLogger } from './logger';
@@ -38,7 +38,10 @@ for (const name of ['SIGTERM', 'SIGINT'] as const) {
 await runWorker(
   {
     queue: createJobQueue<JobType>(client),
-    handlers: jobHandlersFor({ delivery }),
+    handlers: jobHandlersFor({
+      delivery,
+      closing: createSystemServices(client).evaluationClosing,
+    }),
     logger: jsonLogger,
     idleDelayMs: config.idleDelayMs,
   },

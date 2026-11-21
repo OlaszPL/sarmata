@@ -50,6 +50,11 @@ export {
   createNotificationRepository,
 } from './notifications';
 export {
+  type ClosedEvaluation,
+  type EvaluationClosingStore,
+  createEvaluationClosingStore,
+} from './evaluation-closing';
+export {
   type CollectReport,
   type DigestFacts,
   type NotificationDeliveryStore,
