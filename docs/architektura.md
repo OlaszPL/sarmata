@@ -73,6 +73,7 @@ flowchart LR
 | [0004](adr/0004-repozytoria-supabase-js.md) | warstwy backendu, pobieranie danych, minimum tożsamości |
 | [0005](adr/0005-runtime-llm.md) | runtime LLM i tiery modeli Bielik |
 | [0006](adr/0006-reguly-jako-wersjonowane-dane.md) | reguły prawne jako wersjonowane dane ze slotami strategii |
+| [0007](adr/0007-podpis-jako-zatwierdzenie-w-systemie.md) | podpis arkusza jako zatwierdzenie w systemie przez oceniającego |
 
 ## Odłożone do wątku funkcjonalnego
 
