@@ -62,15 +62,15 @@ describe('notes', () => {
       occurredOn: SIGNAL,
       sign: 'minus',
       communicated: false,
-      body: 'Wersja pierwsza',
+      body: 'Test: wersja 1',
     });
-    await notes.update(note.id, { body: 'Wersja druga' });
-    await notes.update(note.id, { body: 'Wersja trzecia', communicated: true });
+    await notes.update(note.id, { body: 'Test: wersja 2' });
+    await notes.update(note.id, { body: 'Test: wersja 3', communicated: true });
     const versions = await notes.versions(note.id);
     expect(versions.map((v) => [v.version, v.body, v.validTo === null])).toEqual([
-      [1, 'Wersja pierwsza', false],
-      [2, 'Wersja druga', false],
-      [3, 'Wersja trzecia', true],
+      [1, 'Test: wersja 1', false],
+      [2, 'Test: wersja 2', false],
+      [3, 'Test: wersja 3', true],
     ]);
   });
 
@@ -83,10 +83,31 @@ describe('notes', () => {
       occurredOn: SIGNAL,
       sign: 'plus',
       communicated: false,
-      body: 'Tylko autor edytuje',
+      body: 'Test: tylko autor edytuje',
     });
     const hr = await signedIn('kadry@kropka.test');
     expect(await createNoteRepository(hr).update(note.id, { body: 'Zmiana kadr' })).toBeNull();
+  });
+});
+
+describe('demo seed', () => {
+  it('demo seed has notes about Marek with one edited', async () => {
+    const evaluator = await signedIn('oceniajacy@kropka.test');
+    const marek = await employeeId(evaluator, 'Merytoryczny');
+    // Other tests in this file write notes with the "Test:" prefix.
+    const seeded = (await createNoteRepository(evaluator).listForEmployee(marek)).filter(
+      (note) => !note.body.startsWith('Test:'),
+    );
+    expect(seeded).toHaveLength(3);
+    expect(seeded.filter((note) => note.version === 2)).toHaveLength(1);
+    expect(seeded.map((note) => note.kind).sort()).toEqual([
+      'observation',
+      'ongoing_conversation',
+      'workload_fact',
+    ]);
+    expect(seeded.find((note) => note.kind === 'workload_fact')?.sign).toBeNull();
+    const settings = await createOfficeSettingsRepository(evaluator).get();
+    expect(settings).toMatchObject({ notesRetentionMonths: 36, aiEnabled: true });
   });
 });
 
