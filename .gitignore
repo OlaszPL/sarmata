@@ -277,3 +277,6 @@ __marimo__/
 docs/**/raw/
 docs/**/text/
 archive/
+
+# local browser tool snapshots
+.playwright-mcp/
