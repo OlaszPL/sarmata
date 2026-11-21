@@ -9,7 +9,7 @@ export type {
 } from './models.ts';
 export { LLAMA_CPP_RELEASE } from './llama-cpp-release.ts';
 export type { LlamaBackend, LlamaCppBundle } from './llama-cpp-release.ts';
-export { recommendRuntime } from './recommend.ts';
+export { INSTALL_PROFILES, recommendRuntime, runtimeChoices } from './recommend.ts';
 export type { InstallProfile, RecommendOptions, RuntimeRecommendation } from './recommend.ts';
 export { installLlamaCpp } from './llama-cpp-install.ts';
 export type { LlamaCpp } from './llama-cpp-install.ts';
@@ -36,13 +36,19 @@ export {
   isBielikOneReady,
   startBielikOne,
 } from './bielik-one.ts';
-export type { BielikOneCommand, BielikOneInstall, BielikOneServer } from './bielik-one.ts';
+export type {
+  BielikOneCommand,
+  BielikOneInstall,
+  BielikOneServer,
+  InstallBielikOneOptions,
+} from './bielik-one.ts';
 export { detectHardware } from './hardware.ts';
 export type { ComputeDevice, Hardware, NvidiaGpu } from './hardware.ts';
-export { fakeMachine, localMachine } from './machine.ts';
+export { architectureOf, fakeMachine, localMachine, operatingSystemOf } from './machine.ts';
 export type {
   Architecture,
   CommandResult,
+  CommandRunner,
   FakeCommand,
   FakeMachine,
   FakeMachineSpec,

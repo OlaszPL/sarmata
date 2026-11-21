@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { fakeMachine, localMachine } from './index.ts';
+import { architectureOf, fakeMachine, localMachine, operatingSystemOf } from './index.ts';
+
+describe('platform names', () => {
+  it('maps Node names and rejects the rest', () => {
+    expect(operatingSystemOf('darwin')).toBe('macos');
+    expect(operatingSystemOf('win32')).toBe('windows');
+    expect(() => operatingSystemOf('aix')).toThrow(/Unsupported platform/);
+    expect(architectureOf('arm64')).toBe('arm64');
+    expect(() => architectureOf('ia32')).toThrow(/Unsupported architecture/);
+  });
+});
 
 describe('localMachine', () => {
   it('runs a command and reports its exit code and output', async () => {
@@ -13,6 +23,27 @@ describe('localMachine', () => {
   it('reports a command that does not exist as not started', async () => {
     const result = await localMachine().run('sarmata-command-that-does-not-exist', []);
     expect(result.exitCode).toBeNull();
+  });
+
+  it('writes stdin to the command', async () => {
+    const result = await localMachine().run(
+      process.execPath,
+      ['-e', 'process.stdin.pipe(process.stdout)'],
+      { stdin: 'tajne' },
+    );
+    expect(result).toMatchObject({ exitCode: 0, stdout: 'tajne' });
+  });
+
+  it('kills a command that runs past its time limit', async () => {
+    const result = await localMachine().run(
+      process.execPath,
+      ['-e', 'setTimeout(() => {}, 60000)'],
+      {
+        timeoutMs: 200,
+      },
+    );
+    expect(result.exitCode).toBeNull();
+    expect(result.stderr).toContain('timed out');
   });
 
   it('describes this computer', () => {

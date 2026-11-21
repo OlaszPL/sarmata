@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MODEL_FILES,
   recommendRuntime,
+  runtimeChoices,
   type ComputeDevice,
   type Hardware,
   type InstallProfile,
@@ -234,6 +235,33 @@ describe('recommendRuntime: Bielik-One', () => {
     ['in the light profile', withNvidia('linux', RTX_4090), 'light'],
   ])('leaves Bielik-One out %s', (_name, hardware, profile) => {
     expect(recommendRuntime(hardware, profile).bielikOne).toBeNull();
+  });
+});
+
+describe('runtimeChoices', () => {
+  const ids = (hardware: Hardware, profile: InstallProfile): (string | undefined)[] =>
+    runtimeChoices(hardware, profile).map((choice) => choice.model?.id);
+
+  it('puts the recommended tier first, then the other models that fit, smallest first', () => {
+    expect(ids(withNvidia('linux', RTX_4070), 'standard')).toEqual([
+      'bielik-11b-v3.1-q4_k_m',
+      'bielik-4.5b-v3.0-q8_0',
+      'bielik-11b-v3.1-q5_k_m',
+      'bielik-11b-v3.1-q6_k',
+    ]);
+  });
+
+  it('offers only Bielik-4.5B without a GPU', () => {
+    expect(ids(linuxLaptop, 'standard')).toEqual(['bielik-4.5b-v3.0-q8_0']);
+  });
+
+  it('offers nothing below 8 GB of RAM', () => {
+    expect(runtimeChoices({ ...linuxLaptop, memoryMiB: 4 * GiB }, 'light')).toEqual([]);
+  });
+
+  it('keeps Bielik-One for a smaller model when it fits next to it', () => {
+    const choices = runtimeChoices(mac(32), 'standard');
+    expect(choices.every((choice) => choice.bielikOne?.engine === 'mlx')).toBe(true);
   });
 });
 

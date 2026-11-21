@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defaultDataDir, type Machine, type ProgressEvent } from '../src/index.ts';
 
-/** One llama-server for every worktree, next to the Supabase ports 554xx (plan 2). */
+/** One llama-server for every worktree, next to the local Supabase ports 55421 and 55422 (database/supabase/config.toml). */
 export const DEV_PORT = 55490;
 
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
