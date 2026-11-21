@@ -272,3 +272,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# research downloads (bulk, not for context)
+docs/**/raw/
+docs/**/text/
+archive/
