@@ -404,6 +404,43 @@ describe('sensitive data', () => {
     });
   });
 
+  it('sensitive data drops a rewrite the dictionary still flags', async () => {
+    const { runner } = await runnerWith({
+      objects: {
+        sensitive_data: {
+          warnings: [],
+          rewrite: 'Po rozstaniu z małżonką 03.11.2026 spóźnił się z opinią.',
+        },
+      },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Po rozwodzie 03.11.2026 spóźnił się z opinią.',
+      keywordWarnings: [{ category: 'family', fragment: 'rozwodzie' }],
+    });
+    expect(output).toEqual({
+      warnings: [{ category: 'family', fragment: 'rozwodzie' }],
+      rewrite: null,
+    });
+  });
+
+  it('sensitive data drops a rewrite with a changed name', async () => {
+    const text = 'Pani Ewa była na zwolnieniu lekarskim, 14.11.2026 oddała raport.';
+    const keywordWarnings = [{ category: 'health' as const, fragment: 'zwolnieniu lekarskim' }];
+    const mangled = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'Panni Ewa 14.11.2026 oddała raport.' } },
+    });
+    const dropped = await executeOk(mangled.runner, 'sensitive_data', { text, keywordWarnings });
+    expect(dropped.output).toEqual({ warnings: keywordWarnings, rewrite: null });
+    const intact = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'Pani Ewa 14.11.2026 oddała raport.' } },
+    });
+    const kept = await executeOk(intact.runner, 'sensitive_data', { text, keywordWarnings });
+    expect(kept.output).toEqual({
+      warnings: keywordWarnings,
+      rewrite: 'Pani Ewa 14.11.2026 oddała raport.',
+    });
+  });
+
   it('sensitive data has no rewrite without warnings', async () => {
     const { runner } = await runnerWith({
       objects: { sensitive_data: { warnings: [], rewrite: 'Coś innego.' } },
