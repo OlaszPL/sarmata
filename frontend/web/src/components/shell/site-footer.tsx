@@ -10,7 +10,7 @@ const links = [
 /** `publicOnly` hides links to pages that need an office membership (sign-in, no-office pages). */
 export function SiteFooter({ publicOnly = false }: { publicOnly?: boolean }) {
   return (
-    <footer className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-8 py-7">
+    <footer className="mx-auto flex max-w-[calc(75rem+4rem)] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-8 py-7">
       <div>
         <ul className="font-heading flex flex-wrap gap-x-7 gap-y-2 leading-[normal]">
           {links

@@ -123,6 +123,11 @@
   h3 {
     @apply font-heading;
   }
+
+  /* WCAG 1.4.8: running text stays readable, at most about 70 characters per line. */
+  main p {
+    max-width: 70ch;
+  }
 }
 
 /*

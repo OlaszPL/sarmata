@@ -71,7 +71,7 @@ export function AppShell({
         <main
           id="main"
           tabIndex={-1}
-          className="border-rule mx-auto flex w-full max-w-[90rem] flex-1 flex-col border-x outline-none"
+          className="border-rule mx-auto flex w-full max-w-[75rem] flex-1 flex-col border-x outline-none"
         >
           {children}
         </main>

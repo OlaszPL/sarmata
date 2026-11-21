@@ -20,13 +20,13 @@ export function Hero({ data }: { data: DashboardData }) {
         <p className="text-ink-muted leading-[normal]">{longDate(data.today)}</p>
         <h1
           id="dashboard-heading"
-          className="font-heading mt-3 text-[2.25rem] leading-[1.1136] font-semibold tracking-[-0.0182em] sm:text-[2.75rem]"
+          className="font-heading mt-3 text-[2.25rem] leading-[1.1136] font-semibold tracking-[-0.0182em] sm:text-[2.5rem]"
         >
           Dzień dobry. <span className="block">{data.headline}</span>
         </h1>
       </div>
       {/* The grid lines take 1px of the padding next to them, so the block stays 284px high as in the mockup. */}
-      <div className="border-rule grid grid-cols-1 border-t sm:grid-cols-2 lg:w-[40rem] lg:shrink-0 lg:border-t-0 lg:border-l">
+      <div className="border-rule grid grid-cols-1 border-t sm:grid-cols-2 lg:w-[34rem] lg:shrink-0 lg:border-t-0 lg:border-l">
         <StatTile label="Do zrobienia" value={String(summary.todo)} hint={nearestHint} emphasis />
         <StatTile
           label="Po terminie"
