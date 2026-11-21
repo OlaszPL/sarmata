@@ -149,6 +149,29 @@ describe('sheet draft', () => {
     });
   });
 
+  it('makes no call for a criterion without tagged notes', async () => {
+    const { runner, fake } = await runnerWith({
+      objects: {
+        sheet_draft_criterion: perCriterion({
+          communication: {
+            sentences: [{ text: '12.03.2026 przekazał ustalenia.', noteIds: ['N1'] }],
+            points: 7,
+          },
+        }),
+        sheet_draft_summary: emptySummary,
+      },
+    });
+    const only = { ...draftInput, notes: [draftInput.notes[0]] };
+    const { output } = await executeOk(runner, 'sheet_draft', only);
+    expect(fake.requests.map((request) => schemaOf(request))).toEqual([
+      'sheet_draft_criterion',
+      'sheet_draft_summary',
+    ]);
+    expect(output).toMatchObject({
+      ratings: [{ points: 7 }, { criterionId: 'reliability', points: null, sentences: [] }],
+    });
+  });
+
   it('drops sentences citing unknown notes', async () => {
     const { runner } = await runnerWith({
       objects: {

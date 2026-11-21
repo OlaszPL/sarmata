@@ -122,13 +122,15 @@ export const sheetDraft: Task<'sheet_draft'> = async (input, { ai, system, progr
     `${header}Kryteria:\n${describeCriteria(input.criteria)}\n\n` +
     `Notatki oceniającego:\n${describeNotes(input.notes, notes.aliasOf)}\n\n`;
 
+  const tagged = input.notes.some((note) => note.criterionId !== null);
   const ratings: Rating[] = [];
   for (const criterion of input.criteria) {
-    // A 4.5B model files a note under the wrong criterion when it sees them all, so the call sees
-    // only the notes tagged for this criterion and the untagged ones.
-    const relevant = input.notes.filter(
-      (note) => note.criterionId === null || note.criterionId === criterion.id,
-    );
+    // A 4.5B model files a note under the wrong criterion when it sees them all, and writes from the
+    // indicators when nothing fits. So the call sees only the notes tagged for this criterion, and
+    // none (no call) means too little data. Without any tags the call sees every note.
+    const relevant = tagged
+      ? input.notes.filter((note) => note.criterionId === criterion.id)
+      : input.notes;
     if (relevant.length === 0) {
       ratings.push(ratingOf(criterion, null));
       progress.output(draft(ratings, EMPTY_SUMMARY));
@@ -148,7 +150,7 @@ export const sheetDraft: Task<'sheet_draft'> = async (input, { ai, system, progr
         `${header}Kryterium: ${criterion.id} (${criterion.name}).\n` +
         `Wskaźniki zachowań: ${criterion.indicators.length > 0 ? criterion.indicators.join('; ') : 'brak'}.\n\n` +
         `Notatki oceniającego:\n${describeNotes(relevant, notes.aliasOf)}\n\n` +
-        `Zadanie: kryterium ${criterion.id} (${criterion.name}). Użyj tylko notatek, które pokazują właśnie to kryterium i jego wskaźniki. ` +
+        `Zadanie: kryterium ${criterion.id} (${criterion.name}). Użyj tylko notatek, które pokazują właśnie to kryterium. Wskaźniki służą tylko do oceny, czy notatka pasuje, nie przepisuj ich. ` +
         `Pomiń notatki o czymś innym. Gdy żadna nie pasuje, zostaw pustą listę zdań i ustaw points na null (za mało danych). ` +
         `Najwyżej ${MAX_CRITERION_SENTENCES} krótkie zdania, potem poziom ze skali.`,
       maxTokens: CRITERION_MAX_TOKENS,
