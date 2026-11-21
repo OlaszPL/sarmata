@@ -1,0 +1,2 @@
+Available devices:
+  CUDA0: NVIDIA GeForce RTX 4070 (11873 MiB, 11520 MiB free)

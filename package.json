@@ -23,7 +23,10 @@
     "db:status": "pnpm --filter @sarmata/database status",
     "db:reset": "pnpm --filter @sarmata/database reset",
     "db:types": "pnpm --filter @sarmata/database types",
-    "db:test": "pnpm --filter @sarmata/database test:db"
+    "db:test": "pnpm --filter @sarmata/database test:db",
+    "ai:setup": "pnpm --filter @sarmata/ai-runtime ai:setup",
+    "ai:start": "pnpm --filter @sarmata/ai-runtime ai:start",
+    "ai:stop": "pnpm --filter @sarmata/ai-runtime ai:stop"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
