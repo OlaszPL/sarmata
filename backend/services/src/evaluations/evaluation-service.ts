@@ -98,6 +98,14 @@ export function warningsOf(
   return warnings;
 }
 
+export type ApprovalStage = 'part_one' | 'sheet';
+
+export interface ApprovalPreview {
+  /** Which approval the current status leads to, null when no approval is next. */
+  readonly stage: ApprovalStage | null;
+  readonly issues: readonly ApprovalIssue[];
+}
+
 export interface AbsenceInput {
   /** Pass the id of an earlier entry to complete it, e.g. with the return date. */
   readonly absenceId?: string;
@@ -141,6 +149,8 @@ export interface EvaluationService {
   get(id: string): Promise<EvaluationView | null>;
   list(filter?: EvaluationFilter): Promise<Evaluation[]>;
   saveDraft(id: string, content: SheetContent): Promise<EvaluationView>;
+  /** The gates of the next approval without running it. `content` checks unsaved edits (ZodError when invalid). */
+  approvalIssues(id: string, content?: SheetContent): Promise<ApprovalPreview>;
   /** Filing an objection (`file_objection`) and interrupting (`interrupt`) are commands here too. */
   transition(id: string, command: EvaluationCommand): Promise<EvaluationView>;
   recordAbsence(id: string, input: AbsenceInput): Promise<EvaluationView>;
@@ -179,6 +189,35 @@ export function createEvaluationService(
       );
     }
     return stored.document;
+  }
+
+  /** The gates of an approval, shared by the real transition and the preview so they never differ. */
+  function gateIssues(
+    stage: ApprovalStage,
+    detail: EvaluationDetail,
+    regulation: RegulationDocument,
+    content: SheetContent,
+  ): ApprovalIssue[] {
+    if (stage === 'sheet') {
+      return sheetApprovalIssues({
+        regulation,
+        sheetId: detail.sheetId,
+        content,
+        evaluated: detail.snapshot,
+      });
+    }
+    const computed =
+      computeEvaluationDeadlines(
+        {
+          ...detail,
+          sheet: {
+            ...detail.sheet,
+            content: { ...content, partOne: { ...content.partOne, dueOn: null } },
+          },
+        },
+        regulation,
+      ).find((slot) => slot.slot === 'evaluationDeadline')?.dueOn ?? null;
+    return partOneIssues(regulation, detail.sheetId, content, computed);
   }
 
   async function load(id: string): Promise<EvaluationDetail> {
@@ -458,6 +497,19 @@ export function createEvaluationService(
       return refreshDeadlines(id);
     },
 
+    async approvalIssues(id, content) {
+      const checked = content === undefined ? undefined : sheetContentSchema.parse(content);
+      const detail = await load(id);
+      const stage: ApprovalStage | null =
+        detail.status === 'criteria' ? 'part_one' : detail.status === 'interview' ? 'sheet' : null;
+      if (stage === null) return { stage, issues: [] };
+      const regulation = await regulationOf(detail);
+      return {
+        stage,
+        issues: gateIssues(stage, detail, regulation, checked ?? detail.sheet.content),
+      };
+    },
+
     async transition(id, command) {
       const detail = await load(id);
       let plan;
@@ -473,29 +525,13 @@ export function createEvaluationService(
       const { content } = detail.sheet;
 
       if (command.type === 'approve_part_one') {
-        const computed =
-          computeEvaluationDeadlines(
-            {
-              ...detail,
-              sheet: {
-                ...detail.sheet,
-                content: { ...content, partOne: { ...content.partOne, dueOn: null } },
-              },
-            },
-            regulation,
-          ).find((slot) => slot.slot === 'evaluationDeadline')?.dueOn ?? null;
-        const issues = partOneIssues(regulation, detail.sheetId, content, computed);
+        const issues = gateIssues('part_one', detail, regulation, content);
         if (issues.length > 0) {
           throw new ServiceError('criteria_invalid', 'Part one is not valid', issues);
         }
       }
       if (command.type === 'approve_sheet') {
-        const issues: ApprovalIssue[] = sheetApprovalIssues({
-          regulation,
-          sheetId: detail.sheetId,
-          content,
-          evaluated: detail.snapshot,
-        });
+        const issues = gateIssues('sheet', detail, regulation, content);
         if (issues.length > 0) {
           throw new ServiceError('approval_blocked', 'The sheet cannot be approved', issues);
         }

@@ -37,6 +37,7 @@ function fakeRepository(overrides: Partial<NoteRepository> = {}): NoteRepository
     update: vi.fn(() => Promise.resolve(stored)),
     get: vi.fn(() => Promise.resolve(stored)),
     listForEmployee: vi.fn(() => Promise.resolve([stored])),
+    listMine: vi.fn(() => Promise.resolve([stored])),
     versions: vi.fn(() => Promise.resolve([] as NoteVersion[])),
     ...overrides,
   };
@@ -295,5 +296,15 @@ describe('note check', () => {
       status: 'unavailable',
       runId: 'r1',
     });
+  });
+});
+
+describe('notes.listMine', () => {
+  it("list mine returns the author's notes", async () => {
+    const mine: Note[] = [stored, { ...stored, id: 'n2', occurredOn: calendarDate('2026-02-01') }];
+    const repository = fakeRepository({ listMine: vi.fn(() => Promise.resolve(mine)) });
+    const service = createNoteService({ notes: repository, ai: fakeAi() });
+    expect(await service.listMine()).toEqual(mine);
+    expect(repository.listMine).toHaveBeenCalledTimes(1);
   });
 });

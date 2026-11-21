@@ -89,6 +89,8 @@ export interface Services {
   };
   readonly regulations: {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
+    /** The regulation version the evaluation is pinned to. `not_found` for an evaluation the account cannot see. */
+    forEvaluation(evaluationId: string): Promise<RegulationDocument>;
   };
   readonly evaluations: EvaluationService;
   readonly archivedEvaluations: {
@@ -119,6 +121,21 @@ export function createServices(dependencies: ServiceDependencies): Services {
         );
       }
       return version.document;
+    },
+
+    async forEvaluation(evaluationId) {
+      const detail = await repositories.evaluations.get(evaluationId);
+      if (detail === null) {
+        throw new ServiceError('not_found', `Evaluation ${evaluationId} not found`);
+      }
+      const stored = await repositories.regulationVersions.findByCode(detail.regulationId);
+      if (stored === null) {
+        throw new ServiceError(
+          'unknown_regulation',
+          `Unknown regulation version ${detail.regulationId}`,
+        );
+      }
+      return stored.document;
     },
   };
 
