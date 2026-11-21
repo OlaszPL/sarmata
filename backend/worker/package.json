@@ -11,6 +11,7 @@
     "dev": "tsx watch src/main.ts",
     "sync-regulations": "tsx src/sync-regulations.ts",
     "collect-notifications": "tsx src/collect-notifications.ts",
+    "run-retention": "tsx src/run-retention.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },

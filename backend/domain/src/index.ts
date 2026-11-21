@@ -186,6 +186,17 @@ export {
   legalSourceSchema,
 } from './ai/contracts';
 export {
+  RECORDS_RETENTION_YEARS,
+  RETENTION_JOB_TYPE,
+  retentionEndsOn,
+} from './lifecycle/retention';
+export { type EndEmploymentInput, endEmploymentInputSchema } from './lifecycle/employment-end';
+export {
+  type RetainedEvaluationFacts,
+  type RetainedFactsInput,
+  retainedFacts,
+} from './lifecycle/retained-facts';
+export {
   type CriterionFact,
   type NoteFact,
   AI_NOTE_BUDGET_CHARS,

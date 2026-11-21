@@ -192,17 +192,17 @@ const rpcStartEvaluation = (db: Db, args: NullableStartArgs) =>
 /** The select string is dynamic, so the client types rows loosely and the row shape is asserted here. */
 const asEvaluationRows = (data: unknown): EvaluationRow[] => data as EvaluationRow[];
 
-interface HistoryRow {
+export interface HistoryRow {
   sheet_id: string;
   regulation_versions: { document: unknown } | null;
   evaluation_sheets: { version: number; state: string; content: unknown }[];
   evaluation_events: { kind: string; occurred_on: string }[];
 }
 
-const HISTORY_COLUMNS =
+export const HISTORY_COLUMNS =
   'sheet_id, regulation_versions(document), evaluation_sheets(version, state, content), evaluation_events(kind, occurred_on)' as const;
 
-function toHistoryEntry(row: HistoryRow): HistoryEntry | null {
+export function toHistoryEntry(row: HistoryRow): HistoryEntry | null {
   const lastOn = (kinds: readonly string[]) =>
     row.evaluation_events
       .filter((event) => kinds.includes(event.kind))

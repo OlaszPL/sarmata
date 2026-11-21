@@ -146,18 +146,21 @@ interface ClosedSpec {
   readonly gradeRequest?: { requestedGrade: number; motivation: string };
   /** hr files the objection and rejects it. */
   readonly rejectedObjectionBy?: Services;
+  /** The day the evaluation happens, today when absent. */
+  readonly on?: CalendarDate;
 }
 
 // A complete evaluation of the year, through the real service: sheet C with the same points everywhere.
 async function seedClosed(services: Services, spec: ClosedSpec): Promise<string> {
-  const started = await services.evaluations.start({ employeeId: spec.employeeId, today });
+  const on = spec.on ?? today;
+  const started = await services.evaluations.start({ employeeId: spec.employeeId, today: on });
   const ratings = Object.fromEntries(SHEET_C_MANDATORY.map((id) => [id, spec.points]));
   const content = sheetContentSchema.parse({
     partOne: { additionalCriteria: [], dueOn: null },
     partTwo: {
       ...started.sheet.content.partTwo,
       ratings,
-      interviewOn: today,
+      interviewOn: on,
       developmentConclusions: spec.conclusions,
       justification: spec.justification ?? '',
       gradeRequest: spec.gradeRequest ?? null,
@@ -165,26 +168,26 @@ async function seedClosed(services: Services, spec: ClosedSpec): Promise<string>
   });
   await services.evaluations.saveDraft(started.id, content);
   const commands = [
-    { type: 'approve_part_one', startingInterviewOn: today },
-    { type: 'record_part_one_signature', signedOn: today },
-    { type: 'record_evaluation_interview', heldOn: today },
-    { type: 'approve_sheet', draftedOn: today },
-    { type: 'record_acquaintance', acquaintedOn: today, signatureRefused: false },
+    { type: 'approve_part_one', startingInterviewOn: on },
+    { type: 'record_part_one_signature', signedOn: on },
+    { type: 'record_evaluation_interview', heldOn: on },
+    { type: 'approve_sheet', draftedOn: on },
+    { type: 'record_acquaintance', acquaintedOn: on, signatureRefused: false },
   ] as const;
   for (const command of commands) await services.evaluations.transition(started.id, command);
   if (spec.rejectedObjectionBy === undefined) {
     await services.evaluations.transition(started.id, {
       type: 'close_after_objection_window',
-      closedOn: addDays(today, 60),
+      closedOn: addDays(on, 60),
     });
   } else {
     await spec.rejectedObjectionBy.evaluations.transition(started.id, {
       type: 'file_objection',
-      filedOn: today,
+      filedOn: on,
     });
     await spec.rejectedObjectionBy.evaluations.decideObjection(started.id, {
       outcome: 'rejected',
-      decidedOn: today,
+      decidedOn: on,
     });
   }
   return started.id;
@@ -234,6 +237,31 @@ async function seedClosedEvaluations(
   });
 }
 
+// Roman Dawny left in December 2016. His evaluation of that year is closed and his retention period
+// (10 years from the end of the year, art. 94 pkt 9b KP) ends on 2026-12-31, so the retention overview
+// shows him and `pnpm retention:run -- --day 2027-01-01` anonymizes him while the reports of 2016 stay.
+async function seedLeaver(evaluator: Services, hr: AppServices): Promise<void> {
+  const employee = await hr.employees.create({
+    firstName: 'Roman',
+    lastName: 'Dawny',
+    email: 'roman.dawny@kropka.test',
+    positionTitle: 'Starszy referent',
+    orgUnit: 'Wydział Kontroli',
+    employmentStart: calendarDate('2009-03-02'),
+  });
+  await seedClosed(evaluator, {
+    employeeId: employee.id,
+    points: 5,
+    conclusions: 'Szkolenie z obsługi archiwum zakładowego.',
+    on: calendarDate('2016-09-12'),
+  });
+  await hr.employment.end({
+    employeeId: employee.id,
+    endedOn: calendarDate('2016-12-20'),
+    reason: 'przejście na emeryturę',
+  });
+}
+
 /** The admin clones the official regulation into a draft, so the rule editor has something to show. */
 async function seedRegulationDraft(admin: AppServices): Promise<void> {
   const source = (await admin.regulationEditor.list()).find(
@@ -268,11 +296,12 @@ async function main(): Promise<void> {
     karol: await employeeIdByEmail(db, 'kadry@kropka.test'),
     olga: await employeeIdByEmail(db, 'oceniajacy@kropka.test'),
   });
+  await seedLeaver(services, hr);
   await seedRegulationDraft(
     await signedInServices(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, ADMIN_EMAIL),
   );
   console.log(
-    'demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview), Stefan Sprzeciwny (objection), four closed evaluations for the statistics, a regulation draft of the office',
+    'demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview), Stefan Sprzeciwny (objection), four closed evaluations for the statistics, a former employee with a retention period ending in 2026, a regulation draft of the office',
   );
 }
 

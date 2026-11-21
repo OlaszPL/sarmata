@@ -1,5 +1,9 @@
 import { type JobQueue, type QueuedJob } from '@sarmata/repositories';
-import { type EvaluationClosing, type NotificationDelivery } from '@sarmata/services/system';
+import {
+  type EvaluationClosing,
+  type NotificationDelivery,
+  type RetentionService,
+} from '@sarmata/services/system';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import {
@@ -17,6 +21,10 @@ const unusedDelivery: NotificationDelivery = {
 
 const unusedClosing: EvaluationClosing = {
   closeUnobjected: () => Promise.reject(new Error('unused')),
+};
+
+const unusedRetention: RetentionService = {
+  run: () => Promise.reject(new Error('unused')),
 };
 
 class InMemoryQueue implements JobQueue {
@@ -241,7 +249,11 @@ describe('runWorker', () => {
     await runUntil(
       {
         queue,
-        handlers: jobHandlersFor({ delivery: unusedDelivery, closing: unusedClosing }),
+        handlers: jobHandlersFor({
+          delivery: unusedDelivery,
+          closing: unusedClosing,
+          retention: unusedRetention,
+        }),
         logger,
       },
       () => queue.pending === 0,

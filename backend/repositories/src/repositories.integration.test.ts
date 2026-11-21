@@ -102,6 +102,7 @@ describe('employees', () => {
     ).employees.list();
     expect(employees.map((employee) => employee.lastName)).toEqual([
       'Administracyjna',
+      'Dawny',
       'Ewidencyjna',
       'Kadrowy',
       'Merytoryczny',

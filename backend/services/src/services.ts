@@ -18,16 +18,19 @@ import {
   type OfficeSettingsRepository,
   type Repositories,
   type SimilarEmployee,
+  createEmploymentRepository,
   createHrRegisterRepository,
   createAiRunRepository,
   createNoteRepository,
   createRegulationDraftRepository,
   createNotificationRepository,
   createStatisticsRepository,
+  createNotesRetentionPreviewRepository,
   createOfficeSettingsRepository,
   createRepositories,
 } from '@sarmata/repositories';
 import { ServiceError } from './errors';
+import { type EmploymentService, createEmploymentService } from './employment/employment-service';
 import { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
 import { type StatisticsService, createStatisticsService } from './statistics/statistics-service';
 import { type NoteService, createNoteService } from './notes/note-service';
@@ -165,6 +168,7 @@ export type AppServices = Services & {
   readonly ai: AiService;
   readonly regulationEditor: RegulationEditorService;
   readonly development: DevelopmentService;
+  readonly employment: EmploymentService;
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
@@ -186,7 +190,10 @@ export const servicesFor = (db: Db): AppServices => {
   return {
     ...services,
     notes: createNoteService(notes),
-    officeSettings: createOfficeSettingsService(officeSettings),
+    officeSettings: createOfficeSettingsService(
+      officeSettings,
+      createNotesRetentionPreviewRepository(db),
+    ),
     notifications: createNotificationService(createNotificationRepository(db)),
     hrRegister: createHrRegisterService({ repository: createHrRegisterRepository(db) }),
     statistics: createStatisticsService({
@@ -213,6 +220,11 @@ export const servicesFor = (db: Db): AppServices => {
       regulations: repositories.regulationVersions,
       catalog: trainingCatalog,
       today: todayUtc,
+    }),
+    employment: createEmploymentService({
+      employment: createEmploymentRepository(db),
+      employees: repositories.employees,
+      evaluations: repositories.evaluations,
     }),
   };
 };
