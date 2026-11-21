@@ -133,6 +133,11 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system }, signa
     prompt: `Wskazane sygnały: ${present.join(', ')}.\n\n${state}`,
     ...withSignal(signal),
   });
+  // Where only Bielik-One runs (a 16 GB Mac holds one model at a time), the signals it decided stay,
+  // without source fragments, questions and actions. Other failures of the text model fail the run.
+  if (!result.ok && (result.reason === 'disabled' || result.reason === 'unavailable')) {
+    return ok({ signals, questions: [], actions: [] });
+  }
   if (!result.ok) return result;
   const bodies = new Map(input.notes.map((note) => [note.id, note.body]));
   return ok({

@@ -287,6 +287,30 @@ describe('hr signals', () => {
     expect(JSON.stringify(fake.requests[0]?.body)).toContain('reliability 7');
   });
 
+  it.each([
+    ['not configured', null],
+    ['not running', 'http://127.0.0.1:9/v1'],
+  ])(
+    'signals of Bielik-One stay when the text model is %s, without fragments',
+    async (_, textUrl) => {
+      const { runner } = await runnerWith(
+        { decision: bielikAnswers(0.8) },
+        { text: textUrl === null ? null : { baseUrl: textUrl, model: 'bielik', apiKey: null } },
+      );
+      const output = await executeOk(runner, 'hr_signals', input);
+      expect(output).toMatchObject({
+        signals: [
+          { signal: 'sentiment', present: false },
+          { signal: 'overload', present: true, probability: 0.8, fragments: [] },
+          { signal: 'engagement_drop', present: false },
+          { signal: 'burnout_risk', present: false },
+        ],
+        questions: [],
+        actions: [],
+      });
+    },
+  );
+
   it('signals fall back to text model', async () => {
     const { runner, fake } = await runnerWith(
       {
