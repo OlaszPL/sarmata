@@ -16,6 +16,11 @@ test.describe('evaluator dashboard', () => {
     const todo = page.getByRole('region', { name: 'Zrób teraz' });
     await expect(todo.getByRole('link', { name: 'Ewa Ewidencyjna' })).toBeVisible();
     await expect(todo).toContainText('Wpisz wnioski do IPRZ i zatwierdź ocenę');
+    await expect(todo).toContainText('Arkusz C, część II, brakuje 1 pola');
+
+    const hero = page.getByRole('region', { name: /Dzień dobry/ });
+    await expect(hero).toContainText('Czeka na ocenianego');
+    await expect(hero).toContainText(`Zamknięte w ${new Date().getFullYear()} r.`);
 
     const main = page.getByRole('main');
     await expect(main).toContainText('Marek Merytoryczny');

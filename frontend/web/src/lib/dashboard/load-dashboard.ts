@@ -38,27 +38,34 @@ export async function loadDashboard(account: MemberAccount): Promise<DashboardDa
     aiEnabledInOffice(),
   ]);
 
-  const closedCount = evaluations.filter((evaluation) => evaluation.status === 'closed').length;
+  const closedIds = evaluations
+    .filter((evaluation) => evaluation.status === 'closed')
+    .map((evaluation) => evaluation.id);
   const open = evaluations.filter(
     (evaluation) => evaluation.status !== 'closed' && evaluation.status !== 'interrupted',
   );
 
-  const [settled, hrRuns, appreciationRuns, draftRuns] = await Promise.all([
+  const [settled, settledClosed, hrRuns, appreciationRuns, draftRuns] = await Promise.all([
     Promise.allSettled(open.map((evaluation) => services.evaluations.get(evaluation.id))),
+    // The closing date lives in the event log, so the closed ones are read in full as well.
+    Promise.allSettled(closedIds.map((id) => services.evaluations.get(id))),
     aiEnabled ? aiRuns('hr_signals') : null,
     aiEnabled ? aiRuns('appreciation_moments') : null,
     aiEnabled ? aiRuns('sheet_draft') : null,
   ]);
 
   // One broken case (unknown regulation, bad event payload) must not blank the landing page.
-  const views = settled.flatMap((result): EvaluationView[] =>
-    result.status === 'fulfilled' && result.value !== null ? [result.value] : [],
-  );
-  const skipped = open.length - views.length;
+  const loaded = (results: PromiseSettledResult<EvaluationView | null>[]): EvaluationView[] =>
+    results.flatMap((result) =>
+      result.status === 'fulfilled' && result.value !== null ? [result.value] : [],
+    );
+  const views = loaded(settled);
+  const closed = loaded(settledClosed);
+  const skipped = open.length + closedIds.length - views.length - closed.length;
   if (skipped > 0) console.warn(`dashboard: skipped ${skipped} evaluation(s) that failed to load`);
 
   return composeDashboard(
-    { views, closedCount, aiEnabled, hrRuns, appreciationRuns, draftRuns },
+    { views, closed, aiEnabled, hrRuns, appreciationRuns, draftRuns },
     todayInWarsaw(),
     new Date(),
   );

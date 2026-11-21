@@ -40,6 +40,7 @@ describe('nextStep', () => {
       action: 'Ustal kryteria na rozmowie rozpoczynającej',
       owner: 'evaluator',
       dueOn: '2026-12-18',
+      missingFields: null,
     });
   });
 
@@ -124,6 +125,37 @@ describe('nextStep', () => {
       expect(step?.action).toBe('Sprawdź i zatwierdź ocenę');
     });
 
+    it('counts missing partial ratings and empty conclusions as missing fields', () => {
+      expect(nextStep(view({ status: 'interview', criteria }))?.missingFields).toBe(3);
+      expect(
+        nextStep(
+          view({
+            status: 'interview',
+            criteria,
+            ratings: { a: 5 },
+            developmentConclusions: 'Kurs',
+          }),
+        )?.missingFields,
+      ).toBe(1);
+      expect(
+        nextStep(view({ status: 'interview', criteria, ratings: { a: 5, b: 7 } }))?.missingFields,
+      ).toBe(1);
+      expect(
+        nextStep(
+          view({
+            status: 'interview',
+            criteria,
+            ratings: { a: 5, b: 7 },
+            developmentConclusions: 'Szkolenie',
+          }),
+        )?.missingFields,
+      ).toBe(0);
+    });
+
+    it('has no missing fields outside the interview', () => {
+      expect(nextStep(view({ status: 'period' }))?.missingFields).toBeNull();
+    });
+
     it('keeps the deadlines of the period, by the same priority', () => {
       const deadlines = {
         evaluationDeadline: '2027-03-01',
@@ -147,6 +179,7 @@ describe('nextStep', () => {
       action: 'Odnotuj zapoznanie z oceną albo odmowę podpisu',
       owner: 'evaluator',
       dueOn: null,
+      missingFields: null,
     });
   });
 
@@ -157,6 +190,7 @@ describe('nextStep', () => {
         action: 'Czas na sprzeciw, potem ocena zamknie się sama',
         owner: 'nobody',
         dueOn: '2026-12-05',
+        missingFields: null,
       },
     );
   });
@@ -169,6 +203,7 @@ describe('nextStep', () => {
       action: 'Kadry rozpatrują sprzeciw',
       owner: 'hr',
       dueOn: '2026-12-12',
+      missingFields: null,
     });
   });
 

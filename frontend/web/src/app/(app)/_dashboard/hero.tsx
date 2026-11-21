@@ -17,27 +17,34 @@ export function Hero({ data }: { data: DashboardData }) {
       className="border-rule flex flex-col border-b lg:flex-row"
     >
       <div className="flex-1 px-6 py-10 sm:px-10">
-        <p className="text-ink-muted">{longDate(data.today)}</p>
+        <p className="text-ink-muted leading-[normal]">{longDate(data.today)}</p>
         <h1
           id="dashboard-heading"
-          className="font-heading mt-4 text-[2.25rem] leading-tight font-semibold tracking-tight sm:text-[2.75rem]"
+          className="font-heading mt-3 text-[2.25rem] leading-[1.1136] font-semibold tracking-[-0.0182em] sm:text-[2.75rem]"
         >
           Dzień dobry. <span className="block">{data.headline}</span>
         </h1>
       </div>
-      <div className="border-rule grid grid-cols-1 border-t sm:grid-cols-2 lg:w-[40rem] lg:shrink-0 lg:border-t-0 lg:border-l [&>*]:border-rule [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l">
+      {/* The grid lines take 1px of the padding next to them, so the block stays 284px high as in the mockup. */}
+      <div className="border-rule grid grid-cols-1 border-t sm:grid-cols-2 lg:w-[40rem] lg:shrink-0 lg:border-t-0 lg:border-l">
         <StatTile label="Do zrobienia" value={String(summary.todo)} hint={nearestHint} emphasis />
         <StatTile
           label="Po terminie"
           value={String(summary.overdue)}
           {...(summary.overdue === 0 ? { hint: 'Wszystko na czas' } : {})}
+          className="border-rule border-t pt-[1.1875rem] sm:border-t-0 sm:border-l sm:pt-5"
         />
         <StatTile
-          label="Czekają na innych"
-          value={String(summary.waiting)}
-          hint="Sprzeciw albo kadry"
+          label="Czeka na ocenianego"
+          value={String(summary.awaitingEmployee)}
+          hint="Zapoznanie z oceną"
+          className="border-rule border-t py-[1.1875rem]"
         />
-        <StatTile label="Zamknięte oceny" value={String(summary.closed)} />
+        <StatTile
+          label={`Zamknięte w ${data.today.slice(0, 4)} r.`}
+          value={String(summary.closedThisYear)}
+          className="border-rule border-t py-[1.1875rem] sm:border-l"
+        />
       </div>
     </section>
   );

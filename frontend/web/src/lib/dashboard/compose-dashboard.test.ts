@@ -1,6 +1,6 @@
 import { type AiRun, type EvaluationView, calendarDate } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
-import { type DashboardSources, composeDashboard } from './compose-dashboard';
+import { type DashboardSources, composeDashboard, todoMeta } from './compose-dashboard';
 
 const today = calendarDate('2026-11-21');
 const now = new Date('2026-11-21T10:00:00Z');
@@ -13,6 +13,8 @@ interface ViewOptions {
   status?: string;
   /** Due date of the single deadline the status looks at. */
   dueOn?: string | null;
+  /** Dates of `closed` events in the log, oldest first. */
+  closedOn?: string[];
 }
 
 /** `drafted` has no date and is an evaluator step, `delivered` waits for nobody, `objection` for HR. */
@@ -31,6 +33,10 @@ function view(options: ViewOptions): EvaluationView {
     snapshot: { firstName: options.firstName ?? 'Anna', lastName: options.lastName ?? 'Nowak' },
     sheet: { content: { partTwo: { ratings: {}, developmentConclusions: '' } } },
     criteria: [],
+    events: (options.closedOn ?? []).map((occurredOn) => ({
+      kind: 'closed',
+      occurredOn: calendarDate(occurredOn),
+    })),
     deadlines:
       slot && options.dueOn
         ? [{ slot, windowStart: null, dueOn: calendarDate(options.dueOn), suspendedSince: null }]
@@ -93,7 +99,7 @@ function appreciationRun(
 function sources(overrides: Partial<DashboardSources> = {}): DashboardSources {
   return {
     views: [],
-    closedCount: 0,
+    closed: [],
     aiEnabled: true,
     hrRuns: [],
     appreciationRuns: [],
@@ -109,7 +115,7 @@ describe('composeDashboard', () => {
       headline: 'Nie masz spraw do zrobienia.',
       todo: [],
       others: [],
-      summary: { todo: 0, overdue: 0, waiting: 0, closed: 0, nearestDueOn: null },
+      summary: { todo: 0, overdue: 0, awaitingEmployee: 0, closedThisYear: 0, nearestDueOn: null },
       aiEnabled: true,
       hrSignal: null,
       appreciation: null,
@@ -173,16 +179,29 @@ describe('composeDashboard', () => {
       view({ id: 'e', status: 'delivered', dueOn: '2026-11-30' }),
     ];
 
-    it('counts todo, overdue (own steps only), waiting and closed', () => {
-      const data = composeDashboard(sources({ views, closedCount: 7 }), today);
+    it('counts todo, overdue (own steps only), awaiting the employee and closed this year', () => {
+      const closed = [
+        view({ id: 'x', status: 'closed', closedOn: ['2026-01-02'] }),
+        view({ id: 'y', status: 'closed', closedOn: ['2025-12-30'] }),
+        view({ id: 'z', status: 'closed', closedOn: ['2026-11-20'] }),
+      ];
+      const data = composeDashboard(sources({ views, closed }), today);
       expect(data.summary).toEqual({
         todo: 3,
         overdue: 1,
-        waiting: 2,
-        closed: 7,
+        awaitingEmployee: 1,
+        closedThisYear: 2,
         nearestDueOn: '2026-11-18',
       });
       expect(data.headline).toBe('Masz 3 sprawy do zrobienia.');
+    });
+
+    it('dates a closed evaluation by its newest closing event and skips one without it', () => {
+      const closed = [
+        view({ id: 'reclosed', status: 'closed', closedOn: ['2025-06-01', '2026-02-01'] }),
+        view({ id: 'no-event', status: 'closed' }),
+      ];
+      expect(composeDashboard(sources({ closed }), today).summary.closedThisYear).toBe(1);
     });
 
     it('uses the singular form for one case', () => {
@@ -461,5 +480,34 @@ describe('composeDashboard', () => {
     expect(data.hrSignal).toBeNull();
     expect(data.appreciation).toBeNull();
     expect(data.runningDrafts).toEqual([]);
+  });
+});
+
+describe('todoMeta', () => {
+  const step = {
+    stage: 'Część II',
+    action: 'Wpisz wnioski do IPRZ i zatwierdź ocenę',
+    owner: 'evaluator',
+    dueOn: null,
+  } as const;
+
+  it('names the sheet and the stage in lower case, keeping the roman numeral', () => {
+    expect(todoMeta({ sheetId: 'C', step: { ...step, missingFields: null } })).toBe(
+      'Arkusz C, część II',
+    );
+    expect(todoMeta({ sheetId: 'C', step: { ...step, missingFields: 0 } })).toBe(
+      'Arkusz C, część II',
+    );
+  });
+
+  it.each([
+    [1, 'brakuje 1 pola'],
+    [2, 'brakuje 2 pól'],
+    [4, 'brakuje 4 pól'],
+    [5, 'brakuje 5 pól'],
+  ])('adds %i missing fields', (missingFields, suffix) => {
+    expect(todoMeta({ sheetId: 'C', step: { ...step, missingFields } })).toBe(
+      `Arkusz C, część II, ${suffix}`,
+    );
   });
 });

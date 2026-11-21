@@ -5,7 +5,8 @@ import { type NextStep, nextStep } from '../evaluations/next-step';
 export interface DashboardSources {
   /** Evaluations in progress led by the account. */
   readonly views: readonly EvaluationView[];
-  readonly closedCount: number;
+  /** Closed evaluations led by the account, with their event log. */
+  readonly closed: readonly EvaluationView[];
   readonly aiEnabled: boolean;
   /** Null when the fetch failed. */
   readonly hrRuns: readonly AiRun[] | null;
@@ -37,8 +38,10 @@ export interface DashboardData {
   readonly summary: {
     readonly todo: number;
     readonly overdue: number;
-    readonly waiting: number;
-    readonly closed: number;
+    /** Drawn up and waiting for the employee to acknowledge them (status `drafted`). */
+    readonly awaitingEmployee: number;
+    /** Closed in the calendar year of `today`, by the date of the closing event. */
+    readonly closedThisYear: number;
     readonly nearestDueOn: CalendarDate | null;
   };
   readonly aiEnabled: boolean;
@@ -98,6 +101,19 @@ function compareRows(a: DashboardRow, b: DashboardRow): number {
   if (a.daysLeft === null) return 1;
   if (b.daysLeft === null) return -1;
   return a.daysLeft - b.daysLeft;
+}
+
+/** Date of the newest closing event in the log, null when the log has none. */
+function closedOn(view: EvaluationView): CalendarDate | null {
+  return view.events.filter((event) => event.kind === 'closed').at(-1)?.occurredOn ?? null;
+}
+
+/** `Arkusz C, część II`, for an unfinished part II with `, brakuje 2 pól`. */
+export function todoMeta(row: Pick<DashboardRow, 'sheetId' | 'step'>): string {
+  const { stage, missingFields } = row.step;
+  const meta = `Arkusz ${row.sheetId}, ${stage.charAt(0).toLowerCase()}${stage.slice(1)}`;
+  if (!missingFields) return meta;
+  return `${meta}, brakuje ${missingFields} ${pluralPl(missingFields, 'pola', 'pól', 'pól')}`;
 }
 
 function headlineFor(todoCount: number): string {
@@ -214,6 +230,7 @@ export function composeDashboard(
     ]),
   );
   const ai = sources.aiEnabled;
+  const year = today.slice(0, 4);
 
   return {
     today,
@@ -224,8 +241,8 @@ export function composeDashboard(
       todo: mine.length,
       // Only the evaluator's own late steps: HR and the closing job are not the evaluator's to chase.
       overdue: mine.filter((row) => row.daysLeft !== null && row.daysLeft < 0).length,
-      waiting: rows.length - mine.length,
-      closed: sources.closedCount,
+      awaitingEmployee: sources.views.filter((view) => view.status === 'drafted').length,
+      closedThisYear: sources.closed.filter((view) => closedOn(view)?.slice(0, 4) === year).length,
       nearestDueOn,
     },
     aiEnabled: ai,
