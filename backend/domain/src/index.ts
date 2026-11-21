@@ -43,6 +43,18 @@ export {
 } from './evaluations/criteria';
 export { type SheetScore, scoreSheet } from './evaluations/score';
 export { proposeSheet } from './evaluations/sheet-selection';
+export {
+  type EvaluationCommand,
+  type EvaluationStatus,
+  type EvaluationTransition,
+  type TransitionPlan,
+  TransitionError,
+  evaluationTransitions,
+  planTransition,
+} from './evaluations/state-machine';
+export { type ApprovalIssue, partOneIssues, sheetApprovalIssues } from './evaluations/approval';
+export { type Eligibility, evaluationEligibility } from './evaluations/eligibility';
+export { effectiveDueOn } from './evaluations/due-date';
 export { errorMessage } from './support/error-message';
 export { parseEnv } from './support/parse-env';
 export { type OfficeId, officeIdSchema } from './identity/office-id';
