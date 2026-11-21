@@ -322,6 +322,9 @@ importers:
       '@sarmata/regulations':
         specifier: workspace:*
         version: link:../regulations
+      '@supabase/supabase-js':
+        specifier: 'catalog:'
+        version: 2.119.2
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
