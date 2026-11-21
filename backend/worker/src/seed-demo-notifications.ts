@@ -2,25 +2,30 @@ import { errorMessage } from '@sarmata/domain';
 import { createServiceClient } from '@sarmata/repositories';
 import { workerConfigFromEnv } from './config';
 
-// Three unread inbox entries for the demo evaluator Olga Oceniająca (pnpm db:seed:demo, after the demo
-// evaluations). They have the shape `public.collect_notifications` writes: the real collector derives
-// them from stored deadlines relative to the real day, so the demo day 2026-11-22 is written directly.
+// Unread inbox entries for the demo evaluator Olga Oceniająca (pnpm db:seed:demo, after the demo
+// evaluations). Every row is derived from a stored deadline (evaluation_deadlines) and is exactly what
+// `public.collect_notifications` writes for it: the reminder with the lead 14 on the day 14 days before
+// the deadline, the one with the lead 3 on the day 3 days before. The unique key of notifications
+// (account, kind, evaluation, slot, due_on, lead_days) makes a later collector run skip them.
 
 const OFFICE_ID = '11111111-1111-4111-8111-111111111111';
 const EVALUATOR_ACCOUNT_ID = '22222222-2222-4222-8222-000000000003';
-const DEMO_DAY = '2026-11-22';
+const SLOT = 'evaluationDeadline';
 
 const config = workerConfigFromEnv(process.env);
 const db = createServiceClient({ url: config.supabaseUrl, secretKey: config.secretKey });
 
-async function evaluationOf(email: string): Promise<string> {
+const addDays = (date: string, days: number): string =>
+  new Date(Date.parse(date) + days * 86_400_000).toISOString().slice(0, 10);
+
+async function deadlineOf(email: string): Promise<{ evaluationId: string; dueOn: string }> {
   const { data: employee, error } = await db
     .from('employees')
     .select('id')
     .eq('email', email)
     .single();
   if (error) throw new Error(`Demo employee ${email} not found: ${error.message}`);
-  const { data, error: evaluationError } = await db
+  const { data: evaluation, error: evaluationError } = await db
     .from('evaluations')
     .select('id')
     .eq('employee_id', employee.id)
@@ -29,7 +34,16 @@ async function evaluationOf(email: string): Promise<string> {
     .limit(1)
     .single();
   if (evaluationError) throw new Error(`No evaluation of ${email}: ${evaluationError.message}`);
-  return data.id;
+  const { data, error: deadlineError } = await db
+    .from('evaluation_deadlines')
+    .select('due_on')
+    .eq('evaluation_id', evaluation.id)
+    .eq('slot', SLOT)
+    .not('due_on', 'is', null)
+    .is('suspended_since', null)
+    .single();
+  if (deadlineError) throw new Error(`No ${SLOT} of ${email}: ${deadlineError.message}`);
+  return { evaluationId: evaluation.id, dueOn: data.due_on };
 }
 
 async function main(): Promise<void> {
@@ -42,45 +56,25 @@ async function main(): Promise<void> {
     console.log('demo notifications already exist, skipping');
     return;
   }
-  const ewa = await evaluationOf('ewa.ewidencyjna@kropka.test');
-  const marek = await evaluationOf('marek.merytoryczny@kropka.test');
-  const common = {
+  const ewa = await deadlineOf('ewa.ewidencyjna@kropka.test');
+  const marek = await deadlineOf('marek.merytoryczny@kropka.test');
+  const reminder = (deadline: { evaluationId: string; dueOn: string }, leadDays: number) => ({
     office_id: OFFICE_ID,
     account_id: EVALUATOR_ACCOUNT_ID,
-    created_on: DEMO_DAY,
+    kind: 'deadline_reminder' as const,
+    evaluation_id: deadline.evaluationId,
+    slot: SLOT,
+    due_on: deadline.dueOn,
+    lead_days: leadDays,
+    created_on: addDays(deadline.dueOn, -leadDays),
     status: 'open',
-  };
-  const { error } = await db.from('notifications').insert([
-    // 14 days before the evaluation deadline of Ewa (the lead is the nearest configured one).
-    {
-      ...common,
-      kind: 'deadline_reminder',
-      evaluation_id: ewa,
-      slot: 'evaluationDeadline',
-      due_on: '2026-12-06',
-      lead_days: 14,
-    },
-    // 3 days before the deadline of Marek.
-    {
-      ...common,
-      kind: 'deadline_reminder',
-      evaluation_id: marek,
-      slot: 'evaluationDeadline',
-      due_on: '2026-11-25',
-      lead_days: 3,
-    },
-    // Overdue starting interview of Marek: a task without lead time.
-    {
-      ...common,
-      kind: 'deadline_overdue',
-      evaluation_id: marek,
-      slot: 'startingInterview',
-      due_on: '2026-11-18',
-      lead_days: null,
-    },
-  ]);
+  });
+  // Marek has both reminders, the earlier one (lead 14) sorts first in the inbox like the collector's.
+  const { error } = await db
+    .from('notifications')
+    .insert([reminder(ewa, 14), reminder(marek, 14), reminder(marek, 3)]);
   if (error) throw new Error(error.message);
-  console.log('demo notifications seeded: three unread entries for Olga Oceniająca');
+  console.log('demo notifications seeded: three unread reminders for Olga Oceniająca');
 }
 
 try {
