@@ -14,6 +14,22 @@ export type { InstallProfile, RecommendOptions, RuntimeRecommendation } from './
 export { installLlamaCpp } from './llama-cpp-install.ts';
 export type { LlamaCpp } from './llama-cpp-install.ts';
 export { defaultDataDir } from './data-dir.ts';
+export {
+  isLlamaServerReady,
+  llamaServerCommand,
+  prepareLlamaServer,
+  readLlamaServerConfig,
+  startLlamaServer,
+} from './llama-server.ts';
+export type {
+  Benchmark,
+  LlamaServerConfig,
+  PreparedLlamaServer,
+  PrepareOptions,
+  RunningServer,
+  Speed,
+} from './llama-server.ts';
+export type { StartOptions } from './process.ts';
 export { detectHardware } from './hardware.ts';
 export type { ComputeDevice, Hardware, NvidiaGpu } from './hardware.ts';
 export { fakeMachine, localMachine } from './machine.ts';
