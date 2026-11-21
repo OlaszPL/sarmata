@@ -55,6 +55,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+      # Same state as `pnpm db:reset` locally: official regulation versions synced from backend/regulations.
+      - name: Synchronizacja przepisów
+        working-directory: .
+        run: pnpm regulations:sync
       - run: pnpm exec supabase test db
       - name: Typy zgodne z migracjami
         run: |
@@ -79,6 +83,9 @@ jobs:
       - name: Supabase (db, auth, rest)
         working-directory: database
         run: pnpm exec supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+      # Same state as `pnpm db:reset` locally: synced regulations and demo evaluations created through the services.
+      - run: pnpm regulations:sync
+      - run: pnpm db:seed:demo
       - run: pnpm web:env
       - run: pnpm --filter @sarmata/e2e exec playwright install --with-deps chromium
       - run: pnpm --filter @sarmata/web build
