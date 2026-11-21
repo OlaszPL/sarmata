@@ -110,6 +110,7 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
   - zmiana oceny: kadry wpisują nową wersję arkusza w imieniu DG, backend nie pozwala obniżyć oceny,
   - ponowne sporządzenie: obecna wersja zostaje anulowana, ocena wraca do etapu rozmowy oceniającej z nowym terminem.
 - Wcześniejsze wersje arkusza zostają do odczytu i trafiają do teczki sprawy.
+- Adresat sprzeciwu jest parametrem (domyślnie DG urzędu, art. 83 ust. 1). Arkusz A ma pole adresata, a wyciąg z ustawy od organizatorów zawiera uchylony art. 83 ust. 2 (sprzeciw do oceniającego). Reguły opieramy na Dz.U. 2026 poz. 590, rozbieżność czeka na odpowiedź mentorów (`docs/wymagania-i-kontekst.md`, sekcja 21, pytanie 10).
 
 ## Korekta zablokowanych pól
 
