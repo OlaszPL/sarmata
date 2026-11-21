@@ -80,13 +80,14 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm typecheck` | kontrola typów |
 | `pnpm lint`, `pnpm format` | ESLint i Prettier |
 | `pnpm secrets:decrypt` | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
-| `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 |
+| `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 (SMTP 55425) |
 | `pnpm db:reset` | migracje od zera, dane demo, synchronizacja oficjalnych wersji przepisów i oceny demo |
 | `pnpm db:seed:demo` | zakłada trzy oceny demo przez prawdziwy serwis jako `oceniajacy@kropka.test` (sprzeciw jako `kadry@kropka.test`), pomija, gdy oceny już istnieją (wymaga `pnpm regulations:sync`) |
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
 | `pnpm test:integration` | testy repozytoriów na lokalnym Supabase, wymagają `pnpm db:reset` |
 | `pnpm regulations:sync` | wstawia brakujące oficjalne wersje przepisów, kończy się błędem, gdy wersja w bazie różni się od kodu |
+| `pnpm notifications:collect` | ręczne zebranie powiadomień na dziś (`-- --day RRRR-MM-DD` dla innego dnia), pg_cron robi to o 5:00 UTC. Raport JSON zawiera `created`, `queued` i `resolved` |
 | `pnpm worker:dev` | worker kolejki pgmq z przeładowaniem po zmianie kodu |
 | `pnpm worker:start` | worker kolejki pgmq bez przeładowania |
 | `pnpm ai:setup` | llama.cpp i model Bielik do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local` |
@@ -120,7 +121,7 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 |---|---|---|
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | testy integracyjne, worker | `scripts/with-supabase-env.mjs` czyta je z `supabase status`, chyba że `SUPABASE_URL` jest już ustawione (zewnętrzna instancja) |
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | aplikacja web | `frontend/web/.env.local`, zapisuje go `pnpm web:env` (z `supabase status` albo z ustawionych w powłoce zmiennych zewnętrznej instancji) |
-| `SITE_URL` | aplikacja web | domyślnie `http://localhost:3000`, `scripts/termic-run.sh` ustawia adres taska. Na razie nic go nie czyta (zaproszenia i reset hasła) |
+| `SITE_URL` | aplikacja web, worker | domyślnie `http://localhost:3000`, `scripts/termic-run.sh` ustawia adres taska. Worker buduje z niego link do skrzynki powiadomień w zbiorczym mailu |
 | `PORT` | `pnpm dev` | domyślnie 3000, `scripts/termic-run.sh` ustawia port taska |
 | `SARMATA_AI_ENABLED` | `@sarmata/ai` | domyślnie `false`, AI wyłączone |
 | `SARMATA_AI_TIMEOUT_MS` | `@sarmata/ai` | domyślnie `60000` |
@@ -128,7 +129,7 @@ Font Open Sans jest na licencji SIL Open Font License 1.1.
 | `SARMATA_AI_DECISION_BASE_URL`, `SARMATA_AI_DECISION_MODEL` | `@sarmata/ai`, Bielik-One `/v1/systemone` | np. `http://127.0.0.1:8026/v1` i `decision`, bez nich decyzje są wyłączone |
 | `SARMATA_AI_TEXT_API_KEY`, `SARMATA_AI_DECISION_API_KEY` | `@sarmata/ai` | tylko gdy serwer modelu wymaga klucza. To sekret: dopisz go do `secrets/dev.enc.env` przez `sops secrets/dev.enc.env`, nigdy jawnie do repo |
 | `SARMATA_WORKER_IDLE_DELAY_MS` | worker | domyślnie `1000`, przerwa po pustym odczycie kolejki |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SENDER_EMAIL`, `SMTP_SENDER_NAME` | worker | opcjonalne i na razie nieużywane: kreator je przekazuje, worker tylko sprawdza ich poprawność do czasu powiadomień. `SMTP_HOST` wymaga też portu i adresu nadawcy |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SENDER_EMAIL`, `SMTP_SENDER_NAME` | worker | opcjonalne: domyślny SMTP instalatora, używany gdy urząd nie ma własnego w ustawieniach (te mają pierwszeństwo). `SMTP_HOST` wymaga też portu i adresu nadawcy |
 
 W instalacji urzędu te same zmienne ustawia kreator w `.env` katalogu instalacji. Kontener `web` dostaje `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SITE_URL` i `SARMATA_AI_*`, a `SUPABASE_SECRET_KEY` trafia wyłącznie do kontenera `worker` (ADR 0004).
 

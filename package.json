@@ -29,6 +29,7 @@
     "db:reset": "pnpm --filter @sarmata/database reset && pnpm regulations:sync && pnpm db:seed:demo",
     "regulations:sync": "node scripts/with-supabase-env.mjs pnpm --filter @sarmata/worker sync-regulations",
     "db:seed:demo": "node scripts/with-supabase-env.mjs pnpm --filter @sarmata/services seed-demo-evaluations",
+    "notifications:collect": "node scripts/with-supabase-env.mjs pnpm --filter @sarmata/worker collect-notifications",
     "worker:start": "node scripts/with-supabase-env.mjs pnpm --filter @sarmata/worker start",
     "worker:dev": "node scripts/with-supabase-env.mjs pnpm --filter @sarmata/worker dev",
     "db:types": "pnpm --filter @sarmata/database types",

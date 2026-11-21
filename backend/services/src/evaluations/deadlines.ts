@@ -51,6 +51,17 @@ const lastEventDate = (
   events.filter((event) => kinds.includes(event.kind)).at(-1)?.occurredOn ?? null;
 
 /**
+ * The grade by law (art. 89 ust. 2) signal as a stored deadline. The signal itself lives only in the
+ * view, so without this slot the notification collector would not see the hr task.
+ */
+export function gradeByLawSlot(signal: { readonly dueOn: CalendarDate } | null): StoredDeadline[] {
+  if (signal === null) return [];
+  return [
+    { slot: 'gradeByLawGrant', windowStart: null, dueOn: signal.dueOn, suspendedSince: null },
+  ];
+}
+
+/**
  * The deadline slots that apply to the evaluation in its current status. Slots not returned are
  * cleared by the repository. Pure: absences are read from the `absence` events.
  */

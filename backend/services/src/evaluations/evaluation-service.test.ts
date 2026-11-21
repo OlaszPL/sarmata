@@ -725,6 +725,41 @@ describe('staffing situations and objection flow', () => {
     expect(started.signals.secondConsecutiveNegative).toBe(false);
   });
 
+  it('grade by law due stores gradeByLawGrant slot', async () => {
+    const qualifying = reg.gradeByLaw.qualifyingLevels[0] ?? 'x';
+    const history: HistoryEntry[] = Array.from(
+      { length: reg.gradeByLaw.consecutiveEvaluations },
+      (_, index) => ({
+        drafted: date(`${String(2020 + index)}-03-01`),
+        levelCode: qualifying,
+        outcome: 'positive' as const,
+        acquaintedOn: date(`${String(2020 + index)}-03-10`),
+      }),
+    );
+    const { services, store } = setup(
+      [employee({ serviceStatus: 'civil_servant', gradeGrantedOn: date('2018-01-01') })],
+      [],
+      history,
+    );
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const dueOn = started.signals.gradeByLaw?.dueOn;
+    const stored = store.get(started.id)?.deadlines.find((d) => d.slot === 'gradeByLawGrant');
+    expect(dueOn).toBeDefined();
+    expect(stored).toEqual({
+      slot: 'gradeByLawGrant',
+      windowStart: null,
+      dueOn,
+      suspendedSince: null,
+    });
+  });
+
+  it('evaluation without signal stores no gradeByLawGrant slot', async () => {
+    const { services, store } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const slots = store.get(started.id)?.deadlines.map((d) => d.slot) ?? [];
+    expect(slots).not.toContain('gradeByLawGrant');
+  });
+
   it('view signals nothing for a plain employee', async () => {
     const { services } = setup([employee()]);
     const started = await services.evaluations.start({ employeeId: 'emp1', today });

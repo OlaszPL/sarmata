@@ -41,7 +41,7 @@ import {
 } from '@sarmata/repositories';
 import { ServiceError } from '../errors';
 import { sameJson } from '../same-json';
-import { computeEvaluationDeadlines } from './deadlines';
+import { computeEvaluationDeadlines, gradeByLawSlot } from './deadlines';
 
 export interface StartEvaluationInput {
   readonly employeeId: string;
@@ -237,10 +237,12 @@ export function createEvaluationService(
   async function refreshDeadlines(id: string): Promise<EvaluationView> {
     const detail = await load(id);
     const regulation = await regulationOf(detail);
-    await repositories.evaluations.saveDeadlines(
-      id,
-      computeEvaluationDeadlines(detail, regulation),
-    );
+    const { score } = scoreOf(regulation, detail, detail.sheet.content);
+    const signals = await signalsOf(detail, regulation, score);
+    await repositories.evaluations.saveDeadlines(id, [
+      ...computeEvaluationDeadlines(detail, regulation),
+      ...gradeByLawSlot(signals.gradeByLaw),
+    ]);
     return view(await load(id));
   }
 

@@ -60,3 +60,8 @@ insert into public.notes (id, office_id, employee_id, author_account_id, kind, o
 update public.notes
    set body = 'Przekazał zespołowi ustalenia ze spotkania i zadbał o notatkę z działań.'
  where id = '33333333-3333-4333-8333-000000000001';
+
+-- SMTP of the demo office: the Mailpit of the local Supabase (smtp_port in config.toml), no password needed.
+update public.office_settings
+   set smtp_host = '127.0.0.1', smtp_port = 55425, smtp_from = 'oceny@kropka.test'
+ where office_id = '11111111-1111-4111-8111-111111111111';

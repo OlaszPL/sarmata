@@ -31,7 +31,12 @@ export {
   type OfficeSettingsService,
   createOfficeSettingsService,
 } from './office-settings/office-settings-service';
-export type { Note, NoteVersion, OfficeSettings } from '@sarmata/repositories';
+export {
+  type NotificationService,
+  createNotificationService,
+} from './notifications/notification-service';
+export type { InboxItem, Note, NoteVersion, OfficeSettings } from '@sarmata/repositories';
+export type { NotificationCategory, NotificationKind, NotificationStatus } from '@sarmata/domain';
 export type {
   NewNoteInput,
   NoteKind,
