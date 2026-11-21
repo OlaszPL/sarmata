@@ -45,6 +45,31 @@ describe('statistics repository', () => {
     expect(await hr.evaluatorFigures(year)).not.toHaveLength(0);
   });
 
+  it('demo seed gives office figures for the demo year', async () => {
+    const hr = createStatisticsRepository(await signedIn('kadry@kropka.test'));
+    const sources = await hr.resultSources(year);
+    await hr.saveResults(
+      sources.map((source) => ({
+        evaluationId: source.evaluationId,
+        sheetVersion: source.sheetVersion,
+        ...evaluationResult(source.regulation, { ...source, history: [] }),
+      })),
+    );
+    const { distribution, counts } = await hr.officeFigures(year);
+    const total = (pick: (row: (typeof distribution)[number]) => number) =>
+      distribution.reduce((sum, row) => sum + pick(row), 0);
+    expect(total((row) => row.evaluations)).toBeGreaterThanOrEqual(5);
+    expect(new Set(distribution.map((row) => row.orgUnit)).size).toBeGreaterThanOrEqual(2);
+    expect(total((row) => row.negative)).toBeGreaterThanOrEqual(1);
+    expect(total((row) => row.withConclusions)).toBeGreaterThanOrEqual(4);
+    expect(total((row) => row.gradeRequests)).toBeGreaterThanOrEqual(1);
+    expect(counts.labourCourtAppeals).toBeGreaterThanOrEqual(1);
+    expect(counts.gradesOnRequest).toBeGreaterThanOrEqual(1);
+    expect(counts.objectionsRejected).toBeGreaterThanOrEqual(1);
+    const evaluators = await hr.evaluatorFigures(year);
+    expect(new Set(evaluators.map((row) => row.evaluatorAccountId)).size).toBeGreaterThanOrEqual(2);
+  });
+
   it('evaluator gets 42501 from office figures', async () => {
     const evaluator = createStatisticsRepository(await signedIn('oceniajacy@kropka.test'));
     await expect(evaluator.officeFigures(year)).rejects.toMatchObject({ code: '42501' });

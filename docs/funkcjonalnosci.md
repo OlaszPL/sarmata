@@ -77,12 +77,15 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 
 ## Statystyki i raporty (rola kadry)
 
-Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
+Liczone w widokach SQL albo funkcjach RPC (ADR 0004). Raporty urzędu czytają kadry i admin, rozkład per oceniający tylko kadry. Inne role dostają `forbidden`.
 
-- Harmonogram i terminowość: kto do oceny i kiedy, oceny w toku, po terminie, bez zarejestrowanej rozmowy oceniającej, nadchodzące terminy rozmowy rozpoczynającej.
-- Sprawozdanie DSC-OCK: liczby na 5 poziomach (osobno urzędnicy SC), oceny negatywne, drugie kolejne negatywne, sprzeciwy według wyniku, stopnie z art. 89 ust. 1 i 2. Eksport CSV.
-- Rozkład ocen urzędu na tle danych krajowych, per komórka (tekst z migawki), odsetek ocen z wnioskami do IPRZ, potrzeby rozwojowe według kryteriów.
-- Rozkład per oceniający (tendencja centralna, łagodność), tylko dla kadr. To profilowanie oceniających, liczone deterministycznie.
+- Rok raportu to rok sporządzenia oceny, czyli data ostatniego zdarzenia `sheet_approved`. Sprzeciwy liczymy od ocen sporządzonych w tym roku (pytanie 13 formularza).
+- Poziom i wynik oceny liczy kalkulator w `@sarmata/domain`, więc SQL nie ma po czym grupować. Serwis statystyk przelicza projekcję wyników (`evaluation_results`) przy odczycie raportu i zapisuje ją przez RPC. Po korekcie arkusza stary wiersz projekcji się nie liczy, bo RPC łączą po numerze wersji arkusza.
+- Harmonogram i terminowość: kto do oceny i kiedy, oceny w toku, po terminie (bez zawieszonych), bez zarejestrowanej rozmowy oceniającej, nadchodzące terminy rozmowy rozpoczynającej. Domyślny horyzont to 30 dni.
+- Sprawozdanie DSC-OCK, pytania 4 do 17 działu 1: liczby na 5 poziomach (osobno urzędnicy SC), oceny negatywne, drugie kolejne negatywne, sprzeciwy według wyniku, odwołania do sądu, wnioski i stopnie z art. 89. Pytania 1 do 3 (pierwsza ocena) poza zakresem. Eksport CSV dla Excela: UTF-8 z BOM i średnik jako separator.
+- Rozkład ocen urzędu na tle danych krajowych (sprawozdanie Szefa SC za 2025 r.), per komórka (tekst z migawki, małych komórek nie ukrywamy, bo kadry czytają każdą ocenę), odsetek ocen z wnioskami do IPRZ, potrzeby rozwojowe według kryteriów.
+- Rozkład per oceniający (tendencja centralna, łagodność, surowość), tylko dla kadr. To profilowanie oceniających, liczone deterministycznie. Progi flag to ustawienia urzędu zmieniane przez admina: co najmniej 5 ocen, udział poziomu środkowego od 80% i różnica średnich od 1 punktu (kolumny `evaluator_flag_*`).
+- Pytania 14 i 16 mają dane z wpisów kadr, bo ocena ich nie niesie. Odwołanie do sądu pracy to zdarzenie `labour_court_appeal`, które kadry zapisują tylko po nieuwzględnionym sprzeciwie (jedno na ocenę, data nie wcześniejsza niż data wyniku sprzeciwu). Przyznanie stopnia to wpis w `grade_grants` z podstawą `on_request` (art. 89 ust. 1) albo `by_law` (ust. 2), tylko dla urzędnika i tylko na wyższy stopień. Przyznanie z mocy prawa zmienia stopień pracownika i zamyka zadanie kadr, bo usuwa termin `gradeByLawGrant` oceny i blokuje jego odtworzenie.
 
 ## IPRZ i rozwój
 

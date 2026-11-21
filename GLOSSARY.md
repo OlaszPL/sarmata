@@ -83,3 +83,15 @@ _Avoid_: kopia notatki
 **Ustawienia urzędu** (`OfficeSettings`, `office_settings`):
 Jeden wiersz na urząd: przełącznik AI, okres przechowywania notatek, wyprzedzenie przypomnień, SMTP, domyślna miejscowość i adresat sprzeciwu na arkuszu A. Zmienia je admin. Hasło SMTP leży w Supabase Vault i nie wraca do klienta.
 _Avoid_: konfiguracja
+
+**Wynik oceny** (`EvaluationResult`, `evaluation_results`):
+Poziom i wynik bieżącej zablokowanej wersji arkusza, liczone przez kalkulator w `@sarmata/domain`. Przechowywane tylko na potrzeby statystyk, przeliczane przy każdym raporcie, więc po korekcie arkusza stary wiersz się nie liczy.
+_Avoid_: ocena końcowa, punktacja
+
+**Odwołanie do sądu pracy** (`labour_court_appeal`):
+Zdarzenie oceny po nieuwzględnionym sprzeciwie (art. 83 ust. 5 ustawy). Zapisują je tylko kadry. Źródło pytania 14 sprawozdania DSC-OCK.
+_Avoid_: pozew, skarga
+
+**Przyznanie stopnia** (`GradeGrant`, `grade_grants`):
+Wpis kadr o przyznaniu urzędnikowi kolejnego stopnia służbowego. Podstawa `on_request` to art. 89 ust. 1 ustawy (na wniosek), `by_law` to art. 89 ust. 2 (z mocy prawa, po kolejnych ocenach na wymaganym poziomie). Zmienia stopień pracownika i zamyka zadanie kadr.
+_Avoid_: awans, podwyżka
