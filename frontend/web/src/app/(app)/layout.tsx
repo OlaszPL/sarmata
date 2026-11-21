@@ -44,7 +44,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             className="bg-navy font-heading flex items-center gap-2 px-6 font-medium text-white no-underline"
           >
             <Plus className="size-5" aria-hidden />
-            Nowa ocena
+            <span className="sr-only sm:not-sr-only">Nowa ocena</span>
           </Link>
         ) : null
       }

@@ -61,11 +61,11 @@ export function A11yTools() {
       <button
         type="button"
         aria-pressed={large}
-        aria-label="Powiększ tekst"
         onClick={toggleTextSize}
         className={`${base} font-heading text-base font-bold ${large ? on : ''}`}
       >
         <span aria-hidden>A+</span>
+        <span className="sr-only">Powiększ tekst</span>
       </button>
       <button
         type="button"

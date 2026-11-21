@@ -24,10 +24,12 @@ test('sign-in page with errors meets WCAG 2.1 AA', async ({ page }) => {
   await expectNoViolations(page);
 });
 
-test('signed-in shell meets WCAG 2.1 AA', async ({ page }) => {
-  await signIn(page, demoAccount('evaluator'));
-  await expectNoViolations(page);
-});
+for (const role of ['hr', 'evaluator']) {
+  test(`signed-in shell as ${role} meets WCAG 2.1 AA`, async ({ page }) => {
+    await signIn(page, demoAccount(role));
+    await expectNoViolations(page);
+  });
+}
 
 test('accessibility statement meets WCAG 2.1 AA', async ({ page }) => {
   await signIn(page, demoAccount('evaluator'));
@@ -40,6 +42,8 @@ test('accessibility statement meets WCAG 2.1 AA', async ({ page }) => {
 
 test('first Tab stop is the skip link and the current section is marked', async ({ page }) => {
   await signIn(page, demoAccount('evaluator'));
+  // A fresh page load: after the sign-in redirect the focus stays where the form left it.
+  await page.goto('/');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Przejdź do treści' })).toBeFocused();
   await expect(page.getByRole('navigation').getByRole('link', { name: 'Pulpit' })).toHaveAttribute(

@@ -34,10 +34,14 @@ export function AppShell({
         Przejdź do treści
       </a>
       <header className="border-rule border-b">
-        <div className="flex min-h-16 items-stretch">
+        {/*
+          Cells wrap onto a second line when they do not fit. Cells of the first line draw the line
+          between the two, the row overlaps the header border by 1px so a single line stays single.
+        */}
+        <div className="-mb-px flex flex-wrap items-stretch">
           <a
             href={homeHref}
-            className="bg-navy flex shrink-0 items-center gap-3 px-6 text-white no-underline"
+            className="bg-navy border-rule flex min-h-16 shrink-0 items-center gap-3 border-b px-6 text-white no-underline"
           >
             <span className="flex size-10 items-center justify-center bg-white">
               <BrandMark className="size-8" />
@@ -45,10 +49,12 @@ export function AppShell({
             <span className="font-heading text-2xl font-bold">{product.name}</span>
             <span className="sr-only">: {product.tagline}</span>
           </a>
-          {nav ? <div className="hidden lg:flex">{nav}</div> : null}
-          <div className="flex-1" />
-          {tools ? <div className="flex items-stretch">{tools}</div> : null}
-          {primaryAction}
+          {nav ? <div className="border-rule hidden border-b lg:flex">{nav}</div> : null}
+          <div className="border-rule flex-1 border-b" />
+          <div className="flex min-h-16 min-w-0 grow items-stretch justify-end">
+            {tools}
+            {primaryAction}
+          </div>
         </div>
         {nav ? (
           <div className="border-rule overflow-x-auto border-t lg:hidden">
