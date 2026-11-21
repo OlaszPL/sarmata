@@ -21,6 +21,8 @@ const nodeBuiltinPaths = (message) => builtinModules.map((name) => ({ name, mess
 export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
+    'infra/deploy/supabase/**',
+    'infra/deploy/release/**',
     'database/src/types.ts',
     'frontend/ui/src/shadcn/**',
     '**/next-env.d.ts',

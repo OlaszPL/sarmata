@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+.git
+archive
+docs
+e2e
+infra/deploy/supabase
+infra/deploy/release
+secrets
+**/.env*

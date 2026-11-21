@@ -24,3 +24,4 @@ catalog:
 allowBuilds:
   esbuild: true
   supabase: true
+  bun: true

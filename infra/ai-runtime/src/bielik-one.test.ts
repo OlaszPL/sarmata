@@ -3,7 +3,13 @@ import type { ServerResponse } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { fakeMachine, installBielikOne, isBielikOneReady } from './index.ts';
+import {
+  BIELIK_ONE_PACKAGES,
+  bielikOneCommands,
+  fakeMachine,
+  installBielikOne,
+  isBielikOneReady,
+} from './index.ts';
 import { freePort, listen } from './test-helpers.ts';
 
 const ARCHIVE =
@@ -124,5 +130,39 @@ describe('isBielikOneReady', () => {
 
   it('is not ready when nothing listens', async () => {
     expect(await isBielikOneReady(`http://127.0.0.1:${await freePort()}`)).toBe(false);
+  });
+});
+
+describe('bielikOneCommands', () => {
+  const dataDir = join('/data', 'sarmata', 'ai');
+  const hfHome = { HF_HOME: join(dataDir, 'huggingface') };
+
+  it('gives the MLX backend and the frontend with the Hugging Face cache and logs in the data directory', () => {
+    const pkg = BIELIK_ONE_PACKAGES['bielik-one-4b-r1-adapter'];
+    const executable = join(dataDir, 'bielik-one', 'mlx', 'bin', 'bielik-one');
+    const commands = bielikOneCommands({ engine: 'mlx', executable }, pkg, dataDir);
+    expect(commands.backend).toEqual({
+      command: executable,
+      args: ['backend', pkg.repo, '--revision', pkg.revision, '--engine', 'mlx'],
+      env: hfHome,
+      logFile: join(dataDir, 'logs', 'bielik-one-backend.log'),
+    });
+    expect(commands.frontend).toEqual({
+      command: executable,
+      args: ['frontend', pkg.repo, '--revision', pkg.revision],
+      env: hfHome,
+      logFile: join(dataDir, 'logs', 'bielik-one-frontend.log'),
+    });
+  });
+
+  it('runs the vLLM backend without the engine flag', () => {
+    const pkg = BIELIK_ONE_PACKAGES['bielik-one-11b-v3.1-r1-adapter'];
+    const executable = join(dataDir, 'bielik-one', 'vllm', 'bin', 'bielik-one');
+    expect(bielikOneCommands({ engine: 'vllm', executable }, pkg, dataDir).backend.args).toEqual([
+      'backend',
+      pkg.repo,
+      '--revision',
+      pkg.revision,
+    ]);
   });
 });
