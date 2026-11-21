@@ -134,7 +134,7 @@ Nierozwiązane słabe wyniki pokazują zespołowi, że standardy są różne, i 
 
 Ocena negatywna w SC: ponowna ocena po 6 miesiącach, kryteria najpóźniej w 7 dni od sporządzenia oceny negatywnej [SC1].
 
-Emocje: przełożony reaguje jako człowiek. Asystent nie analizuje emocji (4.5), tylko przygotowuje przełożonego na typowe reakcje. Przy problemie zdrowotnym kieruje do pomocy, bez diagnozy [S32] [S33].
+Emocje: przełożony reaguje jako człowiek. Asystent przygotowuje przełożonego na typowe reakcje. Przy problemie zdrowotnym kieruje do pomocy, bez diagnozy [S32] [S33].
 
 ## 2. Cele i oczekiwania
 
@@ -369,12 +369,10 @@ Opracowanie własne. Układ: doświadczenie / relacje / kurs. Konkretne kursy z 
   - W PL depresja wśród pracujących wzrosła z 25,5% do 64,93% (2019 do 2022) [S45].
   - Program PIP: stres odpowiada za 60% absencji chorobowej [S38].
 
-### 4.5. Granica AI Act i rola przełożonego
-- Art. 5 ust. 1 lit. f zakazuje systemów AI wyciągających wnioski o emocjach w miejscu pracy, z wyjątkiem względów medycznych i bezpieczeństwa [L2].
-- Motyw 18 opiera pojęcie rozpoznawania emocji na danych biometrycznych i wyłącza zmęczenie [L2]. Granicę dla analizy tekstu (np. notatek) musi ocenić zespół prawny. Bezpieczne założenie: asystent w ogóle nie wnioskuje o emocjach.
-- Ocena wydajności i przydział zadań na podstawie zachowania lub cech to system wysokiego ryzyka (zał. III pkt 4b) [L2].
+### 4.5. Rola przełożonego
+- Analiza sentymentu i sygnałów wypalenia przez Bielik-One jest dozwolona (ustalenie z organizatorami KPRM). Wynik to sugestia dla przełożonego, decyduje człowiek.
 - WHO: przełożeni "nie mogą i nie powinni" diagnozować [S33]. HSE: diagnoza nie jest rolą przełożonego [S32]. EU-OSHA: diagnozują medycy [S36].
-- Elementy list PIP i HSE dotyczące nastroju [S39] [S30] mogą trafić do materiałów edukacyjnych dla przełożonego. System nie powinien ich wykrywać ani oceniać.
+- Elementy list PIP i HSE dotyczące nastroju [S39] [S30] mogą trafić do materiałów edukacyjnych dla przełożonego.
 
 ### 4.6. Sygnały przeciążenia i działania
 Dane: S = system, P = notatka przełożonego o fakcie. Działania to opracowanie własne.
@@ -422,7 +420,6 @@ Dane: S = system, P = notatka przełożonego o fakcie. Działania to opracowanie
 
 Zastrzeżenia:
 - Pojedynczy sygnał nic nie przesądza. Te same oznaki mogą mieć inne przyczyny [S30].
-- Pokazywać fakty i pytania do rozmowy, nie etykietę przy nazwisku [S33].
 - Dane o czasie pracy i nieobecnościach wymagają analizy RODO.
 
 ### 4.7. Prewencja
@@ -577,7 +574,7 @@ Szablon check-inu (opracowanie własne):
 - **Podobne luki w całym zespole:** działanie zespołowe, sprawdzić organizację pracy [S9] [S39].
 
 ## 7. Wnioski dla projektu asystenta
-1. **Dobrostan na faktach organizacyjnych.** Asystent korzysta z faktów (nadgodziny, urlop, kumulacja zadań, zmiany zakresu, nieobecności, brak check-inów) i notatek przełożonego. Nie wnioskuje o emocjach, nie przypisuje etykiety "ryzyko wypalenia". Proponuje rozmowę z pytaniami z 4.8 [L2] [S33] [S32].
+1. **Dobrostan na faktach i notatkach.** Asystent korzysta z faktów (nadgodziny, urlop, kumulacja zadań, zmiany zakresu, nieobecności, brak check-inów) i notatek przełożonego. Bielik-One daje sygnały sentymentu, przeciążenia i wypalenia jako sugestię. Asystent proponuje rozmowę z pytaniami z 4.8 [S33] [S32].
 2. **System wysokiego ryzyka.** Wsparcie oceny wydajności podpada pod AI Act (zał. III pkt 4b). Wymaga nadzoru człowieka. Decyduje przełożony [L2].
 3. **Dziennik obserwacji przez cały okres jako rdzeń** [S11] [S19] [SC1] [SC2]. Asystent może:
    - przypominać o notatkach,
@@ -595,4 +592,4 @@ Szablon check-inu (opracowanie własne):
 12. **9-box ostrożnie albo wcale** [L1] [S29].
 13. **Uzasadnienie modułu danymi z PL:** przeciążenie to druga wada pracy w SC [S50], zdrowie psychiczne to najsłabiej oceniane wsparcie [S49], pracownicy oczekują lepszej komunikacji z przełożonym [S49]. To przemawia za modułem rozmów, obciążenia i doceniania, a nie monitoringu.
 14. **Odesłanie do pomocy bez diagnozy:** Centrum Wsparcia, telefony wsparcia, EAP w urzędzie, medycyna pracy [SC10] [SC11] [S32].
-15. **Do weryfikacji przez inne zespoły:** art. 5 ust. 1 lit. f wobec analizy tekstu notatek (zespół prawny), RODO dla danych o czasie pracy i nieobecnościach.
+15. **Do weryfikacji przez inne zespoły:** RODO dla danych o czasie pracy i nieobecnościach.

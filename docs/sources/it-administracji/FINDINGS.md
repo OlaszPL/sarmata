@@ -269,7 +269,7 @@ Formę wymaganego podpisu trzeba potwierdzić z mentorami (pytanie 2 w `../../wy
 - **Domyślnie model lokalny** na licencji Apache-2.0: Bielik-11B-v3.1-Instruct (Q4_K_M, 6,72 GB) albo PLLuM-12B-instruct-2512. Dla słabszego sprzętu Bielik-4.5B lub PLLuM-4B. Unikać wariantów `-nc-` (CC-BY-NC-4.0). Llama-PLLuM (licencja Llama 3.1) traktować ostrożnie przy wymogu „bez płatnych licencji” i neutralności.
 - **Tryb centralny:** jeden serwer GPU obsługuje wiele urzędów. To tańsze niż GPU w każdym urzędzie. [O]
 - **Model zewnętrzny tylko przez warstwę anonimizacji:** NER po polsku (np. podejście CLARIN-PL Anonymizer lub FastPDN) zamienia imiona, nazwiska, PESEL, nazwy komórek i stanowisk na pseudonimy. Mapa pseudonimów zostaje w urzędzie, tekst wraca i jest odtwarzany lokalnie. Do tego centra danych w UE (SCCO2), umowa powierzenia (art. 28 RODO) i rejestr wywołań.
-- Nie analizować emocji ani zdrowia (AI Act art. 5 ust. 1 lit. f, art. 9 RODO). Zob. `../../wymagania-i-kontekst.md` sekcje 18 i 19.
+- Nie zapisywać danych o zdrowiu (art. 9 RODO). Analiza sentymentu i sygnałów wypalenia przez Bielik-One jest dozwolona jako sugestia (ustalenie z KPRM).
 - Bielik-Guard (0.1B do 0.5B) może filtrować wejście i wyjście modelu. [O]
 
 ### 6.6. Integracja z EZD i e-mail

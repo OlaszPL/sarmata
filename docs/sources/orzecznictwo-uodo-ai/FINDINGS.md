@@ -140,10 +140,7 @@ Inne ustalenia z tej uchwały:
   - call center śledzące złość pracowników,
   - monitorowanie „tonu emocjonalnego w zespołach pracujących hybrydowo” na podstawie głosu i wideo.
 - **Przykład dozwolony:** system do „treningu osobistego”, jeśli wyniki nie trafiają do kadr i „nie mają wpływu na ocenę, awans”.
-- **Wyjątek medyczny i bezpieczeństwa jest wąski** (pkt 257 i 263):
-  - „system AI przeznaczony do wykrywania wypalenia zawodowego lub depresji w miejscu pracy [...] nie byłby objęty wyjątkiem i pozostałby zakazany”,
-  - „rozpoznawanie emocji w celu oceny dobrostanu [...] pracowników, ich poziomu motywacji oraz satysfakcji z pracy [...] byłoby zakazane”.
-- **Poza zakresem zakazu** są systemy AI wnioskujące emocje z danych innych niż biometryczne (pkt 265). Takie systemy podlegają jednak RODO i ocenie wysokiego ryzyka.
+- **Poza zakresem zakazu** są systemy AI wnioskujące emocje z danych innych niż biometryczne (pkt 265), np. z tekstu notatek.
 
 ### 4.2. Projekt wytycznych do art. 6 (19.05.2026, wersja do konsultacji)
 
@@ -228,15 +225,13 @@ Inne ustalenia z tej uchwały:
 8. **Niezmienialny ślad audytowy** wersji arkusza i eksport pełnej teczki na potrzeby sprzeciwu i sądu, bo sąd bada cały tryb z urzędu.
 9. **Moduł „wirtualny HR partner”: granica art. 5 ust. 1 lit. f AI Act**
    - Bez kamery, głosu, mimiki i dynamiki pisania na klawiaturze.
-   - Nie wolno wykrywać wypalenia, stresu ani motywacji ze źródeł biometrycznych (wytyczne KE, pkt 251, 257, 263).
-   - Analiza samego tekstu nie jest objęta zakazem, ale wnioskowanie o emocjach i dobrostanie konkretnego pracownika przekazywane przełożonemu to ocena zachowania, czyli wysokie ryzyko i profilowanie (projekt wytycznych, pkt 275 i 276). Do tego dochodzi ryzyko danych o zdrowiu (art. 9 RODO).
-   - Bezpieczny model: sygnały oparte na obiektywnych faktach organizacyjnych wpisanych przez ludzi (liczba zadań, nadgodziny, niewykorzystany urlop, zmiany zakresu), prezentowane jako wskaźniki do rozmowy, bez wnioskowania o stanie psychicznym.
-   - Wariant dla samego pracownika: wyniki widzi tylko pracownik i nie trafiają do kadr (wytyczne KE, pkt 254, projekt wytycznych, pkt 278).
+   - Analiza samego tekstu nie jest objęta zakazem (wytyczne KE, pkt 250).
+   - Organizatorzy KPRM zgodzili się na analizę sentymentu i sygnałów wypalenia przez Bielik-One jako sugestię dla przełożonego. Decyduje człowiek.
 10. **Klasyfikacja AI Act. Funkcje mieszczące się w filtrze art. 6 ust. 3:**
     - redakcja i korekta językowa tekstu napisanego przez przełożonego po zakończeniu oceny, z flagowaniem stronniczych sformułowań, bez zmiany ocen (lit. b),
     - zestawienie istniejących danych w raport bez scoringu (lit. d),
     - podpowiedzi pytań do rozmowy.
-11. **Funkcje wysokiego ryzyka:** rekomendacja oceny, scoring, ranking, przewidywanie wypalenia, sugestie wpływające na awans lub stopień służbowy.
+11. **Funkcje wysokiego ryzyka:** scoring, ranking, sugestie wpływające na awans lub stopień służbowy.
     - Nadzór człowieka nie zdejmuje klasyfikacji wysokiego ryzyka.
     - Kalkulator średniej i walidator reguł to nie AI (wytyczne o definicji, pkt 46).
 12. **Terminy z rozporządzenia 2026/1744:**

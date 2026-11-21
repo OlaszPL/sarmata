@@ -563,7 +563,7 @@ Najważniejsze z praktyki DSC (poza tym, co już jest w sekcjach 7 do 10):
 - Wzór DSC z 2013 r. dla bieżącej informacji zwrotnej: kwartalna ocena pracy w skali 1 do 5 na arkuszu. Gotowy wzorzec dla F-08.
 - Druga kolejna ocena negatywna urzędnika oznacza obowiązkowe rozwiązanie stosunku pracy (art. 71 ust. 1 pkt 1 ustawy), wypowiedzenie bez czekania na sąd.
 
-Wnioski z przeglądu rynku: polskie systemy kadrowe nie wspierają przełożonego w rozmowie ani w pisaniu oceny. Dobre wzorce to szkic cytujący notatki, „za mało danych” zamiast ogólników, brak propozycji poziomu oceny od AI, strażnik danych wrażliwych w notatkach (kara 35,3 mln EUR dla H&M za notatki o zdrowiu i życiu prywatnym) i coaching przełożonego zamiast diagnozy pracownika.
+Wnioski z przeglądu rynku: polskie systemy kadrowe nie wspierają przełożonego w rozmowie ani w pisaniu oceny. Dobre wzorce to szkic cytujący notatki, „za mało danych” zamiast ogólników, strażnik danych wrażliwych w notatkach (kara 35,3 mln EUR dla H&M za notatki o zdrowiu i życiu prywatnym) i coaching przełożonego zamiast diagnozy pracownika.
 
 ## 17. Dokumentacja pracownicza w postaci elektronicznej i podpisy
 
@@ -598,11 +598,11 @@ Dlaczego to ważne: organizator wprost wskazuje obieg dokumentów cyfrowych i po
 
 - Rozporządzenie UE 2024/1689 (AI Act), załącznik III pkt 4 lit. b: systemy AI przeznaczone do podejmowania decyzji wpływających na warunki stosunków pracy, awans, rozwiązanie stosunku pracy, przydzielania zadań w oparciu o zachowanie lub cechy osobowości, albo do monitorowania lub oceny wydajności i zachowania osób w takich stosunkach są **systemami wysokiego ryzyka**.
 - Wyjątek z art. 6 ust. 3: system z załącznika III nie jest wysokiego ryzyka, gdy nie stwarza znaczącego ryzyka, bo np. wykonuje wąskie zadanie proceduralne, poprawia wynik wcześniej zakończonej czynności człowieka, wykrywa wzorce bez zastępowania oceny człowieka albo wykonuje zadanie przygotowawcze (zob. też motyw 53). Wyjątek **nie działa**, jeśli system profiluje osoby fizyczne.
-- Wniosek projektowy: funkcje typu formatowanie, walidacja formalna, podpowiedzi pytań, redakcja tekstu na bazie notatek przełożonego mieszczą się raczej w art. 6 ust. 3. Funkcje oceniające pracownika (scoring, przewidywanie wypalenia, rekomendacja oceny) to najpewniej wysokie ryzyko albo profilowanie. Warto świadomie wybrać granicę i opisać ją w prezentacji.
+- Wniosek projektowy: funkcje typu formatowanie, walidacja formalna, podpowiedzi pytań, redakcja tekstu na bazie notatek przełożonego mieszczą się raczej w art. 6 ust. 3. Szkic arkusza z propozycjami poziomów i sygnały wypalenia Bielik-One pokazujemy jako sugestie, decyduje przełożony.
 
 **Zakazy**
 
-- Art. 5 ust. 1 lit. f: zakaz systemów AI do wyciągania wniosków na temat emocji osoby fizycznej w miejscu pracy (wyjątek: względy medyczne lub bezpieczeństwa). Obowiązuje od 2.02.2025. Ma bezpośredni wpływ na F-44: nie wolno wykrywać wypalenia lub spadku motywacji przez analizę emocji (np. z głosu, twarzy, tekstu jako emocji). Bezpieczniej opierać sygnały na faktach organizacyjnych (obciążenie zadaniami, nadgodziny, zmiany zakresu, nieodebrane urlopy) wprowadzanych i interpretowanych przez przełożonego.
+- Art. 5 ust. 1 lit. f: zakaz systemów AI do wyciągania wniosków na temat emocji osoby fizycznej w miejscu pracy (wyjątek: względy medyczne lub bezpieczeństwa). Obowiązuje od 2.02.2025. Zakaz dotyczy danych biometrycznych (głos, twarz). Analiza tekstu notatek nie jest nim objęta (wytyczne KE, pkt 250). Organizatorzy KPRM zgodzili się na analizę sentymentu i sygnałów wypalenia przez Bielik-One (F-44) jako sugestię dla przełożonego.
 
 **Obowiązki podmiotu stosującego (urząd) dla systemu wysokiego ryzyka**
 

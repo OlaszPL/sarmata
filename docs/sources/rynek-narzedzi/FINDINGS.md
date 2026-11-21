@@ -1,6 +1,6 @@
 # Przegląd rynku: narzędzia do ocen i rozwoju pracowników z AI
 
-Kontekst: Cyfrowy Asystent Ocen Okresowych dla służby cywilnej z modułem "wirtualny HR partner" ([general-info.md](../../general-info.md), sekcja 3). Ograniczenia projektu: AI nie zastępuje przełożonego w ocenie, AI nie wnioskuje o emocjach pracownika (AI Act art. 5 ust. 1 lit. f), ocena wydajności przez AI to system wysokiego ryzyka (AI Act, załącznik III pkt 4 lit. b).
+Kontekst: Cyfrowy Asystent Ocen Okresowych dla służby cywilnej z modułem "wirtualny HR partner" ([general-info.md](../../general-info.md), sekcja 3). Ograniczenia projektu: AI daje sugestie, a decyzję podejmuje przełożony.
 
 Stan na 2026-11-21. Lista źródeł i braków: [INDEX.md](INDEX.md). Opisy produktów pochodzą głównie od producentów. Tam, gdzie piszę "deklaruje", nie ma niezależnej weryfikacji.
 
@@ -78,8 +78,6 @@ Legenda: **tak** (potwierdzone w źródle), **częściowo**, **b.d.** (brak dany
 - **H&M, 35,3 mln EUR (Hamburg 2020):** notatki z rozmów po nieobecnościach (diagnozy, religia, rodzina), dostęp do 50 menedżerów. Ostrzeżenie dla notatek z 24 miesięcy i obsługi długich nieobecności.
 - **Amazon France Logistique, CNIL 32 mln EUR (2024):** wskaźniki bezczynności per osoba.
 - **Microsoft Productivity Score (2020):** wycofanie danych indywidualnych.
-- **Predykcja wypalenia i odejścia:** fałszywe alarmy, wstrzymywanie rozwoju osobom oznaczonym (SHRM), brak pewnego pojedynczego wskaźnika (przegląd 2025).
-- **AI Act art. 5 ust. 1 lit. f:** zakaz dotyczy wnioskowania o emocjach na podstawie danych biometrycznych (art. 3 pkt 39, wytyczne KE). Sentyment samego tekstu nie jest wprost objęty, ale projekt przyjmuje szerszą granicę.
 
 ## 3. Wzorce UX dla przełożonych
 
@@ -95,7 +93,7 @@ Legenda: **tak** (potwierdzone w źródle), **częściowo**, **b.d.** (brak dany
 1. **Szkic z cytowaniem notatek.** Każde zdanie linkuje do notatki, zdanie bez źródła oznaczone (Lattice, Personio).
 2. **"Za mało danych" zamiast ogólników.** Kryterium bez notatek: propozycja pytania do rozmowy, nie tekst.
 3. **Okno kontekstu** z wyborem źródeł i zakresu, nigdy ponad uprawnienia użytkownika.
-4. **Twarde granice w UI:** AI nie ustawia poziomu, nie wypełnia skal, nie podpisuje, nie wysyła.
+4. **Twarde granice w UI:** AI proponuje poziomy tylko jako sugestię do akceptacji, nie podpisuje, nie wysyła.
 5. **Najpierw przełożony, potem AI** (Frontiers 2026).
 6. **Kontrola jakości treści zamiast listy złych słów:** przykład, skutek, następny krok, praca a nie osobowość, równie konkretna część rozwojowa (Textio Lift, BIT 2021).
 7. **Strażnik danych wrażliwych w notatkach** (RODO art. 9, lekcja H&M). Przy nieobecnościach zapisujemy fakt i wpływ na zadania, bez przyczyny.
@@ -104,7 +102,7 @@ Legenda: **tak** (potwierdzone w źródle), **częściowo**, **b.d.** (brak dany
 10. **Dziennik osiągnięć pracownika** jako wejście do samooceny i pakiet przy zmianie oceniającego.
 11. **Generator działań rozwojowych o stałej strukturze** (cel, kroki, forma, efekt) z przyciskami wstaw, zastąp, odrzuć, łatwiej, trudniej (Workday).
 12. **Coaching przełożonego, nie diagnoza pracownika** (np. brak docenienia od 8 tygodni, brak rozmowy od 6 miesięcy, zmiana zakresu bez rozmowy).
-13. **Sygnały obciążenia ze struktury pracy, podane jako pytania**, bez etykiety "ryzyko wypalenia".
+13. **Sygnały obciążenia i wypalenia (Bielik-One) jako sugestia dla przełożonego**, z fragmentami źródłowymi i pytaniami do rozmowy.
 14. **Progi anonimowości ankiet zespołowych** (min. 5 osób, podsumowanie tylko dla autora).
 15. **Przegląd spójności ocen dla kadr** na agregatach, decyzja zostaje u oceniającego.
 
@@ -115,12 +113,8 @@ Uzupełniająco: oznaczanie treści AI, ocena kciukiem, dziennik użycia AI per 
 2. "Detektora bias" na liście słów sprzedawanego jako gwarancja.
 3. Teczek cieni (notatki bez minimalizacji, dane o zdrowiu i życiu prywatnym).
 4. Metryk aktywności per osoba (maile, logowania, czas w EZD).
-5. Analizy emocji i sentymentu pracownika, w tym wbudowanej w komponenty dostawców.
-6. Indywidualnych wskaźników "ryzyka wypalenia" lub "ryzyka odejścia".
-7. Sprzeczności między deklarowanym przeznaczeniem a funkcjami (AI Act wymaga precyzyjnego przeznaczenia).
-8. Niejawnych przepływów do zewnętrznego modelu. Dla administracji: model w infrastrukturze krajowej lub UE, DPIA, brak trenowania, jawna lista podprocesorów.
-9. Funkcji AI włączonych domyślnie bez decyzji administratora i informacji dla pracowników.
-10. Pokazywania propozycji poziomu oceny (kotwiczenie, łagodność LLM).
+5. Sprzeczności między deklarowanym przeznaczeniem a funkcjami (AI Act wymaga precyzyjnego przeznaczenia).
+6. Niejawnych przepływów do zewnętrznego modelu. Dla administracji: model w infrastrukturze krajowej lub UE, DPIA, brak trenowania, jawna lista podprocesorów.
 
 ## 5. Otwarte pytania
 
