@@ -27,13 +27,19 @@ class InMemoryStore implements AiRunQueueStore {
     readonly kind: AiRunKind,
     readonly input: unknown,
     readonly aiEnabled = true,
+    readonly requestedAt = new Date().toISOString(),
   ) {}
 
   claim() {
     if (this.failClaim) return Promise.reject(new Error('database is down'));
     if (this.state !== 'queued') return Promise.resolve(null);
     this.state = 'running';
-    return Promise.resolve({ kind: this.kind, input: this.input, aiEnabled: this.aiEnabled });
+    return Promise.resolve({
+      kind: this.kind,
+      input: this.input,
+      aiEnabled: this.aiEnabled,
+      requestedAt: this.requestedAt,
+    });
   }
 
   status() {
@@ -208,6 +214,26 @@ describe('ai.run handler', () => {
     expect(outcome).toEqual({ status: 'done' });
     expect(store.state).toBe('failed');
     expect(store.outcome).toMatchObject({ failure: { reason: 'interrupted' } });
+  });
+
+  it('a note check older than the check timeout expires without a model call', async () => {
+    const now = new Date('2026-03-01T10:01:00Z');
+    const input = { text: 'Notatka.', keywordWarnings: [] };
+    const runner = await fakeRunner({ objects: {} });
+    const expired = new InMemoryStore('sensitive_data', input, true, '2026-03-01T10:00:14Z');
+    await createAiRunHandler(() => ({ store: expired, runner, now: () => now })).run(
+      { runId: RUN },
+      context(),
+    );
+    expect(expired.state).toBe('failed');
+    expect(expired.outcome).toMatchObject({ failure: { reason: 'expired' } });
+    expect(server?.requests).toEqual([]);
+    const boundary = new InMemoryStore('sensitive_data', input, true, '2026-03-01T10:00:15Z');
+    await createAiRunHandler(() => ({ store: boundary, runner, now: () => now })).run(
+      { runId: RUN },
+      context(),
+    );
+    expect(boundary.outcome).not.toMatchObject({ failure: { reason: 'expired' } });
   });
 
   it('a run still running elsewhere throws so the job comes back', async () => {

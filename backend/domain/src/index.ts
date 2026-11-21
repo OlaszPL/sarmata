@@ -108,6 +108,8 @@ export { parseEnv } from './support/parse-env';
 export { type OfficeId, officeIdSchema } from './identity/office-id';
 export { calendarDateSchema } from './deadlines/calendar-date';
 export {
+  NOTE_BODY_MAX_LENGTH,
+  NOTE_CHECK_TIMEOUT_MS,
   type NewNote,
   type NewNoteInput,
   type NoteKind,

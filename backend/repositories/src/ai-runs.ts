@@ -112,7 +112,13 @@ export interface AiRunQueueStore {
   claim(
     id: string,
     staleAfterMs: number,
-  ): Promise<{ kind: AiRunKind; input: unknown; aiEnabled: boolean } | null>;
+  ): Promise<{
+    kind: AiRunKind;
+    input: unknown;
+    aiEnabled: boolean;
+    /** ISO time the run was queued. */
+    requestedAt: string;
+  } | null>;
   /** The status of a run, `null` when it does not exist. */
   status(id: string): Promise<AiRunStatus | null>;
   /**
@@ -304,7 +310,7 @@ export function createAiRunQueueStore(db: ServiceDb): AiRunQueueStore {
         .or(
           `status.eq.queued,and(status.eq.running,started_at.lt."${staleBefore}",or(progress_updated_at.is.null,progress_updated_at.lt."${staleBefore}"))`,
         )
-        .select('kind, input, office_id')
+        .select('kind, input, office_id, requested_at')
         .maybeSingle();
       if (error) throw new RepositoryError('aiRuns.claim', error);
       if (data === null) return null;
@@ -314,7 +320,12 @@ export function createAiRunQueueStore(db: ServiceDb): AiRunQueueStore {
         .eq('office_id', data.office_id)
         .maybeSingle();
       if (settingsError) throw new RepositoryError('aiRuns.claim', settingsError);
-      return { kind: data.kind, input: data.input, aiEnabled: settings?.ai_enabled ?? false };
+      return {
+        kind: data.kind,
+        input: data.input,
+        aiEnabled: settings?.ai_enabled ?? false,
+        requestedAt: data.requested_at,
+      };
     },
 
     async status(id) {

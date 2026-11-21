@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { calendarDateSchema } from '../deadlines/calendar-date';
 
+/** Longest note body, also the longest rewrite the guard may propose (accepting it must save). */
+export const NOTE_BODY_MAX_LENGTH = 5000;
+
+/** A queued or running sensitive data check older than this counts as unavailable, the user can save without it. */
+export const NOTE_CHECK_TIMEOUT_MS = 45_000;
+
 export const noteKindSchema = z.enum([
   'observation',
   'ongoing_conversation',
@@ -25,7 +31,7 @@ const noteFields = z.strictObject({
   /** Null for a workload fact. */
   sign: noteSignSchema.nullable(),
   communicated: z.boolean(),
-  body: z.string().trim().min(1).max(5000),
+  body: z.string().trim().min(1).max(NOTE_BODY_MAX_LENGTH),
 });
 const workloadFactHasNoSign = {
   message: 'A workload fact has no sign',

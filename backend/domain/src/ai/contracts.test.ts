@@ -25,7 +25,10 @@ const outputExamples: Record<AiRunKind, unknown> = {
   quality_check: {
     issues: [{ type: 'no_date', fragment: null, suggestion: 'Dodaj datę zdarzenia.' }],
   },
-  sensitive_data: { warnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }] },
+  sensitive_data: {
+    warnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+    rewrite: 'Był nieobecny.',
+  },
   conversation_prep: {
     goal: 'Omówienie wyników.',
     plan: ['Powitanie', 'Omówienie kryteriów'],
@@ -109,6 +112,22 @@ describe('ai contracts', () => {
       'developmentConclusions.1',
       'question.0',
     ]);
+  });
+
+  it('sensitive data output without rewrite parses as null rewrite', () => {
+    expect(aiOutputSchemas.sensitive_data.parse({ warnings: [] })).toEqual({
+      warnings: [],
+      rewrite: null,
+    });
+  });
+
+  it('sensitive data fragment paths include rewrite', () => {
+    const warnings = [{ category: 'health' as const, fragment: 'L4' }];
+    expect(aiFragmentPaths('sensitive_data', { warnings, rewrite: 'Był nieobecny.' })).toEqual([
+      'warning.0',
+      'rewrite',
+    ]);
+    expect(aiFragmentPaths('sensitive_data', { warnings, rewrite: null })).toEqual(['warning.0']);
   });
 
   it('appreciation input requires gap days', () => {

@@ -42,7 +42,16 @@ export {
   type StartEvaluationInput,
 } from './evaluations/evaluation-service';
 export { computeEvaluationDeadlines } from './evaluations/deadlines';
-export { type NoteService, type NoteWriteOptions, createNoteService } from './notes/note-service';
+export {
+  NOTE_CHECK_TIMEOUT_MS,
+  type NoteCheck,
+  type NoteCheckAi,
+  type NoteCheckInput,
+  type NoteService,
+  type NoteServiceDependencies,
+  type NoteWriteOptions,
+  createNoteService,
+} from './notes/note-service';
 export {
   type OfficeSettingsService,
   createOfficeSettingsService,

@@ -1,4 +1,9 @@
-import { type AiInput, type AiRunKind, aiRunKindSchema } from '@sarmata/domain';
+import {
+  type AiInput,
+  type AiRunKind,
+  NOTE_BODY_MAX_LENGTH,
+  aiRunKindSchema,
+} from '@sarmata/domain';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type AiConfig } from './config';
 import {
@@ -371,6 +376,7 @@ describe('sensitive data', () => {
             { category: 'family', fragment: 'opiekował się synem' },
             { category: 'religion', fragment: 'nie ma tego w notatce' },
           ],
+          rewrite: 'Był nieobecny w pracy.',
         },
       },
     });
@@ -383,7 +389,126 @@ describe('sensitive data', () => {
         { category: 'health', fragment: 'zwolnieniu lekarskim' },
         { category: 'family', fragment: 'opiekował się synem' },
       ],
+      rewrite: 'Był nieobecny w pracy.',
     });
+  });
+
+  it('sensitive data drops a rewrite that keeps a flagged fragment', async () => {
+    const { runner } = await runnerWith({
+      objects: {
+        sensitive_data: { warnings: [], rewrite: 'Był na zwolnieniu lekarskim w marcu.' },
+      },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+    });
+    expect(output).toEqual({
+      warnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+      rewrite: null,
+    });
+  });
+
+  it('sensitive data drops a rewrite the dictionary still flags', async () => {
+    const { runner } = await runnerWith({
+      objects: {
+        sensitive_data: {
+          warnings: [],
+          rewrite: 'Po rozstaniu z małżonką 03.11.2026 spóźnił się z opinią.',
+        },
+      },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Po rozwodzie 03.11.2026 spóźnił się z opinią.',
+      keywordWarnings: [{ category: 'family', fragment: 'rozwodzie' }],
+    });
+    expect(output).toEqual({
+      warnings: [{ category: 'family', fragment: 'rozwodzie' }],
+      rewrite: null,
+    });
+  });
+
+  it('sensitive data drops a rewrite with a changed name', async () => {
+    const text = 'Pani Ewa była na zwolnieniu lekarskim, 14.11.2026 oddała raport.';
+    const keywordWarnings = [{ category: 'health' as const, fragment: 'zwolnieniu lekarskim' }];
+    const mangled = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'Panni Ewa 14.11.2026 oddała raport.' } },
+    });
+    const dropped = await executeOk(mangled.runner, 'sensitive_data', { text, keywordWarnings });
+    expect(dropped.output).toEqual({ warnings: keywordWarnings, rewrite: null });
+    const intact = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'Pani Ewa 14.11.2026 oddała raport.' } },
+    });
+    const kept = await executeOk(intact.runner, 'sensitive_data', { text, keywordWarnings });
+    expect(kept.output).toEqual({
+      warnings: keywordWarnings,
+      rewrite: 'Pani Ewa 14.11.2026 oddała raport.',
+    });
+  });
+
+  it('sensitive data keeps a rewrite that opens with a lowercase word of the note', async () => {
+    const text = 'Po operacji kolana pan Jan 03.11.2026 przygotował raport.';
+    const keywordWarnings = [{ category: 'health' as const, fragment: 'operacji' }];
+    const { runner } = await runnerWith({
+      objects: {
+        sensitive_data: { warnings: [], rewrite: 'Pan Jan 03.11.2026 przygotował raport.' },
+      },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', { text, keywordWarnings });
+    expect(output).toEqual({
+      warnings: keywordWarnings,
+      rewrite: 'Pan Jan 03.11.2026 przygotował raport.',
+    });
+  });
+
+  it('sensitive data drops a rewrite longer than the note limit', async () => {
+    const keywordWarnings = [{ category: 'health' as const, fragment: 'zwolnieniu lekarskim' }];
+    const { runner } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'a'.repeat(NOTE_BODY_MAX_LENGTH + 1) } },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings,
+    });
+    expect(output).toEqual({ warnings: keywordWarnings, rewrite: null });
+  });
+
+  it('sensitive data has no rewrite without warnings', async () => {
+    const { runner } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: 'Coś innego.' } },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Oddał raport w terminie.',
+      keywordWarnings: [],
+    });
+    expect(output).toEqual({ warnings: [], rewrite: null });
+  });
+
+  it('sensitive data drops a rewrite equal to the note', async () => {
+    const { runner } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: ' Był na zwolnieniu lekarskim. ' } },
+    });
+    const { output } = await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+    });
+    expect(output).toEqual({
+      warnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+      rewrite: null,
+    });
+  });
+
+  it('sensitive data prompt lists keyword warnings', async () => {
+    const { runner, fake } = await runnerWith({
+      objects: { sensitive_data: { warnings: [], rewrite: null } },
+    });
+    await executeOk(runner, 'sensitive_data', {
+      text: 'Był na zwolnieniu lekarskim.',
+      keywordWarnings: [{ category: 'health', fragment: 'zwolnieniu lekarskim' }],
+    });
+    const prompt = fake.requests.map(promptOf)[0];
+    expect(prompt).toContain('Notatka:\nBył na zwolnieniu lekarskim.');
+    expect(prompt).toContain('Słownik wskazał fragmenty:\n- health: zwolnieniu lekarskim');
   });
 });
 
