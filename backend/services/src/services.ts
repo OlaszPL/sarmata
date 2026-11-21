@@ -19,11 +19,16 @@ import {
   type Repositories,
   type SimilarEmployee,
   createNoteRepository,
+  createNotificationRepository,
   createOfficeSettingsRepository,
   createRepositories,
 } from '@sarmata/repositories';
 import { ServiceError } from './errors';
 import { type NoteService, createNoteService } from './notes/note-service';
+import {
+  type NotificationService,
+  createNotificationService,
+} from './notifications/notification-service';
 import {
   type OfficeSettingsService,
   createOfficeSettingsService,
@@ -129,6 +134,7 @@ export function createServices(dependencies: ServiceDependencies): Services {
 export type AppServices = Services & {
   readonly notes: NoteService;
   readonly officeSettings: OfficeSettingsService;
+  readonly notifications: NotificationService;
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
@@ -148,5 +154,6 @@ export const servicesFor = (db: Db): AppServices => {
     }),
     notes: createNoteService(createNoteRepository(db)),
     officeSettings: createOfficeSettingsService(officeSettings),
+    notifications: createNotificationService(createNotificationRepository(db)),
   };
 };
