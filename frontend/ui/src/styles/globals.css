@@ -10,6 +10,20 @@
 
 @theme inline {
   --font-sans: 'Open Sans Variable', 'Open Sans', system-ui, sans-serif;
+  --font-heading: 'Fira Sans', system-ui, sans-serif;
+  --color-navy: var(--navy);
+  --color-navy-dark: var(--navy-dark);
+  --color-link: var(--link);
+  --color-brand-red: var(--brand-red);
+  --color-error: var(--error);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-gold: var(--gold);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-band: var(--band);
+  --color-rule: var(--rule);
+  --color-on-navy-muted: var(--on-navy-muted);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -34,28 +48,55 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Gov.pl palette (docs/sources/ux-standardy/FINDINGS.md, section 2). Contrast is against white. */
 :root {
-  --radius: 0.375rem;
+  /* Civil service palette (docs/superpowers/specs/2026-11-21-ui-style-design.md). */
+  --navy: #003480;
+  --navy-dark: #00265e;
+  --link: #1d4f9c;
+  --brand-red: #e52518; /* accent only: mark, line above the footer, notification counter */
+  --error: #b81d13;
+  --success: #2e6b1f;
+  --warning: #8a5a00;
+  --gold: #f7cf55; /* decoration only */
+  --ink: #1b1b1b;
+  --ink-muted: #5c5c5c;
+  --band: #f2f2ee;
+  --rule: #1b1b1b;
+  --on-navy-muted: #c5d0e6;
+
+  --radius: 0;
   --background: #ffffff;
-  --foreground: #1b1b1b; /* Black */
+  --foreground: var(--ink);
   --card: #ffffff;
-  --card-foreground: #1b1b1b;
+  --card-foreground: var(--ink);
   --popover: #ffffff;
-  --popover-foreground: #1b1b1b;
-  --primary: #0052a5; /* Dark blue, 7.64:1 */
+  --popover-foreground: var(--ink);
+  --primary: var(--navy);
   --primary-foreground: #ffffff;
-  --secondary: #f1f1f1; /* Gray 4 */
-  --secondary-foreground: #1b1b1b;
-  --muted: #f1f1f1;
-  --muted-foreground: #656565; /* Gray 1, 5.83:1 */
-  --accent: #f1f1f1;
-  --accent-foreground: #00468d; /* Navy blue */
-  --destructive: #a7162d; /* Dark red, 7.51:1 */
-  --border: #dadada; /* Gray 3a, decorative lines only */
-  --input: #767676; /* Gray 2, 4.54:1, field borders need 3:1 (WCAG 1.4.11) */
-  --ring: #006cd7; /* Light blue, 5.09:1 */
-  --focus: #0052a5;
+  --secondary: var(--band);
+  --secondary-foreground: var(--ink);
+  --muted: var(--band);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--band);
+  --accent-foreground: var(--navy-dark);
+  --destructive: var(--error);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--navy);
+  --focus: var(--navy);
+}
+
+/* Text size tool in the header. */
+:root[data-text-size='large'] {
+  font-size: 112.5%;
+}
+
+/* High contrast tool in the header. */
+:root[data-contrast='high'] {
+  --ink-muted: #1b1b1b;
+  --link: #00265e;
+  --on-navy-muted: #ffffff;
+  --band: #ffffff;
 }
 
 @layer base {
@@ -75,6 +116,12 @@
   h4 {
     line-height: 1.25;
   }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
+  }
 }
 
 /*
@@ -84,4 +131,30 @@
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px #fff; /* triple ring: visible on white and on navy */
+}
+
+/* PixelLoader: cells fill one after another. Unlayered like the focus ring, so it is never purged or overridden. */
+.pixel-loader-cell {
+  background-color: var(--cell);
+  animation: pixel-fill 2.4s steps(1, end) infinite;
+}
+
+@keyframes pixel-fill {
+  0% {
+    background-color: #dcdcd6;
+  }
+  10%,
+  80% {
+    background-color: var(--cell);
+  }
+  100% {
+    background-color: #dcdcd6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-loader-cell {
+    animation: none;
+  }
 }

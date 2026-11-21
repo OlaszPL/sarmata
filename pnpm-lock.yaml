@@ -522,6 +522,9 @@ importers:
       '@fontsource-variable/open-sans':
         specifier: 5.3.0
         version: 5.3.0
+      '@fontsource/fira-sans':
+        specifier: 5.3.0
+        version: 5.3.0
       '@myriaddreamin/typst-ts-node-compiler':
         specifier: 'catalog:'
         version: 0.7.0
@@ -1016,6 +1019,9 @@ packages:
 
   '@fontsource-variable/open-sans@5.3.0':
     resolution: {integrity: sha512-VOfhZfLIOBVa6K/dTEu7scqQXYdGa4jBX8quFpQ0S6574B+W2EOBJf9PkqyVtMEI7WWIWNEbpvPc3vY1mN2mmQ==}
+
+  '@fontsource/fira-sans@5.3.0':
+    resolution: {integrity: sha512-z1SKSG7eRhm3srlb7rQ3j77QP4TP7OFxCZ4wUWhCdt+3hOF9K0AyvybpAsz6+JWNcCVV7AqC7dbOT3e67P2r5A==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -4494,6 +4500,8 @@ snapshots:
   '@floating-ui/utils@0.2.12': {}
 
   '@fontsource-variable/open-sans@5.3.0': {}
+
+  '@fontsource/fira-sans@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

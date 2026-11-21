@@ -149,7 +149,7 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
-Font Open Sans jest na licencji SIL Open Font License 1.1.
+Czcionki Open Sans (treść) i Fira Sans (nagłówki, menu, przyciski, liczby, pakiet `@fontsource/fira-sans`) są na licencji SIL Open Font License 1.1.
 
 ## Zmienne środowiskowe
 

@@ -1,4 +1,7 @@
 import '@fontsource-variable/open-sans';
+import '@fontsource/fira-sans/500.css';
+import '@fontsource/fira-sans/600.css';
+import '@fontsource/fira-sans/700.css';
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
