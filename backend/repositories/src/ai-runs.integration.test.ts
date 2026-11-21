@@ -93,6 +93,7 @@ describe('ai runs', () => {
       kind: 'hr_signals',
       input: signalsInput,
       aiEnabled: true,
+      requestedAt: expect.any(String) as string,
     });
     expect(await store.claim(run.id, 600_000)).toBeNull();
   });
