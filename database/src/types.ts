@@ -217,6 +217,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"grade_grants": {
+                  Row: {
+                    "basis": string,"employee_id": string,"evaluation_id": string | null,"granted_on": string,"id": string,"new_grade": number,"office_id": string,"previous_grade": number | null,"recorded_at": string,"recorded_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "basis": string,"employee_id": string,"evaluation_id"?: string | null,"granted_on": string,"id"?: string,"new_grade": number,"office_id": string,"previous_grade"?: number | null,"recorded_at"?: string,"recorded_by"?: string
+                  }
+                  Update: {
+                    "basis"?: string,"employee_id"?: string,"evaluation_id"?: string | null,"granted_on"?: string,"id"?: string,"new_grade"?: number,"office_id"?: string,"previous_grade"?: number | null,"recorded_at"?: string,"recorded_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "grade_grants_employee_fkey"
+      columns: ["employee_id","office_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "grade_grants_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "evaluations"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "grade_grants_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "statistics_evaluation_facts"
+      referencedColumns: ["evaluation_id","office_id"]
+    },{
+      foreignKeyName: "grade_grants_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"memberships": {
                   Row: {
                     "created_at": string,"office_id": string,"role": Database["public"]['Enums']["office_role"],"user_id": string
@@ -285,14 +323,14 @@ isOneToOne: false
                   ]
                 },"office_settings": {
                   Row: {
-                    "ai_enabled": boolean,"default_place": string | null,"notes_retention_months": number,"objection_addressee_sheet_a": string | null,"office_id": string,"reminder_lead_days": (number)[],"smtp_from": string | null,"smtp_host": string | null,"smtp_password_secret_id": string | null,"smtp_password_set": boolean | null,"smtp_port": number | null,"smtp_user": string | null
+                    "ai_enabled": boolean,"default_place": string | null,"evaluator_flag_central_share": number,"evaluator_flag_leniency_points": number,"evaluator_flag_min_evaluations": number,"notes_retention_months": number,"objection_addressee_sheet_a": string | null,"office_id": string,"reminder_lead_days": (number)[],"smtp_from": string | null,"smtp_host": string | null,"smtp_password_secret_id": string | null,"smtp_password_set": boolean | null,"smtp_port": number | null,"smtp_user": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "ai_enabled"?: boolean,"default_place"?: string | null,"notes_retention_months"?: number,"objection_addressee_sheet_a"?: string | null,"office_id": string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
+                    "ai_enabled"?: boolean,"default_place"?: string | null,"evaluator_flag_central_share"?: number,"evaluator_flag_leniency_points"?: number,"evaluator_flag_min_evaluations"?: number,"notes_retention_months"?: number,"objection_addressee_sheet_a"?: string | null,"office_id": string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
                   }
                   Update: {
-                    "ai_enabled"?: boolean,"default_place"?: string | null,"notes_retention_months"?: number,"objection_addressee_sheet_a"?: string | null,"office_id"?: string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
+                    "ai_enabled"?: boolean,"default_place"?: string | null,"evaluator_flag_central_share"?: number,"evaluator_flag_leniency_points"?: number,"evaluator_flag_min_evaluations"?: number,"notes_retention_months"?: number,"objection_addressee_sheet_a"?: string | null,"office_id"?: string,"reminder_lead_days"?: (number)[],"smtp_from"?: string | null,"smtp_host"?: string | null,"smtp_password_secret_id"?: string | null,"smtp_password_set"?: never,"smtp_port"?: number | null,"smtp_user"?: string | null
                   }
                   Relationships: [
                     {
@@ -414,6 +452,12 @@ isOneToOne: false
 "job_queue_send":
 { Args: { "delay_seconds"?: number,"message": Json }; Returns: number
                            },
+"record_grade_grant":
+{ Args: { "p_basis": string,"p_employee_id": string,"p_evaluation_id": string,"p_granted_on": string,"p_new_grade": number }; Returns: string
+                           },
+"record_labour_court_appeal":
+{ Args: { "p_evaluation_id": string,"p_filed_on": string }; Returns: string
+                           },
 "save_evaluation_results":
 { Args: { "p_results": Json }; Returns: number
                            },
@@ -425,7 +469,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","note_kind": "observation"|"ongoing_conversation"|"appreciation"|"workload_fact","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
+            "employment_basis": "indefinite"|"appointment"|"fixed_term","evaluation_event_kind": "created"|"part_one_approved"|"part_one_signed"|"evaluation_interview_held"|"sheet_approved"|"acquainted"|"signature_refused"|"closed"|"objection_filed"|"objection_outcome"|"absence"|"term_changed"|"evaluator_changed"|"position_changed"|"correction"|"interrupted"|"labour_court_appeal","evaluation_status": "criteria"|"criteria_awaiting_signature"|"period"|"interview"|"drafted"|"delivered"|"closed"|"objection"|"interrupted","note_kind": "observation"|"ongoing_conversation"|"appreciation"|"workload_fact","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -541,7 +585,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"note_kind": ["observation", "ongoing_conversation", "appreciation", "workload_fact"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
+            "employment_basis": ["indefinite", "appointment", "fixed_term"],"evaluation_event_kind": ["created", "part_one_approved", "part_one_signed", "evaluation_interview_held", "sheet_approved", "acquainted", "signature_refused", "closed", "objection_filed", "objection_outcome", "absence", "term_changed", "evaluator_changed", "position_changed", "correction", "interrupted", "labour_court_appeal"],"evaluation_status": ["criteria", "criteria_awaiting_signature", "period", "interview", "drafted", "delivered", "closed", "objection", "interrupted"],"note_kind": ["observation", "ongoing_conversation", "appreciation", "workload_fact"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
           }
         }
 } as const
