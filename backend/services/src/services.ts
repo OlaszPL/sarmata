@@ -3,14 +3,18 @@ import {
   type DeadlineFacts,
   type DeadlineResult,
   type DeadlineSlot,
+  type NewEmployeeInput,
   type RegulationDocument,
   computeDeadline,
+  employeePatchSchema,
+  newEmployeeSchema,
   versionInForce,
 } from '@sarmata/domain';
 import {
   type Db,
   type Employee,
   type Repositories,
+  type SimilarEmployee,
   createRepositories,
 } from '@sarmata/repositories';
 import { ServiceError } from './errors';
@@ -27,7 +31,14 @@ export interface DeadlineRequest {
 }
 
 export interface Services {
-  readonly employees: { list(): Promise<Employee[]> };
+  readonly employees: {
+    list(): Promise<Employee[]>;
+    get(id: string): Promise<Employee | null>;
+    /** Throws `ZodError` for invalid input. */
+    create(input: NewEmployeeInput): Promise<Employee>;
+    update(id: string, patch: Partial<NewEmployeeInput>): Promise<Employee>;
+    findSimilar(search: string): Promise<SimilarEmployee[]>;
+  };
   readonly regulations: {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
   };
@@ -38,7 +49,14 @@ export function createServices(dependencies: ServiceDependencies): Services {
   const { repositories } = dependencies;
 
   return {
-    employees: repositories.employees,
+    employees: {
+      list: () => repositories.employees.list(),
+      get: (id) => repositories.employees.get(id),
+      create: async (input) => repositories.employees.create(newEmployeeSchema.parse(input)),
+      update: async (id, patch) =>
+        repositories.employees.update(id, employeePatchSchema.parse(patch)),
+      findSimilar: (search) => repositories.employees.findSimilar(search),
+    },
     regulations: {
       async inForceOn(on) {
         const version = versionInForce(await repositories.regulationVersions.listOfficial(), on);

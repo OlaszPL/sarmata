@@ -2,10 +2,12 @@ import { type RegulationDocument, calendarDate } from '@sarmata/domain';
 import { officialRegulations } from '@sarmata/regulations';
 import {
   type Employee,
+  type NewEmployee,
   type OfficialRegulationWriter,
   type Repositories,
 } from '@sarmata/repositories';
 import { describe, expect, it } from 'vitest';
+import { ZodError } from 'zod';
 import { ServiceError, createServices } from './index';
 import { syncOfficialRegulations } from './system';
 
@@ -15,8 +17,23 @@ if (regulation2016 === undefined) throw new Error('The official regulation catal
 function inMemoryRepositories(seed: { employees?: Employee[]; official?: RegulationDocument[] }) {
   const official = [...(seed.official ?? [])];
   const inserted: string[] = [];
+  const created: Employee[] = [];
   const repositories: Repositories = {
-    employees: { list: () => Promise.resolve([...(seed.employees ?? [])]) },
+    employees: {
+      list: () => Promise.resolve([...(seed.employees ?? [])]),
+      get: (id) => Promise.resolve((seed.employees ?? []).find((e) => e.id === id) ?? null),
+      create: (input: NewEmployee) => {
+        const employee: Employee = { id: 'new', officeId: 'o1', userId: null, ...input };
+        created.push(employee);
+        return Promise.resolve(employee);
+      },
+      update: (id, patch) => {
+        const current = (seed.employees ?? []).find((e) => e.id === id);
+        if (current === undefined) return Promise.reject(new Error('missing'));
+        return Promise.resolve({ ...current, lastName: patch.lastName ?? current.lastName });
+      },
+      findSimilar: () => Promise.resolve([]),
+    },
     regulationVersions: {
       listOfficial: () => Promise.resolve([...official]),
       findOfficialById: (id) =>
@@ -30,13 +47,56 @@ function inMemoryRepositories(seed: { employees?: Employee[]; official?: Regulat
       return Promise.resolve();
     },
   };
-  return { repositories, writer, inserted };
+  return { repositories, writer, inserted, created };
 }
 
 const expectServiceError = async (promise: Promise<unknown>, code: string) => {
   await expect(promise).rejects.toBeInstanceOf(ServiceError);
   await expect(promise).rejects.toMatchObject({ code });
 };
+
+const profile = {
+  positionTitle: null,
+  orgUnit: null,
+  positionKind: 'other',
+  serviceStatus: 'employee',
+  employmentBasis: 'indefinite',
+  employmentStart: null,
+  appointmentYear: null,
+  grade: null,
+  gradeGrantedOn: null,
+  employmentEndedOn: null,
+  supervisorEmployeeId: null,
+} as const;
+
+describe('employees.create', () => {
+  it('rejects empty last name', async () => {
+    const { repositories, created } = inMemoryRepositories({});
+    await expect(
+      createServices({ repositories }).employees.create({ firstName: 'Ewa', lastName: '  ' }),
+    ).rejects.toBeInstanceOf(ZodError);
+    expect(created).toEqual([]);
+  });
+
+  it('passes civil servant grade through', async () => {
+    const { repositories, created } = inMemoryRepositories({});
+    await createServices({ repositories }).employees.create({
+      firstName: 'Ewa',
+      lastName: 'Ewidencyjna',
+      serviceStatus: 'civil_servant',
+      appointmentYear: 2019,
+      grade: 4,
+      gradeGrantedOn: '2023-05-01',
+    });
+    expect(created[0]).toMatchObject({
+      serviceStatus: 'civil_servant',
+      grade: 4,
+      gradeGrantedOn: '2023-05-01',
+      positionKind: 'other',
+      email: null,
+    });
+  });
+});
 
 describe('employees.list', () => {
   it('returns the employees from the repository', async () => {
@@ -47,6 +107,7 @@ describe('employees.list', () => {
       lastName: 'Ewidencyjna',
       email: null,
       userId: null,
+      ...profile,
     };
     const { repositories } = inMemoryRepositories({ employees: [employee] });
     expect(await createServices({ repositories }).employees.list()).toEqual([employee]);

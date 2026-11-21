@@ -22,3 +22,14 @@ export { versionInForce } from './regulations/version-in-force';
 export { errorMessage } from './support/error-message';
 export { parseEnv } from './support/parse-env';
 export { type OfficeId, officeIdSchema } from './identity/office-id';
+export {
+  type EmploymentBasis,
+  type NewEmployeeInput,
+  type PositionKind,
+  type ServiceStatus,
+  employeePatchSchema,
+  employmentBasisSchema,
+  newEmployeeSchema,
+  positionKindSchema,
+  serviceStatusSchema,
+} from './employees/employee';

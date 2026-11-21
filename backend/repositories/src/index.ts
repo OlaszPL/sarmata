@@ -5,7 +5,13 @@ export { readAccountClaims } from './auth';
 export { findOfficeName } from './offices';
 export { createServiceClient } from './service-client';
 export { RepositoryError } from './errors';
-export { type Employee, type EmployeeRepository } from './employees';
+export {
+  type Employee,
+  type EmployeePatch,
+  type EmployeeRepository,
+  type NewEmployee,
+  type SimilarEmployee,
+} from './employees';
 export {
   type OfficialRegulationWriter,
   type RegulationVersionRepository,

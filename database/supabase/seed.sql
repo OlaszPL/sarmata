@@ -27,7 +27,14 @@ select access.create_account(
   account_id => '22222222-2222-4222-8222-000000000004'
 );
 
--- Employees without accounts: evaluated employees do not use the app.
-insert into public.employees (office_id, first_name, last_name, email) values
-  ('11111111-1111-4111-8111-111111111111', 'Ewa', 'Ewidencyjna', 'ewa.ewidencyjna@kropka.test'),
-  ('11111111-1111-4111-8111-111111111111', 'Marek', 'Merytoryczny', 'marek.merytoryczny@kropka.test');
+-- Employees without accounts: evaluated employees do not use the app. Their supervisor is Olga Oceniająca.
+insert into public.employees (
+  office_id, first_name, last_name, email, position_kind, service_status, employment_basis,
+  appointment_year, grade, supervisor_employee_id
+) values
+  ('11111111-1111-4111-8111-111111111111', 'Ewa', 'Ewidencyjna', 'ewa.ewidencyjna@kropka.test',
+   'other', 'civil_servant', 'appointment', 2018, 4,
+   (select id from public.employees where email = 'oceniajacy@kropka.test')),
+  ('11111111-1111-4111-8111-111111111111', 'Marek', 'Merytoryczny', 'marek.merytoryczny@kropka.test',
+   'other', 'employee', 'indefinite', null, null,
+   (select id from public.employees where email = 'oceniajacy@kropka.test'));

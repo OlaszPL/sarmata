@@ -67,3 +67,15 @@ _Avoid_: log, akcja
 **Notatka**:
 Obserwacja oceniającego z okresu oceny o konkretnym pracowniku. Czyta ją autor i kadry.
 _Avoid_: komentarz, uwaga
+
+**Arkusz**:
+Treść arkusza A, B albo C jednej oceny, wypełniana w trakcie oceny. Dokument oceny, nie sama ocena.
+_Avoid_: formularz, ankieta
+
+**Wersja arkusza**:
+Kolejny numer zapisu arkusza. Każda zmiana tworzy nową wersję, a poprzednie zostają do odczytu.
+_Avoid_: kopia, edycja
+
+**Rodzaj stanowiska**:
+Cecha stanowiska pracownika (szef urzędu, stanowisko z kierowaniem ludźmi albo inne), która wyznacza, jaki arkusz obowiązuje.
+_Avoid_: typ stanowiska, poziom

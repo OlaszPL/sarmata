@@ -7,14 +7,14 @@ export type Database = {
           Tables: {
             "employees": {
                   Row: {
-                    "created_at": string,"email": string | null,"first_name": string,"id": string,"last_name": string,"office_id": string,"user_id": string | null
+                    "appointment_year": number | null,"created_at": string,"email": string | null,"employment_basis": Database["public"]['Enums']["employment_basis"],"employment_ended_on": string | null,"employment_start": string | null,"first_name": string,"grade": number | null,"grade_granted_on": string | null,"id": string,"last_name": string,"office_id": string,"org_unit": string | null,"position_kind": Database["public"]['Enums']["position_kind"],"position_title": string | null,"service_status": Database["public"]['Enums']["service_status"],"supervisor_employee_id": string | null,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"email"?: string | null,"first_name": string,"id"?: string,"last_name": string,"office_id": string,"user_id"?: string | null
+                    "appointment_year"?: number | null,"created_at"?: string,"email"?: string | null,"employment_basis"?: Database["public"]['Enums']["employment_basis"],"employment_ended_on"?: string | null,"employment_start"?: string | null,"first_name": string,"grade"?: number | null,"grade_granted_on"?: string | null,"id"?: string,"last_name": string,"office_id": string,"org_unit"?: string | null,"position_kind"?: Database["public"]['Enums']["position_kind"],"position_title"?: string | null,"service_status"?: Database["public"]['Enums']["service_status"],"supervisor_employee_id"?: string | null,"user_id"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"email"?: string | null,"first_name"?: string,"id"?: string,"last_name"?: string,"office_id"?: string,"user_id"?: string | null
+                    "appointment_year"?: number | null,"created_at"?: string,"email"?: string | null,"employment_basis"?: Database["public"]['Enums']["employment_basis"],"employment_ended_on"?: string | null,"employment_start"?: string | null,"first_name"?: string,"grade"?: number | null,"grade_granted_on"?: string | null,"id"?: string,"last_name"?: string,"office_id"?: string,"org_unit"?: string | null,"position_kind"?: Database["public"]['Enums']["position_kind"],"position_title"?: string | null,"service_status"?: Database["public"]['Enums']["service_status"],"supervisor_employee_id"?: string | null,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -23,6 +23,12 @@ export type Database = {
 isOneToOne: false
       referencedRelation: "offices"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "employees_supervisor_fkey"
+      columns: ["supervisor_employee_id","office_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id","office_id"]
     },{
       foreignKeyName: "employees_user_id_office_id_fkey"
       columns: ["user_id","office_id"]
@@ -53,14 +59,14 @@ isOneToOne: false
                   ]
                 },"offices": {
                   Row: {
-                    "created_at": string,"id": string,"name": string
+                    "created_at": string,"evaluation_visibility": string,"id": string,"name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"name": string
+                    "created_at"?: string,"evaluation_visibility"?: string,"id"?: string,"name": string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"name"?: string
+                    "created_at"?: string,"evaluation_visibility"?: string,"id"?: string,"name"?: string
                   }
                   Relationships: [
                     
@@ -97,7 +103,12 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "job_queue_archive":
+            "find_similar_employees":
+{ Args: { "max_results"?: number,"search": string }; Returns: {
+              "first_name": string,"id": string,"last_name": string,"org_unit": string,"position_title": string,"score": number
+            }[]
+                           },
+"job_queue_archive":
 { Args: { "message_id": number }; Returns: boolean
                            },
 "job_queue_read":
@@ -110,7 +121,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "office_role": "admin"|"hr"|"evaluator"
+            "employment_basis": "indefinite"|"appointment"|"fixed_term","office_role": "admin"|"hr"|"evaluator","position_kind": "office_head"|"manages_people"|"other","service_status": "civil_servant"|"employee"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -226,7 +237,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "office_role": ["admin", "hr", "evaluator"]
+            "employment_basis": ["indefinite", "appointment", "fixed_term"],"office_role": ["admin", "hr", "evaluator"],"position_kind": ["office_head", "manages_people", "other"],"service_status": ["civil_servant", "employee"]
           }
         }
 } as const

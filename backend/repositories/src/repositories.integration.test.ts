@@ -56,6 +56,12 @@ describe('employees', () => {
     );
   });
 
+  it('findSimilar finds seeded employee by misspelled name', async () => {
+    const repositories = createRepositories(await signedIn('oceniajacy@kropka.test'));
+    const similar = await repositories.employees.findSimilar('Merek Merytoryczny');
+    expect(similar[0]?.lastName).toBe('Merytoryczny');
+  });
+
   it('refuses an anonymous client', async () => {
     await expect(createRepositories(anonymousClient()).employees.list()).rejects.toThrow(
       RepositoryError,
