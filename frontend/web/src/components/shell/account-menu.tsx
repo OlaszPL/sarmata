@@ -55,14 +55,17 @@ export function AccountMenu({ name, details }: AccountMenuProps) {
         onClick={() => {
           setOpen((current) => !current);
         }}
-        className={`flex min-h-16 min-w-0 items-center gap-3 px-5 text-left ${
+        className={`flex min-h-16 min-w-0 items-center gap-2.5 px-[1.125rem] text-left ${
           open ? 'bg-band' : 'hover:bg-band'
         }`}
       >
         <CircleUser className="size-6 shrink-0 md:hidden" aria-hidden />
-        <span className="hidden min-w-0 md:block">
-          <span className="font-heading block truncate font-medium">{name}</span>
-          <span className="text-ink-muted block truncate text-sm">{details}</span>
+        {/* Capped at the width of the mockup, a long office name is cut with an ellipsis. */}
+        <span className="hidden max-w-[17.5rem] min-w-0 md:block">
+          <span className="font-heading block truncate text-[0.9375rem] leading-[normal] font-semibold">
+            {name}
+          </span>
+          <span className="text-ink-muted block truncate text-sm leading-[normal]">{details}</span>
         </span>
         <span className="sr-only"> Menu konta</span>
         <ChevronDown className={`size-4 shrink-0 ${open ? 'rotate-180' : ''}`} aria-hidden />

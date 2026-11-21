@@ -20,7 +20,7 @@ const cells = Array.from({ length: size * size }, (_, index) => {
 export function PixelLoader({ label, className }: PixelLoaderProps) {
   return (
     <div className={cn('flex items-center gap-4', className)}>
-      <div className="grid grid-cols-6 gap-0.5" style={{ width: 'fit-content' }} aria-hidden>
+      <div className="grid grid-cols-6" style={{ width: 'fit-content' }} aria-hidden>
         {cells.map((color, index) => (
           <span
             key={index}

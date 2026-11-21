@@ -10,21 +10,21 @@ const links = [
 /** `publicOnly` hides links to pages that need an office membership (sign-in, no-office pages). */
 export function SiteFooter({ publicOnly = false }: { publicOnly?: boolean }) {
   return (
-    <footer className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-8 py-8">
+    <footer className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-8 py-7">
       <div>
-        <ul className="flex flex-wrap gap-x-7 gap-y-2">
+        <ul className="font-heading flex flex-wrap gap-x-7 gap-y-2 leading-[normal]">
           {links
             .filter((link) => link.public || !publicOnly)
             .map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="font-heading font-medium text-white underline">
+                <Link href={link.href} className="font-medium text-white underline">
                   {link.label}
                 </Link>
               </li>
             ))}
         </ul>
       </div>
-      <p className="text-on-navy-muted text-sm">
+      <p className="text-on-navy-muted text-sm leading-[normal]">
         Model AI działa w urzędzie. Dane nie opuszczają twojej sieci.
       </p>
     </footer>

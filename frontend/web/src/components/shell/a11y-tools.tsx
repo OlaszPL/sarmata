@@ -44,7 +44,8 @@ export function A11yTools() {
   }
 
   // Pressed is a full navy fill with white text: a strong cue that stays in high contrast mode.
-  const base = 'flex min-h-16 items-center px-3';
+  // One cell of 16px side padding with a 10px gap between the two tools, split across the buttons.
+  const base = 'flex min-h-16 items-center';
   const state = (pressed: boolean) => (pressed ? 'bg-navy text-white' : 'text-ink hover:bg-band');
 
   return (
@@ -53,7 +54,7 @@ export function A11yTools() {
         type="button"
         aria-pressed={large}
         onClick={toggleTextSize}
-        className={`${base} font-heading text-base font-bold ${state(large)}`}
+        className={`${base} font-heading pr-[0.3125rem] pl-4 text-[1.0625rem] leading-[normal] font-bold ${state(large)}`}
       >
         A+<span className="sr-only"> Powiększ tekst</span>
       </button>
@@ -62,7 +63,7 @@ export function A11yTools() {
         aria-pressed={high}
         aria-label="Wysoki kontrast"
         onClick={toggleContrast}
-        className={`${base} ${state(high)}`}
+        className={`${base} pr-4 pl-[0.3125rem] ${state(high)}`}
       >
         <Contrast className="size-5" aria-hidden />
       </button>

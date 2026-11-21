@@ -30,7 +30,7 @@ export function MemberShell({
           <div className="border-rule hidden border-l sm:flex">
             <Link
               href={routes.employees}
-              className="font-heading flex min-h-16 items-center gap-2 px-5 font-medium"
+              className="font-heading flex min-h-16 items-center gap-2.5 px-[1.125rem] leading-[normal] font-medium"
             >
               <Search className="size-5" aria-hidden />
               {/* The label shows from 1440px, below the header needs the room for one line. */}
@@ -46,7 +46,7 @@ export function MemberShell({
         canStartEvaluation(account.role) ? (
           <Link
             href={routes.newEvaluation}
-            className="bg-navy font-heading flex shrink-0 items-center gap-2 px-6 font-medium whitespace-nowrap text-white no-underline"
+            className="bg-navy font-heading flex shrink-0 items-center gap-2.5 px-6 text-[1.0625rem] leading-[normal] font-semibold whitespace-nowrap text-white no-underline"
           >
             <Plus className="size-5" aria-hidden />
             <span className="sr-only sm:not-sr-only">Nowa ocena</span>

@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   const data = await loadDashboard(account);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col">
       <Hero data={data} />
       <div className="flex flex-1 flex-col lg:flex-row">
         <div className="min-w-0 flex-1">
@@ -24,7 +24,7 @@ export default async function DashboardPage() {
         </div>
         <aside
           aria-label="Podpowiedzi"
-          className="bg-band border-rule border-t lg:w-[26rem] lg:shrink-0 lg:border-t-0 lg:border-l"
+          className="bg-band border-rule border-t lg:w-[26.25rem] lg:shrink-0 lg:border-t-0 lg:border-l"
         >
           <HrSignalPanel signal={data.hrSignal} aiEnabled={data.aiEnabled} />
           <AiDraftPanel drafts={data.runningDrafts} />

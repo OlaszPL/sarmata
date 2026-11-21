@@ -9,7 +9,10 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Main navigation as header cells. The current section carries aria-current and a navy bar. */
+/**
+ * Main navigation as header cells. The current section carries aria-current, a heavier weight and a
+ * navy bar, so the state never rests on color alone.
+ */
 export function MainNav({ items }: { items: readonly NavItem[] }) {
   const pathname = usePathname();
 
@@ -23,8 +26,8 @@ export function MainNav({ items }: { items: readonly NavItem[] }) {
               <Link
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`font-heading relative flex min-h-16 items-center px-5 text-[1.0625rem] font-medium whitespace-nowrap ${
-                  active ? 'text-navy underline' : 'text-ink no-underline hover:underline'
+                className={`font-heading relative flex min-h-[3.9375rem] items-center px-[1.375rem] text-[1.0625rem] leading-[normal] whitespace-nowrap no-underline hover:underline ${
+                  active ? 'text-navy font-semibold' : 'text-ink font-medium'
                 }`}
               >
                 {item.label}

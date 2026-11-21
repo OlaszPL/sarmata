@@ -43,12 +43,14 @@ export function AppShell({
         <div className="-mb-px flex flex-wrap items-stretch xl:flex-nowrap">
           <a
             href={homeHref}
-            className="bg-navy border-rule flex min-h-16 shrink-0 items-center gap-3 border-b px-5 text-white no-underline"
+            className="bg-navy border-rule flex min-h-16 shrink-0 items-center gap-3 border-b px-6 text-white no-underline"
           >
             <span className="flex size-10 items-center justify-center bg-white">
-              <BrandMark className="size-8" />
+              <BrandMark className="size-10" />
             </span>
-            <span className="font-heading text-2xl font-bold">{product.name}</span>
+            <span className="font-heading text-2xl leading-[normal] font-bold tracking-[-0.0125em]">
+              {product.name}
+            </span>
             <span className="sr-only">: {product.tagline}</span>
           </a>
           {nav ? <div className="border-rule hidden shrink-0 border-b xl:flex">{nav}</div> : null}
@@ -64,11 +66,12 @@ export function AppShell({
           </div>
         ) : null}
       </header>
-      <div className="flex-1 px-8">
+      {/* A flex column all the way down, so the rails reach the footer on a short page. */}
+      <div className="flex flex-1 flex-col px-8">
         <main
           id="main"
           tabIndex={-1}
-          className="border-rule mx-auto h-full w-full max-w-[90rem] border-x outline-none"
+          className="border-rule mx-auto flex w-full max-w-[90rem] flex-1 flex-col border-x outline-none"
         >
           {children}
         </main>

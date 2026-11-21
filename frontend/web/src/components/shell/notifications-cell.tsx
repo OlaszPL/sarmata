@@ -22,12 +22,12 @@ export async function NotificationsCell() {
       <Link
         href={routes.notifications}
         aria-label={label}
-        className="flex min-h-16 items-center gap-2 px-5"
+        className="flex min-h-16 items-center gap-2.5 px-[1.125rem]"
       >
         <Bell className="size-5" aria-hidden />
         {unread ? (
           <span
-            className="bg-brand-red font-heading inline-flex min-w-6 items-center justify-center px-1 py-0.5 text-sm font-bold text-white"
+            className="bg-brand-red font-heading inline-flex h-[1.375rem] items-center justify-center px-[0.4375rem] text-sm leading-[normal] font-bold text-white"
             aria-hidden
           >
             {unread}
