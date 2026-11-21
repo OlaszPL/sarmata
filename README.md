@@ -29,7 +29,15 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm db:start
        pnpm db:reset
 
-6. **Sprawdzenie całości** (to samo co CI):
+6. **Aplikacja web** (po `pnpm db:start`):
+
+       pnpm web:env
+       pnpm --filter @sarmata/e2e exec playwright install chromium
+       pnpm dev
+
+   `web:env` zapisuje `frontend/web/.env.local` z adresem i kluczem lokalnego Supabase (oraz `AI_BASE_URL`, `AI_MODEL`, `AI_DECISION_URL` z `.env.ai.local`, jeśli istnieje). Przeglądarka Chromium służy testom e2e i skillowi `app-walkthrough`. Aplikacja działa na `http://localhost:3000`.
+
+7. **Sprawdzenie całości** (to samo co CI):
 
        pnpm check
        pnpm db:test
@@ -51,6 +59,18 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
 
+## Aplikacja web
+
+| Skrypt | Co robi |
+|---|---|
+| `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase |
+| `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
+| `pnpm e2e` | testy Playwright: logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA) |
+| `pnpm e2e:ui` | te same testy w trybie UI Playwright |
+| `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
+
+Font Open Sans jest na licencji SIL Open Font License 1.1.
+
 ## Pliki konfiguracyjne
 
 - W repo: `.envrc`, `.sops.yaml`, `secrets/*.enc.env` (zaszyfrowane), `.mcp.json`, `.claude/`, `.agents/`, `.codex/`, `scripts/termic-*.sh`, `database/supabase/config.toml`.
@@ -58,7 +78,12 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 
 ## Termic
 
-W ustawieniach projektu sarmata w Termic ustaw skrypt setup na `./scripts/termic-setup.sh`. Robi kroki 3 do 5 automatycznie: instalacja, `direnv allow`, sekrety, start wspólnej bazy, ostrzeżenia z `doctor`.
+W ustawieniach projektu sarmata w Termic ustaw:
+
+- skrypt setup: `./scripts/termic-setup.sh`. Robi kroki 3 do 6 automatycznie: instalacja, `direnv allow`, sekrety, start wspólnej bazy, `web:env`, Chromium dla Playwright, ostrzeżenia z `doctor`.
+- skrypt run: `./scripts/termic-run.sh`
+
+Skrypt run uruchamia `pnpm dev` na porcie wyliczonym z nazwy taska (`$TERMIC_TASK`, zakres 3001 do 3999, poza Termic port 3000) i ustawia `SITE_URL` aplikacji na ten sam adres. Port bieżącego taska pokazuje `node scripts/task-port.mjs`.
 
 ## Dokumentacja
 

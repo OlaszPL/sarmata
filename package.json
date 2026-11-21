@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @sarmata/web dev",
+    "web:env": "node scripts/web-env.mjs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
