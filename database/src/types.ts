@@ -89,16 +89,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"employees": {
+                },"employee_retention": {
                   Row: {
-                    "appointment_year": number | null,"created_at": string,"email": string | null,"employment_basis": Database["public"]['Enums']["employment_basis"],"employment_ended_on": string | null,"employment_start": string | null,"first_name": string,"grade": number | null,"grade_granted_on": string | null,"id": string,"last_name": string,"office_id": string,"org_unit": string | null,"position_kind": Database["public"]['Enums']["position_kind"],"position_title": string | null,"service_status": Database["public"]['Enums']["service_status"],"supervisor_employee_id": string | null,"user_id": string | null
+                    "archive_exported_at": string | null,"archive_exported_by": string | null,"created_at": string,"employee_id": string,"office_id": string,"retained_until": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "appointment_year"?: number | null,"created_at"?: string,"email"?: string | null,"employment_basis"?: Database["public"]['Enums']["employment_basis"],"employment_ended_on"?: string | null,"employment_start"?: string | null,"first_name": string,"grade"?: number | null,"grade_granted_on"?: string | null,"id"?: string,"last_name": string,"office_id": string,"org_unit"?: string | null,"position_kind"?: Database["public"]['Enums']["position_kind"],"position_title"?: string | null,"service_status"?: Database["public"]['Enums']["service_status"],"supervisor_employee_id"?: string | null,"user_id"?: string | null
+                    "archive_exported_at"?: string | null,"archive_exported_by"?: string | null,"created_at"?: string,"employee_id": string,"office_id": string,"retained_until": string
                   }
                   Update: {
-                    "appointment_year"?: number | null,"created_at"?: string,"email"?: string | null,"employment_basis"?: Database["public"]['Enums']["employment_basis"],"employment_ended_on"?: string | null,"employment_start"?: string | null,"first_name"?: string,"grade"?: number | null,"grade_granted_on"?: string | null,"id"?: string,"last_name"?: string,"office_id"?: string,"org_unit"?: string | null,"position_kind"?: Database["public"]['Enums']["position_kind"],"position_title"?: string | null,"service_status"?: Database["public"]['Enums']["service_status"],"supervisor_employee_id"?: string | null,"user_id"?: string | null
+                    "archive_exported_at"?: string | null,"archive_exported_by"?: string | null,"created_at"?: string,"employee_id"?: string,"office_id"?: string,"retained_until"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "employee_retention_employee_fkey"
+      columns: ["employee_id","office_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id","office_id"]
+    }
+                  ]
+                },"employees": {
+                  Row: {
+                    "anonymized_at": string | null,"appointment_year": number | null,"created_at": string,"email": string | null,"employment_basis": Database["public"]['Enums']["employment_basis"],"employment_ended_on": string | null,"employment_start": string | null,"first_name": string,"grade": number | null,"grade_granted_on": string | null,"id": string,"last_name": string,"office_id": string,"org_unit": string | null,"position_kind": Database["public"]['Enums']["position_kind"],"position_title": string | null,"service_status": Database["public"]['Enums']["service_status"],"supervisor_employee_id": string | null,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "anonymized_at"?: string | null,"appointment_year"?: number | null,"created_at"?: string,"email"?: string | null,"employment_basis"?: Database["public"]['Enums']["employment_basis"],"employment_ended_on"?: string | null,"employment_start"?: string | null,"first_name": string,"grade"?: number | null,"grade_granted_on"?: string | null,"id"?: string,"last_name": string,"office_id": string,"org_unit"?: string | null,"position_kind"?: Database["public"]['Enums']["position_kind"],"position_title"?: string | null,"service_status"?: Database["public"]['Enums']["service_status"],"supervisor_employee_id"?: string | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "anonymized_at"?: string | null,"appointment_year"?: number | null,"created_at"?: string,"email"?: string | null,"employment_basis"?: Database["public"]['Enums']["employment_basis"],"employment_ended_on"?: string | null,"employment_start"?: string | null,"first_name"?: string,"grade"?: number | null,"grade_granted_on"?: string | null,"id"?: string,"last_name"?: string,"office_id"?: string,"org_unit"?: string | null,"position_kind"?: Database["public"]['Enums']["position_kind"],"position_title"?: string | null,"service_status"?: Database["public"]['Enums']["service_status"],"supervisor_employee_id"?: string | null,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -244,12 +264,6 @@ isOneToOne: false
       referencedRelation: "employees"
       referencedColumns: ["id","office_id"]
     },{
-      foreignKeyName: "evaluations_evaluator_fkey"
-      columns: ["evaluator_account_id","office_id"]
-isOneToOne: false
-      referencedRelation: "memberships"
-      referencedColumns: ["user_id","office_id"]
-    },{
       foreignKeyName: "evaluations_office_id_fkey"
       columns: ["office_id"]
 isOneToOne: false
@@ -315,14 +329,14 @@ isOneToOne: false
                   ]
                 },"memberships": {
                   Row: {
-                    "created_at": string,"office_id": string,"role": Database["public"]['Enums']["office_role"],"user_id": string
+                    "created_at": string,"ended_on": string | null,"office_id": string,"role": Database["public"]['Enums']["office_role"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"office_id": string,"role": Database["public"]['Enums']["office_role"],"user_id": string
+                    "created_at"?: string,"ended_on"?: string | null,"office_id": string,"role": Database["public"]['Enums']["office_role"],"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"office_id"?: string,"role"?: Database["public"]['Enums']["office_role"],"user_id"?: string
+                    "created_at"?: string,"ended_on"?: string | null,"office_id"?: string,"role"?: Database["public"]['Enums']["office_role"],"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -497,6 +511,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"retained_evaluation_facts": {
+                  Row: {
+                    "civil_servant": boolean,"evaluation_id": string,"evaluator_account_id": string,"grade_by_law_due_year": number | null,"grade_requested": boolean,"labour_court_appeal_year": number | null,"level_code": string | null,"mean": number | null,"objection": string,"office_id": string,"org_unit": string | null,"outcome": string | null,"ratings": NonNullable<Json>,"retained_at": string,"second_consecutive_negative": boolean,"sheet_id": string,"with_conclusions": boolean,"year": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "civil_servant": boolean,"evaluation_id": string,"evaluator_account_id": string,"grade_by_law_due_year"?: number | null,"grade_requested": boolean,"labour_court_appeal_year"?: number | null,"level_code"?: string | null,"mean"?: number | null,"objection": string,"office_id": string,"org_unit"?: string | null,"outcome"?: string | null,"ratings": NonNullable<Json>,"retained_at"?: string,"second_consecutive_negative": boolean,"sheet_id": string,"with_conclusions": boolean,"year": number
+                  }
+                  Update: {
+                    "civil_servant"?: boolean,"evaluation_id"?: string,"evaluator_account_id"?: string,"grade_by_law_due_year"?: number | null,"grade_requested"?: boolean,"labour_court_appeal_year"?: number | null,"level_code"?: string | null,"mean"?: number | null,"objection"?: string,"office_id"?: string,"org_unit"?: string | null,"outcome"?: string | null,"ratings"?: NonNullable<Json>,"retained_at"?: string,"second_consecutive_negative"?: boolean,"sheet_id"?: string,"with_conclusions"?: boolean,"year"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "retained_evaluation_facts_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"retained_grade_grants": {
+                  Row: {
+                    "basis": string,"granted_year": number,"id": string,"new_grade": number,"office_id": string,"retained_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "basis": string,"granted_year": number,"id": string,"new_grade": number,"office_id": string,"retained_at"?: string
+                  }
+                  Update: {
+                    "basis"?: string,"granted_year"?: number,"id"?: string,"new_grade"?: number,"office_id"?: string,"retained_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "retained_grade_grants_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -512,12 +566,6 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "employees"
       referencedColumns: ["id","office_id"]
-    },{
-      foreignKeyName: "evaluations_evaluator_fkey"
-      columns: ["evaluator_account_id","office_id"]
-isOneToOne: false
-      referencedRelation: "memberships"
-      referencedColumns: ["user_id","office_id"]
     },{
       foreignKeyName: "evaluations_office_id_fkey"
       columns: ["office_id"]
@@ -535,7 +583,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "apply_evaluation_transition":
+            "anonymize_employee":
+{ Args: { "p_employee_id": string,"p_facts": Json,"p_today": string }; Returns: undefined
+                           },
+"apply_evaluation_transition":
 { Args: { "p_evaluation_id": string,"p_event_kind": Database["public"]['Enums']["evaluation_event_kind"],"p_expected_status": Database["public"]['Enums']["evaluation_status"],"p_lock_sheet": boolean,"p_next_status": Database["public"]['Enums']["evaluation_status"],"p_occurred_on": string,"p_payload": Json }; Returns: string
                            },
 "apply_objection_outcome":
@@ -554,8 +605,16 @@ isOneToOne: false
               "created": number,"queued": number,"resolved": number
             }[]
                            },
+"confirm_archive_export":
+{ Args: { "p_employee_id": string }; Returns: undefined
+                           },
 "correct_sheet":
 { Args: { "p_content": Json,"p_evaluation_id": string,"p_reason": string }; Returns: string
+                           },
+"end_employment":
+{ Args: { "p_employee_id": string,"p_ended_on": string,"p_purge_due_on": string,"p_reason": string }; Returns: {
+              "interrupted_evaluation_id": string
+            }[]
                            },
 "evaluation_transitions":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -581,6 +640,11 @@ isOneToOne: false
 "job_queue_send":
 { Args: { "delay_seconds"?: number,"message": Json }; Returns: number
                            },
+"notes_retention_preview":
+{ Args: { "p_months": number }; Returns: {
+              "ai_runs": number,"notes": number
+            }[]
+                           },
 "notification_digest_facts":
 { Args: { "p_account_id": string,"p_day": string }; Returns: {
               "email": string,"nearest_due_on": string,"office_id": string,"status": string,"unread_count": number
@@ -591,6 +655,11 @@ isOneToOne: false
               "host": string,"password": string,"port": number,"sender": string,"sender_name": string,"username": string
             }[]
                            },
+"purge_expired_content":
+{ Args: { "p_today": string }; Returns: {
+              "ai_runs": number,"decisions": number,"notes": number
+            }[]
+                           },
 "record_digest_result":
 { Args: { "p_account_id": string,"p_day": string,"p_error": string,"p_status": string }; Returns: undefined
                            },
@@ -599,6 +668,11 @@ isOneToOne: false
                            },
 "record_labour_court_appeal":
 { Args: { "p_evaluation_id": string,"p_filed_on": string }; Returns: string
+                           },
+"retention_overview":
+{ Args: { "p_within_days"?: number }; Returns: {
+              "archive_exported_at": string,"employee_id": string,"purge_due_on": string
+            }[]
                            },
 "save_evaluation_results":
 { Args: { "p_results": Json }; Returns: number
