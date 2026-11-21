@@ -156,3 +156,11 @@ export type {
   AiRunStatus,
   LegalFragment,
 } from '@sarmata/domain';
+export {
+  type EmploymentService,
+  type EmploymentServiceDependencies,
+  type EndEmploymentResult,
+  createEmploymentService,
+} from './employment/employment-service';
+export type { RetentionOverviewRow } from '@sarmata/repositories';
+export type { EndEmploymentInput } from '@sarmata/domain';

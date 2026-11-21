@@ -4,8 +4,10 @@ import {
   createEvaluationClosingStore,
   createOfficialRegulationWriter,
   createRegulationVersionRepository,
+  createRetentionStore,
 } from '@sarmata/repositories';
 import { type EvaluationClosing, createEvaluationClosing } from './evaluations/evaluation-closing';
+import { type RetentionService, createRetentionService } from './retention/retention-service';
 import { type SyncReport, syncOfficialRegulations } from './sync-official';
 
 /** Services that act for the system, not for an account. Never handed to the frontend. */
@@ -15,6 +17,7 @@ export interface SystemServices {
     syncOfficial(): Promise<SyncReport>;
   };
   readonly evaluationClosing: EvaluationClosing;
+  readonly retention: RetentionService;
 }
 
 /** Needs the service client (`ServiceDb`), so only the worker and scripts can build it. */
@@ -29,5 +32,11 @@ export function createSystemServices(db: ServiceDb): SystemServices {
         }),
     },
     evaluationClosing: createEvaluationClosing(createEvaluationClosingStore(db)),
+    retention: createRetentionService({
+      store: createRetentionStore(db),
+      log: (message) => {
+        console.warn(message);
+      },
+    }),
   };
 }

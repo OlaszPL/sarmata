@@ -11,3 +11,10 @@ export {
   createNotificationDelivery,
 } from './notifications/digest-delivery';
 export { type EvaluationClosing } from './evaluations/evaluation-closing';
+export {
+  type RetentionReport,
+  type RetentionService,
+  type RetentionServiceDependencies,
+  RetentionRunError,
+  createRetentionService,
+} from './retention/retention-service';

@@ -107,4 +107,36 @@ describe('office settings service', () => {
     );
     await expect(service.setSmtpPassword('x')).rejects.toBe(failure);
   });
+
+  it('retention preview reports what a shorter period would remove', async () => {
+    const preview = vi.fn(() => Promise.resolve({ notes: 7, aiRuns: 2 }));
+    const service = createOfficeSettingsService(fakeRepository(), { preview });
+    expect(await service.notesRetentionPreview(12)).toEqual({ notes: 7, aiRuns: 2 });
+    expect(preview).toHaveBeenCalledWith(12);
+  });
+
+  it('retention preview rejects a period out of range before the repository', async () => {
+    const preview = vi.fn(() => Promise.resolve({ notes: 0, aiRuns: 0 }));
+    const service = createOfficeSettingsService(fakeRepository(), { preview });
+    await expect(service.notesRetentionPreview(0)).rejects.toBeInstanceOf(ZodError);
+    await expect(service.notesRetentionPreview(121)).rejects.toBeInstanceOf(ZodError);
+    expect(preview).not.toHaveBeenCalled();
+  });
+
+  it('retention preview maps 42501 to forbidden', async () => {
+    const service = createOfficeSettingsService(fakeRepository(), {
+      preview: () =>
+        Promise.reject(
+          new RepositoryError('officeSettings.notesRetentionPreview', {
+            message: 'denied',
+            code: '42501',
+          }),
+        ),
+    });
+    const error: unknown = await service
+      .notesRetentionPreview(12)
+      .catch((reason: unknown) => reason);
+    expect(error).toBeInstanceOf(ServiceError);
+    expect((error as ServiceError).code).toBe('forbidden');
+  });
 });

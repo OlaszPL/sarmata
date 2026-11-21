@@ -23,7 +23,9 @@ export type ServiceErrorCode =
   | 'ai_fragment_unknown'
   | 'regulation_invalid'
   | 'regulation_cases_failed'
-  | 'regulation_not_draft';
+  | 'regulation_not_draft'
+  | 'already_ended'
+  | 'not_ended';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */
 export class ServiceError extends Error {
