@@ -18,9 +18,13 @@ import {
   createRepositories,
 } from '@sarmata/repositories';
 import { ServiceError } from './errors';
+import { type EvaluationService, createEvaluationService } from './evaluations/evaluation-service';
+import { getCurrentAccount } from './account/current-account';
 
 export interface ServiceDependencies {
   readonly repositories: Repositories;
+  /** Id of the signed-in account, needed to start an evaluation without a named evaluator. */
+  readonly currentAccountId?: () => Promise<string>;
 }
 
 export interface DeadlineRequest {
@@ -42,11 +46,25 @@ export interface Services {
   readonly regulations: {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
   };
+  readonly evaluations: EvaluationService;
   readonly deadlines: { compute(request: DeadlineRequest): Promise<DeadlineResult> };
 }
 
 export function createServices(dependencies: ServiceDependencies): Services {
-  const { repositories } = dependencies;
+  const { repositories, currentAccountId } = dependencies;
+
+  const regulations: Services['regulations'] = {
+    async inForceOn(on) {
+      const version = versionInForce(await repositories.regulationVersions.listOfficial(), on);
+      if (version === null) {
+        throw new ServiceError(
+          'no_regulation_in_force',
+          `No regulation version is in force on ${on}`,
+        );
+      }
+      return version;
+    },
+  };
 
   return {
     employees: {
@@ -57,18 +75,12 @@ export function createServices(dependencies: ServiceDependencies): Services {
         repositories.employees.update(id, employeePatchSchema.parse(patch)),
       findSimilar: (search) => repositories.employees.findSimilar(search),
     },
-    regulations: {
-      async inForceOn(on) {
-        const version = versionInForce(await repositories.regulationVersions.listOfficial(), on);
-        if (version === null) {
-          throw new ServiceError(
-            'no_regulation_in_force',
-            `No regulation version is in force on ${on}`,
-          );
-        }
-        return version;
-      },
-    },
+    regulations,
+    evaluations: createEvaluationService({
+      repositories,
+      regulationInForceOn: (on) => regulations.inForceOn(on),
+      ...(currentAccountId === undefined ? {} : { currentAccountId }),
+    }),
     deadlines: {
       async compute({ regulationId, slot, facts }) {
         const version = await repositories.regulationVersions.findOfficialById(regulationId);
@@ -93,4 +105,13 @@ export function createServices(dependencies: ServiceDependencies): Services {
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
 export const servicesFor = (db: Db): Services =>
-  createServices({ repositories: createRepositories(db) });
+  createServices({
+    repositories: createRepositories(db),
+    currentAccountId: async () => {
+      const account = await getCurrentAccount(db);
+      if (account.status === 'signed-out') {
+        throw new ServiceError('not_found', 'Nobody is signed in');
+      }
+      return account.userId;
+    },
+  });

@@ -7,7 +7,10 @@ export type EvaluationStatus =
   | 'interview'
   | 'drafted'
   | 'delivered'
-  | 'closed';
+  | 'closed'
+  /** No transitions yet, a later plan adds them. */
+  | 'objection'
+  | 'interrupted';
 
 export type EvaluationCommand =
   | { type: 'approve_part_one'; startingInterviewOn: CalendarDate }

@@ -1,6 +1,7 @@
 import {
   type CalendarDate,
   type DeadlineSlot,
+  type EvaluationStatus,
   type ServiceStatus,
   type SheetContent,
   calendarDate,
@@ -11,9 +12,8 @@ import { type Db } from './db';
 import { RepositoryError } from './errors';
 import { toJson } from './json';
 
-/** Database status, a superset of the domain StoredEvaluationStatus (adds objection and interrupted). */
-export type StoredEvaluationStatus = Database['public']['Enums']['evaluation_status'];
-type EventKind = Database['public']['Enums']['evaluation_event_kind'];
+export type EvaluationEventKind = Database['public']['Enums']['evaluation_event_kind'];
+type EventKind = EvaluationEventKind;
 type SheetState = 'draft' | 'locked' | 'superseded' | 'cancelled';
 
 /** Employee data as of the day the evaluation was created. */
@@ -36,7 +36,7 @@ export interface Evaluation {
   /** The regulation document id, e.g. `regulation-2016`. */
   readonly regulationId: string;
   readonly sheetId: string;
-  readonly status: StoredEvaluationStatus;
+  readonly status: EvaluationStatus;
   readonly cycleStart: CalendarDate;
   readonly afterNegative: boolean;
   readonly previousEvaluationId: string | null;
@@ -85,8 +85,8 @@ export interface NewEvaluation {
 
 export interface TransitionInput {
   readonly evaluationId: string;
-  readonly expectedStatus: StoredEvaluationStatus;
-  readonly nextStatus: StoredEvaluationStatus;
+  readonly expectedStatus: EvaluationStatus;
+  readonly nextStatus: EvaluationStatus;
   readonly eventKind: EventKind;
   readonly occurredOn: CalendarDate;
   readonly payload: Record<string, unknown>;
@@ -98,7 +98,7 @@ export interface EvaluationRepository {
   create(input: NewEvaluation): Promise<Evaluation>;
   get(id: string): Promise<EvaluationDetail | null>;
   listForOffice(filter?: {
-    status?: StoredEvaluationStatus;
+    status?: EvaluationStatus;
     evaluatorAccountId?: string;
     employeeId?: string;
   }): Promise<Evaluation[]>;

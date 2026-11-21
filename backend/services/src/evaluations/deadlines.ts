@@ -1,0 +1,111 @@
+import {
+  type Absence,
+  type CalendarDate,
+  type DeadlineSlot,
+  type RegulationDocument,
+  calendarDate,
+  computeDeadline,
+  effectiveDueOn,
+} from '@sarmata/domain';
+import {
+  type EvaluationDetail,
+  type EvaluationEvent,
+  type StoredDeadline,
+} from '@sarmata/repositories';
+import { ServiceError } from '../errors';
+
+function absencesOf(events: readonly EvaluationEvent[]): Absence[] {
+  return events
+    .filter((event) => event.kind === 'absence')
+    .map((event) => {
+      const { from, to } = event.payload as { from: string; to?: string | null };
+      return {
+        from: calendarDate(from),
+        to: to === undefined || to === null ? null : calendarDate(to),
+      };
+    });
+}
+
+function slot(
+  regulation: RegulationDocument,
+  name: DeadlineSlot,
+  eventDate: CalendarDate,
+  absences: readonly Absence[],
+  chosenDueOn: CalendarDate | null = null,
+): StoredDeadline {
+  const rule = regulation.deadlines[name];
+  if (rule === undefined) {
+    throw new ServiceError(
+      'missing_deadline_slot',
+      `Regulation version ${regulation.id} has no ${name} deadline`,
+    );
+  }
+  const result = computeDeadline(rule, { eventDate, absences });
+  if (result.kind === 'suspended') {
+    return { slot: name, windowStart: null, dueOn: null, suspendedSince: result.since };
+  }
+  return {
+    slot: name,
+    windowStart: result.windowStart,
+    dueOn: effectiveDueOn(result.due, chosenDueOn),
+    suspendedSince: null,
+  };
+}
+
+const lastEventDate = (
+  events: readonly EvaluationEvent[],
+  kinds: readonly EvaluationEvent['kind'][],
+): CalendarDate | null =>
+  events.filter((event) => kinds.includes(event.kind)).at(-1)?.occurredOn ?? null;
+
+/**
+ * The deadline slots that apply to the evaluation in its current status. Slots not returned are
+ * cleared by the repository. Pure: absences are read from the `absence` events.
+ */
+export function computeEvaluationDeadlines(
+  detail: EvaluationDetail,
+  regulation: RegulationDocument,
+): StoredDeadline[] {
+  const absences = absencesOf(detail.events);
+  const { status, cycleStart, afterNegative } = detail;
+  const slots: StoredDeadline[] = [];
+
+  if (status === 'criteria') {
+    slots.push(
+      slot(
+        regulation,
+        afterNegative ? 'startingInterviewAfterNegative' : 'startingInterview',
+        cycleStart,
+        absences,
+      ),
+    );
+  }
+  if (
+    status === 'criteria' ||
+    status === 'criteria_awaiting_signature' ||
+    status === 'period' ||
+    status === 'interview'
+  ) {
+    if (afterNegative) {
+      const created = detail.events.find((event) => event.kind === 'created');
+      const acquainted = created?.payload.previousAcquaintedOn;
+      const eventDate = typeof acquainted === 'string' ? calendarDate(acquainted) : cycleStart;
+      slots.push(slot(regulation, 'reevaluationAfterNegative', eventDate, absences));
+    } else {
+      slots.push(
+        slot(
+          regulation,
+          'evaluationDeadline',
+          cycleStart,
+          absences,
+          detail.sheet.content.partOne.dueOn,
+        ),
+      );
+    }
+  }
+  if (status === 'delivered') {
+    const acquaintedOn = lastEventDate(detail.events, ['acquainted', 'signature_refused']);
+    if (acquaintedOn !== null) slots.push(slot(regulation, 'objection', acquaintedOn, absences));
+  }
+  return slots;
+}

@@ -13,6 +13,18 @@ export {
   servicesFor,
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
+export {
+  type EvaluationFilter,
+  type EvaluationService,
+  type StartEvaluationInput,
+} from './evaluations/evaluation-service';
+export { computeEvaluationDeadlines } from './evaluations/deadlines';
+export type {
+  Evaluation,
+  EvaluationDetail,
+  EvaluationEvent,
+  StoredDeadline,
+} from '@sarmata/repositories';
 export type { Employee } from '@sarmata/repositories';
 export {
   type CalendarDate,
@@ -20,6 +32,11 @@ export {
   type DeadlineResult,
   type DeadlineSlot,
   type RegulationDocument,
+  type ApprovalIssue,
+  type CriteriaIssue,
+  type EvaluationCommand,
+  type EvaluationStatus,
+  type SheetContent,
   type OfficeId,
   calendarDate,
   parseEnv,
