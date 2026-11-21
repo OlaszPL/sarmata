@@ -5,7 +5,33 @@ export type Database = {
   
   "public": {
           Tables: {
-            "employees": {
+            "archived_evaluations": {
+                  Row: {
+                    "acquainted_on": string | null,"created_at": string,"created_by": string,"drafted_on": string,"employee_id": string,"id": string,"level_code": string | null,"office_id": string,"outcome": string | null,"ratings": Json | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "acquainted_on"?: string | null,"created_at"?: string,"created_by"?: string,"drafted_on": string,"employee_id": string,"id"?: string,"level_code"?: string | null,"office_id": string,"outcome"?: string | null,"ratings"?: Json | null
+                  }
+                  Update: {
+                    "acquainted_on"?: string | null,"created_at"?: string,"created_by"?: string,"drafted_on"?: string,"employee_id"?: string,"id"?: string,"level_code"?: string | null,"office_id"?: string,"outcome"?: string | null,"ratings"?: Json | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "archived_evaluations_employee_fkey"
+      columns: ["employee_id","office_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "archived_evaluations_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"employees": {
                   Row: {
                     "appointment_year": number | null,"created_at": string,"email": string | null,"employment_basis": Database["public"]['Enums']["employment_basis"],"employment_ended_on": string | null,"employment_start": string | null,"first_name": string,"grade": number | null,"grade_granted_on": string | null,"id": string,"last_name": string,"office_id": string,"org_unit": string | null,"position_kind": Database["public"]['Enums']["position_kind"],"position_title": string | null,"service_status": Database["public"]['Enums']["service_status"],"supervisor_employee_id": string | null,"user_id": string | null
                   }
@@ -209,6 +235,15 @@ isOneToOne: false
           Functions: {
             "apply_evaluation_transition":
 { Args: { "p_evaluation_id": string,"p_event_kind": Database["public"]['Enums']["evaluation_event_kind"],"p_expected_status": Database["public"]['Enums']["evaluation_status"],"p_lock_sheet": boolean,"p_next_status": Database["public"]['Enums']["evaluation_status"],"p_occurred_on": string,"p_payload": Json }; Returns: string
+                           },
+"apply_objection_outcome":
+{ Args: { "p_evaluation_id": string,"p_new_content": Json,"p_occurred_on": string,"p_outcome": string,"p_payload": Json }; Returns: string
+                           },
+"change_evaluator":
+{ Args: { "p_evaluation_id": string,"p_new_evaluator_account_id": string,"p_occurred_on": string,"p_reason": string }; Returns: string
+                           },
+"correct_sheet":
+{ Args: { "p_content": Json,"p_evaluation_id": string,"p_reason": string }; Returns: string
                            },
 "evaluation_transitions":
 { Args: Record<PropertyKey, never>; Returns: {
