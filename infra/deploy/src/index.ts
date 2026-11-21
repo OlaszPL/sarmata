@@ -32,3 +32,18 @@ export { renderBootstrapSql, type BootstrapAccount } from './bootstrap-sql.ts';
 export { describePlan, type Action, type Plan, type Step, type Target } from './plan.ts';
 export { localHost, wslHost, type Host, type RunOptions, type RunResult } from './host.ts';
 export { executePlan, type ExecutionEvent, type ExecutionResult, type Hosts } from './execute.ts';
+
+export {
+  binaryName,
+  detectEnvironment,
+  layout,
+  WSL_DISTRO,
+  type Arch,
+  type EngineStatus,
+  type Environment,
+  type Layout,
+  type LinuxDistro,
+  type Os,
+  type ProcessFacts,
+} from './environment.ts';
+export { desktopShortcut, type Shortcut } from './shortcut.ts';

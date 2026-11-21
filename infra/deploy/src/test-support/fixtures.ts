@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import {
   generateSecrets,
   installConfigSchema,
+  type Environment,
   type InstallConfig,
   type Secrets,
 } from '../index.ts';
@@ -74,4 +75,64 @@ export function upstreamCompose(): string {
     fileURLToPath(new URL('../../supabase/docker-compose.yml', import.meta.url)),
     'utf8',
   );
+}
+
+export function macEnvironment(overrides: Partial<Environment> = {}): Environment {
+  return {
+    os: 'macos',
+    arch: 'arm64',
+    engineHost: 'local',
+    home: '/Users/jan/Sarmata',
+    binDir: '/Users/jan/Sarmata/bin',
+    execPath: '/Users/jan/Downloads/sarmata/infra/deploy/dist/sarmata-macos-arm64',
+    releaseDir: '/Users/jan/Downloads/sarmata',
+    userHome: '/Users/jan',
+    desktopDir: '/Users/jan/Desktop',
+    user: { name: 'jan', group: 'staff', isRoot: false },
+    linuxDistro: null,
+    engine: { state: 'ready', dockerPrefix: [] },
+    installed: false,
+    wslConfig: null,
+    ...overrides,
+  };
+}
+
+export function linuxEnvironment(overrides: Partial<Environment> = {}): Environment {
+  return {
+    os: 'linux',
+    arch: 'x64',
+    engineHost: 'local',
+    home: '/opt/sarmata',
+    binDir: '/opt/sarmata/bin',
+    execPath: '/home/jan/sarmata/infra/deploy/dist/sarmata-linux-x64',
+    releaseDir: '/home/jan/sarmata',
+    userHome: '/home/jan',
+    desktopDir: '/home/jan/Pulpit',
+    user: { name: 'jan', group: 'jan', isRoot: false },
+    linuxDistro: { family: 'apt', id: 'ubuntu' },
+    engine: { state: 'ready', dockerPrefix: [] },
+    installed: false,
+    wslConfig: null,
+    ...overrides,
+  };
+}
+
+export function windowsEnvironment(overrides: Partial<Environment> = {}): Environment {
+  return {
+    os: 'windows',
+    arch: 'x64',
+    engineHost: 'wsl',
+    home: '/opt/sarmata',
+    binDir: 'C:\\Users\\jan\\AppData\\Local\\Programs\\Sarmata',
+    execPath: 'C:\\Users\\jan\\Downloads\\sarmata\\infra\\deploy\\dist\\sarmata-windows-x64.exe',
+    releaseDir: 'C:\\Users\\jan\\Downloads\\sarmata',
+    userHome: 'C:\\Users\\jan',
+    desktopDir: 'C:\\Users\\jan\\Desktop',
+    user: { name: 'jan', group: '', isRoot: false },
+    linuxDistro: { family: 'apt', id: 'ubuntu' },
+    engine: { state: 'ready', dockerPrefix: [] },
+    installed: false,
+    wslConfig: null,
+    ...overrides,
+  };
 }
