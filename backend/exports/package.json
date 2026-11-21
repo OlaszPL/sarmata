@@ -1,0 +1,28 @@
+{
+  "name": "@sarmata/exports",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@myriaddreamin/typst-ts-node-compiler": "catalog:",
+    "@sarmata/domain": "workspace:*",
+    "@sarmata/repositories": "workspace:*",
+    "@sarmata/services": "workspace:*",
+    "docx": "catalog:",
+    "fflate": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@sarmata/regulations": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

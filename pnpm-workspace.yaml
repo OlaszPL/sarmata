@@ -19,6 +19,9 @@ catalog:
   react-dom: 19.3.1
   tailwindcss: 4.3.5
   zod: 4.6.7
+  '@myriaddreamin/typst-ts-node-compiler': 0.7.0
+  docx: 9.14.0
+  fflate: 0.8.3
 
 # pnpm 12 blocks dependency build scripts unless listed here.
 allowBuilds:
