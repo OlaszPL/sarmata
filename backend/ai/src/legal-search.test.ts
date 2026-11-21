@@ -163,7 +163,7 @@ describe('procedure assistant', () => {
 
   it('answer without valid citation is not grounded', async () => {
     const { output } = await ask(
-      { answer: 'Podane fragmenty nie odpowiadają na to pytanie.', citations: [] },
+      { answer: 'Podane fragmenty nie odpowiadają na to pytanie, zapytaj kadry.', citations: [] },
       [fragment],
     );
     expect(output).toMatchObject({ grounded: false, citations: [] });
@@ -177,7 +177,7 @@ describe('procedure assistant', () => {
       },
       [fragment],
     );
-    expect(JSON.stringify(fake.requests[0]?.body)).toContain('"minLength":40');
+    expect(JSON.stringify(fake.requests[0]?.body)).toContain('"minLength":50');
   });
 
   it('no fragments answers without the model', async () => {

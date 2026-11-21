@@ -14,7 +14,7 @@ const describeFragments = (fragments: readonly LegalFragment[]): string =>
     .join('\n\n');
 
 /** A full sentence ("Sprzeciw wnosi się w terminie 7 dni [1]."), not a bare "7". */
-const MIN_ANSWER_LENGTH = 40;
+const MIN_ANSWER_LENGTH = 50;
 
 /**
  * Procedure assistant (RAG): semble finds the fragments in the legal texts of the regulation version,

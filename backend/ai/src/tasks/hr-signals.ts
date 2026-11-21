@@ -93,14 +93,15 @@ const isDiagnostic = (text: string): boolean =>
   sensitiveDataWarnings(text).some((warning) => warning.category === 'diagnosis');
 
 // Points, not prose: about 300 output tokens (ADR 0005, Bielik-4.5B on a 16 GB Mac).
-const MAX_FRAGMENTS = 2;
+const MAX_FRAGMENTS = 1;
+const MAX_QUOTE_LENGTH = 120;
 const MAX_QUESTIONS = 3;
 const MAX_ACTIONS = 4;
 const MIN_QUESTIONS = 2;
 const MIN_ACTIONS = 2;
 /** Below this a signal is too weak to ask the text model for evidence: it stays without fragments. */
 const MIN_EVIDENCE_PROBABILITY = 0.6;
-const MAX_TOKENS = 480;
+const MAX_TOKENS = 640;
 
 const fragmentSchema = z.object({ noteId: z.string(), quote: z.string() });
 const actionSchema = z.object({
@@ -178,18 +179,20 @@ export const hrSignals: Task<'hr_signals'> = async (input, { ai, system, progres
   const result = await ai.generateObject({
     schemaName: 'hr_signals',
     schema: z.object({
-      signals: z
-        .array(
+      // One entry per signal in a fixed order: no duplicates, no missing signal.
+      signals: z.tuple(
+        evidenced.map((name) =>
           z.object({
-            signal: oneOf(evidenced),
+            signal: z.literal(name),
             fragments: z
-              .array(z.object({ noteId: oneOf(notes.aliases), quote: z.string() }))
+              .array(
+                z.object({ noteId: oneOf(notes.aliases), quote: z.string().max(MAX_QUOTE_LENGTH) }),
+              )
               .min(1)
               .max(MAX_FRAGMENTS),
           }),
-        )
-        .min(evidenced.length)
-        .max(evidenced.length),
+        ) as unknown as [z.ZodType, ...z.ZodType[]],
+      ),
       questions: z.array(z.string()).min(MIN_QUESTIONS).max(MAX_QUESTIONS),
       actions: z
         .array(

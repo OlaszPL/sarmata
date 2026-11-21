@@ -329,7 +329,8 @@ describe('hr signals', () => {
     const schema = schemaOf(fake, 1);
     expect(schema).toContain('"minItems":1');
     expect(schema.match(/"minItems":2/g)).toHaveLength(2);
-    expect(schema).toContain('"enum":["overload"]');
+    expect(schema).toContain('"prefixItems"');
+    expect(schema).toContain('"const":"overload"');
   });
 
   it('asks the text model only about signals above the minimum probability', async () => {
