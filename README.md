@@ -20,6 +20,19 @@ Wymagania: Node 24, pnpm 12.21.0, sops i age (sekrety zespołu). Klucz age leży
 | `pnpm lint`, `pnpm format` | ESLint i Prettier                                  |
 | `pnpm secrets:decrypt`     | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
 
+## Baza danych
+
+Wymagania: Docker i Supabase CLI 3.2.0 (`brew install supabase/tap/supabase`).
+
+| Skrypt | Co robi |
+|---|---|
+| `pnpm db:start` / `db:stop` / `db:status` | wspólna instancja `sarmata` (API 55421, DB 55422, Studio 55423, Mailpit 55424) |
+| `pnpm db:reset` | migracje od zera i dane demo |
+| `pnpm db:test` | testy pgTAP |
+| `pnpm db:types` | typy do `database/src/types.ts` po każdej migracji |
+
+Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test`.
+
 ## Termic
 
 W ustawieniach projektu w Termic ustaw skrypt setup na `./scripts/termic-setup.sh`.

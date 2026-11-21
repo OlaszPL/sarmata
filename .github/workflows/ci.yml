@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -34,3 +35,22 @@ jobs:
       - run: pnpm check
         env:
           TURBO_CACHE_DIR: .turbo/cache
+
+  baza:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: database
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 3.2.0
+      - run: supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+      - run: supabase test db
+      - name: Typy zgodne z migracjami
+        run: |
+          supabase gen types typescript --schema public > /tmp/types.ts
+          diff -u src/types.ts /tmp/types.ts
