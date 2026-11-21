@@ -111,7 +111,7 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 | `pnpm run doctor` | sprawdza wymagane narzędzia i podpowiada instalację |
 | `pnpm check` | lint, format, typecheck i testy (to samo co CI) |
 | `pnpm build` | build wszystkich pakietów przez Turborepo |
-| `pnpm test` | testy wszystkich pakietów przez Turborepo |
+| `pnpm test` | testy wszystkich pakietów przez Turborepo (w tym logiki pulpitu w `frontend/web`) |
 | `pnpm typecheck` | kontrola typów |
 | `pnpm lint`, `pnpm lint:fix` | ESLint, z poprawianiem |
 | `pnpm format`, `pnpm format:check` | Prettier, z zapisem i tylko sprawdzenie |
