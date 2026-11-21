@@ -8,7 +8,10 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ai:setup": "node scripts/ai-setup.ts",
+    "ai:start": "node scripts/ai-start.ts",
+    "ai:stop": "node scripts/ai-stop.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
