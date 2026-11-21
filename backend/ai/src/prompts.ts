@@ -8,6 +8,10 @@ export const PROMPT_VERSIONS = {
   'sheet-draft': 1,
   'quality-check': 1,
   'sensitive-data': 1,
+  'conversation-prep': 1,
+  'criteria-proposals': 1,
+  'appreciation-moments': 1,
+  'hr-signals': 1,
 } as const;
 
 export type PromptName = keyof typeof PROMPT_VERSIONS;

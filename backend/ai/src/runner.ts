@@ -11,6 +11,10 @@ import { aiConfigFromEnv } from './config';
 import { type LegalSearch, unavailableLegalSearch } from './legal-search';
 import { type PromptName, loadPrompt } from './prompts';
 import { type AiResult, failure } from './result';
+import { appreciationMoments } from './tasks/appreciation-moments';
+import { conversationPrep } from './tasks/conversation-prep';
+import { criteriaProposals } from './tasks/criteria-proposals';
+import { hrSignals } from './tasks/hr-signals';
 import { qualityCheck } from './tasks/quality-check';
 import { sensitiveData } from './tasks/sensitive-data';
 import { sheetDraft } from './tasks/sheet-draft';
@@ -37,6 +41,10 @@ const TASKS: { readonly [K in AiRunKind]?: TaskEntry<K> } = {
   sheet_draft: { prompt: 'sheet-draft', run: sheetDraft },
   quality_check: { prompt: 'quality-check', run: qualityCheck },
   sensitive_data: { prompt: 'sensitive-data', run: sensitiveData },
+  conversation_prep: { prompt: 'conversation-prep', run: conversationPrep },
+  criteria_proposals: { prompt: 'criteria-proposals', run: criteriaProposals },
+  appreciation_moments: { prompt: 'appreciation-moments', run: appreciationMoments },
+  hr_signals: { prompt: 'hr-signals', run: hrSignals },
 };
 
 export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRunner {
