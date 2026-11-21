@@ -16,7 +16,13 @@
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm format:check && turbo run typecheck test",
     "prepare": "husky",
-    "secrets:decrypt": "bash scripts/secrets-decrypt.sh"
+    "secrets:decrypt": "bash scripts/secrets-decrypt.sh",
+    "db:start": "pnpm --filter @sarmata/database start",
+    "db:stop": "pnpm --filter @sarmata/database stop",
+    "db:status": "pnpm --filter @sarmata/database status",
+    "db:reset": "pnpm --filter @sarmata/database reset",
+    "db:types": "pnpm --filter @sarmata/database types",
+    "db:test": "pnpm --filter @sarmata/database test:db"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
