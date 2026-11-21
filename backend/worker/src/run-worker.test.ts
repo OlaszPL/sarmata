@@ -253,6 +253,7 @@ describe('runWorker', () => {
           delivery: unusedDelivery,
           closing: unusedClosing,
           retention: unusedRetention,
+          invitations: { process: () => Promise.reject(new Error('unused')) },
         }),
         logger,
       },

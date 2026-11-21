@@ -27,7 +27,7 @@ const delivery = createNotificationDelivery({
         },
 });
 
-const system = createSystemServices(client);
+const system = createSystemServices(client, { siteUrl: config.siteUrl });
 
 const controller = new AbortController();
 for (const name of ['SIGTERM', 'SIGINT'] as const) {
@@ -44,6 +44,7 @@ await runWorker(
       delivery,
       closing: system.evaluationClosing,
       retention: system.retention,
+      invitations: system.accountInvitations,
     }),
     logger: jsonLogger,
     idleDelayMs: config.idleDelayMs,

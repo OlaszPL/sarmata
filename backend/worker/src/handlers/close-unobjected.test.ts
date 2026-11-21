@@ -74,6 +74,7 @@ describe('closeUnobjectedHandler', () => {
       delivery,
       closing: fakeClosing().closing,
       retention: { run: () => Promise.reject(new Error('unused')) },
+      invitations: { process: () => Promise.reject(new Error('unused')) },
     }).map((handler) => handler.type);
     expect(types).toContain('evaluations.close_unobjected');
   });

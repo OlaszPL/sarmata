@@ -1,4 +1,6 @@
 import {
+  type AccountInvitation,
+  type AccountInvitationRepository,
   type AccountRepository,
   type Member,
   type OfficeRoleName,
@@ -6,7 +8,6 @@ import {
 } from '@sarmata/repositories';
 import { z } from 'zod';
 import { ServiceError } from '../errors';
-import { type AccountAdministration, type InviteResult } from './account-administration';
 
 export const inviteInputSchema = z.strictObject({
   email: z.email(),
@@ -26,10 +27,18 @@ export interface EndMembershipResult {
 export interface AccountsService {
   list(): Promise<Member[]>;
   /**
-   * Invites an account with a role, creates the membership and links the employee record by e-mail (or creates
-   * one). Throws `ZodError` for invalid input, `account_exists` when the person already belongs to an office.
+   * Requests the invitation of an account with a role and returns the id of the request. The worker invites the
+   * account, creates the membership and links the employee record by e-mail (or creates one), then writes the
+   * result: poll it with `invitation`. Throws `ZodError` for invalid input.
    */
-  invite(input: InviteInput): Promise<InviteResult>;
+  invite(input: InviteInput): Promise<string>;
+  /** The request and its result (`status`, `mode`, `errorCode` such as `account_exists`). `not_found` when unknown. */
+  invitation(id: string): Promise<AccountInvitation>;
+  /**
+   * The temporary password of a sent invitation, shown once: it is removed on the way. Only invitations with
+   * `mode` `temporary_password` have one (no working SMTP). `null` when none waits. The admin hands it over.
+   */
+  takeInvitationPassword(id: string): Promise<string | null>;
   /** Takes effect at the next token refresh. Fails with `last_admin` for the only admin. */
   changeRole(accountId: string, role: OfficeRoleName): Promise<void>;
   /** Ends the access from today, the row stays. Fails with `last_admin` for the only admin. */
@@ -40,8 +49,7 @@ export interface AccountsServiceDependencies {
   readonly repository: AccountRepository;
   /** Office and role of the signed-in account, `null` without an office. */
   readonly current: () => Promise<{ officeId: string; role: OfficeRoleName } | null>;
-  /** Needs the service client. Without it `invite` fails: the frontend cannot create that client. */
-  readonly administration?: AccountAdministration;
+  readonly invitations: AccountInvitationRepository;
 }
 
 function mapped(error: unknown): unknown {
@@ -60,12 +68,11 @@ function mapped(error: unknown): unknown {
 }
 
 export function createAccountsService(deps: AccountsServiceDependencies): AccountsService {
-  async function admin(): Promise<{ officeId: string }> {
+  async function admin(): Promise<void> {
     const current = await deps.current();
     if (current?.role !== 'admin') {
       throw new ServiceError('forbidden', 'Only an admin can manage accounts');
     }
-    return current;
   }
 
   return {
@@ -76,11 +83,28 @@ export function createAccountsService(deps: AccountsServiceDependencies): Accoun
 
     async invite(rawInput) {
       const input = inviteInputSchema.parse(rawInput);
-      const { officeId } = await admin();
-      if (deps.administration === undefined) {
-        throw new Error('Account invitations need the system account administration');
+      await admin();
+      try {
+        return await deps.invitations.request({ ...input, email: input.email.toLowerCase() });
+      } catch (error) {
+        throw mapped(error);
       }
-      return deps.administration.invite({ ...input, officeId });
+    },
+
+    async invitation(id) {
+      await admin();
+      const invitation = await deps.invitations.get(id);
+      if (invitation === null) throw new ServiceError('not_found', 'No such invitation');
+      return invitation;
+    },
+
+    async takeInvitationPassword(id) {
+      await admin();
+      try {
+        return await deps.invitations.takePassword(id);
+      } catch (error) {
+        throw mapped(error);
+      }
     },
 
     async changeRole(accountId, role) {

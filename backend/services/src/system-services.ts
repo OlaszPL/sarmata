@@ -6,11 +6,16 @@ import {
   createRegulationVersionRepository,
   createRetentionStore,
   createAccountAdminStore,
+  createAccountInvitationStore,
 } from '@sarmata/repositories';
 import {
   type AccountAdministration,
   createAccountAdministration,
 } from './accounts/account-administration';
+import {
+  type InvitationProcessing,
+  createInvitationProcessing,
+} from './accounts/invitation-processing';
 import { type EvaluationClosing, createEvaluationClosing } from './evaluations/evaluation-closing';
 import { type RetentionService, createRetentionService } from './retention/retention-service';
 import { type SyncReport, syncOfficialRegulations } from './sync-official';
@@ -23,12 +28,23 @@ export interface SystemServices {
   };
   readonly evaluationClosing: EvaluationClosing;
   readonly retention: RetentionService;
-  /** Invites accounts (Supabase Auth admin). The frontend gets it only through `servicesFor(db, { accountAdministration })`. */
+  /** Invites accounts (Supabase Auth admin). The frontend asks for it through `services.accounts.invite`, the worker runs it. */
   readonly accounts: AccountAdministration;
+  /** Carries out the invitation requests the frontend queued, for the `accounts.invite` job. */
+  readonly accountInvitations: InvitationProcessing;
+}
+
+export interface SystemServicesOptions {
+  /** Where the link of an invitation e-mail leads (the site URL). */
+  readonly siteUrl?: string;
 }
 
 /** Needs the service client (`ServiceDb`), so only the worker and scripts can build it. */
-export function createSystemServices(db: ServiceDb): SystemServices {
+export function createSystemServices(
+  db: ServiceDb,
+  options: SystemServicesOptions = {},
+): SystemServices {
+  const accounts = createAccountAdministration({ store: createAccountAdminStore(db) });
   return {
     regulations: {
       syncOfficial: () =>
@@ -39,7 +55,12 @@ export function createSystemServices(db: ServiceDb): SystemServices {
         }),
     },
     evaluationClosing: createEvaluationClosing(createEvaluationClosingStore(db)),
-    accounts: createAccountAdministration({ store: createAccountAdminStore(db) }),
+    accounts,
+    accountInvitations: createInvitationProcessing({
+      store: createAccountInvitationStore(db),
+      administration: accounts,
+      ...(options.siteUrl === undefined ? {} : { redirectTo: options.siteUrl }),
+    }),
     retention: createRetentionService({
       store: createRetentionStore(db),
       log: (message) => {

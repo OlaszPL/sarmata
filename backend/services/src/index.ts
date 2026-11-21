@@ -11,7 +11,6 @@ export {
   type ServiceDependencies,
   type Services,
   createServices,
-  type ServicesForOptions,
   servicesFor,
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
@@ -180,7 +179,7 @@ export {
   createAccountsService,
   inviteInputSchema,
 } from './accounts/accounts-service';
-export type { Member } from '@sarmata/repositories';
+export type { AccountInvitation, Member } from '@sarmata/repositories';
 export {
   type ColumnMapping,
   type EmployeeImportService,
