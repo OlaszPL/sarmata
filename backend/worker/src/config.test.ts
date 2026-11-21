@@ -9,6 +9,7 @@ describe('workerConfigFromEnv', () => {
       supabaseUrl: 'http://127.0.0.1:55421',
       secretKey: 'secret',
       idleDelayMs: 1_000,
+      siteUrl: 'http://localhost:3000',
       smtp: null,
     });
   });
@@ -31,6 +32,13 @@ describe('workerConfigFromEnv', () => {
       senderEmail: 'sarmata@urzad.test',
       senderName: 'Sarmata Urząd',
     });
+  });
+
+  it('site url defaults to localhost', () => {
+    expect(workerConfigFromEnv(base).siteUrl).toBe('http://localhost:3000');
+    expect(workerConfigFromEnv({ ...base, SITE_URL: 'https://sarmata.urzad.test' }).siteUrl).toBe(
+      'https://sarmata.urzad.test',
+    );
   });
 
   it('rejects a mail host without port and sender', () => {

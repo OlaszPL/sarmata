@@ -1,4 +1,5 @@
 import { type JobQueue, type QueuedJob } from '@sarmata/repositories';
+import { type NotificationDelivery } from '@sarmata/services/system';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import {
@@ -6,9 +7,13 @@ import {
   type Logger,
   type WorkerOptions,
   defineJobHandler,
-  jobHandlers,
+  jobHandlersFor,
   runWorker,
 } from './index';
+
+const unusedDelivery: NotificationDelivery = {
+  sendDigest: () => Promise.reject(new Error('unused')),
+};
 
 class InMemoryQueue implements JobQueue {
   readonly archived: number[] = [];
@@ -229,7 +234,10 @@ describe('runWorker', () => {
     const queue = new InMemoryQueue();
     const logger = recordingLogger();
     queue.add({ type: 'system.ping', payload: { note: 'hello' } });
-    await runUntil({ queue, handlers: jobHandlers, logger }, () => queue.pending === 0);
+    await runUntil(
+      { queue, handlers: jobHandlersFor({ delivery: unusedDelivery }), logger },
+      () => queue.pending === 0,
+    );
     expect(logger.entries).toContainEqual({
       level: 'info',
       message: 'pong',

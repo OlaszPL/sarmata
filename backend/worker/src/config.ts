@@ -5,8 +5,10 @@ const envSchema = z.object({
   SUPABASE_URL: z.url({ protocol: /^https?$/ }),
   SUPABASE_SECRET_KEY: z.string().min(1),
   SARMATA_WORKER_IDLE_DELAY_MS: z.coerce.number().int().positive().default(1_000),
-  // Mail settings that the installer passes. No mailer reads them until notifications exist, so
-  // they are validated only: a half-filled setup is caught at start, not at the first e-mail.
+  // Public address of the app: the digest e-mail links to its inbox.
+  SITE_URL: z.url().default('http://localhost:3000'),
+  // Default SMTP of the installation. The SMTP settings of an office take precedence over it. A
+  // half-filled setup is caught at start, not at the first e-mail.
   SMTP_HOST: z.string().min(1).optional(),
   SMTP_PORT: z.coerce.number().int().min(1).max(65_535).optional(),
   SMTP_USER: z.string().min(1).optional(),
@@ -28,7 +30,8 @@ export interface WorkerConfig {
   readonly supabaseUrl: string;
   readonly secretKey: string;
   readonly idleDelayMs: number;
-  /** Null when no mail server is configured. Unused until notifications. */
+  readonly siteUrl: string;
+  /** Default SMTP of the installation, null when none is configured. Offices may have their own. */
   readonly smtp: SmtpConfig | null;
 }
 
@@ -38,6 +41,7 @@ export function workerConfigFromEnv(env: Record<string, string | undefined>): Wo
     supabaseUrl: values.SUPABASE_URL,
     secretKey: values.SUPABASE_SECRET_KEY,
     idleDelayMs: values.SARMATA_WORKER_IDLE_DELAY_MS,
+    siteUrl: values.SITE_URL,
     smtp: smtpFrom(values),
   };
 }
