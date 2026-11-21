@@ -65,13 +65,49 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"regulation_versions": {
+                  Row: {
+                    "based_on": string | null,"code": string,"created_at": string,"document": NonNullable<Json>,"effective_from": string,"id": string,"is_official": boolean,"office_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "based_on"?: string | null,"code": string,"created_at"?: string,"document": NonNullable<Json>,"effective_from": string,"id"?: string,"is_official": boolean,"office_id"?: string | null
+                  }
+                  Update: {
+                    "based_on"?: string | null,"code"?: string,"created_at"?: string,"document"?: NonNullable<Json>,"effective_from"?: string,"id"?: string,"is_official"?: boolean,"office_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "regulation_versions_based_on_fkey"
+      columns: ["based_on"]
+isOneToOne: false
+      referencedRelation: "regulation_versions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "regulation_versions_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "job_queue_archive":
+{ Args: { "message_id": number }; Returns: boolean
+                           },
+"job_queue_read":
+{ Args: { "batch_size": number,"visibility_timeout_seconds": number }; Returns: {
+              "enqueued_at": string,"message": Json,"message_id": number,"read_count": number
+            }[]
+                           },
+"job_queue_send":
+{ Args: { "delay_seconds"?: number,"message": Json }; Returns: number
+                           }
           }
           Enums: {
             "office_role": "admin"|"hr"|"evaluator"
