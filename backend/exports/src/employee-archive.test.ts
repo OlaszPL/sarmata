@@ -9,7 +9,7 @@ import { type ExportRequest } from './export-service';
 
 const EMPLOYEE = '11111111-1111-4111-8111-111111111111';
 
-const employee = (endedOn: string | null): Employee => ({
+const employee = (endedOn: string | null, anonymizedAt: string | null = null): Employee => ({
   id: EMPLOYEE,
   officeId: 'o1',
   firstName: 'Lena',
@@ -27,7 +27,7 @@ const employee = (endedOn: string | null): Employee => ({
   gradeGrantedOn: null,
   employmentEndedOn: endedOn === null ? null : calendarDate(endedOn),
   supervisorEmployeeId: null,
-  anonymizedAt: null,
+  anonymizedAt,
 });
 
 const evaluation = (id: string, cycleStart: string, status: Evaluation['status']): Evaluation =>
@@ -42,6 +42,7 @@ function setup(
     evaluations?: Evaluation[];
     failFor?: string;
     unexportable?: string;
+    anonymizedAt?: string;
   } = {},
 ) {
   const requests: { id: string; request: ExportRequest }[] = [];
@@ -63,7 +64,12 @@ function setup(
     },
     employees: {
       get: () =>
-        Promise.resolve(employee(options.endedOn === undefined ? '2026-03-15' : options.endedOn)),
+        Promise.resolve(
+          employee(
+            options.endedOn === undefined ? '2026-03-15' : options.endedOn,
+            options.anonymizedAt ?? null,
+          ),
+        ),
     },
     evaluations: {
       listForOffice: () =>
@@ -118,6 +124,17 @@ describe('employee archive', () => {
     );
     expect(error).toBeInstanceOf(ServiceError);
     expect((error as ServiceError).code).toBe('not_ended');
+    expect(confirmed).toEqual([]);
+  });
+
+  it('archive of an anonymized employee is refused and does not confirm again', async () => {
+    const { service, confirmed } = setup({ anonymizedAt: '2027-01-02T05:30:00Z' });
+    const error: unknown = await service.exportEmployeeArchive(EMPLOYEE).then(
+      () => undefined,
+      (reason: unknown) => reason,
+    );
+    expect(error).toBeInstanceOf(ServiceError);
+    expect((error as ServiceError).code).toBe('not_found');
     expect(confirmed).toEqual([]);
   });
 

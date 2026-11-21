@@ -40,6 +40,10 @@ export function createEmployeeArchiveService(
     async exportEmployeeArchive(employeeId) {
       const employee = await deps.employees.get(employeeId);
       if (employee === null) throw new ServiceError('not_found', 'Employee not found');
+      if (employee.anonymizedAt !== null) {
+        // Only the id is left, a second archive would be empty and would overwrite the first confirmation.
+        throw new ServiceError('not_found', 'The employee is anonymized, no archive is left');
+      }
       if (employee.employmentEndedOn === null) {
         throw new ServiceError('not_ended', 'The employment of this employee has not ended');
       }

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(15);
 
 -- Today is 2026-12-01. Objection windows end before it for c1 and c6, not yet for c2.
 insert into public.offices (id, name) values
@@ -73,6 +73,12 @@ select results_eq(
 select is(
   (select count(*) from closed_second)::integer, 0,
   'second run closes nothing'
+);
+select is(
+  (select due_on from public.evaluation_deadlines
+    where evaluation_id = 'cccccccc-0000-4000-8000-000000000001' and slot = 'objection'),
+  null::date,
+  'closing clears the objection deadline of the closed evaluation'
 );
 select results_eq(
   $$select count(*) from public.evaluation_events

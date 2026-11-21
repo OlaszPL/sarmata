@@ -55,6 +55,18 @@ interface InboxRow {
   evaluations: { employees: { first_name: string; last_name: string } | null } | null;
 }
 
+/** Open unread first, then open read, resolved tasks last. Each group by deadline, then creation. */
+export function sortInbox(items: readonly InboxItem[]): InboxItem[] {
+  const group = (item: InboxItem): number =>
+    item.status === 'resolved' ? 2 : item.readAt === null ? 0 : 1;
+  return [...items].sort(
+    (a, b) =>
+      group(a) - group(b) ||
+      a.dueOn.localeCompare(b.dueOn) ||
+      a.createdOn.localeCompare(b.createdOn),
+  );
+}
+
 const toItem = (row: InboxRow): InboxItem => {
   const employee = row.evaluations?.employees ?? null;
   return {
@@ -77,17 +89,14 @@ const toItem = (row: InboxRow): InboxItem => {
 export function createNotificationRepository(db: Db): NotificationRepository {
   return {
     async list(options = {}) {
-      let query = db
-        .from('notifications')
-        .select(COLUMNS)
-        .order('status', { ascending: true })
-        .order('read_at', { ascending: true, nullsFirst: true })
-        .order('due_on', { ascending: true });
+      // The order needs "unread first, then by deadline", which PostgREST cannot express in one
+      // ordering, so the rows are sorted here and the limit applies after the sort.
+      let query = db.from('notifications').select(COLUMNS);
       if (options.unreadOnly === true) query = query.eq('status', 'open').is('read_at', null);
-      if (options.limit !== undefined) query = query.limit(options.limit);
       const { data, error } = await query;
       if (error) throw new RepositoryError('notifications.list', error);
-      return data.map(toItem);
+      const sorted = sortInbox(data.map(toItem));
+      return options.limit === undefined ? sorted : sorted.slice(0, options.limit);
     },
 
     async unreadCount() {

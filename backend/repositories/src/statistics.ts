@@ -1,6 +1,7 @@
 import {
   type CalendarDate,
   type EvaluationResult,
+  type EvaluationStatus,
   type RegulationDocument,
   type ServiceStatus,
   type SheetContent,
@@ -40,7 +41,7 @@ export interface ScheduleRow {
   readonly orgUnit: string | null;
   readonly evaluatorAccountId: string;
   readonly evaluatorName: string | null;
-  readonly status: string;
+  readonly status: EvaluationStatus;
   readonly cycleStart: CalendarDate;
   readonly startingInterviewDueOn: CalendarDate | null;
   readonly evaluationDueOn: CalendarDate | null;
@@ -184,7 +185,8 @@ export function createStatisticsRepository(db: Db): StatisticsRepository {
         orgUnit: row.org_unit,
         evaluatorAccountId: row.evaluator_account_id,
         evaluatorName: row.evaluator_name,
-        status: row.status,
+        // The function returns the evaluation_status enum column as text.
+        status: row.status as EvaluationStatus,
         cycleStart: calendarDate(row.cycle_start),
         startingInterviewDueOn: optionalDate(row.starting_interview_due_on),
         evaluationDueOn: optionalDate(row.evaluation_due_on),
