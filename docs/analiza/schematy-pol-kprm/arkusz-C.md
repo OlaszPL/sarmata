@@ -1,4 +1,4 @@
-> Oficjalny schemat pól formularza od KPRM (zasoby wyzwania HackNation 2026, pakiet „4. Formularze ocen”). Konwersja DOCX do Markdown bez zmian treści. Oryginał: `archive/docs/sources/hackathon/raw/zasoby-kprm-mirror/extracted/4. Formularze ocen/schematy widoku formularza C oceny okresowej/`.
+> Oficjalny schemat pól formularza od KPRM (zasoby wyzwania HackNation 2026, pakiet „4. Formularze ocen”). Konwersja DOCX do Markdown bez zmian treści. Oryginał: `docs/zasoby-kprm/4. Formularze ocen/schematy widoku formularza C oceny okresowej/`.
 
 **Arkusz C**
 

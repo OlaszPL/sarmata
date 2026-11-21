@@ -105,13 +105,13 @@ Wszystkie w `archive/` (poza kontekstem, w `.gitignore`):
 
 | Co | Ścieżka |
 |---|---|
-| Wzory graficzne A, B, C (PDF, skany z rozporządzenia) | `archive/docs/sources/hackathon/raw/zasoby-kprm-mirror/extracted/4. Formularze ocen/schematy widoku formularza X oceny okresowej/wzór formularza oceny okresowej arkusz X.pdf` |
+| Wzory graficzne A, B, C (PDF, skany z rozporządzenia) | `docs/zasoby-kprm/4. Formularze ocen/schematy widoku formularza X oceny okresowej/wzór formularza oceny okresowej arkusz X.pdf` |
 | Schematy pól KPRM (DOCX, oryginał) | tamże, `formularz oceny okresowej X - schemat pól formularza.docx` |
 | Arkusz B w Excelu z formułami KPRM (listy rozwijane, średnia, poziom) | `.../4. Formularze ocen/8. Arkusz B-wersja zautomatyzowana.xlsx` |
-| 13 wypełnionych przykładów (A, B, C, w tym 3 negatywne): dane testowe | `archive/docs/sources/hackathon/raw/zasoby-kprm-mirror/extracted/5. Przykładowe wypełnione formularze oceny/` |
+| 13 wypełnionych przykładów (A, B, C, w tym 3 negatywne): dane testowe | `docs/zasoby-kprm/5. Przykładowe wypełnione formularze oceny/` |
 | Edytowalne wzory DSC 2016 (DOCX, XLSX) i ich wersje tekstowe | `archive/docs/sources/sluzba-cywilna/raw/` i `.../text/arkusz-oceny-{A,B,C}-2016*.md` |
 | Instrukcja Excela DSC (walidacje: duplikaty kryteriów, dwa X w wierszu, format daty) | `archive/docs/sources/sluzba-cywilna/text/arkusze-ocen-instrukcja-uzytkownika.txt` |
-| Zasady liczenia terminów (przypadki testowe) | `archive/docs/sources/hackathon/raw/zasoby-kprm-mirror/extracted/6. Materiały dodatkowe/liczenie terminów.docx` |
+| Zasady liczenia terminów (przypadki testowe) | `docs/zasoby-kprm/6. Materiały dodatkowe/liczenie terminów.docx` |
 | Przypadki użycia i warunki brzegowe KPRM, BPMN | `.../extracted/2. Przypadki użycia/`, `.../extracted/3. Schemat procesu/` |
 | Dane maszynowe (kryteria, arkusze, skala, terminy) | [../legal/oceny-okresowe-dane.yaml](../legal/oceny-okresowe-dane.yaml) |
 

@@ -88,7 +88,7 @@ Kwota to "nagroda główna" pokazywana na stronie. Regulaminy zadań podają kwo
 
 | Zasób z sekcji 7 | Status | Gdzie |
 |---|---|---|
-| 1) Akty prawne | Mamy (kopia) | `raw/zasoby-kprm-mirror/extracted/1. Akty prawne/` oraz niezależnie z ISAP w `docs/legal/raw/` |
+| 1) Akty prawne | Mamy (kopia) | `../../zasoby-kprm/1. Akty prawne/` oraz niezależnie z ISAP w `docs/legal/raw/` |
 | 2) Przypadki użycia, schemat i opis | Mamy (kopia) | `.../2. Przypadki użycia/` (diagram A3 PDF i VSDX, opis, warunki brzegowe) |
 | 3) Schemat procesu | Mamy (kopia) | `.../3. Schemat procesu/` (BPMN Bizagi, XPDL, PNG, skrócony opis procesu i pojęć) |
 | 4) Formularze ocen, wzory i opisy pól | Mamy (kopia) | `.../4. Formularze ocen/` (wzory A, B, C jako skany PDF, schematy pól DOCX, automatyczny arkusz B w XLSX) |

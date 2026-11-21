@@ -219,7 +219,7 @@ Wniosek: 60% punktów to zgodność z procesem i przepisami oraz wdrażalność.
 4. formularze ocen (wzory i opisy pól),
 5. przykładowe wypełnione formularze.
 
-Wszystkie pozycje (oraz „6. Materiały dodatkowe” z zasadami liczenia terminów i poradnikiem KPRM) są w `archive/docs/sources/hackathon/raw/zasoby-kprm-mirror/`. To kopia z publicznego repozytorium innego uczestnika (github.com/Ch3shireDev/hacknation-2026), nie kanał oficjalny. Warto porównać ją z oficjalnym pakietem od mentorów (Discord lub stoisko KPRM). Najważniejsze z tych zasobów:
+Wszystkie pozycje (oraz „6. Materiały dodatkowe” z zasadami liczenia terminów i poradnikiem KPRM) są w `docs/zasoby-kprm/`. To kopia z publicznego repozytorium innego uczestnika (github.com/Ch3shireDev/hacknation-2026), nie kanał oficjalny. Warto porównać ją z oficjalnym pakietem od mentorów (Discord lub stoisko KPRM). Najważniejsze z tych zasobów:
 
 - BPMN z rolami: ZARZĄDZAJĄCY (kadry), OCENIAJĄCY, OCENIANY, ADMIN, SCHEDULER (czas, czyli automatyczne przypomnienia i przesunięcia terminów),
 - przypadki użycia i warunki brzegowe (w tym „fikcja zapoznania z oceną”, import danych pracownika, zastępstwa, archiwizacja, usuwanie danych, wydruk zgodny ze wzorem),

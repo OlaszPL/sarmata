@@ -45,7 +45,7 @@ Na hacknation.pl pole `materials` jest puste dla wszystkich 15 zadań. Zasoby KP
 
 Ocena wiarygodności: to nie jest kanał oficjalny. Za autentycznością przemawia to, że PDF z pełną treścią zadania w tym repozytorium jest bajtowo identyczny z oficjalnym plikiem z hacknation.pl (sprawdzone `cmp`), a przykładowe formularze używają fikcyjnego urzędu ("Urząd Ministerstwa Testowego w Kropce Wielkopolskiej"). Przed oparciem się na szczegółach warto porównać pliki z wersją od mentorów KPRM (Discord lub stoisko).
 
-| Plik w `raw/zasoby-kprm-mirror/zip/` | SHA-256 | Zawartość po rozpakowaniu (`raw/zasoby-kprm-mirror/extracted/`, teksty w `text/zasoby-kprm-mirror/`) |
+| Plik w `archive/docs/sources/hackathon/raw/zasoby-kprm-mirror/zip/` | SHA-256 | Zawartość po rozpakowaniu (`../../zasoby-kprm/`, teksty w `text/zasoby-kprm-mirror/`) |
 |---|---|---|
 | `1. Akty prawne.zip` | `0a96668c...04fc1e` | Rozporządzenie PRM w sprawie ocen okresowych (PDF), ustawa o służbie cywilnej (wyciąg DOCX i całość PDF), standardy zzl w sc (PDF) |
 | `2. Przypadki użycia.zip` | `8ab9b460...ab72743` | Diagram przypadków użycia A3 (PDF i Visio `.vsdx`), `use cases - opis.docx`, `use cases - warunki brzegowe.docx` |
