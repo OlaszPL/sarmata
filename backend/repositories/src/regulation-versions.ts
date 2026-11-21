@@ -8,6 +8,8 @@ export interface RegulationVersionRepository {
   listOfficial(): Promise<RegulationDocument[]>;
   /** The official version with this document id. The id is stored in the `code` column. */
   findOfficialById(id: string): Promise<RegulationDocument | null>;
+  /** The `regulation_versions` row uuid of the official version with this document id (for foreign keys). */
+  findOfficialRowId(id: string): Promise<string | null>;
 }
 
 /** Writes official versions. Needs the service client: accounts cannot create them (RLS). */
@@ -36,6 +38,17 @@ export function createRegulationVersionRepository(db: Db | ServiceDb): Regulatio
         .maybeSingle();
       if (error) throw new RepositoryError('regulationVersions.findOfficialById', error);
       return data === null ? null : parseRegulationDocument(data.document);
+    },
+
+    async findOfficialRowId(id) {
+      const { data, error } = await db
+        .from('regulation_versions')
+        .select('id')
+        .eq('is_official', true)
+        .eq('code', id)
+        .maybeSingle();
+      if (error) throw new RepositoryError('regulationVersions.findOfficialRowId', error);
+      return data?.id ?? null;
     },
   };
 }

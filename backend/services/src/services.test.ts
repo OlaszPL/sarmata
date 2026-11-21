@@ -14,11 +14,15 @@ import { syncOfficialRegulations } from './system';
 const [regulation2016] = officialRegulations;
 if (regulation2016 === undefined) throw new Error('The official regulation catalog is empty');
 
+const unavailable = (): never => {
+  throw new Error('Evaluation repository is not used in these tests');
+};
+
 function inMemoryRepositories(seed: { employees?: Employee[]; official?: RegulationDocument[] }) {
   const official = [...(seed.official ?? [])];
   const inserted: string[] = [];
   const created: Employee[] = [];
-  const repositories: Pick<Repositories, 'employees' | 'regulationVersions'> = {
+  const repositories: Repositories = {
     employees: {
       list: () => Promise.resolve([...(seed.employees ?? [])]),
       get: (id) => Promise.resolve((seed.employees ?? []).find((e) => e.id === id) ?? null),
@@ -38,6 +42,17 @@ function inMemoryRepositories(seed: { employees?: Employee[]; official?: Regulat
       listOfficial: () => Promise.resolve([...official]),
       findOfficialById: (id) =>
         Promise.resolve(official.find((document) => document.id === id) ?? null),
+      findOfficialRowId: (id) =>
+        Promise.resolve(official.some((document) => document.id === id) ? `row-${id}` : null),
+    },
+    evaluations: {
+      create: unavailable,
+      get: unavailable,
+      listForOffice: unavailable,
+      latestForEmployee: unavailable,
+      saveDraft: unavailable,
+      applyTransition: unavailable,
+      saveDeadlines: unavailable,
     },
   };
   const writer: OfficialRegulationWriter = {

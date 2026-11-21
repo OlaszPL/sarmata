@@ -13,6 +13,17 @@ export {
   type SimilarEmployee,
 } from './employees';
 export {
+  type Evaluation,
+  type EvaluationDetail,
+  type EvaluationEvent,
+  type EvaluationRepository,
+  type EvaluatedSnapshot,
+  type NewEvaluation,
+  type StoredDeadline,
+  type StoredEvaluationStatus,
+  type TransitionInput,
+} from './evaluations';
+export {
   type OfficialRegulationWriter,
   type RegulationVersionRepository,
   createOfficialRegulationWriter,

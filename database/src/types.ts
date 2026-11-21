@@ -230,6 +230,9 @@ isOneToOne: false
                            },
 "job_queue_send":
 { Args: { "delay_seconds"?: number,"message": Json }; Returns: number
+                           },
+"start_evaluation":
+{ Args: { "p_after_negative": boolean,"p_content": Json,"p_cycle_start": string,"p_employee_id": string,"p_evaluator_account_id": string,"p_previous_acquainted_on": string,"p_previous_evaluation_id": string,"p_regulation_version_id": string,"p_sheet_id": string,"p_snapshot": Json }; Returns: string
                            }
           }
           Enums: {
