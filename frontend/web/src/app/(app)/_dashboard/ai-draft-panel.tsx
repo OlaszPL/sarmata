@@ -1,6 +1,6 @@
 import { AiMark, PixelLoader } from '@sarmata/ui';
 import { type DashboardData } from '@/lib/dashboard/compose-dashboard';
-import { AiDraftRefresh } from './ai-draft-refresh';
+import { PollingRefresh } from '@/components/polling-refresh';
 
 const PREVIEW_CHARS = 160;
 
@@ -36,7 +36,7 @@ export function AiDraftPanel({ drafts }: { drafts: DashboardData['runningDrafts'
           </li>
         ))}
       </ul>
-      <AiDraftRefresh />
+      <PollingRefresh active />
     </section>
   );
 }
