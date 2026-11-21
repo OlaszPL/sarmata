@@ -523,11 +523,48 @@ Claude-Session: https://claude.ai/code/session_01CbBDmh1wTCkUawRYrUwNRT"
 
 Osobny commit z samym kodem wygenerowanym pokazuje później w historii, że nikt go ręcznie nie zmieniał.
 
+- [ ] **Step 9a: Utwórz `frontend/ui/src/components/brand-mark.tsx`**
+
+Znak produktu: tarcza w granacie gov.pl z czerwonym pasem i pióropusz czapli spięty szkofią (motyw sarmacki). Źródło: `docs/brand/sarmata-znak.svg` i `docs/brand/sarmata-logo.svg` (decyzja użytkownika: własny znak w barwach gov.pl zamiast godła i znaku KPRM). Inline SVG, żeby nie zależał od ścieżek publicznych i dziedziczył `className`.
+
+```tsx
+type BrandMarkProps = {
+  className?: string;
+};
+
+/** Product mark: gov.pl navy shield with a heron plume held by a jewel (Sarmatian motif). Decorative. */
+export function BrandMark({ className }: BrandMarkProps) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden focusable="false">
+      <path
+        d="M9 4h46a3 3 0 0 1 3 3v24c0 15.6-11.3 25.3-26 29.4C17.3 56.3 6 46.6 6 31V7a3 3 0 0 1 3-3z"
+        fill="#0052a5"
+      />
+      <path d="M9 4h46a3 3 0 0 1 3 3v4H6V7a3 3 0 0 1 3-3z" fill="#d5233f" />
+      <path
+        d="M23 46.5C19.6 36.8 22.6 24.4 32.4 17.6 39.6 12.6 48.6 13.2 52.6 19.2 47.4 17.2 41.8 18.6 38 22.6 31.8 29.2 28.8 38.4 23 46.5z"
+        fill="#ffffff"
+      />
+      <path
+        d="M23 46.5C24.6 37.4 28.2 28.6 34.4 22.2 39.6 17 46 15.8 52.6 19.2"
+        fill="none"
+        stroke="#0052a5"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <circle cx="23" cy="46.5" r="5.4" fill="#eba828" stroke="#ffffff" strokeWidth="1.4" />
+      <circle cx="23" cy="46.5" r="3" fill="#d5233f" />
+      <circle cx="22" cy="45.4" r="0.9" fill="#ffffff" />
+    </svg>
+  );
+}
+```
+
 - [ ] **Step 9: Utwórz `frontend/ui/src/components/app-shell.tsx`**
 
 ```tsx
 import type { ReactNode } from 'react';
-import { Landmark } from 'lucide-react';
+import { BrandMark } from '#components/brand-mark';
 
 type AppShellProps = {
   productName: string;
@@ -550,7 +587,7 @@ export function AppShell({ productName, productTagline, account, children }: App
       <header className="border-b-4 border-primary bg-background">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-3">
-            <Landmark className="size-8 text-primary" aria-hidden />
+            <BrandMark className="size-10 shrink-0" />
             <div>
               <p className="text-lg leading-tight font-bold">{productName}</p>
               <p className="text-sm text-muted-foreground">{productTagline}</p>
@@ -699,6 +736,7 @@ export { Card, CardContent, CardDescription, CardHeader } from '#shadcn/ui/card'
 
 // Our overlays on top of the generated components.
 export { AppShell } from '#components/app-shell';
+export { BrandMark } from '#components/brand-mark';
 export { FormAlert } from '#components/form-alert';
 export { SubmitButton } from '#components/submit-button';
 export { TextField } from '#components/text-field';
@@ -901,6 +939,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 ```
 
 Open Sans jest dołączany z paczki fontsource (SIL OFL 1.1), bez pobierania z Google w czasie budowania, więc build działa w sieci urzędu bez dostępu do internetu.
+
+- [ ] **Step 8a: Ikona strony ze znaku produktu**
+
+Run: `cp docs/brand/sarmata-znak.svg frontend/web/src/app/icon.svg`
+
+Next.js sam podpina `app/icon.svg` jako ikonę karty przeglądarki.
 
 - [ ] **Step 9: Zainstaluj zależności lintu w korzeniu**
 
@@ -2107,5 +2151,5 @@ Plan przejrzany pod kątem głębokości modułów, szwów i testowania przez in
 - Menu konta w dropdownie: na razie trzy informacje i jeden przycisk mieszczą się w nagłówku.
 - `eslint-config-next` i `eslint-plugin-jsx-a11y`: brak wsparcia ESLint 10. Dostępność pilnuje axe w e2e.
 - `output: 'standalone'` w Next: sposób pakowania obrazu wybiera plan 6.
-- Godło albo znak służby cywilnej w nagłówku: używanie godła reguluje ustawa, a FINDINGS odradza elementy portalu gov.pl. Nagłówek ma neutralną ikonę lucide i nazwę produktu.
+- Godło albo znak służby cywilnej w nagłówku: używanie godła reguluje ustawa, a FINDINGS odradza elementy portalu gov.pl. Po decyzji użytkownika nagłówek ma własny znak produktu `BrandMark` (tarcza gov.pl z pióropuszem czapli, `docs/brand/`), a ikona strony to ten sam znak.
 - Parametr `next` (powrót po logowaniu na pierwotną stronę): YAGNI, dopóki nie ma ekranów domenowych.
