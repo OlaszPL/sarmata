@@ -88,11 +88,17 @@ describe('handoverPlan', () => {
   it('Windows with WSL: copies the new .exe next to the installed command', () => {
     const { plan, launcher } = handoverPlan(windowsEnvironment(INSTALLED));
     expect(launcher).toBe('C:\\Users\\jan\\AppData\\Local\\Programs\\Sarmata\\sarmata-next.exe');
-    expect(plan.steps[0]?.action).toEqual({
-      kind: 'copy',
-      from: '/opt/sarmata/source.next/infra/deploy/dist/sarmata-windows-x64.exe',
-      to: '/mnt/c/Users/jan/AppData/Local/Programs/Sarmata/sarmata-next.exe',
-      mode: 0o755,
+    expect(plan.steps[0]).toMatchObject({
+      on: 'engine',
+      action: {
+        kind: 'run',
+        argv: [
+          'cp',
+          '--',
+          '/opt/sarmata/source.next/infra/deploy/dist/sarmata-windows-x64.exe',
+          '/mnt/c/Users/jan/AppData/Local/Programs/Sarmata/sarmata-next.exe',
+        ],
+      },
     });
   });
 

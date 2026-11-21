@@ -47,12 +47,19 @@ export function handoverPlan(env: Environment): { plan: Plan; launcher: string }
     return {
       plan: {
         steps: [
-          step('Przygotowanie kreatora nowej wersji', 'engine', {
-            kind: 'copy',
-            from: binary,
-            to: toEnginePath(env, launcher),
-            mode: 0o755,
-          }),
+          // A plain cp into the Windows drive: cp -a (the WSL copy adapter) would try to keep
+          // Linux ownership on a drvfs mount.
+          env.engineHost === 'wsl'
+            ? step(
+                'Przygotowanie kreatora nowej wersji',
+                'engine',
+                runAction(['cp', '--', binary, toEnginePath(env, launcher)]),
+              )
+            : step('Przygotowanie kreatora nowej wersji', 'engine', {
+                kind: 'copy',
+                from: binary,
+                to: launcher,
+              }),
         ],
       },
       launcher,
