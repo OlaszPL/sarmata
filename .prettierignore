@@ -1,0 +1,14 @@
+docs/
+archive/
+pnpm-lock.yaml
+.turbo/
+**/.next/
+.agents/
+.claude/
+.codex/
+.superpowers/
+.termic/
+.mcp.json
+AGENTS.md
+GLOSSARY.md
+README.md

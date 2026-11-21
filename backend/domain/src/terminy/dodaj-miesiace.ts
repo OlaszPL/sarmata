@@ -17,5 +17,9 @@ export function dodajMiesiace(od: DataKalendarzowa, miesiace: number): DataKalen
   const indeks = rok * 12 + (miesiac - 1) + miesiace;
   const nowyRok = Math.floor(indeks / 12);
   const nowyMiesiac = (indeks % 12) + 1;
-  return zeSkladowych(nowyRok, nowyMiesiac, Math.min(dzien, ostatniDzienMiesiaca(nowyRok, nowyMiesiac)));
+  return zeSkladowych(
+    nowyRok,
+    nowyMiesiac,
+    Math.min(dzien, ostatniDzienMiesiaca(nowyRok, nowyMiesiac)),
+  );
 }
