@@ -20,3 +20,7 @@ if docker info >/dev/null 2>&1; then
 else
   echo "Docker is not running, skipping Supabase start"
 fi
+
+# AI models and llama.cpp are machine-wide (user data dir), so a new worktree never downloads them
+# again. This only writes .env.ai.local when AI is already set up on this machine.
+pnpm ai:env || true

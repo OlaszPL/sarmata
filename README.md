@@ -34,7 +34,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm ai:setup
        pnpm ai:start
 
-   Serwer działa w tle pod `http://127.0.0.1:55490/v1`, zatrzymuje go `pnpm ai:stop`. Oba skrypty zapisują `AI_BASE_URL` i `AI_MODEL` do wygenerowanego `.env.ai.local` w korzeniu, który direnv ładuje zaraz po `.env.local` (bez direnv: `set -a; . ./.env.ai.local; set +a`). Na słabszym sprzęcie: `SARMATA_AI_MODEL=bielik-4.5b-v3.0-q8_0 pnpm ai:setup`. Sekretów ani tokenu Hugging Face nie trzeba, repozytoria modeli są publiczne.
+   Serwer działa w tle pod `http://127.0.0.1:55490/v1`, zatrzymuje go `pnpm ai:stop`. Oba skrypty zapisują `AI_BASE_URL` i `AI_MODEL` do wygenerowanego `.env.ai.local` w korzeniu, który direnv ładuje zaraz po `.env.local` (bez direnv: `set -a; . ./.env.ai.local; set +a`). Na słabszym sprzęcie: `SARMATA_AI_MODEL=bielik-4.5b-v3.0-q8_0 pnpm ai:setup`. Sekretów ani tokenu Hugging Face nie trzeba, repozytoria modeli są publiczne. Pobieranie robi się raz na maszynę: w kolejnym worktree wystarczy `pnpm ai:env` (zapisuje tylko `.env.ai.local`, bez pobierania i bez startu serwera), a skrypt setup dla Termic woła go sam. Powtórne `ai:setup` też niczego nie ściąga, jeśli pliki mają poprawne sumy.
 
 7. **Sprawdzenie całości** (to samo co CI):
 
@@ -58,6 +58,7 @@ Konta demo (hasło `Haslo-Demo-2026`): `admin@kropka.test`, `kadry@kropka.test`,
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
 | `pnpm ai:setup` | llama.cpp i model Bielik do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local` |
+| `pnpm ai:env` | `.env.ai.local` dla tego worktree z już pobranego AI, bez pobierania |
 | `pnpm ai:start` / `ai:stop` | wspólny llama-server w tle na porcie 55490 |
 
 ## Pliki konfiguracyjne
