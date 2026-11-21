@@ -42,7 +42,7 @@ const CONFIG: LlamaServerConfig = {
 };
 
 describe('llamaServerCommand', () => {
-  it('starts llama-server with the model, the alias, Jinja templates and the chosen device', () => {
+  it('starts llama-server with the model, the alias, the ChatML template and the chosen device', () => {
     expect(llamaServerCommand(CONFIG)).toEqual({
       command: '/opt/llama/llama-server',
       args: [
@@ -59,7 +59,9 @@ describe('llamaServerCommand', () => {
         '--parallel',
         '2',
         '--kv-unified',
-        '--jinja',
+        '--no-jinja',
+        '--chat-template',
+        'chatml',
         '--no-webui',
         '--device',
         'MTL0',
@@ -264,7 +266,7 @@ describe.skipIf(process.platform === 'win32')('startLlamaServer', () => {
     try {
       expect(server.url).toBe(`http://127.0.0.1:${port}/v1`);
       expect(await isLlamaServerReady(server.url)).toBe(true);
-      expect(await readFile(config.logFile, 'utf8')).toContain('--jinja');
+      expect(await readFile(config.logFile, 'utf8')).toContain('--chat-template chatml');
     } finally {
       await server.stop();
     }
