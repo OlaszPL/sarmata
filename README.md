@@ -4,7 +4,7 @@ System Automatycznej Rejestracji i Monitorowania Awansów, Terminów i Analiz. C
 
 ## Start
 
-Wymagania: Node 24, pnpm 12.21.0, Docker, sops i age (sekrety zespołu). Klucz age leży w `~/.config/sops/age/keys.txt` albo pod ścieżką z `SOPS_AGE_KEY_FILE`. `pnpm doctor` sprawdza narzędzia i podaje polecenia instalacji dla macOS, Debiana/Ubuntu i Windowsa.
+Wymagania: Node 24, pnpm 12.21.0, Docker, sops i age (sekrety zespołu). Klucz age leży w `~/.config/sops/age/keys.txt` albo pod ścieżką z `SOPS_AGE_KEY_FILE`. `pnpm run doctor` sprawdza narzędzia i podaje polecenia instalacji dla macOS, Debiana/Ubuntu i Windowsa.
 
 Opcjonalnie direnv: `direnv allow` w katalogu repo ładuje `.envrc` (ścieżka klucza age, `node_modules/.bin` w `PATH`, `.env.local`). Skrypt `scripts/termic-setup.sh` robi to sam, gdy direnv jest zainstalowany.
 
@@ -16,7 +16,7 @@ Opcjonalnie direnv: `direnv allow` w katalogu repo ładuje `.envrc` (ścieżka k
 
 | Skrypt                     | Co robi                                            |
 | -------------------------- | -------------------------------------------------- |
-| `pnpm doctor`              | sprawdza wymagane narzędzia i podpowiada instalację |
+| `pnpm run doctor`            | sprawdza wymagane narzędzia i podpowiada instalację |
 | `pnpm check`               | lint, format, typecheck i testy (to samo co CI)    |
 | `pnpm test`                | testy wszystkich pakietów przez Turborepo          |
 | `pnpm typecheck`           | kontrola typów                                     |
