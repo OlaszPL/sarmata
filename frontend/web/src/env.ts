@@ -4,7 +4,10 @@ import { z } from 'zod';
 const envSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
-  /** Public address of the app, for links in auth e-mails (invites, password reset). */
+  /**
+   * Public address of the app, for links in auth e-mails (invites, password reset).
+   * TODO: nothing reads it yet, the first user is the invite and password reset plan.
+   */
   SITE_URL: z.url().default('http://localhost:3000'),
 });
 

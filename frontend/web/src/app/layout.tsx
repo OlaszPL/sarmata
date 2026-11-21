@@ -1,5 +1,5 @@
 import '@fontsource-variable/open-sans';
-import '@sarmata/ui/globals.css';
+import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { product } from '@/lib/product';

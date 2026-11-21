@@ -1,10 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
+@import './shadcn.css';
 
-/* Class sources: this package and the web app (relative to this file). */
+/* Class sources of this package (relative to this file). The app adds its own with @source. */
 @source '../';
-@source '../../../web/src';
 
 /* Used by classes in generated shadcn components. The app has no dark theme. */
 @custom-variant dark (&:is(.dark *));

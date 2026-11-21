@@ -1,0 +1,20 @@
+'use client';
+
+import { AppShell, Button } from '@sarmata/ui';
+import { product } from '@/lib/product';
+
+/** Polish error page for failures of a route, e.g. a broken account contract or missing config. */
+export default function ErrorPage({ reset }: { error: Error; reset: () => void }) {
+  return (
+    <AppShell productName={product.name} productTagline={product.tagline}>
+      <h1 className="text-3xl font-bold">Coś poszło nie tak</h1>
+      <p className="mt-4 max-w-prose">
+        Nie udało się wyświetlić tej strony. Spróbuj ponownie. Jeśli błąd się powtarza, zgłoś go
+        administratorowi.
+      </p>
+      <Button type="button" className="mt-6 h-11 text-base" onClick={reset}>
+        Spróbuj ponownie
+      </Button>
+    </AppShell>
+  );
+}
