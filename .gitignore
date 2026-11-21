@@ -285,3 +285,5 @@ archive/
 .env.local
 secrets/*.env
 !secrets/*.enc.env
+
+node_modules/
