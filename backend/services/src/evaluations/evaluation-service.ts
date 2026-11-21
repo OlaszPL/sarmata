@@ -23,6 +23,7 @@ import {
   termChangePayloadSchema,
   emptySheetContent,
   evaluationEligibility,
+  evaluationTransitions,
   partOneIssues,
   planTransition,
   proposeSheet,
@@ -149,8 +150,16 @@ export interface EvaluationService {
   get(id: string): Promise<EvaluationView | null>;
   list(filter?: EvaluationFilter): Promise<Evaluation[]>;
   saveDraft(id: string, content: SheetContent): Promise<EvaluationView>;
-  /** The gates of the next approval without running it. `content` checks unsaved edits (ZodError when invalid). */
+  /**
+   * The gates of the next approval without running it. `part_one` issues are the `details` of
+   * `criteria_invalid`, `sheet` issues the `details` of `approval_blocked`. `content` checks unsaved edits,
+   * but `transition` gates the saved content, so the frontend saves before approving. In the `sheet` stage
+   * part one is always the saved one (it is locked after approval). Throws `ZodError` for invalid
+   * `content` (parsed before the lookup, so it wins over `not_found`) and `not_found` for an unknown id.
+   */
   approvalIssues(id: string, content?: SheetContent): Promise<ApprovalPreview>;
+  /** The regulation version the evaluation is pinned to. `not_found` for an evaluation the account cannot see, `unknown_regulation` for a missing version. */
+  pinnedRegulation(id: string): Promise<RegulationDocument>;
   /** Filing an objection (`file_objection`) and interrupting (`interrupt`) are commands here too. */
   transition(id: string, command: EvaluationCommand): Promise<EvaluationView>;
   recordAbsence(id: string, input: AbsenceInput): Promise<EvaluationView>;
@@ -500,14 +509,26 @@ export function createEvaluationService(
     async approvalIssues(id, content) {
       const checked = content === undefined ? undefined : sheetContentSchema.parse(content);
       const detail = await load(id);
-      const stage: ApprovalStage | null =
-        detail.status === 'criteria' ? 'part_one' : detail.status === 'interview' ? 'sheet' : null;
-      if (stage === null) return { stage, issues: [] };
+      const approval = evaluationTransitions.find(
+        (row) =>
+          row.from === detail.status &&
+          (row.eventKind === 'part_one_approved' || row.eventKind === 'sheet_approved'),
+      );
+      if (approval === undefined) return { stage: null, issues: [] };
+      const stage: ApprovalStage =
+        approval.eventKind === 'part_one_approved' ? 'part_one' : 'sheet';
       const regulation = await regulationOf(detail);
-      return {
-        stage,
-        issues: gateIssues(stage, detail, regulation, checked ?? detail.sheet.content),
-      };
+      const gated =
+        checked === undefined
+          ? detail.sheet.content
+          : stage === 'sheet'
+            ? { ...checked, partOne: detail.sheet.content.partOne }
+            : checked;
+      return { stage, issues: gateIssues(stage, detail, regulation, gated) };
+    },
+
+    async pinnedRegulation(id) {
+      return regulationOf(await load(id));
     },
 
     async transition(id, command) {

@@ -36,7 +36,7 @@
     "worker:dev": "node scripts/with-supabase-env.mjs pnpm --filter @sarmata/worker dev",
     "db:types": "pnpm --filter @sarmata/database types",
     "db:test": "pnpm --filter @sarmata/database test:db",
-    "test:integration": "node scripts/with-supabase-env.mjs pnpm --filter @sarmata/repositories --filter @sarmata/worker --filter @sarmata/exports test:integration",
+    "test:integration": "node scripts/with-supabase-env.mjs pnpm --workspace-concurrency=1 --filter @sarmata/repositories --filter @sarmata/worker --filter @sarmata/exports test:integration",
     "ai:setup": "pnpm --filter @sarmata/ai-runtime ai:setup",
     "ai:env": "pnpm --filter @sarmata/ai-runtime ai:env",
     "ai:start": "pnpm --filter @sarmata/ai-runtime ai:start",

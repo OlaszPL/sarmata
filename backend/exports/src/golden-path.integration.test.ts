@@ -118,6 +118,11 @@ describe('golden path of the demo', () => {
       partTwo: started.sheet.content.partTwo,
     });
     await evaluator.evaluations.saveDraft(evaluationId, partOne);
+    // The stored content round-trips through JSON into the same gate as the real approval.
+    expect(await evaluator.evaluations.approvalIssues(evaluationId)).toEqual({
+      stage: 'part_one',
+      issues: [],
+    });
     await evaluator.evaluations.transition(evaluationId, {
       type: 'approve_part_one',
       startingInterviewOn: today,

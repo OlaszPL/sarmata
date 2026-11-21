@@ -42,7 +42,7 @@ export interface NoteRepository {
   get(id: string): Promise<Note | null>;
   /** Newest occurrence first, then newest entry first. */
   listForEmployee(employeeId: string): Promise<Note[]>;
-  /** Notes the signed-in account wrote (kadry can read all notes, this keeps only their own). */
+  /** Notes the signed-in account wrote (hr reads all notes, this keeps only the account's own). */
   listMine(): Promise<Note[]>;
   /** Earlier versions and the current one, oldest first. Empty for a note that is not visible. */
   versions(id: string): Promise<NoteVersion[]>;
