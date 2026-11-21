@@ -66,7 +66,7 @@ Ustalenia z wątku funkcjonalnego. Najpierw backend: model danych, stany oceny, 
 ## Moduł HR partnera
 
 - Wejście: strukturalne fakty obciążenia od oceniającego (notatki typu `fakt_obciazenia`), tekst notatek oceniającego i oceny cząstkowe z poprzednich cykli. Importu z systemu kadrowego nie robimy.
-- Bielik-One daje sygnały (sentyment, przeciążenie, spadek zaangażowania, ryzyko wypalenia) z prawdopodobieństwem i fragmentami źródłowymi.
+- Bielik-One daje sygnały (sentyment, przeciążenie, spadek zaangażowania, ryzyko wypalenia) z prawdopodobieństwem i fragmentami źródłowymi. Nie konfigurujemy progów pewności: o tym, co jest sygnałem, decyduje Bielik-One, a wynik pokazujemy jako sugestię.
 - Wynik to sugestia: sygnały, pytania do rozmowy, działania według JD-R i HSE. Nigdy diagnoza. Decyduje oceniający (ustalenie z KPRM w `AGENTS.md`).
 - Wynik czyta autor analizy i kadry. Nie trafia do arkusza.
 
