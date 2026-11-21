@@ -29,10 +29,15 @@ export interface Employee {
   readonly gradeGrantedOn: CalendarDate | null;
   readonly employmentEndedOn: CalendarDate | null;
   readonly supervisorEmployeeId: string | null;
+  /** Set when the record was anonymized after the retention period: only the id and counts are left. */
+  readonly anonymizedAt: string | null;
 }
 
 /** Fields HR enters. The id, the office and the account link are set by the system. */
-export type NewEmployee = Omit<Employee, 'id' | 'officeId' | 'userId'>;
+export type NewEmployee = Omit<
+  Employee,
+  'id' | 'officeId' | 'userId' | 'employmentEndedOn' | 'anonymizedAt'
+>;
 
 /** Fields to change, absent or `undefined` keys stay untouched. */
 export type EmployeePatch = { [K in keyof NewEmployee]?: NewEmployee[K] | undefined };
@@ -58,12 +63,9 @@ export interface EmployeeRepository {
 }
 
 const COLUMNS =
-  'id, office_id, first_name, last_name, email, user_id, position_title, org_unit, position_kind, service_status, employment_basis, employment_start, appointment_year, grade, grade_granted_on, employment_ended_on, supervisor_employee_id' as const;
+  'id, office_id, first_name, last_name, email, user_id, position_title, org_unit, position_kind, service_status, employment_basis, employment_start, appointment_year, grade, grade_granted_on, employment_ended_on, supervisor_employee_id, anonymized_at' as const;
 
-type EmployeeRow = Omit<
-  Database['public']['Tables']['employees']['Row'],
-  'created_at' | 'anonymized_at'
->;
+type EmployeeRow = Omit<Database['public']['Tables']['employees']['Row'], 'created_at'>;
 type EmployeeColumns = Database['public']['Tables']['employees']['Update'];
 
 const optionalDate = (value: string | null): CalendarDate | null =>
@@ -87,6 +89,7 @@ const toEmployee = (row: EmployeeRow): Employee => ({
   gradeGrantedOn: optionalDate(row.grade_granted_on),
   employmentEndedOn: optionalDate(row.employment_ended_on),
   supervisorEmployeeId: row.supervisor_employee_id,
+  anonymizedAt: row.anonymized_at,
 });
 
 /** Column values of the fields present in the patch, absent keys stay untouched. */
@@ -104,7 +107,6 @@ function toColumns(patch: EmployeePatch): EmployeeColumns {
   if (patch.appointmentYear !== undefined) columns.appointment_year = patch.appointmentYear;
   if (patch.grade !== undefined) columns.grade = patch.grade;
   if (patch.gradeGrantedOn !== undefined) columns.grade_granted_on = patch.gradeGrantedOn;
-  if (patch.employmentEndedOn !== undefined) columns.employment_ended_on = patch.employmentEndedOn;
   if (patch.supervisorEmployeeId !== undefined) {
     columns.supervisor_employee_id = patch.supervisorEmployeeId;
   }

@@ -25,7 +25,8 @@ export type ServiceErrorCode =
   | 'regulation_cases_failed'
   | 'regulation_not_draft'
   | 'already_ended'
-  | 'not_ended';
+  | 'not_ended'
+  | 'invalid_end_date';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */
 export class ServiceError extends Error {

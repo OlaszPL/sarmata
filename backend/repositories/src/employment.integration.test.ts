@@ -62,7 +62,6 @@ async function employeeWithEvaluation() {
     appointmentYear: null,
     grade: null,
     gradeGrantedOn: null,
-    employmentEndedOn: null,
     supervisorEmployeeId: null,
   });
   const evaluator = createRepositories(evaluatorDb);
@@ -105,6 +104,21 @@ describe('ending an employment', () => {
     expect(result.interruptedEvaluationIds).toEqual([evaluation.id]);
     expect((await hr.evaluations.get(evaluation.id))?.status).toBe('interrupted');
     expect((await hr.employees.get(employee.id))?.employmentEndedOn).toBe('2026-03-15');
+  });
+
+  it('the end date cannot be written through the employee row', async () => {
+    const { hrDb, employee } = await employeeWithEvaluation();
+    const direct = await hrDb
+      .from('employees')
+      .update({ employment_ended_on: '2026-03-15' })
+      .eq('id', employee.id);
+    expect(direct.error?.code).toBe('42501');
+    const after = await hrDb
+      .from('employees')
+      .select('employment_ended_on')
+      .eq('id', employee.id)
+      .single();
+    expect(after.data?.employment_ended_on).toBeNull();
   });
 
   it('ending twice fails already_ended', async () => {

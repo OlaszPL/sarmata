@@ -27,6 +27,7 @@ const employee = (endedOn: string | null): Employee => ({
   gradeGrantedOn: null,
   employmentEndedOn: endedOn === null ? null : calendarDate(endedOn),
   supervisorEmployeeId: null,
+  anonymizedAt: null,
 });
 
 const evaluation = (id: string, cycleStart: string, status: Evaluation['status']): Evaluation =>

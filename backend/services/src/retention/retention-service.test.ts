@@ -30,8 +30,6 @@ const source = (evaluationId: string): RetentionEvaluationSource => ({
   drafted: calendarDate('2014-03-01'),
   acquaintedOn: calendarDate('2014-03-05'),
   history: [],
-  objection: 'none',
-  labourCourtAppealOn: null,
   evaluatorAccountId: 'a1',
   regulation,
 });

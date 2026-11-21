@@ -31,6 +31,7 @@ const employee = (userId: string | null): Employee => ({
   gradeGrantedOn: null,
   employmentEndedOn: null,
   supervisorEmployeeId: null,
+  anonymizedAt: null,
 });
 
 const evaluation = (id: string, status: Evaluation['status'], employeeId: string): Evaluation =>
@@ -55,6 +56,7 @@ function setup(
       get: () => Promise.resolve(employee(options.userId === undefined ? null : options.userId)),
     },
     evaluations: { listForOffice: () => Promise.resolve(options.led ?? []) },
+    today: () => calendarDate('2026-06-01'),
   });
   return { service, employment };
 }
@@ -73,6 +75,20 @@ async function failureOf(promise: Promise<unknown>): Promise<unknown> {
 }
 
 describe('employment service', () => {
+  it('end rejects a date after today and writes nothing', async () => {
+    const { service, employment } = setup();
+    const failure = await failureOf(service.end({ ...input, endedOn: calendarDate('2026-06-02') }));
+    expect(failure).toMatchObject({ code: 'invalid_end_date' });
+    expect(employment.end).not.toHaveBeenCalled();
+  });
+
+  it('end accepts today', async () => {
+    const { service } = setup();
+    await expect(
+      service.end({ ...input, endedOn: calendarDate('2026-06-01') }),
+    ).resolves.toBeDefined();
+  });
+
   it('end computes the purge date from the end year', async () => {
     const { service, employment } = setup();
     const result = await service.end(input);

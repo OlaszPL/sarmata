@@ -511,16 +511,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"retained_evaluation_facts": {
+                },"retained_dsc_events": {
                   Row: {
-                    "civil_servant": boolean,"evaluation_id": string,"evaluator_account_id": string,"grade_by_law_due_year": number | null,"grade_requested": boolean,"labour_court_appeal_year": number | null,"level_code": string | null,"mean": number | null,"objection": string,"office_id": string,"org_unit": string | null,"outcome": string | null,"ratings": NonNullable<Json>,"retained_at": string,"second_consecutive_negative": boolean,"sheet_id": string,"with_conclusions": boolean,"year": number
+                    "id": string,"kind": string,"office_id": string,"outcome": string | null,"retained_at": string,"year": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "civil_servant": boolean,"evaluation_id": string,"evaluator_account_id": string,"grade_by_law_due_year"?: number | null,"grade_requested": boolean,"labour_court_appeal_year"?: number | null,"level_code"?: string | null,"mean"?: number | null,"objection": string,"office_id": string,"org_unit"?: string | null,"outcome"?: string | null,"ratings": NonNullable<Json>,"retained_at"?: string,"second_consecutive_negative": boolean,"sheet_id": string,"with_conclusions": boolean,"year": number
+                    "id"?: string,"kind": string,"office_id": string,"outcome"?: string | null,"retained_at"?: string,"year": number
                   }
                   Update: {
-                    "civil_servant"?: boolean,"evaluation_id"?: string,"evaluator_account_id"?: string,"grade_by_law_due_year"?: number | null,"grade_requested"?: boolean,"labour_court_appeal_year"?: number | null,"level_code"?: string | null,"mean"?: number | null,"objection"?: string,"office_id"?: string,"org_unit"?: string | null,"outcome"?: string | null,"ratings"?: NonNullable<Json>,"retained_at"?: string,"second_consecutive_negative"?: boolean,"sheet_id"?: string,"with_conclusions"?: boolean,"year"?: number
+                    "id"?: string,"kind"?: string,"office_id"?: string,"outcome"?: string | null,"retained_at"?: string,"year"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "retained_dsc_events_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"retained_evaluation_facts": {
+                  Row: {
+                    "civil_servant": boolean,"evaluation_id": string,"evaluator_account_id": string,"grade_by_law_due_year": number | null,"grade_requested": boolean,"level_code": string | null,"mean": number | null,"office_id": string,"org_unit": string | null,"outcome": string | null,"ratings": NonNullable<Json>,"retained_at": string,"second_consecutive_negative": boolean,"sheet_id": string,"with_conclusions": boolean,"year": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "civil_servant": boolean,"evaluation_id": string,"evaluator_account_id": string,"grade_by_law_due_year"?: number | null,"grade_requested": boolean,"level_code"?: string | null,"mean"?: number | null,"office_id": string,"org_unit"?: string | null,"outcome"?: string | null,"ratings": NonNullable<Json>,"retained_at"?: string,"second_consecutive_negative": boolean,"sheet_id": string,"with_conclusions": boolean,"year": number
+                  }
+                  Update: {
+                    "civil_servant"?: boolean,"evaluation_id"?: string,"evaluator_account_id"?: string,"grade_by_law_due_year"?: number | null,"grade_requested"?: boolean,"level_code"?: string | null,"mean"?: number | null,"office_id"?: string,"org_unit"?: string | null,"outcome"?: string | null,"ratings"?: NonNullable<Json>,"retained_at"?: string,"second_consecutive_negative"?: boolean,"sheet_id"?: string,"with_conclusions"?: boolean,"year"?: number
                   }
                   Relationships: [
                     {

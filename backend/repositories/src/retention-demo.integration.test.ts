@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type Db,
   createRetentionStore,
+  createRepositories,
   createServiceClient,
   createStatisticsRepository,
 } from './index';
@@ -27,7 +28,8 @@ async function signedIn(email: string): Promise<Db> {
 describe('retention of the demo office', () => {
   // Needs a fresh `pnpm db:reset`: the seed holds Roman Dawny, who left in 2016 (retention ends 2026-12-31).
   it('demo retention purges the seeded employee and the report is unchanged', async () => {
-    const statistics = createStatisticsRepository(await signedIn('kadry@kropka.test'));
+    const hrDb = await signedIn('kadry@kropka.test');
+    const statistics = createStatisticsRepository(hrDb);
     const service = createServiceClient({
       url: env('SUPABASE_URL'),
       secretKey: env('SUPABASE_SECRET_KEY'),
@@ -83,5 +85,10 @@ describe('retention of the demo office', () => {
       .single();
     expect(anonymized.data?.first_name).toBe('Anonimizowany');
     expect(anonymized.data?.anonymized_at).not.toBeNull();
+    // The list tells an anonymized record apart without reading the name.
+    const listed = (await createRepositories(hrDb).employees.list()).find(
+      (e) => e.id === roman.data.id,
+    );
+    expect(listed?.anonymizedAt).not.toBeNull();
   });
 });

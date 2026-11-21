@@ -173,6 +173,7 @@ const employee = (patch: Partial<Employee> = {}): Employee => ({
   gradeGrantedOn: null,
   employmentEndedOn: null,
   supervisorEmployeeId: null,
+  anonymizedAt: null,
   ...patch,
 });
 

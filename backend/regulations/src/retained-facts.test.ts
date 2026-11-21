@@ -36,8 +36,6 @@ const input = (overrides: Partial<RetainedFactsInput> = {}): RetainedFactsInput 
   drafted: calendarDate('2026-03-01'),
   acquaintedOn: calendarDate('2026-03-05'),
   history: [],
-  objection: 'none',
-  labourCourtAppealOn: null,
   evaluatorAccountId: '22222222-2222-4222-8222-222222222222',
   ...overrides,
 });
@@ -61,8 +59,6 @@ describe('retained facts', () => {
         'withConclusions',
         'gradeRequested',
         'ratings',
-        'objection',
-        'labourCourtAppealYear',
         'evaluatorAccountId',
       ].sort(),
     );

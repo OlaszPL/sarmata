@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(47);
+select plan(59);
 
 -- Office A: hr, admin, evaluator, the leaver L (account, led the evaluation of O), his subordinate S, the
 -- employee O with an evaluation and notes, Q (employment ended, period not over), R (still employed).
@@ -107,10 +107,40 @@ insert into public.ai_fragment_decisions (run_id, office_id, fragment, decision,
 -- The facts the service would compute for the evaluations of L.
 create temp table facts (body jsonb);
 insert into facts values (
-  '[{"evaluationId":"e1313131-0000-4000-8000-000000000001","sheetId":"A","year":2013,"orgUnit":"Wydział L","civilServant":true,"levelCode":"above","outcome":"positive","mean":4.5,"secondConsecutiveNegative":false,"gradeByLawDueYear":2014,"withConclusions":true,"gradeRequested":false,"ratings":[{"criterionId":"quality","points":5}],"objection":"none","labourCourtAppealYear":null,"evaluatorAccountId":"a1313131-1111-4000-8000-000000000003"},
-    {"evaluationId":"e1313131-0000-4000-8000-000000000002","sheetId":"A","year":2013,"orgUnit":"Wydział L","civilServant":true,"levelCode":"good","outcome":"positive","mean":3.5,"secondConsecutiveNegative":false,"gradeByLawDueYear":null,"withConclusions":false,"gradeRequested":true,"ratings":[{"criterionId":"quality","points":3}],"objection":"rejected","labourCourtAppealYear":2014,"evaluatorAccountId":"a1313131-1111-4000-8000-000000000003"}]'::jsonb
+  '[{"evaluationId":"e1313131-0000-4000-8000-000000000001","sheetId":"A","year":2013,"orgUnit":"Wydział L","civilServant":true,"levelCode":"above","outcome":"positive","mean":4.5,"secondConsecutiveNegative":false,"gradeByLawDueYear":2014,"withConclusions":true,"gradeRequested":false,"ratings":[{"criterionId":"quality","points":5}],"evaluatorAccountId":"a1313131-1111-4000-8000-000000000003"},
+    {"evaluationId":"e1313131-0000-4000-8000-000000000002","sheetId":"A","year":2013,"orgUnit":"Wydział L","civilServant":true,"levelCode":"good","outcome":"positive","mean":3.5,"secondConsecutiveNegative":false,"gradeByLawDueYear":null,"withConclusions":false,"gradeRequested":true,"ratings":[{"criterionId":"quality","points":3}],"evaluatorAccountId":"a1313131-1111-4000-8000-000000000003"}]'::jsonb
 );
 grant select on facts to public;
+
+-- The leaver M: no evaluation is counted (all interrupted), but objections and appeals exist.
+--   E1 approved 2016-03-01, objection filed 2016-04-01 and still pending at the termination.
+--   E2 approved 2016-12-01, objection filed 2016-12-10, outcome redraft 2016-12-20, approved again
+--      2017-01-15, a second objection 2017-02-01 rejected 2017-02-20, two labour court appeals in 2017.
+insert into public.employees (id, office_id, first_name, last_name, org_unit) values
+  ('a1313131-2222-4000-8000-0000000000a6', 'a1313131-0000-4000-8000-000000000001', 'Marek', 'Objęty', 'Wydział M');
+update public.employees set employment_ended_on = '2015-06-30' where id = 'a1313131-2222-4000-8000-0000000000a6';
+insert into public.employee_retention (employee_id, office_id, retained_until) values
+  ('a1313131-2222-4000-8000-0000000000a6', 'a1313131-0000-4000-8000-000000000001', '2025-12-31');
+insert into public.evaluations (id, office_id, employee_id, evaluator_account_id, regulation_version_id, sheet_id, status, cycle_start, snapshot, created_by) values
+  ('e1313131-0000-4000-8000-0000000000c1', 'a1313131-0000-4000-8000-000000000001', 'a1313131-2222-4000-8000-0000000000a6',
+   'a1313131-1111-4000-8000-000000000003', 'a1313131-3333-4000-8000-000000000001', 'A', 'interrupted', '2016-01-01', '{}', 'a1313131-1111-4000-8000-000000000001'),
+  ('e1313131-0000-4000-8000-0000000000c2', 'a1313131-0000-4000-8000-000000000001', 'a1313131-2222-4000-8000-0000000000a6',
+   'a1313131-1111-4000-8000-000000000003', 'a1313131-3333-4000-8000-000000000001', 'A', 'interrupted', '2016-06-01', '{}', 'a1313131-1111-4000-8000-000000000001');
+insert into public.evaluation_events (office_id, evaluation_id, kind, occurred_on, payload, recorded_by)
+select 'a1313131-0000-4000-8000-000000000001', k.evaluation_id::uuid, k.kind::public.evaluation_event_kind, k.occurred_on::date, k.payload::jsonb,
+       'a1313131-1111-4000-8000-000000000001'
+  from (values
+    ('e1313131-0000-4000-8000-0000000000c1', 'sheet_approved', '2016-03-01', '{}'),
+    ('e1313131-0000-4000-8000-0000000000c1', 'objection_filed', '2016-04-01', '{}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'sheet_approved', '2016-12-01', '{}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'objection_filed', '2016-12-10', '{}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'objection_outcome', '2016-12-20', '{"outcome":"redraft"}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'sheet_approved', '2017-01-15', '{}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'objection_filed', '2017-02-01', '{}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'objection_outcome', '2017-02-20', '{"outcome":"rejected"}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'labour_court_appeal', '2017-05-01', '{}'),
+    ('e1313131-0000-4000-8000-0000000000c2', 'labour_court_appeal', '2017-06-01', '{}')
+  ) as k(evaluation_id, kind, occurred_on, payload);
 
 -- The log only grows, for the owner too, and a marker of another transaction does not change that.
 select throws_ok(
@@ -250,6 +280,33 @@ select results_eq(
   'after a failed call nothing changed'
 );
 
+-- DSC-OCK counts of the leaver M before and after anonymization.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a1313131-1111-4000-8000-000000000001","role":"authenticated","office_id":"a1313131-0000-4000-8000-000000000001","office_role":"hr"}';
+select results_eq(
+  $$select objections_upheld::integer, objections_rejected::integer, objections_pending::integer, labour_court_appeals::integer
+      from public.statistics_dsc_ock_counts(2016)$$,
+  $$values (1, 0, 1, 0)$$,
+  'live counts 2016: the pending objection at termination and the redraft one'
+);
+select results_eq(
+  $$select objections_upheld::integer, objections_rejected::integer, objections_pending::integer, labour_court_appeals::integer
+      from public.statistics_dsc_ock_counts(2017)$$,
+  $$values (0, 1, 0, 2)$$,
+  'live counts 2017: the second objection and two appeals'
+);
+reset role;
+select lives_ok(
+  $$select public.anonymize_employee('a1313131-2222-4000-8000-0000000000a6', '2026-11-21', '[]')$$,
+  'anonymize runs for a leaver with objections but no counted evaluation'
+);
+select results_eq(
+  $$select kind, year::integer, outcome from public.retained_dsc_events order by kind, year, outcome nulls first$$,
+  $$values ('labour_court_appeal', 2017, null), ('labour_court_appeal', 2017, null),
+           ('objection', 2016, null), ('objection', 2016, 'redraft'), ('objection', 2017, 'rejected')$$,
+  'every objection and appeal event becomes its own retained row'
+);
+
 select lives_ok(
   $$select public.anonymize_employee('a1313131-2222-4000-8000-0000000000a1', '2026-11-21', (select body from facts))$$,
   'anonymize runs for a due employee'
@@ -308,10 +365,10 @@ select results_eq(
   'other office untouched'
 );
 select results_eq(
-  $$select evaluation_id::text, year::integer, level_code, outcome, civil_servant, org_unit, objection, labour_court_appeal_year::integer
+  $$select evaluation_id::text, year::integer, level_code, outcome, civil_servant, org_unit
       from public.retained_evaluation_facts order by evaluation_id$$,
-  $$values ('e1313131-0000-4000-8000-000000000001', 2013, 'above', 'positive', true, 'Wydział L', 'none', null::integer),
-           ('e1313131-0000-4000-8000-000000000002', 2013, 'good', 'positive', true, 'Wydział L', 'rejected', 2014)$$,
+  $$values ('e1313131-0000-4000-8000-000000000001', 2013, 'above', 'positive', true, 'Wydział L'),
+           ('e1313131-0000-4000-8000-000000000002', 2013, 'good', 'positive', true, 'Wydział L')$$,
   'retained facts hold the evaluation without personal data'
 );
 select results_eq(
@@ -339,14 +396,26 @@ select results_eq(
   'distribution is the same before and after anonymization: the retained facts are counted'
 );
 select results_eq(
-  $$select objections_rejected::integer, labour_court_appeals::integer from public.statistics_dsc_ock_counts(2013)$$,
-  $$values (1, 0)$$,
-  'retained objections count in the year of the sheet'
+  $$select objections_upheld::integer, objections_rejected::integer, objections_pending::integer, labour_court_appeals::integer
+      from public.statistics_dsc_ock_counts(2016)$$,
+  $$values (1, 0, 1, 0)$$,
+  'retained objections are the same after anonymization (2016): pending at termination and the redraft one'
 );
 select results_eq(
-  $$select objections_rejected::integer, labour_court_appeals::integer, grades_by_law::integer from public.statistics_dsc_ock_counts(2014)$$,
-  $$values (0, 1, 1)$$,
-  'retained appeals and by-law grants count in their year'
+  $$select objections_upheld::integer, objections_rejected::integer, objections_pending::integer, labour_court_appeals::integer
+      from public.statistics_dsc_ock_counts(2017)$$,
+  $$values (0, 1, 0, 2)$$,
+  'retained objections and appeals are the same after anonymization (2017): second objection, two appeals'
+);
+select results_eq(
+  $$select grades_by_law::integer from public.statistics_dsc_ock_counts(2014)$$,
+  $$values (1)$$,
+  'retained by-law grants count in their year'
+);
+select results_eq(
+  $$select count(*)::integer from public.retained_dsc_events$$,
+  $$values (5)$$,
+  'hr reads retained objections and appeals'
 );
 select results_eq(
   $$select grades_on_request::integer from public.statistics_dsc_ock_counts(2015)$$,
@@ -373,6 +442,45 @@ select results_eq(
   $$select schedule, command like '%retention.run%' from cron.job where jobname = 'retention-daily'$$,
   $$values ('30 5 * * *', true)$$,
   'daily retention job is scheduled'
+);
+
+-- The end of the employment is not editable through the employee row (only end_employment sets it).
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a1313131-1111-4000-8000-000000000001","role":"authenticated","office_id":"a1313131-0000-4000-8000-000000000001","office_role":"hr"}';
+select throws_ok(
+  $$update public.employees set employment_ended_on = '2026-11-01' where id = 'a1313131-2222-4000-8000-0000000000a5'$$,
+  '42501', null, 'hr cannot set the employment end through the profile'
+);
+select throws_ok(
+  $$update public.employees set employment_ended_on = null where id = 'a1313131-2222-4000-8000-0000000000a4'$$,
+  '42501', null, 'hr cannot clear the employment end through the profile'
+);
+select lives_ok(
+  $$update public.employees set position_title = 'Inspektor' where id = 'a1313131-2222-4000-8000-0000000000a4'$$,
+  'hr still edits the rest of the profile of a former employee'
+);
+select throws_ok(
+  $$select * from public.end_employment('a1313131-2222-4000-8000-0000000000a5', current_date + 1, 'za wcześnie', '2036-12-31')$$,
+  '22023', 'future_end', 'termination refuses a date after today'
+);
+select lives_ok(
+  $$select * from public.end_employment('a1313131-2222-4000-8000-0000000000a5', current_date, 'dzisiaj', (extract(year from current_date)::integer + 10 || '-12-31')::date)$$,
+  'termination accepts today through the function'
+);
+reset role;
+
+-- No notification for an account whose membership has ended.
+update public.memberships set ended_on = current_date - 1
+ where user_id = 'a1313131-1111-4000-8000-000000000003';
+insert into public.notifications (office_id, account_id, kind, evaluation_id, slot, due_on, created_on) values
+  ('a1313131-0000-4000-8000-000000000001', 'a1313131-1111-4000-8000-000000000003', 'deadline_overdue',
+   'e1313131-0000-4000-8000-000000000003', 'evaluationDeadline', '2026-01-01', '2026-11-21'),
+  ('a1313131-0000-4000-8000-000000000001', 'a1313131-1111-4000-8000-000000000001', 'deadline_overdue',
+   'e1313131-0000-4000-8000-000000000003', 'evaluationDeadline', '2026-01-01', '2026-11-21');
+select results_eq(
+  $$select account_id::text from public.notifications where evaluation_id = 'e1313131-0000-4000-8000-000000000003'$$,
+  $$values ('a1313131-1111-4000-8000-000000000001')$$,
+  'a notification for an ended account is skipped, one for an active account is created'
 );
 
 select * from finish();

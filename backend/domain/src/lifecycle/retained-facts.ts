@@ -8,7 +8,8 @@ import { evaluationResult } from '../statistics/evaluation-result';
 
 /**
  * What statistics keep of an evaluation after its employee was anonymized: counts without a person.
- * No name, text or date finer than a year. The evaluator account is a pseudonymous id, it stays
+ * No name, text or date finer than a year. Objections and appeals are not here: the database keeps them
+ * as their own rows, taken from the events (retained_dsc_events). The evaluator account is a pseudonymous id, it stays
  * because the evaluator report groups by it.
  */
 export interface RetainedEvaluationFacts {
@@ -26,8 +27,6 @@ export interface RetainedEvaluationFacts {
   readonly withConclusions: boolean;
   readonly gradeRequested: boolean;
   readonly ratings: readonly { readonly criterionId: string; readonly points: number }[];
-  readonly objection: 'none' | 'pending' | 'rejected' | 'changed' | 'redraft';
-  readonly labourCourtAppealYear: number | null;
   readonly evaluatorAccountId: string;
 }
 
@@ -45,8 +44,6 @@ export interface RetainedFactsInput {
   readonly drafted: CalendarDate | null;
   readonly acquaintedOn: CalendarDate | null;
   readonly history: readonly HistoryEntry[];
-  readonly objection: RetainedEvaluationFacts['objection'];
-  readonly labourCourtAppealOn: CalendarDate | null;
   readonly evaluatorAccountId: string;
 }
 
@@ -99,9 +96,6 @@ export function retainedFacts(
       criterionId,
       points,
     })),
-    objection: input.objection,
-    labourCourtAppealYear:
-      input.labourCourtAppealOn === null ? null : toParts(input.labourCourtAppealOn).year,
     evaluatorAccountId: input.evaluatorAccountId,
   };
 }

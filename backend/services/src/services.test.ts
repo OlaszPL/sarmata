@@ -41,7 +41,14 @@ function inMemoryRepositories(seed: {
       list: () => Promise.resolve([...(seed.employees ?? [])]),
       get: (id) => Promise.resolve((seed.employees ?? []).find((e) => e.id === id) ?? null),
       create: (input: NewEmployee) => {
-        const employee: Employee = { id: 'new', officeId: 'o1', userId: null, ...input };
+        const employee: Employee = {
+          id: 'new',
+          officeId: 'o1',
+          userId: null,
+          employmentEndedOn: null,
+          anonymizedAt: null,
+          ...input,
+        };
         created.push(employee);
         return Promise.resolve(employee);
       },
@@ -103,7 +110,6 @@ const profile = {
   appointmentYear: null,
   grade: null,
   gradeGrantedOn: null,
-  employmentEndedOn: null,
   supervisorEmployeeId: null,
 } as const;
 
@@ -145,6 +151,8 @@ describe('employees.list', () => {
       lastName: 'Ewidencyjna',
       email: null,
       userId: null,
+      employmentEndedOn: null,
+      anonymizedAt: null,
       ...profile,
     };
     const { repositories } = inMemoryRepositories({ employees: [employee] });

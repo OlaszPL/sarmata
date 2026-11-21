@@ -1,4 +1,4 @@
-import { endEmploymentInputSchema, retentionEndsOn } from '@sarmata/domain';
+import { type CalendarDate, endEmploymentInputSchema, retentionEndsOn } from '@sarmata/domain';
 import type { EndEmploymentInput } from '@sarmata/domain';
 import {
   type EmployeeRepository,
@@ -8,6 +8,7 @@ import {
   RepositoryError,
 } from '@sarmata/repositories';
 import { ServiceError } from '../errors';
+import { todayUtc } from '../regulations/regulation-editor-service';
 
 export interface EndEmploymentResult {
   /** Open evaluations of the employee that were interrupted. */
@@ -20,7 +21,7 @@ export interface EmploymentService {
   /**
    * Hr marks the end of an employment: interrupts the open evaluations of the employee, ends the access
    * of the account and starts the retention clock of 10 years from the end of the year (art. 94 pkt 9b KP).
-   * Throws `ZodError` for invalid input, `already_ended` and `forbidden` (hr only).
+   * Throws `ZodError` for invalid input, `invalid_end_date` (after today), `already_ended` and `forbidden` (hr only).
    */
   end(input: EndEmploymentInput): Promise<EndEmploymentResult>;
   /** Former employees whose retention ends within the window (hr only: anybody else gets `forbidden`). */
@@ -31,6 +32,8 @@ export interface EmploymentServiceDependencies {
   readonly employment: EmploymentRepository;
   readonly employees: Pick<EmployeeRepository, 'get'>;
   readonly evaluations: Pick<EvaluationRepository, 'listForOffice'>;
+  /** Defaults to the current UTC date. */
+  readonly today?: () => CalendarDate;
 }
 
 /** Maps the failures the SQL raises on purpose. */
@@ -50,9 +53,16 @@ function mapped(error: unknown): unknown {
 }
 
 export function createEmploymentService(deps: EmploymentServiceDependencies): EmploymentService {
+  const today = deps.today ?? todayUtc;
   return {
     async end(rawInput) {
       const input = endEmploymentInputSchema.parse(rawInput);
+      if (input.endedOn > today()) {
+        throw new ServiceError(
+          'invalid_end_date',
+          'The end of the employment cannot be in the future',
+        );
+      }
       try {
         const employee = await deps.employees.get(input.employeeId);
         if (employee === null) throw new ServiceError('not_found', 'Employee not found');

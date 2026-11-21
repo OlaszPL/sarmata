@@ -26,6 +26,7 @@ const nullableYear = z.number().int().min(1990).max(2100).nullable();
 const nullableGrade = z.number().int().min(1).max(9).nullable();
 const nullableId = z.uuid().nullable();
 
+// The end of the employment is not here on purpose: only the termination flow sets it (end_employment).
 // Without defaults, so that `.partial()` for a patch does not fill in values nobody sent.
 const fields = {
   firstName: text,
@@ -40,7 +41,6 @@ const fields = {
   appointmentYear: nullableYear,
   grade: nullableGrade,
   gradeGrantedOn: nullableDate,
-  employmentEndedOn: nullableDate,
   supervisorEmployeeId: nullableId,
 };
 
@@ -58,7 +58,6 @@ export const newEmployeeSchema = z
     appointmentYear: fields.appointmentYear.default(null),
     grade: fields.grade.default(null),
     gradeGrantedOn: fields.gradeGrantedOn.default(null),
-    employmentEndedOn: fields.employmentEndedOn.default(null),
     supervisorEmployeeId: fields.supervisorEmployeeId.default(null),
   })
   .superRefine((value, context) => {

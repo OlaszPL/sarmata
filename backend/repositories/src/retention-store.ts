@@ -66,22 +66,6 @@ interface SourceRow {
 const optionalDate = (value: string | null | undefined): CalendarDate | null =>
   value === null || value === undefined ? null : calendarDate(value);
 
-const objectionOf = (events: SourceRow['evaluation_events']): RetainedFactsInput['objection'] => {
-  const byTime = (a: { occurred_on: string; recorded_at: string }, b: typeof a) =>
-    `${a.occurred_on} ${a.recorded_at}`.localeCompare(`${b.occurred_on} ${b.recorded_at}`);
-  const filed = events
-    .filter((event) => event.kind === 'objection_filed')
-    .sort(byTime)
-    .at(-1);
-  if (filed === undefined) return 'none';
-  const outcome = events
-    .filter((event) => event.kind === 'objection_outcome' && byTime(event, filed) > 0)
-    .sort(byTime)[0]?.payload?.outcome;
-  return outcome === 'rejected' || outcome === 'changed' || outcome === 'redraft'
-    ? outcome
-    : 'pending';
-};
-
 const lastOn = (events: SourceRow['evaluation_events'], kinds: readonly string[]) =>
   events
     .filter((event) => kinds.includes(event.kind))
@@ -169,10 +153,6 @@ export function createRetentionStore(db: ServiceDb): RetentionStore {
               lastOn(row.evaluation_events, ['acquainted', 'signature_refused']),
             ),
             history,
-            objection: objectionOf(row.evaluation_events),
-            labourCourtAppealOn: optionalDate(
-              lastOn(row.evaluation_events, ['labour_court_appeal']),
-            ),
             evaluatorAccountId: row.evaluator_account_id,
             regulation: parseRegulationDocument(row.regulation_versions.document),
           },
