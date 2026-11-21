@@ -145,8 +145,18 @@ const toEvaluation = (row: EvaluationRow): Evaluation => ({
   createdAt: row.created_at,
 });
 
-/** Generated RPC types make nullable arguments non-null, SQL accepts null for them. */
-const nullArg = (value: string | null): string => value as unknown as string;
+type StartEvaluationArgs = Database['public']['Functions']['start_evaluation']['Args'];
+type NullableStartArgs = Omit<
+  StartEvaluationArgs,
+  'p_previous_evaluation_id' | 'p_previous_acquainted_on'
+> & { p_previous_evaluation_id: string | null; p_previous_acquainted_on: string | null };
+
+/** Generated RPC types mark nullable arguments non-null, SQL accepts null for them. */
+const rpcStartEvaluation = (db: Db, args: NullableStartArgs) =>
+  db.rpc('start_evaluation', args as unknown as StartEvaluationArgs);
+
+/** The select string is dynamic, so the client types rows loosely and the row shape is asserted here. */
+const asEvaluationRows = (data: unknown): EvaluationRow[] => data as EvaluationRow[];
 
 function toRepositoryError(operation: string, error: { message: string; code?: string }) {
   if (error.code === 'P0001') {
@@ -226,15 +236,15 @@ export function createEvaluationRepository(db: Db): EvaluationRepository {
 
   return {
     async create(input) {
-      const { data, error } = await db.rpc('start_evaluation', {
+      const { data, error } = await rpcStartEvaluation(db, {
         p_employee_id: input.employeeId,
         p_evaluator_account_id: input.evaluatorAccountId,
         p_regulation_version_id: input.regulationVersionId,
         p_sheet_id: input.sheetId,
         p_cycle_start: input.cycleStart,
         p_after_negative: input.afterNegative,
-        p_previous_evaluation_id: nullArg(input.previousEvaluationId),
-        p_previous_acquainted_on: nullArg(input.previousAcquaintedOn),
+        p_previous_evaluation_id: input.previousEvaluationId,
+        p_previous_acquainted_on: input.previousAcquaintedOn,
         p_snapshot: toJson(input.snapshot),
         p_content: toJson(input.content),
       });
@@ -261,7 +271,7 @@ export function createEvaluationRepository(db: Db): EvaluationRepository {
       if (filter.employeeId !== undefined) query = query.eq('employee_id', filter.employeeId);
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw toRepositoryError('evaluations.listForOffice', error);
-      return (data as unknown as EvaluationRow[]).map(toEvaluation);
+      return asEvaluationRows(data).map(toEvaluation);
     },
 
     latestForEmployee(employeeId) {

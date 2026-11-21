@@ -176,9 +176,14 @@ export function createEvaluationService(
           previous.sheetId,
           previous.sheet.content.partOne.additionalCriteria,
         );
-        afterNegative =
-          scoreSheet(previousRegulation, criteria, previous.sheet.content.partTwo.ratings)
-            .outcome === 'negative';
+        try {
+          afterNegative =
+            scoreSheet(previousRegulation, criteria, previous.sheet.content.partTwo.ratings)
+              .outcome === 'negative';
+        } catch (error) {
+          // An off-scale rating gives the previous sheet no outcome, so it is not negative.
+          if (!(error instanceof RangeError)) throw error;
+        }
       }
 
       const regulation = await regulationInForceOn(cycleStart);

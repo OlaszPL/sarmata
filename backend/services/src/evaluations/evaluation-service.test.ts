@@ -297,6 +297,58 @@ describe('evaluations.start', () => {
     expect(slots.startingInterviewAfterNegative).toBe('2025-01-17');
     expect(slots.reevaluationAfterNegative).toBe('2025-07-13');
   });
+
+  it('start does not throw when the previous sheet has an off-scale rating', async () => {
+    const content = completeContent('C', points('far-below'));
+    const previous: EvaluationDetail = {
+      id: 'prev',
+      officeId: 'o1',
+      employeeId: 'emp1',
+      evaluatorAccountId: 'acc1',
+      regulationId: reg.id,
+      sheetId: 'C',
+      status: 'closed',
+      cycleStart: date('2024-09-02'),
+      afterNegative: false,
+      previousEvaluationId: null,
+      snapshot: {
+        firstName: 'Anna',
+        lastName: 'Nowak',
+        positionTitle: null,
+        orgUnit: null,
+        serviceStatus: 'employee',
+        grade: null,
+        appointmentYear: null,
+        gradeGrantedOn: null,
+      },
+      createdAt: '2024-09-02T00:00:00Z',
+      sheet: { version: 1, state: 'locked', content },
+      events: [
+        {
+          id: 'a',
+          kind: 'sheet_approved',
+          occurredOn: date('2025-01-10'),
+          payload: {},
+          recordedBy: 'acc1',
+          recordedAt: '2025-01-10T10:00:00Z',
+        },
+        {
+          id: 'b',
+          kind: 'acquainted',
+          occurredOn: date('2025-01-13'),
+          payload: {},
+          recordedBy: 'acc1',
+          recordedAt: '2025-01-13T10:00:00Z',
+        },
+      ],
+      deadlines: [],
+    };
+    const offScale = completeContent('C', 4);
+    const bad: EvaluationDetail = { ...previous, sheet: { ...previous.sheet, content: offScale } };
+    const { services } = setup([employee()], [bad]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    expect(started.afterNegative).toBe(false);
+  });
 });
 
 describe('evaluations.transition', () => {
