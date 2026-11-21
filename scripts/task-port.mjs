@@ -13,4 +13,5 @@ export function taskPort(task = process.env.TERMIC_TASK) {
   return 3001 + (hash % 999);
 }
 
-if (import.meta.main) console.log(taskPort());
+// Plain text on purpose: console.log of a number is colored when FORCE_COLOR is set (Playwright).
+if (import.meta.main) process.stdout.write(`${taskPort()}\n`);
