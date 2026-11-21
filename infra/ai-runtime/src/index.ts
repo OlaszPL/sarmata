@@ -30,6 +30,8 @@ export type {
   Speed,
 } from './llama-server.ts';
 export type { StartOptions } from './process.ts';
+export { installBielikOne, isBielikOneReady, startBielikOne } from './bielik-one.ts';
+export type { BielikOneInstall, BielikOneServer } from './bielik-one.ts';
 export { detectHardware } from './hardware.ts';
 export type { ComputeDevice, Hardware, NvidiaGpu } from './hardware.ts';
 export { fakeMachine, localMachine } from './machine.ts';
