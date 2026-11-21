@@ -280,3 +280,8 @@ archive/
 
 # local browser tool snapshots
 .playwright-mcp/
+
+# sarmata
+.env.local
+secrets/*.env
+!secrets/*.enc.env

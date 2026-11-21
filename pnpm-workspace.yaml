@@ -1,0 +1,11 @@
+packages:
+  - frontend/*
+  - backend/*
+  - database
+  - infra/*
+  - e2e
+
+catalog:
+  typescript: 6.0.3
+  vitest: 5.1.1
+  '@types/node': 24.19.2
