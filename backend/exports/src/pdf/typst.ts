@@ -1,5 +1,5 @@
 import { NodeCompiler } from '@myriaddreamin/typst-ts-node-compiler';
-import { FONTS_DIR, PDF_FONT_FAMILY } from './font';
+import { PDF_FONT_FAMILY, resolveFontsDir } from './font';
 
 export interface RenderOptions {
   /** `ua-1` for the downloadable sheet, `a-2a` for the EZD package. The binding takes one standard. */
@@ -10,9 +10,13 @@ export interface RenderOptions {
 
 let compiler: NodeCompiler | undefined;
 
-/** One lazy compiler per process, loading the fonts of the package next to the built-in ones. */
+/**
+ * One lazy compiler per process. The Open Sans files of the package are searched recursively, so the
+ * named family never depends on the machine. The compiler cannot switch off its system and built-in
+ * fonts, they only serve as glyph fallback.
+ */
 function sharedCompiler(): NodeCompiler {
-  compiler ??= NodeCompiler.create({ fontArgs: [{ fontPaths: [FONTS_DIR] }] });
+  compiler ??= NodeCompiler.create({ fontArgs: [{ fontPaths: [resolveFontsDir()] }] });
   return compiler;
 }
 

@@ -20,6 +20,11 @@ const nextConfig = {
   output: 'standalone',
   // Trace workspace packages from the monorepo root, so the standalone output includes them.
   outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
+  // Typst reads the font files at runtime (backend/exports/src/pdf/font.ts), tracing cannot see them.
+  // The standalone output must contain them, the Docker image copies that output.
+  outputFileTracingIncludes: {
+    '/api/oceny/**/*': ['../../backend/exports/fonts/**/*'],
+  },
 };
 
 export default nextConfig;

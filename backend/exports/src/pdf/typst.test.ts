@@ -105,10 +105,26 @@ describe('sheet PDF', () => {
       renderPdf(SHEET_TEMPLATE, { ...data, fontFamily: 'New Computer Modern' }, ua),
     );
     expect(base.length).toBeGreaterThan(0);
-    expect(base.every((name) => name?.startsWith('LibertinusSerif'))).toBe(true);
+    expect(base.every((name) => name?.startsWith('OpenSans'))).toBe(true);
     expect(other.length).toBeGreaterThan(0);
     expect(other.every((name) => name?.startsWith('NewCM'))).toBe(true);
-    expect(PDF_FONT_FAMILY).toBe('Libertinus Serif');
+    expect(PDF_FONT_FAMILY).toBe('Open Sans');
+  });
+
+  it('embeds Open Sans with Polish diacritics in PDF/UA and PDF/A renders', () => {
+    const pangram = 'Zażółć gęślą jaźń, ĄĆĘŁŃÓŚŹŻ';
+    for (const standard of ['ua-1', 'a-2a'] as const) {
+      const bytes = renderPdf(
+        '#let data = json(bytes(sys.inputs.data))\n#set document(title: "Test")\n#set text(font: data.fontFamily, lang: "pl")\n#data.body *#data.body*',
+        { body: pangram },
+        { standard, createdAt },
+      );
+      const names = fonts(bytes);
+      expect(names.length).toBeGreaterThan(0);
+      expect(names.every((name) => name?.startsWith('OpenSans'))).toBe(true);
+      expect(names.some((name) => name?.endsWith('-Bold'))).toBe(true);
+      expect(text(bytes)).toContain(standard === 'ua-1' ? 'pdfuaid:part' : 'pdfaid:part');
+    }
   });
 
   it('no template hard-codes a font name', () => {
