@@ -67,7 +67,7 @@ export function createOfficeSettingsService(
         if (error instanceof RepositoryError && error.code === '42501') {
           throw new ServiceError(
             'forbidden',
-            'Only the office admin can see the retention preview',
+            'Only the office admin or hr can see the retention preview',
           );
         }
         throw error;

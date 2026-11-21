@@ -120,6 +120,17 @@ function wrapWrite(error: unknown): never {
         { path: ['effectiveFrom'], message: 'Inna wersja urzędu obowiązuje od tego dnia' },
       ]);
     }
+    if (error.code === 'P0001') {
+      // Trigger rules the service cannot see: a published row is immutable, a date in the past at
+      // the database clock, a code of an official version.
+      if (error.message.includes('immutable')) {
+        throw new ServiceError(
+          'regulation_not_draft',
+          'The regulation version is already published',
+        );
+      }
+      throw invalid([{ path: ['effectiveFrom'], message: error.message }]);
+    }
   }
   throw error;
 }

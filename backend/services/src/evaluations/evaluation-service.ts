@@ -202,6 +202,9 @@ export function createEvaluationService(
       history.push({ drafted, levelCode: score.levelCode, outcome: score.outcome, acquaintedOn });
     }
     const counted = inForce || detail.status === 'closed';
+    // The signal clears once hr records the new grade, so it reads the employee's current date
+    // and not the one frozen in the snapshot. The snapshot stays the fallback for a missing row.
+    const employee = await repositories.employees.get(detail.employeeId);
     const last = [...history].sort((a, b) => a.drafted.localeCompare(b.drafted)).at(-1);
     const latest =
       counted &&
@@ -212,7 +215,7 @@ export function createEvaluationService(
       signals: {
         gradeByLaw: gradeByLawDue(regulation, {
           serviceStatus: detail.snapshot.serviceStatus,
-          gradeGrantedOn: detail.snapshot.gradeGrantedOn,
+          gradeGrantedOn: employee?.gradeGrantedOn ?? detail.snapshot.gradeGrantedOn,
           history,
         }),
         secondConsecutiveNegative: secondConsecutiveNegative(history),
@@ -287,12 +290,23 @@ export function createEvaluationService(
     throw error;
   }
 
+  /** Side events and an evaluator change belong to the open stages, not to a finished evaluation. */
+  function assertOpen(detail: EvaluationDetail): void {
+    if (detail.status === 'closed' || detail.status === 'interrupted') {
+      throw new ServiceError(
+        'invalid_transition',
+        `The evaluation is ${detail.status} and accepts no further changes`,
+      );
+    }
+  }
+
   async function recordSideEvent(
     detail: EvaluationDetail,
     kind: 'absence' | 'term_changed' | 'position_changed',
     occurredOn: CalendarDate,
     payload: Record<string, unknown>,
   ): Promise<void> {
+    assertOpen(detail);
     try {
       await repositories.evaluations.recordEvent(detail.id, kind, occurredOn, payload);
     } catch (error) {
@@ -513,6 +527,13 @@ export function createEvaluationService(
 
     async changeTerm(id, input) {
       const detail = await load(id);
+      assertOpen(detail);
+      if (detail.afterNegative) {
+        // The deadline after a negative result is the 7 day starting interview, not a cycle term.
+        throw new ServiceError('term_change_invalid', 'The term cannot be changed', [
+          'term_change_after_negative',
+        ]);
+      }
       const regulation = await regulationOf(detail);
       const issues = termChangeIssues(regulation, {
         cycleStart: detail.cycleStart,
@@ -535,7 +556,7 @@ export function createEvaluationService(
     },
 
     async changeEvaluator(id, input) {
-      await load(id);
+      assertOpen(await load(id));
       try {
         await repositories.evaluations.changeEvaluator(
           id,

@@ -16,7 +16,7 @@ const official: RegulationDocument = officialOrNothing;
 const OFFICIAL_ROW = 'row-official';
 const today = calendarDate('2026-11-21');
 
-function setup(options: { denyWrites?: boolean } = {}) {
+function setup(options: { denyWrites?: boolean; publishFailure?: RepositoryError } = {}) {
   const rows = new Map<string, LocalRegulationVersion>();
   let counter = 0;
   const stored: StoredRegulationVersion = {
@@ -53,6 +53,7 @@ function setup(options: { denyWrites?: boolean } = {}) {
       return Promise.resolve(next);
     },
     publish: (id, document, accepted) => {
+      if (options.publishFailure !== undefined) return Promise.reject(options.publishFailure);
       const row = rows.get(id);
       if (row?.status !== 'draft') return Promise.resolve(null);
       if (published().some((other) => other.effectiveFrom === document.effectiveFrom)) {
@@ -245,6 +246,31 @@ describe('regulation editor', () => {
     await expect(attempt).rejects.toMatchObject({
       details: { issues: [{ path: ['effectiveFrom'], message: expect.any(String) as unknown }] },
     });
+  });
+
+  it('a trigger refusal (P0001) maps to a regulation error and not to a raw RepositoryError', async () => {
+    const past = setup({
+      publishFailure: new RepositoryError('publish', {
+        message: 'effective date 2026-11-20 of regulation version x is in the past',
+        code: 'P0001',
+      }),
+    });
+    const draft = await past.service.clone({ sourceId: OFFICIAL_ROW, name: 'Szkic' });
+    await expectCode(
+      past.service.publish(draft.id, { effectiveFrom: calendarDate('2027-01-01') }),
+      'regulation_invalid',
+    );
+    const frozen = setup({
+      publishFailure: new RepositoryError('publish', {
+        message: 'published regulation version x is immutable',
+        code: 'P0001',
+      }),
+    });
+    const other = await frozen.service.clone({ sourceId: OFFICIAL_ROW, name: 'Szkic' });
+    await expectCode(
+      frozen.service.publish(other.id, { effectiveFrom: calendarDate('2027-01-01') }),
+      'regulation_not_draft',
+    );
   });
 
   it('publish on a date taken by another published version fails regulation_invalid', async () => {
