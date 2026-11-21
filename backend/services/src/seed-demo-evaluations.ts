@@ -13,6 +13,7 @@ const envSchema = z.object({
 });
 
 const EVALUATOR_EMAIL = 'oceniajacy@kropka.test';
+const HR_EMAIL = 'kadry@kropka.test';
 const DEMO_PASSWORD = 'Haslo-Demo-2026';
 const today = calendarDate(new Date().toISOString().slice(0, 10));
 
@@ -74,6 +75,56 @@ async function seedEwa(services: Services, employeeId: string): Promise<void> {
   });
 }
 
+// Stefan: an archived evaluation above expectations (2023), then a current one above expectations that
+// is delivered and objected by hr. The two consecutive evaluations since the grade was granted
+// (2021-03-01) make the grade by law visible in the signals.
+async function seedStefan(evaluator: Services, hr: Services, employeeId: string): Promise<void> {
+  await evaluator.archivedEvaluations.create({
+    employeeId,
+    draftedOn: calendarDate('2023-05-10'),
+    acquaintedOn: calendarDate('2023-05-12'),
+    levelCode: 'above',
+    outcome: 'positive',
+    ratings: null,
+  });
+  const started = await evaluator.evaluations.start({ employeeId, today });
+  const ratings = Object.fromEntries(SHEET_C_MANDATORY.map((id) => [id, 7]));
+  const content = sheetContentSchema.parse({
+    partOne: { additionalCriteria: [], dueOn: null },
+    partTwo: {
+      ...started.sheet.content.partTwo,
+      ratings,
+      interviewOn: today,
+      developmentConclusions: 'Szkolenie z zarządzania projektami i mentoring w zespole.',
+    },
+  });
+  await evaluator.evaluations.saveDraft(started.id, content);
+  const commands = [
+    { type: 'approve_part_one', startingInterviewOn: today },
+    { type: 'record_part_one_signature', signedOn: today },
+    { type: 'record_evaluation_interview', heldOn: today },
+    { type: 'approve_sheet', draftedOn: today },
+    { type: 'record_acquaintance', acquaintedOn: today, signatureRefused: false },
+  ] as const;
+  for (const command of commands) await evaluator.evaluations.transition(started.id, command);
+  const objected = await hr.evaluations.transition(started.id, {
+    type: 'file_objection',
+    filedOn: today,
+  });
+  if (objected.signals.gradeByLaw === null) {
+    throw new Error('Stefan Sprzeciwny should have the grade by law signal');
+  }
+}
+
+async function signedInServices(url: string, key: string, email: string): Promise<Services> {
+  const db: Db = createClient<Database>(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { error } = await db.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
+  if (error) throw new Error(`Cannot sign in as ${email}: ${error.message}`);
+  return servicesFor(db);
+}
+
 async function main(): Promise<void> {
   const env = parseEnv(envSchema, process.env, 'seed-demo-evaluations');
   const db: Db = createClient<Database>(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
@@ -92,7 +143,11 @@ async function main(): Promise<void> {
   }
   await seedMarek(services, await employeeIdByEmail(db, 'marek.merytoryczny@kropka.test'));
   await seedEwa(services, await employeeIdByEmail(db, 'ewa.ewidencyjna@kropka.test'));
-  console.log('demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview)');
+  const hr = await signedInServices(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, HR_EMAIL);
+  await seedStefan(services, hr, await employeeIdByEmail(db, 'stefan.sprzeciwny@kropka.test'));
+  console.log(
+    'demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview), Stefan Sprzeciwny (objection)',
+  );
 }
 
 try {

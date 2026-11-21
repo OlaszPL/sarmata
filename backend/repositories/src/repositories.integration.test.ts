@@ -1,5 +1,10 @@
 import type { Database } from '@sarmata/database';
-import { calendarDate, emptySheetContent, evaluationTransitions } from '@sarmata/domain';
+import {
+  calendarDate,
+  emptySheetContent,
+  evaluationTransitions,
+  gradeByLawDue,
+} from '@sarmata/domain';
 import { officialRegulations } from '@sarmata/regulations';
 import { createClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
@@ -53,6 +58,41 @@ describe('demo seed', () => {
     expect(statusesOf('Merytoryczny')).toContain('period');
     expect(statusesOf('Ewidencyjna')).toContain('interview');
   });
+
+  it('demo seed has an evaluation in objection', async () => {
+    const hr = createRepositories(await signedIn('kadry@kropka.test'));
+    const employee = (await hr.employees.list()).find((e) => e.lastName === 'Sprzeciwny');
+    if (employee === undefined) throw new Error('No demo employee Sprzeciwny');
+    const evaluation = (await hr.evaluations.listForOffice()).find(
+      (e) => e.employeeId === employee.id,
+    );
+    expect(evaluation?.status).toBe('objection');
+    const archived = await hr.archivedEvaluations.listForEmployee(employee.id);
+    expect(archived).toMatchObject([{ draftedOn: '2023-05-10', levelCode: 'above' }]);
+    // The seed throws unless signals.gradeByLaw is set, so check the same rule from the stored data.
+    const detail = await hr.evaluations.get(evaluation?.id ?? '');
+    const acquainted = detail?.events.find((event) => event.kind === 'acquainted');
+    const drafted = detail?.events.find((event) => event.kind === 'sheet_approved');
+    const regulationRow = await hr.regulationVersions.findOfficialById(detail?.regulationId ?? '');
+    if (!detail || !acquainted || !drafted || regulationRow === null) {
+      throw new Error('Demo evaluation is incomplete');
+    }
+    const history = await hr.evaluations.history(employee.id);
+    const due = gradeByLawDue(regulationRow, {
+      serviceStatus: 'civil_servant',
+      gradeGrantedOn: employee.gradeGrantedOn,
+      history: [
+        ...history,
+        {
+          drafted: drafted.occurredOn,
+          levelCode: 'above',
+          outcome: 'positive',
+          acquaintedOn: acquainted.occurredOn,
+        },
+      ],
+    });
+    expect(due).not.toBeNull();
+  });
 });
 
 describe('employees', () => {
@@ -66,6 +106,7 @@ describe('employees', () => {
       'Kadrowy',
       'Merytoryczny',
       'Oceniająca',
+      'Sprzeciwny',
     ]);
     expect(new Set(employees.map((employee) => employee.officeId))).toEqual(
       new Set([DEMO_OFFICE_ID]),

@@ -30,11 +30,15 @@ select access.create_account(
 -- Employees without accounts: evaluated employees do not use the app. Their supervisor is Olga Oceniająca.
 insert into public.employees (
   office_id, first_name, last_name, email, position_kind, service_status, employment_basis,
-  appointment_year, grade, supervisor_employee_id
+  appointment_year, grade, grade_granted_on, supervisor_employee_id
 ) values
   ('11111111-1111-4111-8111-111111111111', 'Ewa', 'Ewidencyjna', 'ewa.ewidencyjna@kropka.test',
-   'other', 'civil_servant', 'appointment', 2018, 4,
+   'other', 'civil_servant', 'appointment', 2018, 4, null,
    (select id from public.employees where email = 'oceniajacy@kropka.test')),
   ('11111111-1111-4111-8111-111111111111', 'Marek', 'Merytoryczny', 'marek.merytoryczny@kropka.test',
-   'other', 'employee', 'indefinite', null, null,
+   'other', 'employee', 'indefinite', null, null, null,
+   (select id from public.employees where email = 'oceniajacy@kropka.test')),
+  -- Grade III granted on 2021-03-01: two evaluations above expectations since then give the grade by law.
+  ('11111111-1111-4111-8111-111111111111', 'Stefan', 'Sprzeciwny', 'stefan.sprzeciwny@kropka.test',
+   'other', 'civil_servant', 'appointment', 2018, 3, '2021-03-01',
    (select id from public.employees where email = 'oceniajacy@kropka.test'));

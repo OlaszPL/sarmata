@@ -113,6 +113,8 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
   - nieuwzględniony: ocena zostaje, zdarzenie w dzienniku,
   - zmiana oceny: kadry wpisują nową wersję arkusza w imieniu DG, backend nie pozwala obniżyć oceny,
   - ponowne sporządzenie: obecna wersja zostaje anulowana, ocena wraca do etapu rozmowy oceniającej z nowym terminem.
+- Nazwy kodowe wyników: `rejected` (nieuwzględniony), `changed` (zmiana oceny), `redraft` (ponowne sporządzenie). Błędy: `objection_late` (sprzeciw po 7 dniach od zapoznania) i `objection_lowers_outcome` (zmiana obniżająca poziom oceny).
+- Zmiana oceny po sprzeciwie zamyka ocenę. Ponowne sporządzenie daje nową wersję arkusza ze skopiowaną treścią i nowe prawo do sprzeciwu po kolejnym zapoznaniu.
 - Wcześniejsze wersje arkusza zostają do odczytu i trafiają do teczki sprawy.
 - Adresat sprzeciwu jest parametrem arkusza w `rules.json`. Arkusze B i C: dyrektor generalny urzędu (art. 83 ust. 1). Arkusz A: organ nadrzędny wobec ocenianego, nie wyżej (mentorzy KPRM 21.11.2026). Arkuszem A ocenia się kilka stanowisk, głównie lekarzy weterynarii kierujących inspektoratem (około 5 w służbie cywilnej). Art. 81 ust. 2 i art. 83 ust. 2 są uchylone, reguły opieramy na Dz.U. 2026 poz. 590.
 
@@ -147,6 +149,9 @@ Liczone w widokach SQL albo funkcjach RPC (ADR 0004):
   - Bez daty końca termin ma status „wstrzymany do powrotu”.
   - Po wpisaniu powrotu termin przesuwa się o dni kalendarzowe nieobecności, a potem na dzień roboczy.
 - Kryterium obowiązkowe danego arkusza nie może być wybrane jako dodatkowe (blokada).
+- Zmiana terminu oceny jest dozwolona dopiero po wymaganym okresie od początku cyklu. Zbyt wczesna zmiana kończy się błędem `term_change_too_early`, nieznana przyczyna błędem `term_change_reason_unknown` (oba pod kodem `term_change_invalid`).
+- Bieżące stanowisko ocenianego pochodzi z ostatniego zdarzenia zmiany stanowiska. Migawka w ocenie zostaje niezmienna.
+- Sygnały oceny: `gradeByLaw` (stopień z mocy prawa, liczony od zapoznania z ostatnią oceną, wlicza oceny archiwalne) i `secondConsecutiveNegative` (druga negatywna z rzędu).
 
 ## Stany oceny
 
