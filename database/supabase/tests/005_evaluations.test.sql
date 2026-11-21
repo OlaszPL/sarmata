@@ -53,6 +53,11 @@ insert into public.regulation_versions (id, code, office_id, is_official, effect
   ('bbbbbbbb-3333-4000-8000-000000000001', 'test-evaluations-b', 'bbbbbbbb-0000-4000-8000-000000000002', false, '2016-04-23',
    '{"id":"test-evaluations-b","effectiveFrom":"2016-04-23"}');
 
+-- Fixture: local versions are published without the editor flow (a published past date is refused by the trigger).
+alter table public.regulation_versions disable trigger regulation_versions_local_rules;
+update public.regulation_versions set status = 'published' where not is_official;
+alter table public.regulation_versions enable trigger regulation_versions_local_rules;
+
 -- E1 worker (criteria, draft sheet), E3 locked sheet, E4 period with a draft sheet, E7 interview with a draft sheet,
 -- E8 closed, E9 interview without a sheet, E40 and E60 bottoms of the chains.
 insert into public.evaluations (id, office_id, employee_id, evaluator_account_id, regulation_version_id, sheet_id, status, cycle_start, snapshot, created_by)
