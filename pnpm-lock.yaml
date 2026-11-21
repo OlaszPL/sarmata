@@ -307,6 +307,12 @@ importers:
 
   backend/services:
     dependencies:
+      '@sarmata/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@sarmata/regulations':
+        specifier: workspace:*
+        version: link:../regulations
       '@sarmata/repositories':
         specifier: workspace:*
         version: link:../repositories
@@ -320,6 +326,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@24.19.2)(vite@8.3.8(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
 
   database:
     devDependencies:
