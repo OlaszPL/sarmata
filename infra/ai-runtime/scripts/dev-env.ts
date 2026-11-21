@@ -19,8 +19,6 @@ export const devStateFile = (dataDir: string): string => join(dataDir, 'dev-llam
 export interface AiEnv {
   baseUrl: string;
   model: string;
-  /** Bielik-One frontend, only when it runs. */
-  decisionUrl?: string;
 }
 
 /**
@@ -35,11 +33,13 @@ export async function writeAiEnv(env: AiEnv): Promise<string> {
     'SARMATA_AI_ENABLED=true',
     `SARMATA_AI_TEXT_BASE_URL=${env.baseUrl}`,
     `SARMATA_AI_TEXT_MODEL=${env.model}`,
-    ...(env.decisionUrl ? [`SARMATA_AI_DECISION_BASE_URL=${env.decisionUrl}/v1`] : []),
   ];
   await writeFile(path, `${lines.join('\n')}\n`);
   return path;
 }
+
+export const describeError = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
 export function printProgress(event: ProgressEvent): void {
   if (event.kind === 'step') {

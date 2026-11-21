@@ -13,7 +13,6 @@ export {
   servicesFor,
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
-export { type SyncReport } from './sync-official';
 export type { Employee } from '@sarmata/repositories';
 export {
   type CalendarDate,

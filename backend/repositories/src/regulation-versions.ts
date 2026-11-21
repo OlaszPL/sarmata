@@ -1,5 +1,5 @@
 import { type RegulationDocument, parseRegulationDocument } from '@sarmata/domain';
-import { type Db } from './db';
+import { type Db, type ServiceDb } from './db';
 import { RepositoryError } from './errors';
 import { toJson } from './json';
 
@@ -7,11 +7,14 @@ export interface RegulationVersionRepository {
   /** Official versions, oldest first. */
   listOfficial(): Promise<RegulationDocument[]>;
   findOfficial(code: string): Promise<RegulationDocument | null>;
-  /** Needs the service client: accounts cannot create official versions (RLS). */
+}
+
+/** Writes official versions. Needs the service client: accounts cannot create them (RLS). */
+export interface OfficialRegulationWriter {
   insertOfficial(document: RegulationDocument): Promise<void>;
 }
 
-export function createRegulationVersionRepository(db: Db): RegulationVersionRepository {
+export function createRegulationVersionRepository(db: Db | ServiceDb): RegulationVersionRepository {
   return {
     async listOfficial() {
       const { data, error } = await db
@@ -33,7 +36,11 @@ export function createRegulationVersionRepository(db: Db): RegulationVersionRepo
       if (error) throw new RepositoryError('regulationVersions.findOfficial', error);
       return data === null ? null : parseRegulationDocument(data.document);
     },
+  };
+}
 
+export function createOfficialRegulationWriter(db: ServiceDb): OfficialRegulationWriter {
+  return {
     async insertOfficial(document) {
       const { error } = await db.from('regulation_versions').insert({
         code: document.id,

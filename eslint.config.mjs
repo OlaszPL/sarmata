@@ -1,3 +1,4 @@
+import { builtinModules } from 'node:module';
 import js from '@eslint/js';
 import nextPlugin from '@next/eslint-plugin-next';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -5,6 +6,17 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import prettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+
+// Only the worker, scripts and integration tests may create the service client: it bypasses RLS.
+const serviceClientPath = {
+  name: '@sarmata/repositories',
+  importNames: ['createServiceClient'],
+  message:
+    'Only the worker, scripts and integration tests create the service client: it bypasses RLS (ADR 0004).',
+};
+
+// Node built-ins without the "node:" prefix are not caught by a "node:*" pattern.
+const nodeBuiltinPaths = (message) => builtinModules.map((name) => ({ name, message }));
 
 export default defineConfig([
   globalIgnores([
@@ -46,11 +58,22 @@ export default defineConfig([
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
+    files: ['**/*.{ts,tsx}'],
+    ignores: [
+      'backend/worker/**',
+      'backend/repositories/src/index.ts',
+      '**/*.integration.test.ts',
+      'scripts/**',
+    ],
+    rules: { 'no-restricted-imports': ['error', { paths: [serviceClientPath] }] },
+  },
+  {
     files: ['backend/domain/**'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
+          paths: nodeBuiltinPaths('The domain is pure: no Node built-ins and no I/O (ADR 0004).'),
           patterns: [
             {
               group: ['@supabase/*', '@sarmata/*'],
@@ -82,6 +105,7 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
+          paths: [serviceClientPath],
           patterns: [
             {
               group: ['@supabase/*'],
@@ -101,20 +125,19 @@ export default defineConfig([
           patterns: [
             {
               group: [
-                '@sarmata/repositories',
-                '@sarmata/repositories/*',
-                '@sarmata/ai',
-                '@sarmata/ai/*',
-                '@sarmata/worker',
-                '@sarmata/worker/*',
-                '@supabase/supabase-js',
+                '@sarmata/**',
+                '!@sarmata/services',
+                '!@sarmata/ui',
+                '!@sarmata/ui/*',
+                '@supabase/*',
+                '!@supabase/ssr',
               ],
-              message: 'The frontend uses only @sarmata/services (ADR 0004).',
+              message:
+                'The frontend uses only @sarmata/services, @sarmata/ui and @supabase/ssr (ADR 0004).',
             },
             {
-              group: ['**/backend/repositories/**', '**/backend/ai/**', '**/backend/worker/**'],
-              message:
-                'The frontend must not reach into the data layer by relative path (ADR 0004).',
+              group: ['**/backend/**'],
+              message: 'The frontend must not reach into the backend by relative path (ADR 0004).',
             },
           ],
         },
@@ -127,6 +150,9 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
+          paths: nodeBuiltinPaths(
+            'Regulation versions are pure: no Node built-ins and no I/O (ADR 0006).',
+          ),
           patterns: [
             {
               group: ['@supabase/*', '@sarmata/*', '!@sarmata/domain'],

@@ -1,5 +1,5 @@
 import { localMachine, readLlamaServerConfig } from '../src/index.ts';
-import { devDataDir, writeAiEnv } from './dev-env.ts';
+import { describeError, devDataDir, writeAiEnv } from './dev-env.ts';
 
 /**
  * Writes .env.ai.local for this worktree from the machine-wide AI setup, without downloading
@@ -21,6 +21,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+  console.error(describeError(error));
   process.exitCode = 1;
 });

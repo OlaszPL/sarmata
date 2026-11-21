@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export interface AiEndpoint {
-  /** Base URL with the API version, e.g. `http://127.0.0.1:8080/v1`. */
+  /** Base URL with the API version, e.g. `http://127.0.0.1:55490/v1`. */
   readonly baseUrl: string;
   readonly model: string;
   readonly apiKey: string | null;

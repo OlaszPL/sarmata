@@ -1,8 +1,13 @@
 import { type RegulationDocument, calendarDate } from '@sarmata/domain';
 import { officialRegulations } from '@sarmata/regulations';
-import { type Employee, type Repositories } from '@sarmata/repositories';
+import {
+  type Employee,
+  type OfficialRegulationWriter,
+  type Repositories,
+} from '@sarmata/repositories';
 import { describe, expect, it } from 'vitest';
 import { ServiceError, createServices } from './index';
+import { syncOfficialRegulations } from './system';
 
 const [regulation2016] = officialRegulations;
 if (regulation2016 === undefined) throw new Error('The official regulation catalog is empty');
@@ -16,14 +21,16 @@ function inMemoryRepositories(seed: { employees?: Employee[]; official?: Regulat
       listOfficial: () => Promise.resolve([...official]),
       findOfficial: (code) =>
         Promise.resolve(official.find((document) => document.id === code) ?? null),
-      insertOfficial: (document) => {
-        official.push(document);
-        inserted.push(document.id);
-        return Promise.resolve();
-      },
     },
   };
-  return { repositories, inserted };
+  const writer: OfficialRegulationWriter = {
+    insertOfficial: (document) => {
+      official.push(document);
+      inserted.push(document.id);
+      return Promise.resolve();
+    },
+  };
+  return { repositories, writer, inserted };
 }
 
 const expectServiceError = async (promise: Promise<unknown>, code: string) => {
@@ -72,10 +79,14 @@ describe('regulations.inForceOn', () => {
   });
 });
 
-describe('regulations.syncOfficial', () => {
+describe('syncOfficialRegulations', () => {
   it('inserts missing official versions', async () => {
-    const { repositories, inserted } = inMemoryRepositories({});
-    const report = await createServices({ repositories }).regulations.syncOfficial();
+    const { repositories, writer, inserted } = inMemoryRepositories({});
+    const report = await syncOfficialRegulations({
+      reader: repositories.regulationVersions,
+      writer,
+      official: [regulation2016],
+    });
     expect(report).toEqual({ inserted: ['regulation-2016'], unchanged: [] });
     expect(inserted).toEqual(['regulation-2016']);
   });
@@ -84,8 +95,12 @@ describe('regulations.syncOfficial', () => {
     const reordered = Object.fromEntries(
       Object.entries(regulation2016).reverse(),
     ) as RegulationDocument;
-    const { repositories, inserted } = inMemoryRepositories({ official: [reordered] });
-    const report = await createServices({ repositories }).regulations.syncOfficial();
+    const { repositories, writer, inserted } = inMemoryRepositories({ official: [reordered] });
+    const report = await syncOfficialRegulations({
+      reader: repositories.regulationVersions,
+      writer,
+      official: [regulation2016],
+    });
     expect(report).toEqual({ inserted: [], unchanged: ['regulation-2016'] });
     expect(inserted).toEqual([]);
   });
@@ -97,9 +112,15 @@ describe('regulations.syncOfficial', () => {
       id: 'regulation-2027-test',
       effectiveFrom: calendarDate('2027-01-01'),
     };
-    const { repositories, inserted } = inMemoryRepositories({ official: [changed] });
-    const services = createServices({ repositories, officialRegulations: [added, regulation2016] });
-    await expectServiceError(services.regulations.syncOfficial(), 'regulation_drift');
+    const { repositories, writer, inserted } = inMemoryRepositories({ official: [changed] });
+    await expectServiceError(
+      syncOfficialRegulations({
+        reader: repositories.regulationVersions,
+        writer,
+        official: [added, regulation2016],
+      }),
+      'regulation_drift',
+    );
     expect(inserted).toEqual([]);
   });
 });

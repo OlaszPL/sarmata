@@ -7,7 +7,6 @@ import {
   computeDeadline,
   versionInForce,
 } from '@sarmata/domain';
-import { officialRegulations } from '@sarmata/regulations';
 import {
   type Db,
   type Employee,
@@ -15,12 +14,9 @@ import {
   createRepositories,
 } from '@sarmata/repositories';
 import { ServiceError } from './errors';
-import { type SyncReport, syncOfficialRegulations } from './sync-official';
 
 export interface ServiceDependencies {
   readonly repositories: Pick<Repositories, 'employees' | 'regulationVersions'>;
-  /** Defaults to the catalog of @sarmata/regulations. */
-  readonly officialRegulations?: readonly RegulationDocument[];
 }
 
 export interface DeadlineRequest {
@@ -33,14 +29,12 @@ export interface Services {
   readonly employees: { list(): Promise<Employee[]> };
   readonly regulations: {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
-    syncOfficial(): Promise<SyncReport>;
   };
   readonly deadlines: { compute(request: DeadlineRequest): Promise<DeadlineResult> };
 }
 
 export function createServices(dependencies: ServiceDependencies): Services {
   const { repositories } = dependencies;
-  const official = dependencies.officialRegulations ?? officialRegulations;
 
   return {
     employees: {
@@ -57,7 +51,6 @@ export function createServices(dependencies: ServiceDependencies): Services {
         }
         return version;
       },
-      syncOfficial: () => syncOfficialRegulations(repositories.regulationVersions, official),
     },
     deadlines: {
       async compute({ regulationCode, slot, facts }) {

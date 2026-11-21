@@ -7,6 +7,10 @@ export interface WorkerOptions {
   readonly queue: JobQueue;
   readonly handlers: readonly JobHandler[];
   readonly logger: Logger;
+  /**
+   * Jobs per read, 1 by default: jobs run one after another, so a batch outlasting the visibility
+   * timeout would come back to the queue and run twice.
+   */
   readonly batchSize?: number;
   readonly visibilityTimeoutSeconds?: number;
   /** Deliveries before a failing job is archived as dead. */
@@ -88,7 +92,7 @@ async function processJob(
 export async function runWorker(options: WorkerOptions, signal: AbortSignal): Promise<void> {
   const handlers = new Map(options.handlers.map((handler) => [handler.type, handler]));
   if (handlers.size !== options.handlers.length) throw new Error('Two job handlers share a type');
-  const batchSize = options.batchSize ?? 5;
+  const batchSize = options.batchSize ?? 1;
   const visibilityTimeoutSeconds = options.visibilityTimeoutSeconds ?? 60;
   const idleDelayMs = options.idleDelayMs ?? 1_000;
   options.logger.info('worker started', { handlers: [...handlers.keys()] });

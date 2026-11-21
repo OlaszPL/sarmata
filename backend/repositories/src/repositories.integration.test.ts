@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import {
   type Db,
   RepositoryError,
+  type ServiceDb,
+  createOfficialRegulationWriter,
   createJobQueue,
   createRepositories,
   createServiceClient,
@@ -34,7 +36,7 @@ async function signedIn(email: string): Promise<Db> {
   return db;
 }
 
-const serviceClient = (): Db =>
+const serviceClient = (): ServiceDb =>
   createServiceClient({ url: env('SUPABASE_URL'), secretKey: env('SUPABASE_SECRET_KEY') });
 
 describe('employees', () => {
@@ -73,28 +75,36 @@ describe('regulation versions', () => {
   });
 
   it('does not let an account write an official version', async () => {
-    const repositories = createRepositories(await signedIn('admin@kropka.test'));
-    const document = { ...regulation2016, id: 'regulation-fake' };
-    await expect(repositories.regulationVersions.insertOfficial(document)).rejects.toThrow(
-      RepositoryError,
+    // The cast only exists to try the forbidden path: the types keep accounts away from the writer.
+    const writer = createOfficialRegulationWriter(
+      (await signedIn('admin@kropka.test')) as unknown as ServiceDb,
     );
+    const document = { ...regulation2016, id: 'regulation-fake' };
+    await expect(writer.insertOfficial(document)).rejects.toThrow(RepositoryError);
   });
 });
 
 describe('job queue', () => {
   it('sends, reads and archives a job with the service client', async () => {
     const queue = createJobQueue(serviceClient());
-    const id = await queue.send({ type: 'test.integration', payload: { at: Date.now() } });
-    const read = await queue.read(100, 30);
-    expect(read.find((job) => job.id === id)).toMatchObject({
-      readCount: 1,
-      message: { type: 'test.integration' },
-    });
+    const id = await queue.send(
+      { type: 'test.integration', payload: { at: Date.now() } },
+      { delaySeconds: 0 },
+    );
+    // Small batches with a short visibility timeout, so other jobs on the shared queue stay mostly
+    // untouched. Run this test with the worker stopped (README).
+    let found: Awaited<ReturnType<typeof queue.read>>[number] | undefined;
+    for (let attempt = 0; attempt < 50 && found === undefined; attempt += 1) {
+      const batch = await queue.read(5, 1);
+      found = batch.find((job) => job.id === id);
+    }
+    expect(found).toMatchObject({ readCount: 1, message: { type: 'test.integration' } });
     await queue.archive(id);
   });
 
   it('does not let an account use the queue', async () => {
-    const queue = createJobQueue(await signedIn('admin@kropka.test'));
+    // The cast only exists to try the forbidden path: the types keep accounts away from the queue.
+    const queue = createJobQueue((await signedIn('admin@kropka.test')) as unknown as ServiceDb);
     await expect(queue.send({ type: 'test.denied', payload: {} })).rejects.toThrow(RepositoryError);
   });
 });

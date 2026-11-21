@@ -1,5 +1,8 @@
 import { type RegulationDocument } from '@sarmata/domain';
-import { type RegulationVersionRepository } from '@sarmata/repositories';
+import {
+  type OfficialRegulationWriter,
+  type RegulationVersionRepository,
+} from '@sarmata/repositories';
 import { ServiceError } from './errors';
 import { sameJson } from './same-json';
 
@@ -8,18 +11,25 @@ export interface SyncReport {
   readonly unchanged: string[];
 }
 
+export interface SyncDependencies {
+  readonly reader: Pick<RegulationVersionRepository, 'findOfficial'>;
+  readonly writer: OfficialRegulationWriter;
+  readonly official: readonly RegulationDocument[];
+}
+
 /**
  * Loads official versions from code into the database as immutable rows. Checks every version first,
  * so a drift stops the sync before anything is written.
  */
-export async function syncOfficialRegulations(
-  repository: RegulationVersionRepository,
-  official: readonly RegulationDocument[],
-): Promise<SyncReport> {
+export async function syncOfficialRegulations({
+  reader,
+  writer,
+  official,
+}: SyncDependencies): Promise<SyncReport> {
   const missing: RegulationDocument[] = [];
   const unchanged: string[] = [];
   for (const document of official) {
-    const stored = await repository.findOfficial(document.id);
+    const stored = await reader.findOfficial(document.id);
     if (stored === null) {
       missing.push(document);
     } else if (sameJson(stored, document)) {
@@ -32,6 +42,6 @@ export async function syncOfficialRegulations(
       );
     }
   }
-  for (const document of missing) await repository.insertOfficial(document);
+  for (const document of missing) await writer.insertOfficial(document);
   return { inserted: missing.map((document) => document.id), unchanged };
 }

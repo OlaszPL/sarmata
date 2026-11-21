@@ -5,7 +5,7 @@ import {
   readLlamaServerConfig,
   startLlamaServer,
 } from '../src/index.ts';
-import { devDataDir, devStateFile, writeAiEnv } from './dev-env.ts';
+import { describeError, devDataDir, devStateFile, writeAiEnv } from './dev-env.ts';
 
 async function main(): Promise<void> {
   const dataDir = devDataDir(localMachine());
@@ -31,6 +31,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+  console.error(describeError(error));
   process.exitCode = 1;
 });

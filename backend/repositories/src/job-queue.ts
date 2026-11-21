@@ -1,4 +1,4 @@
-import { type Db } from './db';
+import { type ServiceDb } from './db';
 import { RepositoryError } from './errors';
 import { toJson } from './json';
 
@@ -25,7 +25,7 @@ export interface JobQueue {
 }
 
 /** pgmq through RPC. Needs the service client: accounts have no access to the queue functions. */
-export function createJobQueue(db: Db): JobQueue {
+export function createJobQueue(db: ServiceDb): JobQueue {
   return {
     async send(message, options = {}) {
       const { data, error } = await db.rpc('job_queue_send', {

@@ -1,7 +1,7 @@
 import { readFile, rm } from 'node:fs/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { localMachine } from '../src/index.ts';
-import { devDataDir, devStateFile } from './dev-env.ts';
+import { describeError, devDataDir, devStateFile } from './dev-env.ts';
 
 const isAlive = (pid: number): boolean => {
   try {
@@ -31,6 +31,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+  console.error(describeError(error));
   process.exitCode = 1;
 });

@@ -9,7 +9,7 @@ import {
   type ModelId,
   type RuntimeContext,
 } from '../src/index.ts';
-import { DEV_PORT, devDataDir, printProgress, writeAiEnv } from './dev-env.ts';
+import { DEV_PORT, describeError, devDataDir, printProgress, writeAiEnv } from './dev-env.ts';
 
 // Dev default: Bielik-11B Q4_K_M on Metal (a Mac with 16 GB). SARMATA_AI_MODEL picks another file.
 const DEFAULT_DEV_MODEL: ModelId = 'bielik-11b-v3.1-q4_k_m';
@@ -67,6 +67,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+  console.error(describeError(error));
   process.exitCode = 1;
 });
