@@ -16,7 +16,7 @@ export interface MemberAccount {
 export type CurrentAccount =
   { status: 'signed-out' } | { status: 'no-office'; userId: string; email: string } | MemberAccount;
 
-// Claim contract set by public.custom_access_token_hook (plan 2).
+// Claim contract set by access.custom_access_token_hook (plan 2).
 const claimsSchema = z.object({
   sub: z.uuid(),
   email: z.string().default(''),
