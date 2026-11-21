@@ -83,3 +83,19 @@ _Avoid_: kopia notatki
 **Ustawienia urzędu** (`OfficeSettings`, `office_settings`):
 Jeden wiersz na urząd: przełącznik AI, okres przechowywania notatek, wyprzedzenie przypomnień, SMTP, domyślna miejscowość i adresat sprzeciwu na arkuszu A. Zmienia je admin. Hasło SMTP leży w Supabase Vault i nie wraca do klienta.
 _Avoid_: konfiguracja
+
+**Powiadomienie** (`Notification`, `notifications`):
+Przypomnienie albo zadanie w skrzynce konta, powstające raz dziennie z terminów ocen. Czyta je tylko adresat, także bez SMTP.
+_Avoid_: alert, komunikat
+
+**Zadanie kadr** (`NotificationCategory 'task'`):
+Powiadomienie, które zostaje otwarte do chwili, gdy jego termin przestaje obowiązywać: termin po upływie, decyzja w sprawie sprzeciwu albo stopień z mocy prawa. Zbieracz sam zamyka je ze statusem `resolved`.
+_Avoid_: ticket
+
+**Zbiorczy mail** (`notification_digests`):
+Jedna wiadomość e-mail na konto i dzień z liczbą zadań, najbliższym terminem i linkiem do skrzynki. Bez danych osobowych i bez treści oceny.
+_Avoid_: newsletter
+
+**Zamknięcie automatyczne** (`closed` z `payload.automatic = true`):
+Zamknięcie oceny doręczonej, w której po 7 dniach nie wniesiono sprzeciwu. Wykonuje je system (autor systemowy), a wpis trafia do dziennika zdarzeń i do logu workera.
+_Avoid_: archiwizacja

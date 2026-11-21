@@ -112,6 +112,18 @@ describe('notifications', () => {
     expect(reminder).toMatchObject({ category: 'reminder', leadDays: 14, dueOn: deadline.dueOn });
   });
 
+  it('demo office sends digests to mailpit settings', async () => {
+    const hr = await signedIn('kadry@kropka.test');
+    const facts = await createNotificationDeliveryStore(serviceClient()).digestFacts(
+      await accountId(hr),
+      today,
+    );
+    const smtp = await createNotificationDeliveryStore(serviceClient()).officeSmtp(
+      facts?.officeId ?? '',
+    );
+    expect(smtp).toMatchObject({ host: '127.0.0.1', port: 55425, from: 'oceny@kropka.test' });
+  });
+
   it('digest facts and office smtp for the demo office', async () => {
     const service = serviceClient();
     const store = createNotificationDeliveryStore(service);
