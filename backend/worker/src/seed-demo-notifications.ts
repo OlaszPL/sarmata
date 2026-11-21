@@ -4,7 +4,7 @@ import { workerConfigFromEnv } from './config';
 
 // Unread inbox entries for the demo evaluator Olga Oceniająca (pnpm db:seed:demo, after the demo
 // evaluations). due_on and slot come from the stored deadline (evaluation_deadlines), lead_days is one
-// of the configured leads (14 and 3) and created_on is the day the seed runs. The unique key of
+// the configured lead 14 and created_on is the day the seed runs. The unique key of
 // notifications (account, kind, evaluation, slot, due_on, lead_days) makes a later collector run skip them.
 
 const OFFICE_ID = '11111111-1111-4111-8111-111111111111';
@@ -68,12 +68,10 @@ async function main(): Promise<void> {
     created_on: CREATED_ON,
     status: 'open',
   });
-  // Marek has both reminders, the earlier one (lead 14) sorts first in the inbox like the collector's.
-  const { error } = await db
-    .from('notifications')
-    .insert([reminder(ewa, 14), reminder(marek, 14), reminder(marek, 3)]);
+  // One reminder per evaluation: the inbox lookup of the integration test per evaluation stays unambiguous.
+  const { error } = await db.from('notifications').insert([reminder(ewa, 14), reminder(marek, 14)]);
   if (error) throw new Error(error.message);
-  console.log('demo notifications seeded: three unread reminders for Olga Oceniająca');
+  console.log('demo notifications seeded: two unread reminders for Olga Oceniająca');
 }
 
 try {
