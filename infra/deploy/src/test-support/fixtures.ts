@@ -29,7 +29,13 @@ export function config(overrides: Partial<InstallConfig> = {}): InstallConfig {
 
 export const PROFILES = {
   light: config(),
-  standard: config({ profile: 'standard', exposure: 'lan', host: 'oceny-pc' }),
+  standard: config({
+    profile: 'standard',
+    exposure: 'lan',
+    host: 'oceny-pc',
+    tls: { mode: 'internal' },
+  }),
+  standardLocal: config({ profile: 'standard' }),
   server: config({
     profile: 'server',
     exposure: 'lan',
@@ -51,6 +57,7 @@ export type ProfileName = keyof typeof PROFILES;
 export const PROFILE_NAMES: readonly ProfileName[] = [
   'light',
   'standard',
+  'standardLocal',
   'server',
   'external',
   'withAi',
@@ -92,7 +99,14 @@ export function macEnvironment(overrides: Partial<Environment> = {}): Environmen
     linuxDistro: null,
     engine: { state: 'ready', dockerPrefix: [] },
     installed: false,
+    sourcePresent: false,
+    installedVersion: null,
     wslConfig: null,
+    windowsBuild: null,
+    brewPrefix: '/opt/homebrew',
+    dockerCliConfig: null,
+    conflictingPackages: [],
+    engineTools: { unzip: true, git: true },
     ...overrides,
   };
 }
@@ -112,7 +126,14 @@ export function linuxEnvironment(overrides: Partial<Environment> = {}): Environm
     linuxDistro: { family: 'apt', id: 'ubuntu' },
     engine: { state: 'ready', dockerPrefix: [] },
     installed: false,
+    sourcePresent: false,
+    installedVersion: null,
     wslConfig: null,
+    windowsBuild: null,
+    brewPrefix: null,
+    dockerCliConfig: null,
+    conflictingPackages: [],
+    engineTools: { unzip: true, git: true },
     ...overrides,
   };
 }
@@ -132,7 +153,21 @@ export function windowsEnvironment(overrides: Partial<Environment> = {}): Enviro
     linuxDistro: { family: 'apt', id: 'ubuntu' },
     engine: { state: 'ready', dockerPrefix: [] },
     installed: false,
+    sourcePresent: false,
+    installedVersion: null,
     wslConfig: null,
+    windowsBuild: 26100,
+    brewPrefix: null,
+    dockerCliConfig: null,
+    conflictingPackages: [],
+    engineTools: { unzip: true, git: true },
     ...overrides,
   };
 }
+
+/** An installed system: sarmata.json and the source directory exist. */
+export const INSTALLED = {
+  installed: true,
+  sourcePresent: true,
+  installedVersion: '1.0.0',
+} as const;

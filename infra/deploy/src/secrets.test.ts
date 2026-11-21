@@ -54,10 +54,34 @@ describe('generateSecrets', () => {
   });
 });
 
+const FRESH = generateSecrets(
+  (size) => new Uint8Array(size).fill(7),
+  new Date('2026-11-22T00:00:00Z'),
+);
+
 describe('.env', () => {
   it('reads back to the same secrets, also with $ and double quotes', () => {
     const withSmtp = secrets({ SMTP_PASS: 'p@ss$word"x' });
-    expect(readSecrets(parseEnv(renderEnv(config(), withSmtp)))).toEqual(withSmtp);
+    expect(readSecrets(parseEnv(renderEnv(config(), withSmtp)), FRESH)).toEqual(withSmtp);
+  });
+
+  it('fills a secret an older release did not write from a fresh set', () => {
+    const old = parseEnv(renderEnv(config(), secrets()));
+    delete old.S3_PROTOCOL_ACCESS_KEY_SECRET;
+    const read = readSecrets(old, FRESH);
+    expect(read.S3_PROTOCOL_ACCESS_KEY_SECRET).toBe(FRESH.S3_PROTOCOL_ACCESS_KEY_SECRET);
+    expect(read.POSTGRES_PASSWORD).toBe(secrets().POSTGRES_PASSWORD);
+  });
+
+  it('takes the API keys together with the JWT secret that signs them', () => {
+    const old = parseEnv(renderEnv(config(), secrets()));
+    delete old.JWT_SECRET;
+    const read = readSecrets(old, FRESH);
+    expect(read).toMatchObject({
+      JWT_SECRET: FRESH.JWT_SECRET,
+      ANON_KEY: FRESH.ANON_KEY,
+      SERVICE_ROLE_KEY: FRESH.SERVICE_ROLE_KEY,
+    });
   });
 
   it('rejects a value with a single quote, which compose could not read literally', () => {
@@ -114,7 +138,8 @@ describe('.env', () => {
 describe('publicUrls', () => {
   it.each([
     ['light', PROFILES.light, 'http://localhost:3000', 'http://localhost:8000'],
-    ['standard', PROFILES.standard, 'http://oceny-pc:3000', 'http://oceny-pc:8000'],
+    ['standard in the LAN', PROFILES.standard, 'https://oceny-pc', 'https://oceny-pc'],
+    ['standard locally', PROFILES.standardLocal, 'http://localhost:3000', 'http://localhost:8000'],
     ['server', PROFILES.server, 'https://oceny.urzad.local', 'https://oceny.urzad.local'],
     ['external', PROFILES.external, 'http://localhost:3000', 'https://abc.supabase.co'],
   ] as const)('%s', (_name, profile, appUrl, apiUrl) => {

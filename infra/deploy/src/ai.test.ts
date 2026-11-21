@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { aiServicePlan, type Action, type Plan, type ServiceCommand } from './index.ts';
+import {
+  aiServicePlan,
+  aiServiceRemovalPlan,
+  aiSettings,
+  aiUnsupportedReason,
+  uvInstall,
+  UV_INSTALLER,
+  type Action,
+  type Plan,
+  type ServiceCommand,
+} from './index.ts';
+import { MODEL_FILES, BIELIK_ONE_PACKAGES, type RuntimeRecommendation } from '@sarmata/ai-runtime';
 import { linuxEnvironment, macEnvironment, windowsEnvironment } from './test-support/fixtures.ts';
 
 const llama: ServiceCommand = {
@@ -70,5 +81,77 @@ describe('aiServicePlan', () => {
     expect(script).toContain(
       '-Argument \'--model "/home/jan/models/Bielik 11B.gguf" --port 55491 --host 127.0.0.1\'',
     );
+  });
+
+  it('Linux: escapes systemd specifiers and variables, and hardens the unit', () => {
+    const odd: ServiceCommand = {
+      ...llama,
+      args: ['--alias', '100%$HOME'],
+      env: { NAME: 'a%b$c' },
+    };
+    const unit = stdinOf(aiServicePlan(linuxEnvironment(), [odd]).steps[0]?.action);
+    expect(unit).toContain('"--alias" "100%%$$HOME"');
+    expect(unit).toContain('Environment="NAME=a%%b$$c"');
+    expect(unit).toContain('NoNewPrivileges=yes');
+    expect(unit).toContain('ProtectSystem=full');
+  });
+});
+
+describe('aiServiceRemovalPlan', () => {
+  it('removes only the services asked for', () => {
+    const plan = aiServiceRemovalPlan(linuxEnvironment(), ['bielik-one-backend']);
+    expect(commandsOf(plan)).toEqual([
+      'sudo systemctl disable --now sarmata-ai-bielik-one-backend.service',
+      'sudo rm -f /etc/systemd/system/sarmata-ai-bielik-one-backend.service',
+    ]);
+  });
+});
+
+describe('uvInstall', () => {
+  it('macOS with Homebrew: brew install uv', () => {
+    const { plan, command } = uvInstall(
+      macEnvironment(),
+      '/Users/jan/Library/Application Support/sarmata/ai',
+    );
+    expect(commandsOf(plan)).toEqual(['brew install uv']);
+    expect(command).toBe('/opt/homebrew/bin/uv');
+  });
+
+  it('Linux: the pinned official installer into the AI data directory, PATH untouched', () => {
+    const { plan, command } = uvInstall(linuxEnvironment(), '/home/jan/.local/share/sarmata/ai');
+    const action = plan.steps[0]?.action;
+    expect(action?.kind === 'run' ? action.argv.slice(-2) : []).toEqual([
+      UV_INSTALLER,
+      '/home/jan/.local/share/sarmata/ai/uv',
+    ]);
+    expect(action?.kind === 'run' ? action.argv[2] : '').toContain('UV_NO_MODIFY_PATH=1');
+    expect(UV_INSTALLER).toMatch(/\/uv\/\d+\.\d+\.\d+\/install\.sh$/);
+    expect(command).toBe('/home/jan/.local/share/sarmata/ai/uv/uv');
+  });
+});
+
+describe('aiSettings and aiUnsupportedReason', () => {
+  const choice = (bielikOne: boolean): RuntimeRecommendation => ({
+    enabledByDefault: true,
+    llamaCpp: { key: 'macos-arm64', backend: 'metal', assets: [] },
+    model: MODEL_FILES['bielik-11b-v3.1-q4_k_m'],
+    bielikOne: bielikOne
+      ? { engine: 'mlx', package: BIELIK_ONE_PACKAGES['bielik-one-4b-r1-adapter'] }
+      : null,
+    server: { contextSize: 8192, parallel: 2 },
+    reason: '',
+  });
+
+  it('keeps Bielik-One only when it fits and the user wants it', () => {
+    expect(aiSettings(choice(true), true)).toMatchObject({ decisionPort: 8012 });
+    expect(aiSettings(choice(true), false)).toMatchObject({ decisionPort: null });
+    expect(aiSettings(choice(false), true)).toMatchObject({ decisionPort: null });
+  });
+
+  it('turns AI away on Windows 10 with the WSL engine', () => {
+    expect(aiUnsupportedReason(windowsEnvironment({ windowsBuild: 19045 }))).toContain(
+      'Windows 11',
+    );
+    expect(aiUnsupportedReason(windowsEnvironment())).toBeNull();
   });
 });

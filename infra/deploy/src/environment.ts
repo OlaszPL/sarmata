@@ -1,8 +1,11 @@
 import { posix, win32 } from 'node:path';
+import {
+  architectureOf,
+  operatingSystemOf,
+  type Architecture,
+  type OperatingSystem,
+} from '@sarmata/ai-runtime';
 import { wslCommand, type Host } from './host.ts';
-
-export type Os = 'windows' | 'linux' | 'macos';
-export type Arch = 'x64' | 'arm64';
 
 export type LinuxDistro =
   | { readonly family: 'apt'; readonly id: 'ubuntu' | 'debian' }
@@ -15,8 +18,8 @@ export type EngineStatus =
 
 /** What the installer knows about the computer. Plain data, so plans are pure functions of it. */
 export interface Environment {
-  readonly os: Os;
-  readonly arch: Arch;
+  readonly os: OperatingSystem;
+  readonly arch: Architecture;
   /** wsl: Docker Engine in the WSL distro "sarmata" (Windows without Docker Desktop). */
   readonly engineHost: 'local' | 'wsl';
   /** Installation directory on the engine host. */
@@ -32,9 +35,24 @@ export interface Environment {
   readonly user: { readonly name: string; readonly group: string; readonly isRoot: boolean };
   readonly linuxDistro: LinuxDistro | null;
   readonly engine: EngineStatus;
+  /** sarmata.json exists: the installation finished (it is written last). */
   readonly installed: boolean;
+  /** The installation's source directory exists (an interrupted update may have moved it). */
+  readonly sourcePresent: boolean;
+  /** VERSION of the installed release, null for a build from git. */
+  readonly installedVersion: string | null;
   /** Current %USERPROFILE%\.wslconfig (Windows with WSL), null when missing. */
   readonly wslConfig: string | null;
+  /** Windows build number, null elsewhere. Mirrored WSL networking needs 22621 (Windows 11 22H2). */
+  readonly windowsBuild: number | null;
+  /** Homebrew prefix on macOS, null without Homebrew or elsewhere. */
+  readonly brewPrefix: string | null;
+  /** Current ~/.docker/config.json on macOS, null when missing. */
+  readonly dockerCliConfig: string | null;
+  /** Installed packages that conflict with Docker Engine (podman and runc on RHEL). */
+  readonly conflictingPackages: readonly string[];
+  /** Commands on the engine host that zip and git updates need. */
+  readonly engineTools: { readonly unzip: boolean; readonly git: boolean };
 }
 
 export interface ProcessFacts {
@@ -47,12 +65,18 @@ export interface ProcessFacts {
 
 export const WSL_DISTRO = 'sarmata';
 export const WSL_IMAGE = 'Ubuntu-24.04';
+/** First Windows build with mirrored WSL networking and Hyper-V firewall rules (11 22H2). */
+export const MIRRORED_NETWORKING_BUILD = 22621;
 const LINUX_HOME = '/opt/sarmata';
 const CONFIG_FILE = 'sarmata.json';
 const DOCKER_DESKTOP_INSTALLED =
   "if (Test-Path (Join-Path $env:ProgramFiles 'Docker\\Docker\\Docker Desktop.exe')) { exit 0 } else { exit 1 }";
+const NO_TOOLS = { unzip: false, git: false } as const;
+const posixJoin = (...parts: string[]): string => posix.join(...parts);
+const win32Join = (...parts: string[]): string => win32.join(...parts);
 
 type Common = Pick<Environment, 'arch' | 'execPath' | 'releaseDir' | 'userHome'>;
+type InstallationFacts = Pick<Environment, 'installed' | 'sourcePresent' | 'installedVersion'>;
 
 interface Probe {
   ok(argv: readonly string[]): Promise<boolean>;
@@ -60,11 +84,15 @@ interface Probe {
 }
 
 function probes(system: Host): Probe {
+  const run = (argv: readonly string[]) => {
+    const [command = '', ...args] = argv;
+    return system.run(command, args);
+  };
   return {
-    ok: async (argv) => (await system.run(argv)).code === 0,
+    ok: async (argv) => (await run(argv)).exitCode === 0,
     text: async (argv) => {
-      const result = await system.run(argv);
-      return result.code === 0 ? result.stdout.trim() : null;
+      const result = await run(argv);
+      return result.exitCode === 0 ? result.stdout.trim() : null;
     },
   };
 }
@@ -80,6 +108,26 @@ const powershell = (script: string): string[] => [
 function releaseDirOf(execPath: string): string | null {
   const index = execPath.replaceAll('\\', '/').lastIndexOf('/infra/deploy/dist/');
   return index === -1 ? null : execPath.slice(0, index);
+}
+
+async function installationFacts(
+  read: (path: string) => Promise<string | null>,
+  join: (...parts: string[]) => string,
+  home: string,
+): Promise<InstallationFacts> {
+  const version = (await read(join(home, 'source', 'VERSION')))?.trim() ?? '';
+  return {
+    installed: (await read(join(home, CONFIG_FILE))) !== null,
+    sourcePresent: (await read(join(home, 'source', 'package.json'))) !== null,
+    installedVersion: version === '' ? null : version,
+  };
+}
+
+async function engineTools(probe: Probe, wrap: (argv: string[]) => string[]) {
+  return {
+    unzip: await probe.ok(wrap(['sh', '-c', 'command -v unzip'])),
+    git: await probe.ok(wrap(['sh', '-c', 'command -v git'])),
+  };
 }
 
 export function parseOsRelease(text: string): LinuxDistro | null {
@@ -112,6 +160,18 @@ async function linuxEngine(probe: Probe, isRoot: boolean): Promise<EngineStatus>
   return { state: 'missing', wsl: null };
 }
 
+// Docker's RHEL instructions remove these first: containerd.io conflicts with them.
+async function conflictsWithDocker(
+  probe: Probe,
+  distro: LinuxDistro | null,
+  engine: EngineStatus,
+): Promise<string[]> {
+  if (distro?.id !== 'rhel' || engine.state !== 'missing') return [];
+  const found: string[] = [];
+  for (const name of ['podman', 'runc']) if (await probe.ok(['rpm', '-q', name])) found.push(name);
+  return found;
+}
+
 async function detectLinux(system: Host, probe: Probe, common: Common): Promise<Environment> {
   const name = (await probe.text(['id', '-un'])) ?? 'root';
   const group = (await probe.text(['id', '-gn'])) ?? name;
@@ -123,6 +183,8 @@ async function detectLinux(system: Host, probe: Probe, common: Common): Promise<
     desktop !== '' &&
     desktop !== common.userHome &&
     (await probe.ok(['test', '-d', desktop]));
+  const linuxDistro = osRelease === null ? null : parseOsRelease(osRelease);
+  const engine = await linuxEngine(probe, isRoot);
   return {
     os: 'linux',
     ...common,
@@ -131,10 +193,15 @@ async function detectLinux(system: Host, probe: Probe, common: Common): Promise<
     binDir: posix.join(LINUX_HOME, 'bin'),
     desktopDir: hasDesktop ? desktop : null,
     user: { name, group, isRoot },
-    linuxDistro: osRelease === null ? null : parseOsRelease(osRelease),
-    engine: await linuxEngine(probe, isRoot),
-    installed: (await system.readFile(posix.join(LINUX_HOME, CONFIG_FILE))) !== null,
+    linuxDistro,
+    engine,
+    ...(await installationFacts((path) => system.readFile(path), posixJoin, LINUX_HOME)),
     wslConfig: null,
+    windowsBuild: null,
+    brewPrefix: null,
+    dockerCliConfig: null,
+    conflictingPackages: await conflictsWithDocker(probe, linuxDistro, engine),
+    engineTools: await engineTools(probe, (argv) => argv),
   };
 }
 
@@ -147,6 +214,7 @@ async function detectMac(system: Host, probe: Probe, common: Common): Promise<En
   else if (await probe.ok(['test', '-d', '/Applications/Docker.app']))
     engine = { state: 'stopped', vendor: 'docker-desktop' };
   const name = (await probe.text(['id', '-un'])) ?? 'user';
+  const brewPrefix = await probe.text(['brew', '--prefix']);
   return {
     os: 'macos',
     ...common,
@@ -157,8 +225,13 @@ async function detectMac(system: Host, probe: Probe, common: Common): Promise<En
     user: { name, group: (await probe.text(['id', '-gn'])) ?? 'staff', isRoot: false },
     linuxDistro: null,
     engine,
-    installed: (await system.readFile(posix.join(home, CONFIG_FILE))) !== null,
+    ...(await installationFacts((path) => system.readFile(path), posixJoin, home)),
     wslConfig: null,
+    windowsBuild: null,
+    brewPrefix: brewPrefix === '' ? null : brewPrefix,
+    dockerCliConfig: await system.readFile(posix.join(common.userHome, '.docker', 'config.json')),
+    conflictingPackages: [],
+    engineTools: await engineTools(probe, (argv) => argv),
   };
 }
 
@@ -171,6 +244,7 @@ async function detectWindows(
   const userHome = facts.env.USERPROFILE ?? common.userHome;
   const localAppData = facts.env.LOCALAPPDATA ?? win32.join(userHome, 'AppData', 'Local');
   const desktop = await probe.text(powershell("[Environment]::GetFolderPath('Desktop')"));
+  const build = Number(await probe.text(powershell('[Environment]::OSVersion.Version.Build')));
   const shared = {
     os: 'windows',
     ...common,
@@ -178,6 +252,10 @@ async function detectWindows(
     binDir: win32.join(localAppData, 'Programs', 'Sarmata'),
     desktopDir: desktop === null || desktop === '' ? null : desktop,
     user: { name: facts.env.USERNAME ?? 'user', group: '', isRoot: false },
+    windowsBuild: Number.isInteger(build) && build > 0 ? build : null,
+    brewPrefix: null,
+    dockerCliConfig: null,
+    conflictingPackages: [],
   } as const;
 
   // Docker Desktop (when the office has a licence) or another engine already on PATH.
@@ -188,19 +266,27 @@ async function detectWindows(
     home: desktopHome,
     linuxDistro: null,
     wslConfig: null,
+    engineTools: NO_TOOLS,
   } as const;
+  const desktopFacts = (): Promise<InstallationFacts> =>
+    installationFacts((path) => system.readFile(path), win32Join, desktopHome);
   if (await probe.ok(['docker', 'info'])) {
-    const installed = (await system.readFile(win32.join(desktopHome, CONFIG_FILE))) !== null;
-    return { ...desktopShared, engine: { state: 'ready', dockerPrefix: [] }, installed };
+    return {
+      ...desktopShared,
+      engine: { state: 'ready', dockerPrefix: [] },
+      ...(await desktopFacts()),
+    };
   }
   if (await probe.ok(powershell(DOCKER_DESKTOP_INSTALLED))) {
+    // Read the installation too, so start says "Docker Desktop is not running", not "not installed".
     return {
       ...desktopShared,
       engine: { state: 'stopped', vendor: 'docker-desktop' },
-      installed: false,
+      ...(await desktopFacts()),
     };
   }
 
+  const missing = { installed: false, sourcePresent: false, installedVersion: null } as const;
   const wsl = {
     ...shared,
     engineHost: 'wsl',
@@ -209,7 +295,12 @@ async function detectWindows(
     wslConfig: await system.readFile(win32.join(userHome, '.wslconfig')),
   } as const;
   if (!(await probe.ok(['wsl.exe', '--status'])))
-    return { ...wsl, engine: { state: 'missing', wsl: 'missing' }, installed: false };
+    return {
+      ...wsl,
+      engine: { state: 'missing', wsl: 'missing' },
+      ...missing,
+      engineTools: NO_TOOLS,
+    };
   const distros = (await probe.text(['wsl.exe', '--list', '--quiet'])) ?? '';
   if (
     !distros
@@ -217,38 +308,47 @@ async function detectWindows(
       .map((line) => line.trim())
       .includes(WSL_DISTRO)
   ) {
-    return { ...wsl, engine: { state: 'missing', wsl: 'no-distro' }, installed: false };
+    return {
+      ...wsl,
+      engine: { state: 'missing', wsl: 'no-distro' },
+      ...missing,
+      engineTools: NO_TOOLS,
+    };
   }
   const inDistro = (argv: readonly string[]): string[] => wslCommand(WSL_DISTRO, argv);
-  const installed = await probe.ok(inDistro(['test', '-f', posix.join(LINUX_HOME, CONFIG_FILE)]));
+  const installation = await installationFacts(
+    (path) => probe.text(inDistro(['cat', path])),
+    posixJoin,
+    LINUX_HOME,
+  );
+  const withFacts = {
+    ...wsl,
+    ...installation,
+    engineTools: await engineTools(probe, inDistro),
+  };
   if (await probe.ok(inDistro(['docker', 'info'])))
-    return { ...wsl, engine: { state: 'ready', dockerPrefix: [] }, installed };
-  if (await probe.ok(inDistro(['sh', '-c', 'command -v docker']))) {
-    return { ...wsl, engine: { state: 'stopped', vendor: 'linux-service' }, installed };
-  }
-  return { ...wsl, engine: { state: 'missing', wsl: 'distro' }, installed };
+    return { ...withFacts, engine: { state: 'ready', dockerPrefix: [] } };
+  if (await probe.ok(inDistro(['sh', '-c', 'command -v docker'])))
+    return { ...withFacts, engine: { state: 'stopped', vendor: 'linux-service' } };
+  return { ...withFacts, engine: { state: 'missing', wsl: 'distro' } };
 }
 
 /** Reads the facts the plans need: system, engine state, directories, an existing installation. */
 export async function detectEnvironment(system: Host, facts: ProcessFacts): Promise<Environment> {
-  if (facts.arch !== 'x64' && facts.arch !== 'arm64')
-    throw new Error(`Unsupported architecture: ${facts.arch}`);
   const common: Common = {
-    arch: facts.arch,
+    arch: architectureOf(facts.arch),
     execPath: facts.execPath,
     releaseDir: releaseDirOf(facts.execPath),
     userHome: facts.userHome,
   };
   const probe = probes(system);
-  switch (facts.platform) {
+  switch (operatingSystemOf(facts.platform)) {
     case 'linux':
       return detectLinux(system, probe, common);
-    case 'darwin':
+    case 'macos':
       return detectMac(system, probe, common);
-    case 'win32':
+    case 'windows':
       return detectWindows(system, probe, facts, common);
-    default:
-      throw new Error(`Unsupported platform: ${facts.platform}`);
   }
 }
 
@@ -309,8 +409,14 @@ export function toWslPath(windowsPath: string): string {
 export const toEnginePath = (env: Environment, systemPath: string): string =>
   env.engineHost === 'wsl' ? toWslPath(systemPath) : systemPath;
 
-export const binaryName = (os: Os, arch: Arch): string =>
+export const binaryName = (os: OperatingSystem, arch: Architecture): string =>
   `sarmata-${os}-${arch}${os === 'windows' ? '.exe' : ''}`;
 
 export const samePath = (a: string, b: string): boolean =>
   a.replaceAll('\\', '/').toLowerCase() === b.replaceAll('\\', '/').toLowerCase();
+
+/** Windows with the WSL engine on a build without mirrored networking (Windows 10). */
+export const lacksMirroredNetworking = (env: Environment): boolean =>
+  env.engineHost === 'wsl' &&
+  env.windowsBuild !== null &&
+  env.windowsBuild < MIRRORED_NETWORKING_BUILD;

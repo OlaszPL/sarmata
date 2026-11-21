@@ -4,7 +4,7 @@
     "profile": "standard",
     "exposure": "lan",
     "host": "oceny-pc.kropka.test",
-    "tls": { "mode": "none" },
+    "tls": { "mode": "internal" },
     "supabase": { "mode": "local" },
     "smtp": {
       "enabled": true,

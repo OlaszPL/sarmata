@@ -11,10 +11,12 @@ export type ExecutionEvent =
   | { readonly type: 'done'; readonly step: Step }
   | { readonly type: 'fail'; readonly step: Step; readonly message: string }
   | { readonly type: 'rollback'; readonly step: Step }
-  | { readonly type: 'rollback-fail'; readonly step: Step; readonly message: string };
+  | { readonly type: 'rollback-fail'; readonly step: Step; readonly message: string }
+  | { readonly type: 'warning'; readonly step: Step; readonly message: string };
 
 export type ExecutionResult =
-  | { readonly status: 'ok' }
+  /** warnings: cleanup steps that failed after the plan was committed. */
+  | { readonly status: 'ok'; readonly warnings: readonly string[] }
   | { readonly status: 'halted'; readonly message: string }
   | {
       readonly status: 'failed';
@@ -25,7 +27,7 @@ export type ExecutionResult =
       readonly rollbackErrors: readonly string[];
     };
 
-const errorMessage = (error: unknown): string =>
+export const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 const tail = (text: string): string => text.trim().split('\n').slice(-20).join('\n');
 
@@ -34,13 +36,17 @@ async function perform(current: Step, hosts: Hosts): Promise<void> {
   const action = current.action;
   switch (action.kind) {
     case 'run': {
-      const result = await host.run(action.argv, {
+      const [command, ...args] = action.argv;
+      if (command === undefined) throw new Error('empty command');
+      // Plan steps include image builds and package installs: no time limit here.
+      const result = await host.run(command, args, {
         stdin: action.stdin,
         interactive: action.interactive,
+        timeoutMs: null,
       });
-      if (result.code !== 0 && action.allowFailure !== true) {
+      if (result.exitCode !== 0 && action.allowFailure !== true) {
         throw new Error(
-          `exit code ${result.code}: ${tail(result.stderr === '' ? result.stdout : result.stderr)}`,
+          `exit code ${String(result.exitCode ?? 'none')}: ${tail(result.stderr === '' ? result.stdout : result.stderr)}`,
         );
       }
       return;
@@ -48,7 +54,7 @@ async function perform(current: Step, hosts: Hosts): Promise<void> {
     case 'write':
       return host.writeFile(action.path, action.content, action.mode);
     case 'copy':
-      return host.copy(action.from, action.to);
+      return host.copy(action.from, action.to, action.mode);
     case 'remove':
       return host.remove(action.path);
     case 'rename':
@@ -81,9 +87,31 @@ async function rollBack(
   return { rolledBack, rollbackErrors };
 }
 
+async function runCleanup(
+  cleanup: readonly Step[],
+  hosts: Hosts,
+  onEvent: (event: ExecutionEvent) => void,
+): Promise<string[]> {
+  const warnings: string[] = [];
+  for (const current of cleanup) {
+    onEvent({ type: 'start', step: current });
+    try {
+      await perform(current, hosts);
+      onEvent({ type: 'done', step: current });
+    } catch (error) {
+      const message = errorMessage(error);
+      warnings.push(`${current.title}: ${message}`);
+      onEvent({ type: 'warning', step: current, message });
+    }
+  }
+  return warnings;
+}
+
 /**
  * Runs the steps in order. A halt step ends the plan with its message. When a step fails, the undo
- * steps of the completed steps run in reverse order (the failed step's own undo does not).
+ * steps of the completed steps run in reverse order (the failed step's own undo does not). After
+ * the last step the plan is committed: cleanup runs, never rolls back, and reports its failures as
+ * warnings.
  */
 export async function executePlan(
   plan: Plan,
@@ -110,5 +138,5 @@ export async function executePlan(
     completed.push(current);
     onEvent({ type: 'done', step: current });
   }
-  return { status: 'ok' };
+  return { status: 'ok', warnings: await runCleanup(plan.cleanup ?? [], hosts, onEvent) };
 }

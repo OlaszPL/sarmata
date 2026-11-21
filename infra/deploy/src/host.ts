@@ -1,31 +1,24 @@
-import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import { dirname } from 'node:path';
-
-export interface RunOptions {
-  readonly stdin?: string | undefined;
-  readonly interactive?: boolean | undefined;
-}
-
-export interface RunResult {
-  /** 127 when the command does not exist. */
-  readonly code: number;
-  readonly stdout: string;
-  readonly stderr: string;
-}
+import {
+  localMachine,
+  type CommandResult,
+  type CommandRunner,
+  type RunOptions,
+} from '@sarmata/ai-runtime';
 
 /**
- * Where plan steps run. Adapters: localHost (this computer), wslHost (a WSL distro on Windows)
- * and recordingHost in tests.
+ * Where plan steps run. It extends the command runner of @sarmata/ai-runtime, so the installer
+ * builds one adapter and hands it to both packages. Adapters: localHost (this computer), wslHost
+ * (a WSL distro on Windows) and recordingHost in tests.
  */
-export interface Host {
-  run(argv: readonly string[], options?: RunOptions): Promise<RunResult>;
+export interface Host extends CommandRunner {
   /** Creates missing parent directories. */
   writeFile(path: string, content: string, mode?: number): Promise<void>;
   /** Null when the file does not exist. */
   readFile(path: string): Promise<string | null>;
-  /** File or directory, replacing the target. */
-  copy(from: string, to: string): Promise<void>;
+  /** File or directory, replacing the target. A mode applies to a copied file. */
+  copy(from: string, to: string, mode?: number): Promise<void>;
   /** Recursive, no error when missing. */
   remove(path: string): Promise<void>;
   rename(from: string, to: string): Promise<void>;
@@ -34,41 +27,18 @@ export interface Host {
 const isMissing = (error: unknown): boolean =>
   error instanceof Error && 'code' in error && error.code === 'ENOENT';
 
-function runLocal(argv: readonly string[], options: RunOptions): Promise<RunResult> {
-  const [command, ...args] = argv;
-  if (command === undefined) return Promise.reject(new Error('empty command'));
-  return new Promise((resolve) => {
-    const child = spawn(command, args, {
-      stdio: options.interactive === true ? 'inherit' : ['pipe', 'pipe', 'pipe'],
-      // wsl.exe prints UTF-16 unless told otherwise.
-      env: { ...process.env, WSL_UTF8: '1' },
-    });
-    let stdout = '';
-    let stderr = '';
-    child.stdout?.setEncoding('utf8').on('data', (chunk: string) => {
-      stdout += chunk;
-    });
-    child.stderr?.setEncoding('utf8').on('data', (chunk: string) => {
-      stderr += chunk;
-    });
-    child.on('error', (error) => {
-      resolve({ code: 127, stdout, stderr: error.message });
-    });
-    child.on('close', (code) => {
-      resolve({ code: code ?? 1, stdout, stderr });
-    });
-    child.stdin?.end(options.stdin ?? '');
-  });
-}
-
-/** This computer, through Node APIs. */
-export function localHost(): Host {
+/** This computer: commands through the given runner (localMachine by default), files through Node. */
+export function localHost(runner: CommandRunner = localMachine()): Host {
+  const chmod = async (path: string, mode: number | undefined): Promise<void> => {
+    // Windows has no POSIX modes. The installation directory gets an ACL instead (plans.ts).
+    if (mode !== undefined && process.platform !== 'win32') await fs.chmod(path, mode);
+  };
   return {
-    run: (argv, options = {}) => runLocal(argv, options),
+    run: (command, args, options) => runner.run(command, args, options),
     writeFile: async (path, content, mode) => {
       await fs.mkdir(dirname(path), { recursive: true });
       await fs.writeFile(path, content, mode === undefined ? {} : { mode });
-      if (mode !== undefined && process.platform !== 'win32') await fs.chmod(path, mode);
+      await chmod(path, mode);
     },
     readFile: async (path) => {
       try {
@@ -78,10 +48,11 @@ export function localHost(): Host {
         throw error;
       }
     },
-    copy: async (from, to) => {
+    copy: async (from, to, mode) => {
       await fs.rm(to, { recursive: true, force: true });
       await fs.mkdir(dirname(to), { recursive: true });
       await fs.cp(from, to, { recursive: true });
+      await chmod(to, mode);
     },
     remove: (path) => fs.rm(path, { recursive: true, force: true }),
     rename: (from, to) => fs.rename(from, to),
@@ -94,14 +65,18 @@ export function wslCommand(distro: string, argv: readonly string[]): string[] {
 }
 
 /** The WSL distro with Docker Engine, reached from Windows through wsl.exe. */
-export function wslHost(distro: string, system: Host): Host {
+export function wslHost(distro: string, system: CommandRunner): Host {
+  const inDistro = (argv: readonly string[], options?: RunOptions): Promise<CommandResult> => {
+    const [command, ...args] = wslCommand(distro, argv);
+    return system.run(command ?? 'wsl.exe', args, options);
+  };
   const must = async (argv: readonly string[], options: RunOptions = {}): Promise<void> => {
-    const result = await system.run(wslCommand(distro, argv), options);
-    if (result.code !== 0)
+    const result = await inDistro(argv, options);
+    if (result.exitCode !== 0)
       throw new Error(`${argv.join(' ')} failed in WSL: ${result.stderr.trim()}`);
   };
   return {
-    run: (argv, options) => system.run(wslCommand(distro, argv), options),
+    run: (command, args, options) => inDistro([command, ...args], options),
     writeFile: (path, content, mode = 0o644) =>
       must(
         [
@@ -112,22 +87,21 @@ export function wslHost(distro: string, system: Host): Host {
           path,
           mode.toString(8),
         ],
-        {
-          stdin: content,
-        },
+        { stdin: content },
       ),
     readFile: async (path) => {
-      const result = await system.run(wslCommand(distro, ['cat', path]));
-      return result.code === 0 ? result.stdout : null;
+      const result = await inDistro(['cat', path]);
+      return result.exitCode === 0 ? result.stdout : null;
     },
-    copy: (from, to) =>
+    copy: (from, to, mode) =>
       must([
         'sh',
         '-c',
-        'rm -rf "$2" && mkdir -p "$(dirname "$2")" && cp -a "$1" "$2"',
+        'rm -rf "$2" && mkdir -p "$(dirname "$2")" && cp -a "$1" "$2" && { [ -z "$3" ] || chmod "$3" "$2"; }',
         'sh',
         from,
         to,
+        mode === undefined ? '' : mode.toString(8),
       ]),
     remove: (path) => must(['rm', '-rf', path]),
     rename: (from, to) => must(['mv', '-T', from, to]),

@@ -1,5 +1,11 @@
 import { createHmac } from 'node:crypto';
-import { AI_PORT, publicUrls, type Answers, type InstallConfig } from './config.ts';
+import {
+  AI_PORT,
+  CONTAINER_AI_HOST,
+  publicUrls,
+  type Answers,
+  type InstallConfig,
+} from './config.ts';
 
 /** Returns cryptographically random bytes. Injected so secret generation stays a pure function. */
 export type RandomBytes = (size: number) => Uint8Array;
@@ -25,7 +31,7 @@ export interface Secrets extends GeneratedSecrets {
 // Long-lived HS256 API keys, like generate-keys.sh upstream (5 years there, 10 here: an office
 // installation must not stop working on a forgotten date).
 const API_KEY_LIFETIME_SECONDS = 10 * 365 * 24 * 60 * 60;
-const AI_HOST = 'http://host.docker.internal';
+const AI_BASE = `http://${CONTAINER_AI_HOST}`;
 
 const hex = (bytes: Uint8Array): string => Buffer.from(bytes).toString('hex');
 const base64 = (bytes: Uint8Array): string => Buffer.from(bytes).toString('base64');
@@ -111,10 +117,10 @@ function envValues(config: InstallConfig, secrets: Secrets): Readonly<Record<str
     IMGPROXY_AUTO_WEBP: 'true',
     // Contract of backend/ai/src/config.ts. Empty values count as unset there.
     SARMATA_AI_ENABLED: ai.enabled ? 'true' : 'false',
-    SARMATA_AI_TEXT_BASE_URL: ai.enabled ? `${AI_HOST}:${AI_PORT}/v1` : '',
+    SARMATA_AI_TEXT_BASE_URL: ai.enabled ? `${AI_BASE}:${AI_PORT}/v1` : '',
     SARMATA_AI_TEXT_MODEL: ai.enabled ? ai.alias : '',
     SARMATA_AI_DECISION_BASE_URL:
-      ai.enabled && ai.decisionPort !== null ? `${AI_HOST}:${ai.decisionPort}/v1` : '',
+      ai.enabled && ai.decisionPort !== null ? `${AI_BASE}:${ai.decisionPort}/v1` : '',
   };
 }
 
@@ -140,23 +146,29 @@ export function parseEnv(text: string): Record<string, string> {
   return values;
 }
 
-/** Secrets of an existing installation, so an update rewrites .env without new passwords. */
-export function readSecrets(values: Readonly<Record<string, string>>): Secrets {
-  const get = (name: keyof Secrets): string => {
-    const value = values[name];
-    if (value === undefined) throw new Error(`.env is missing ${name}`);
-    return value;
-  };
+/**
+ * Secrets of an existing installation, so an update or a repeated install rewrites .env without new
+ * passwords. A secret that an older release did not have comes from `fresh` (a newly generated
+ * set), so adding a secret never breaks the update of an older installation. The API keys are
+ * signed with JWT_SECRET, so without it all three come from `fresh`.
+ */
+export function readSecrets(
+  values: Readonly<Record<string, string>>,
+  fresh: GeneratedSecrets,
+): Secrets {
+  const fallback: Secrets = { ...fresh, SMTP_PASS: '', EXTERNAL_DATABASE_URL: '' };
+  const pick = (name: keyof Secrets): string => values[name] ?? fallback[name];
+  const signed = values.JWT_SECRET !== undefined;
   return {
-    POSTGRES_PASSWORD: get('POSTGRES_PASSWORD'),
-    JWT_SECRET: get('JWT_SECRET'),
-    ANON_KEY: get('ANON_KEY'),
-    SERVICE_ROLE_KEY: get('SERVICE_ROLE_KEY'),
-    DASHBOARD_PASSWORD: get('DASHBOARD_PASSWORD'),
-    PG_META_CRYPTO_KEY: get('PG_META_CRYPTO_KEY'),
-    S3_PROTOCOL_ACCESS_KEY_ID: get('S3_PROTOCOL_ACCESS_KEY_ID'),
-    S3_PROTOCOL_ACCESS_KEY_SECRET: get('S3_PROTOCOL_ACCESS_KEY_SECRET'),
-    SMTP_PASS: get('SMTP_PASS'),
-    EXTERNAL_DATABASE_URL: get('EXTERNAL_DATABASE_URL'),
+    POSTGRES_PASSWORD: pick('POSTGRES_PASSWORD'),
+    JWT_SECRET: pick('JWT_SECRET'),
+    ANON_KEY: signed ? pick('ANON_KEY') : fresh.ANON_KEY,
+    SERVICE_ROLE_KEY: signed ? pick('SERVICE_ROLE_KEY') : fresh.SERVICE_ROLE_KEY,
+    DASHBOARD_PASSWORD: pick('DASHBOARD_PASSWORD'),
+    PG_META_CRYPTO_KEY: pick('PG_META_CRYPTO_KEY'),
+    S3_PROTOCOL_ACCESS_KEY_ID: pick('S3_PROTOCOL_ACCESS_KEY_ID'),
+    S3_PROTOCOL_ACCESS_KEY_SECRET: pick('S3_PROTOCOL_ACCESS_KEY_SECRET'),
+    SMTP_PASS: pick('SMTP_PASS'),
+    EXTERNAL_DATABASE_URL: pick('EXTERNAL_DATABASE_URL'),
   };
 }

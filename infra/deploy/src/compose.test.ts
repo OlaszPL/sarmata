@@ -5,7 +5,7 @@ import {
   parseEnv,
   renderCompose,
   renderEnv,
-  servicesFor,
+  composeServicesFor,
   type InstallConfig,
 } from './index.ts';
 import {
@@ -30,6 +30,20 @@ const render = (config: InstallConfig): Compose =>
 const EXPECTED: Readonly<Record<ProfileName, readonly string[]>> = {
   light: ['auth', 'db', 'kong', 'rest', 'tools', 'web', 'worker'],
   standard: [
+    'auth',
+    'caddy',
+    'db',
+    'imgproxy',
+    'kong',
+    'meta',
+    'rest',
+    'storage',
+    'studio',
+    'tools',
+    'web',
+    'worker',
+  ],
+  standardLocal: [
     'auth',
     'db',
     'imgproxy',
@@ -73,9 +87,9 @@ const EXPECTED: Readonly<Record<ProfileName, readonly string[]>> = {
   ],
 };
 
-describe('servicesFor and renderCompose', () => {
+describe('composeServicesFor and renderCompose', () => {
   it.each(PROFILE_NAMES)('%s: the compose file has exactly the services of the profile', (name) => {
-    expect(servicesFor(PROFILES[name])).toEqual(EXPECTED[name]);
+    expect(composeServicesFor(PROFILES[name])).toEqual(EXPECTED[name]);
     expect(Object.keys(render(PROFILES[name]).services).sort()).toEqual(EXPECTED[name]);
   });
 
@@ -112,7 +126,7 @@ describe('servicesFor and renderCompose', () => {
     const compose = parse(
       renderCompose(upstreamCompose(), PROFILES.withAi, [55491, 8026]),
     ) as Compose;
-    expect(servicesFor(PROFILES.withAi, [55491, 8026])).toContain('ai-relay');
+    expect(composeServicesFor(PROFILES.withAi, [55491, 8026])).toContain('ai-relay');
     const relay = compose.services['ai-relay'];
     expect(relay).toMatchObject({ image: 'alpine/socat:1.8.1.1', network_mode: 'host' });
     const command = relay?.command;
@@ -126,12 +140,32 @@ describe('servicesFor and renderCompose', () => {
     expect(script).not.toContain('0.0.0.0');
   });
 
-  it('standard in the LAN: ports on all interfaces, Kong waits for Studio', () => {
+  it('standard in the LAN: HTTPS through Caddy, Kong and the app on loopback only, Kong waits for Studio', () => {
     const { services } = render(PROFILES.standard);
-    expect(services.kong?.ports).toEqual(['8000:8000']);
+    expect(services.kong?.ports).toEqual(['127.0.0.1:8000:8000']);
     expect(services.kong?.depends_on).toEqual({ studio: { condition: 'service_healthy' } });
-    expect(services.web).toMatchObject({ image: 'sarmata/web:current', ports: ['3000:3000'] });
-    expect(services.worker).toMatchObject({ image: 'sarmata/worker:current' });
+    expect(services.web).toMatchObject({ image: 'sarmata/web:current' });
+    expect(services.web).not.toHaveProperty('ports');
+    expect(services.caddy).toMatchObject({ ports: ['80:80', '443:443'] });
+    expect(services).not.toHaveProperty('backup');
+  });
+
+  it.each(PROFILE_NAMES)('%s: nothing but Caddy publishes a port beyond the loopback', (name) => {
+    const { services } = render(PROFILES[name]);
+    for (const [service, definition] of Object.entries(services)) {
+      if (service === 'caddy') continue;
+      for (const port of (definition?.ports ?? []) as string[])
+        expect(port).toMatch(/^127\.0\.0\.1:/);
+    }
+  });
+
+  it('fails loudly when the upstream file changes a shape the renderer relies on', () => {
+    const changed = upstreamCompose().replace(
+      '- ./volumes/api/kong.yml:/home/kong/temp.yml:ro,z',
+      '- type: bind\n        source: ./volumes/api/kong.yml\n        target: /home/kong/temp.yml',
+    );
+    expect(changed).not.toEqual(upstreamCompose());
+    expect(() => renderCompose(changed, PROFILES.light)).toThrow(/short string syntax/);
   });
 
   it('keeps data in named volumes and reads Supabase config files from the vendored sources', () => {
@@ -174,7 +208,10 @@ describe('servicesFor and renderCompose', () => {
     expect(services.web).not.toHaveProperty('ports');
     expect(services.caddy).toMatchObject({ image: 'caddy:2.11.9', ports: ['80:80', '443:443'] });
     expect(services.caddy?.volumes).toContain('./Caddyfile:/etc/caddy/Caddyfile:ro');
-    expect(services.backup).toMatchObject({ command: ['schedule'] });
+    expect(services.backup).toMatchObject({
+      command: ['schedule'],
+      environment: { TZ: 'Europe/Warsaw' },
+    });
   });
 
   it.each(PROFILE_NAMES)('%s: every variable used by compose is set in .env', (name) => {
