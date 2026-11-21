@@ -25,6 +25,38 @@ export interface FakeServer {
   close(): Promise<void>;
 }
 
+const schemaNameOf = (body: unknown): string | null => {
+  if (typeof body !== 'object' || body === null || !('response_format' in body)) return null;
+  const format = body.response_format;
+  if (typeof format !== 'object' || format === null || !('json_schema' in format)) return null;
+  const schema = format.json_schema;
+  if (typeof schema !== 'object' || schema === null || !('name' in schema)) return null;
+  return typeof schema.name === 'string' ? schema.name : null;
+};
+
+/**
+ * Replies like the model servers: a chat completion with `objects[<schema name>]` as JSON content
+ * (by `response_format.json_schema.name`) and the Bielik-One answers from `decision` on `/systemone`.
+ * Anything else gets HTTP 500.
+ */
+export function modelReplies(replies: {
+  readonly objects?: Record<string, unknown>;
+  readonly decision?: unknown;
+}): (request: RecordedRequest) => FakeReply {
+  return (request) => {
+    if (request.url?.endsWith('/systemone') && replies.decision !== undefined) {
+      return { status: 200, body: replies.decision };
+    }
+    const name = schemaNameOf(request.body);
+    const object = name === null ? undefined : replies.objects?.[name];
+    if (object === undefined) return { status: 500, body: { error: `no reply for ${name}` } };
+    return {
+      status: 200,
+      body: { choices: [{ message: { role: 'assistant', content: JSON.stringify(object) } }] },
+    };
+  };
+}
+
 export async function startFakeServer(
   reply: (request: RecordedRequest) => FakeReply,
 ): Promise<FakeServer> {
