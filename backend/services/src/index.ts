@@ -31,13 +31,18 @@ export {
   type OfficeSettingsService,
   createOfficeSettingsService,
 } from './office-settings/office-settings-service';
-export type { Note, NoteVersion, OfficeSettings } from '@sarmata/repositories';
+export { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
+export type { GradeGrant, Note, NoteVersion, OfficeSettings } from '@sarmata/repositories';
 export type {
   NewNoteInput,
   NoteKind,
   NotePatch,
   NoteSign,
   OfficeSettingsPatchInput,
+  GradeBasis,
+  GradeGrantInput,
+  LabourCourtAppealInput,
+  EvaluatorFlagThresholds,
   SensitiveDataWarning,
 } from '@sarmata/domain';
 export type {

@@ -16,7 +16,8 @@ export type ServiceErrorCode =
   | 'invalid_evaluator'
   | 'no_locked_sheet'
   | 'not_found'
-  | 'sensitive_data';
+  | 'sensitive_data'
+  | 'hr_entry_rejected';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */
 export class ServiceError extends Error {

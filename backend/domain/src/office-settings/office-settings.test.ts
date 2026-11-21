@@ -33,6 +33,21 @@ describe('officeSettingsPatchSchema', () => {
     expect(officeSettingsPatchSchema.safeParse({ defaultPlace: '  ' }).success).toBe(false);
   });
 
+  it('thresholds are bounded', () => {
+    expect(
+      officeSettingsPatchSchema.safeParse({ evaluatorFlags: { centralShare: 0.3 } }).success,
+    ).toBe(false);
+    expect(
+      officeSettingsPatchSchema.safeParse({ evaluatorFlags: { minEvaluations: 0 } }).success,
+    ).toBe(false);
+  });
+
+  it('partial thresholds patch is accepted', () => {
+    expect(officeSettingsPatchSchema.parse({ evaluatorFlags: { leniencyPoints: 1.5 } })).toEqual({
+      evaluatorFlags: { leniencyPoints: 1.5 },
+    });
+  });
+
   it('rejects an invalid sender address', () => {
     expect(officeSettingsPatchSchema.safeParse({ smtp: { from: 'nope' } }).success).toBe(false);
   });

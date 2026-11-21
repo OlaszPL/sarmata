@@ -40,6 +40,11 @@ export { type JobMessage, type JobQueue, type QueuedJob, createJobQueue } from '
 export { type Repositories, createRepositories } from './repositories';
 export { type Note, type NoteRepository, type NoteVersion, createNoteRepository } from './notes';
 export {
+  type GradeGrant,
+  type HrRegisterRepository,
+  createHrRegisterRepository,
+} from './hr-register';
+export {
   type OfficeSettings,
   type OfficeSettingsRepository,
   createOfficeSettingsRepository,

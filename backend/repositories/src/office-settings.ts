@@ -1,4 +1,8 @@
-import { type EvaluationVisibility, type OfficeSettingsPatch } from '@sarmata/domain';
+import {
+  type EvaluationVisibility,
+  type EvaluatorFlagThresholds,
+  type OfficeSettingsPatch,
+} from '@sarmata/domain';
 import { readAccountClaims } from './auth';
 import { type Db } from './db';
 import { RepositoryError } from './errors';
@@ -14,6 +18,8 @@ export interface OfficeSettings {
   readonly defaultPlace: string | null;
   /** Office override of the objection addressee on sheet A, `null` means the rules text. */
   readonly objectionAddresseeSheetA: string | null;
+  /** Thresholds of the evaluator flags in the statistics. */
+  readonly evaluatorFlags: EvaluatorFlagThresholds;
   readonly smtp: {
     readonly host: string | null;
     readonly port: number | null;
@@ -33,7 +39,7 @@ export interface OfficeSettingsRepository {
 }
 
 const COLUMNS =
-  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, default_place, objection_addressee_sheet_a, offices(evaluation_visibility)' as const;
+  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, default_place, objection_addressee_sheet_a, evaluator_flag_min_evaluations, evaluator_flag_central_share, evaluator_flag_leniency_points, offices(evaluation_visibility)' as const;
 
 const asVisibility = (value: string | undefined): EvaluationVisibility =>
   value === 'tree' ? 'tree' : 'office';
@@ -50,6 +56,9 @@ interface SettingsRow {
   smtp_password_set: boolean | null;
   default_place: string | null;
   objection_addressee_sheet_a: string | null;
+  evaluator_flag_min_evaluations: number;
+  evaluator_flag_central_share: number;
+  evaluator_flag_leniency_points: number;
   offices: { evaluation_visibility: string } | null;
 }
 
@@ -61,6 +70,11 @@ const toSettings = (row: SettingsRow): OfficeSettings => ({
   evaluationVisibility: asVisibility(row.offices?.evaluation_visibility),
   defaultPlace: row.default_place,
   objectionAddresseeSheetA: row.objection_addressee_sheet_a,
+  evaluatorFlags: {
+    minEvaluations: row.evaluator_flag_min_evaluations,
+    centralShare: row.evaluator_flag_central_share,
+    leniencyPoints: row.evaluator_flag_leniency_points,
+  },
   smtp: {
     host: row.smtp_host,
     port: row.smtp_port,
@@ -80,6 +94,9 @@ interface SettingsColumns {
   smtp_from?: string | null;
   default_place?: string | null;
   objection_addressee_sheet_a?: string | null;
+  evaluator_flag_min_evaluations?: number;
+  evaluator_flag_central_share?: number;
+  evaluator_flag_leniency_points?: number;
 }
 
 function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
@@ -96,6 +113,14 @@ function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
   if (patch.defaultPlace !== undefined) columns.default_place = patch.defaultPlace;
   if (patch.objectionAddresseeSheetA !== undefined) {
     columns.objection_addressee_sheet_a = patch.objectionAddresseeSheetA;
+  }
+  const flags = patch.evaluatorFlags;
+  if (flags?.minEvaluations !== undefined) {
+    columns.evaluator_flag_min_evaluations = flags.minEvaluations;
+  }
+  if (flags?.centralShare !== undefined) columns.evaluator_flag_central_share = flags.centralShare;
+  if (flags?.leniencyPoints !== undefined) {
+    columns.evaluator_flag_leniency_points = flags.leniencyPoints;
   }
   return columns;
 }
