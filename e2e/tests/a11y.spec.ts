@@ -25,6 +25,25 @@ test('sign-in page with errors meets WCAG 2.1 AA', async ({ page }) => {
 });
 
 test('signed-in shell meets WCAG 2.1 AA', async ({ page }) => {
-  await signIn(page, demoAccount('hr'));
+  await signIn(page, demoAccount('evaluator'));
   await expectNoViolations(page);
+});
+
+test('accessibility statement meets WCAG 2.1 AA', async ({ page }) => {
+  await signIn(page, demoAccount('evaluator'));
+  await page.goto('/deklaracja-dostepnosci');
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Deklaracja dostępności' }),
+  ).toBeVisible();
+  await expectNoViolations(page);
+});
+
+test('first Tab stop is the skip link and the current section is marked', async ({ page }) => {
+  await signIn(page, demoAccount('evaluator'));
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Przejdź do treści' })).toBeFocused();
+  await expect(page.getByRole('navigation').getByRole('link', { name: 'Pulpit' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
 });

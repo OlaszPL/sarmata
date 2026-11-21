@@ -1,7 +1,13 @@
 import 'server-only';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
-import { getCurrentAccount, type CurrentAccount, type MemberAccount } from '@sarmata/services';
+import {
+  getCurrentAccount,
+  servicesFor,
+  type CurrentAccount,
+  type Employee,
+  type MemberAccount,
+} from '@sarmata/services';
 import { routes } from '@/lib/routes';
 import { createSupabase } from '@/lib/supabase';
 
@@ -20,3 +26,8 @@ export async function requireMember(): Promise<MemberAccount> {
   if (account.status === 'no-office') redirect(routes.noOffice);
   return account;
 }
+
+/** Employees of the office of this request. One fetch per request, shared by the header and pages. */
+export const officeEmployees = cache(async (): Promise<readonly Employee[]> =>
+  servicesFor(await createSupabase()).employees.list(),
+);

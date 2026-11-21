@@ -145,9 +145,11 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409) |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA, skip link, nawigacja), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
+
+Trasy po zalogowaniu: `/` (pulpit), `/pracownicy`, `/pracownicy/[id]`, `/oceny`, `/oceny/[id]`, `/oceny/nowa`, `/notatki`, `/kadry`, `/ustawienia`, `/powiadomienia`, `/pomoc`, `/dziennik-ai` (to zaślepki „Ta część aplikacji jest w przygotowaniu”) oraz `/deklaracja-dostepnosci`. Bez logowania: `/logowanie`, bez urzędu: `/brak-urzedu`. Menu zależy od roli: oceniający widzi Pulpit, Moi pracownicy, Oceny, Notatki, kadry dodatkowo Kadry, administrator Pulpit i Ustawienia.
 
 Czcionki Open Sans (treść) i Fira Sans (nagłówki, menu, przyciski, liczby, pakiet `@fontsource/fira-sans`) są na licencji SIL Open Font License 1.1.
 
