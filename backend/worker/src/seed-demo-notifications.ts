@@ -3,10 +3,9 @@ import { createServiceClient } from '@sarmata/repositories';
 import { workerConfigFromEnv } from './config';
 
 // Unread inbox entries for the demo evaluator Olga Oceniająca (pnpm db:seed:demo, after the demo
-// evaluations). Every row is derived from a stored deadline (evaluation_deadlines) and is exactly what
-// `public.collect_notifications` writes for it: the reminder with the lead 14 on the day 14 days before
-// the deadline, the one with the lead 3 on the day 3 days before. The unique key of notifications
-// (account, kind, evaluation, slot, due_on, lead_days) makes a later collector run skip them.
+// evaluations). due_on and slot come from the stored deadline (evaluation_deadlines), lead_days is one
+// of the configured leads (14 and 3) and created_on is the day the seed runs. The unique key of
+// notifications (account, kind, evaluation, slot, due_on, lead_days) makes a later collector run skip them.
 
 const OFFICE_ID = '11111111-1111-4111-8111-111111111111';
 const EVALUATOR_ACCOUNT_ID = '22222222-2222-4222-8222-000000000003';
@@ -15,8 +14,8 @@ const SLOT = 'evaluationDeadline';
 const config = workerConfigFromEnv(process.env);
 const db = createServiceClient({ url: config.supabaseUrl, secretKey: config.secretKey });
 
-const addDays = (date: string, days: number): string =>
-  new Date(Date.parse(date) + days * 86_400_000).toISOString().slice(0, 10);
+// The day the seed runs (UTC), like the day the collector would have run.
+const CREATED_ON = new Date().toISOString().slice(0, 10);
 
 async function deadlineOf(email: string): Promise<{ evaluationId: string; dueOn: string }> {
   const { data: employee, error } = await db
@@ -66,7 +65,7 @@ async function main(): Promise<void> {
     slot: SLOT,
     due_on: deadline.dueOn,
     lead_days: leadDays,
-    created_on: addDays(deadline.dueOn, -leadDays),
+    created_on: CREATED_ON,
     status: 'open',
   });
   // Marek has both reminders, the earlier one (lead 14) sorts first in the inbox like the collector's.
