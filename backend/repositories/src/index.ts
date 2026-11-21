@@ -36,6 +36,11 @@ export {
   createOfficialRegulationWriter,
   createRegulationVersionRepository,
 } from './regulation-versions';
+export {
+  type SheetVersion,
+  type SheetVersionRepository,
+  createSheetVersionRepository,
+} from './sheet-versions';
 export { type JobMessage, type JobQueue, type QueuedJob, createJobQueue } from './job-queue';
 export { type Repositories, createRepositories } from './repositories';
 export { type Note, type NoteRepository, type NoteVersion, createNoteRepository } from './notes';
