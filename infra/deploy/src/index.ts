@@ -47,3 +47,17 @@ export {
   type ProcessFacts,
 } from './environment.ts';
 export { desktopShortcut, type Shortcut } from './shortcut.ts';
+
+export {
+  aiRelayPorts,
+  planInstall,
+  planStageSource,
+  planStart,
+  planStatus,
+  planStop,
+  planUninstall,
+  planUpdate,
+  type InstallInput,
+  type UpdateInput,
+  type UpdateSource,
+} from './plans.ts';
