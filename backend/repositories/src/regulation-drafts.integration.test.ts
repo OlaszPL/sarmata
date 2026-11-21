@@ -54,8 +54,22 @@ describe('regulation drafts', () => {
     const published = await drafts.publish(
       created.id,
       parseRegulationDocument({ ...edited, effectiveFrom: '2090-02-01' }),
+      [
+        {
+          caseId: 'kprm-evaluation-24m',
+          title: 'Ocena po 24 miesiącach',
+          status: 'failed',
+          expected: { kind: 'due', due: '2026-03-16' },
+          actual: { kind: 'due', due: '2025-03-17' },
+          message: 'The result differs from the expected one',
+        },
+      ],
     );
-    expect(published).toMatchObject({ status: 'published', effectiveFrom: '2090-02-01' });
+    expect(published).toMatchObject({
+      status: 'published',
+      effectiveFrom: '2090-02-01',
+      acceptedFailingCases: [{ caseId: 'kprm-evaluation-24m', status: 'failed' }],
+    });
     expect(published?.publishedAt).not.toBeNull();
 
     expect(await drafts.updateDraft(created.id, edited)).toBeNull();

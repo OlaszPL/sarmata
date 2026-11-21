@@ -15,6 +15,16 @@ export {
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
 export {
+  type PublishInput,
+  type RegulationCheck,
+  type RegulationEditorDependencies,
+  type RegulationEditorService,
+  type RegulationIssue,
+  type RegulationVersionDetail,
+  type RegulationVersionSummary,
+  createRegulationEditorService,
+} from './regulations/regulation-editor-service';
+export {
   type AbsenceInput,
   type EvaluatorChangeInput,
   type ObjectionDecisionInput,

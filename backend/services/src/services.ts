@@ -8,7 +8,7 @@ import {
   computeDeadline,
   employeePatchSchema,
   newEmployeeSchema,
-  versionInForce,
+  officeVersionInForce,
 } from '@sarmata/domain';
 import {
   type Db,
@@ -21,6 +21,7 @@ import {
   createHrRegisterRepository,
   createAiRunRepository,
   createNoteRepository,
+  createRegulationDraftRepository,
   createNotificationRepository,
   createStatisticsRepository,
   createOfficeSettingsRepository,
@@ -41,6 +42,12 @@ import {
 import { type EvaluationService, createEvaluationService } from './evaluations/evaluation-service';
 import { getCurrentAccount } from './account/current-account';
 import { type AiService, createAiService } from './ai/ai-service';
+import {
+  type RegulationEditorService,
+  createRegulationEditorService,
+  todayUtc,
+} from './regulations/regulation-editor-service';
+import { officialCases } from '@sarmata/regulations';
 
 export interface ServiceDependencies {
   readonly repositories: Repositories;
@@ -83,14 +90,21 @@ export function createServices(dependencies: ServiceDependencies): Services {
 
   const regulations: Services['regulations'] = {
     async inForceOn(on) {
-      const version = versionInForce(await repositories.regulationVersions.listOfficial(), on);
+      const candidates = await repositories.regulationVersions.listInForceCandidates();
+      const version = officeVersionInForce(
+        candidates.map((candidate) => ({
+          ...candidate,
+          effectiveFrom: candidate.document.effectiveFrom,
+        })),
+        on,
+      );
       if (version === null) {
         throw new ServiceError(
           'no_regulation_in_force',
           `No regulation version is in force on ${on}`,
         );
       }
-      return version;
+      return version.document;
     },
   };
 
@@ -116,13 +130,14 @@ export function createServices(dependencies: ServiceDependencies): Services {
     },
     deadlines: {
       async compute({ regulationId, slot, facts }) {
-        const version = await repositories.regulationVersions.findOfficialById(regulationId);
-        if (version === null) {
+        const stored = await repositories.regulationVersions.findByCode(regulationId);
+        if (stored === null) {
           throw new ServiceError(
             'unknown_regulation',
             `Unknown regulation version ${regulationId}`,
           );
         }
+        const version = stored.document;
         const rule = version.deadlines[slot];
         if (rule === undefined) {
           throw new ServiceError(
@@ -144,6 +159,7 @@ export type AppServices = Services & {
   readonly hrRegister: HrRegisterService;
   readonly statistics: StatisticsService;
   readonly ai: AiService;
+  readonly regulationEditor: RegulationEditorService;
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
@@ -180,6 +196,12 @@ export const servicesFor = (db: Db): AppServices => {
       settings: officeSettings,
       evaluations: services.evaluations,
       regulations: repositories.regulationVersions,
+    }),
+    regulationEditor: createRegulationEditorService({
+      versions: repositories.regulationVersions,
+      drafts: createRegulationDraftRepository(db),
+      officialCases,
+      today: todayUtc,
     }),
   };
 };

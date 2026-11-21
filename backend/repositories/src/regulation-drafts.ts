@@ -1,4 +1,8 @@
-import { type RegulationDocument, parseRegulationDocument } from '@sarmata/domain';
+import {
+  type RegulationCaseResult,
+  type RegulationDocument,
+  parseRegulationDocument,
+} from '@sarmata/domain';
 import { type Db } from './db';
 import { RepositoryError } from './errors';
 import { toJson } from './json';
@@ -12,6 +16,8 @@ export interface LocalRegulationVersion {
   basedOn: string | null;
   effectiveFrom: string;
   publishedAt: string | null;
+  /** Failing worked examples the admin accepted at publication, null when none failed. */
+  acceptedFailingCases: RegulationCaseResult[] | null;
   document: RegulationDocument;
 }
 
@@ -26,12 +32,17 @@ export interface RegulationDraftRepository {
   /** Null when no draft was changed: unknown id, already published or not allowed for the account. */
   updateDraft(id: string, document: RegulationDocument): Promise<LocalRegulationVersion | null>;
   /** Writes status, effective date and document in one update. Null as `updateDraft`. */
-  publish(id: string, document: RegulationDocument): Promise<LocalRegulationVersion | null>;
+  publish(
+    id: string,
+    document: RegulationDocument,
+    acceptedFailingCases?: readonly RegulationCaseResult[],
+  ): Promise<LocalRegulationVersion | null>;
   /** False when no draft was deleted. */
   deleteDraft(id: string): Promise<boolean>;
 }
 
-const COLUMNS = 'id, code, status, based_on, effective_from, published_at, document';
+const COLUMNS =
+  'id, code, status, based_on, effective_from, published_at, accepted_failing_cases, document';
 
 interface Row {
   id: string;
@@ -40,6 +51,7 @@ interface Row {
   based_on: string | null;
   effective_from: string;
   published_at: string | null;
+  accepted_failing_cases: unknown;
   document: unknown;
 }
 
@@ -50,6 +62,9 @@ const toLocal = (row: Row): LocalRegulationVersion => ({
   basedOn: row.based_on,
   effectiveFrom: row.effective_from,
   publishedAt: row.published_at,
+  acceptedFailingCases: Array.isArray(row.accepted_failing_cases)
+    ? (row.accepted_failing_cases as RegulationCaseResult[])
+    : null,
   document: parseRegulationDocument(row.document),
 });
 
@@ -95,13 +110,16 @@ export function createRegulationDraftRepository(db: Db): RegulationDraftReposito
       return data === null ? null : toLocal(data);
     },
 
-    async publish(id, document) {
+    async publish(id, document, acceptedFailingCases) {
       const { data, error } = await db
         .from('regulation_versions')
         .update({
           status: 'published',
           effective_from: document.effectiveFrom,
           document: toJson(document),
+          ...(acceptedFailingCases === undefined
+            ? {}
+            : { accepted_failing_cases: toJson(acceptedFailingCases) }),
         })
         .eq('id', id)
         .eq('status', 'draft')

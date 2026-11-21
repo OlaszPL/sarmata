@@ -148,14 +148,14 @@ export function createEvaluationService(
   const { repositories, regulationInForceOn, currentAccountId, officeSettings } = dependencies;
 
   async function regulationOf(detail: EvaluationDetail): Promise<RegulationDocument> {
-    const regulation = await repositories.regulationVersions.findOfficialById(detail.regulationId);
-    if (regulation === null) {
+    const stored = await repositories.regulationVersions.findByCode(detail.regulationId);
+    if (stored === null) {
       throw new ServiceError(
         'unknown_regulation',
         `Unknown regulation version ${detail.regulationId}`,
       );
     }
-    return regulation;
+    return stored.document;
   }
 
   async function load(id: string): Promise<EvaluationDetail> {
@@ -339,12 +339,11 @@ export function createEvaluationService(
       }
 
       const regulation = await regulationInForceOn(cycleStart);
-      const regulationVersionId = await repositories.regulationVersions.findOfficialRowId(
-        regulation.id,
-      );
-      if (regulationVersionId === null) {
+      const pinned = await repositories.regulationVersions.findByCode(regulation.id);
+      if (pinned === null) {
         throw new ServiceError('unknown_regulation', `Unknown regulation version ${regulation.id}`);
       }
+      const regulationVersionId = pinned.rowId;
       const created = await repositories.evaluations.create({
         employeeId: employee.id,
         evaluatorAccountId,
