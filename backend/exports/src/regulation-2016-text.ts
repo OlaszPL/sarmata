@@ -278,6 +278,7 @@ export const regulation2016Text: RegulationText = {
     position_changed: 'Zmiana stanowiska',
     correction: 'Korekta arkusza',
     interrupted: 'Przerwanie oceny',
+    labour_court_appeal: 'Odwołanie do sądu pracy',
   },
 };
 
