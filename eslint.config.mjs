@@ -115,5 +115,32 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ['backend/regulations/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@supabase/*', '@sarmata/*', '!@sarmata/domain'],
+              message: 'Regulation versions are data and pure code on @sarmata/domain (ADR 0006).',
+            },
+            {
+              group: ['node:*'],
+              message: 'Regulation versions are pure: no Node built-ins and no I/O (ADR 0006).',
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'process',
+          message: 'Regulation versions are pure: no access to the process environment (ADR 0006).',
+        },
+      ],
+    },
+  },
   prettier,
 ]);

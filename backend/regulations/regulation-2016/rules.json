@@ -1,0 +1,346 @@
+{
+  "id": "regulation-2016",
+  "name": "Ocena okresowa według ustawy o służbie cywilnej i rozporządzenia z 2016 r.",
+  "effectiveFrom": "2016-04-23",
+  "legalBasis": "ustawa o służbie cywilnej (Dz.U. 2026 poz. 590 t.j.), rozporządzenie PRM z 4.04.2016 r. (Dz.U. 2016 poz. 470, w mocy od 23.04.2016, § 14), zarządzenie nr 6 Szefa SC z 12.03.2020 r.",
+  "sources": [
+    {
+      "id": "civil-service-act",
+      "title": "Ustawa z dnia 21 listopada 2008 r. o służbie cywilnej",
+      "citation": "Dz.U. 2026 poz. 590 t.j.",
+      "text": "docs/legal/ustawa-o-sluzbie-cywilnej-tj-2026.md"
+    },
+    {
+      "id": "periodic-evaluation-regulation",
+      "title": "Rozporządzenie Prezesa Rady Ministrów z dnia 4 kwietnia 2016 r. w sprawie warunków i sposobu przeprowadzania ocen okresowych urzędników służby cywilnej i pracowników służby cywilnej",
+      "citation": "Dz.U. 2016 poz. 470",
+      "text": "docs/legal/rozporzadzenie-oceny-okresowe-2016.md"
+    },
+    {
+      "id": "hr-standards-order-6",
+      "title": "Zarządzenie nr 6 Szefa Służby Cywilnej z dnia 12 marca 2020 r. w sprawie standardów zarządzania zasobami ludzkimi w służbie cywilnej",
+      "citation": "publikacja na gov.pl/web/sluzbacywilna, zmienione zarządzeniem nr 7 z 16.12.2020 r.",
+      "text": "docs/legal/zarzadzenie-6-szefa-sc-2020-standardy-zzl.md"
+    }
+  ],
+  "partialScale": {
+    "basis": "§ 11 ust. 1 pkt 1 rozporządzenia",
+    "levels": [
+      { "code": "far-below", "name": "znacznie poniżej oczekiwań", "points": 1 },
+      { "code": "below", "name": "poniżej oczekiwań", "points": 3 },
+      { "code": "meets", "name": "na poziomie oczekiwań", "points": 5 },
+      { "code": "above", "name": "powyżej oczekiwań", "points": 7 },
+      { "code": "far-above", "name": "znacznie powyżej oczekiwań", "points": 9 }
+    ]
+  },
+  "overallLevel": {
+    "basis": "§ 11 ust. 1 pkt 2 rozporządzenia",
+    "method": "arithmeticMean",
+    "bands": [
+      { "code": "far-below", "min": 1, "minInclusive": true, "max": 2 },
+      { "code": "below", "min": 2, "minInclusive": false, "max": 4 },
+      { "code": "meets", "min": 4, "minInclusive": false, "max": 6 },
+      { "code": "above", "min": 6, "minInclusive": false, "max": 8 },
+      { "code": "far-above", "min": 8, "minInclusive": false, "max": 9 }
+    ]
+  },
+  "outcome": {
+    "basis": "§ 11 ust. 1 pkt 3 i 4 rozporządzenia",
+    "positiveLevels": ["meets", "above", "far-above"],
+    "negativeIfAnyPartialIs": "far-below"
+  },
+  "justification": {
+    "basis": "§ 11 ust. 3 i 4 rozporządzenia",
+    "requiredForNegative": true,
+    "requiredForPositive": false
+  },
+  "criteria": {
+    "basis": "załącznik nr 1 do rozporządzenia",
+    "catalog": [
+      {
+        "id": "communication",
+        "name": "Komunikacja",
+        "indicators": [
+          "Koncentrowanie się na wypowiedzi rozmówcy i dbanie o wzajemne zrozumienie.",
+          "Wypowiadanie się w sposób jasny i precyzyjny, dostosowany do sytuacji i rozmówcy (dobieranie stylu, języka i treści).",
+          "Formułowanie jasnych i precyzyjnych wypowiedzi pisemnych dostosowanych do sytuacji i odbiorcy (dobieranie stylu, języka i treści).",
+          "Przedstawianie przekonujących argumentów odpowiednio do sytuacji."
+        ]
+      },
+      {
+        "id": "creativity",
+        "name": "Kreatywność",
+        "indicators": [
+          "Proponowanie lub tworzenie nowych rozwiązań.",
+          "Nieschematyczne podejście do zadań."
+        ]
+      },
+      {
+        "id": "negotiation",
+        "name": "Negocjowanie",
+        "indicators": [
+          "Przygotowywanie się do negocjacji, w szczególności opracowanie projektu stanowiska, zakresu możliwych ustępstw i argumentacji.",
+          "Stosowanie technik i strategii negocjacyjnych.",
+          "Osiągnięcie efektu negocjacji akceptowanego przez przełożonych."
+        ]
+      },
+      {
+        "id": "work-organization",
+        "name": "Organizacja pracy i orientacja na osiąganie celów",
+        "indicators": [
+          "Określanie sposobu realizacji zadań/celów.",
+          "Realizowanie zadań/celów w kolejności uwzględniającej ich wagę i pilność (ustalanie priorytetów działania).",
+          "Dobieranie niezbędnych zasobów umożliwiających realizację zadań/celów.",
+          "Dostosowywanie się do zmieniających się okoliczności.",
+          "Wytrwałość i zaangażowanie w realizację zadań/celów."
+        ]
+      },
+      {
+        "id": "customer-orientation",
+        "name": "Orientacja na klienta/interesanta",
+        "indicators": [
+          "Taktowne zachowanie, wyrażające szacunek i zrozumienie dla drugiej osoby.",
+          "Reagowanie na potrzeby klienta/interesanta, w szczególności rozpoznawanie jego potrzeb i proponowanie rozwiązań."
+        ]
+      },
+      {
+        "id": "decision-making",
+        "name": "Podejmowanie decyzji i odpowiedzialność",
+        "indicators": [
+          "Wypracowywanie alternatywnych rozwiązań na podstawie analizy informacji, w szczególności potencjalnego ryzyka.",
+          "Podejmowanie decyzji (decyzyjność).",
+          "Przyjmowanie odpowiedzialności za efekty podjętych decyzji."
+        ]
+      },
+      {
+        "id": "crisis-management",
+        "name": "Radzenie sobie w sytuacjach kryzysowych",
+        "indicators": [
+          "Rozpoznawanie sytuacji kryzysowych i informowanie o nich zainteresowanych.",
+          "Podejmowanie działań mających na celu rozwiązanie kryzysu.",
+          "Wyciąganie wniosków z sytuacji kryzysowych."
+        ]
+      },
+      {
+        "id": "reliability",
+        "name": "Rzetelność",
+        "indicators": [
+          "Wykonywanie zadań zgodnie z obowiązującymi standardami (przepisami, zasadami, procedurami) oraz dbałość o jakość rezultatów.",
+          "Dotrzymywanie zobowiązań (realizacja zadań) w wyznaczonym czasie."
+        ]
+      },
+      {
+        "id": "analytical-thinking",
+        "name": "Myślenie analityczne",
+        "indicators": [
+          "Rozróżnianie informacji istotnych i nieistotnych.",
+          "Dostrzeganie zależności między informacjami.",
+          "Formułowanie wniosków."
+        ]
+      },
+      {
+        "id": "knowledge-use",
+        "name": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+        "indicators": [
+          "Wykorzystywanie wiedzy przy realizacji zadań na zajmowanym stanowisku pracy.",
+          "Doskonalenie wiedzy i umiejętności niezbędnych do wykonywania zadań na zajmowanym stanowisku pracy, w szczególności wyszukiwanie i pozyskiwanie wiedzy, korzystanie z dobrych praktyk i doświadczeń innych.",
+          "Korzystanie z dostępnych źródeł informacji, rozwiązań i technologii."
+        ]
+      },
+      {
+        "id": "cooperation",
+        "name": "Współpraca",
+        "indicators": [
+          "Włączanie się w działania realizowane razem z innymi osobami, jeśli istnieje taka możliwość.",
+          "Dbanie o przepływ informacji.",
+          "Dbanie o dobrą atmosferę i otwartość we współpracy.",
+          "Dostrzeganie wkładu pracy innych osób.",
+          "Branie pod uwagę zdania innych osób.",
+          "Dzielenie się wiedzą i doświadczeniem."
+        ]
+      },
+      {
+        "id": "public-speaking",
+        "name": "Wystąpienia publiczne",
+        "indicators": [
+          "Wykorzystywanie różnych środków przekazu (np. narzędzi multimedialnych) i dbałość o sposób prezentacji (w tym autoprezentacji).",
+          "Nawiązywanie i utrzymywanie kontaktu z audytorium.",
+          "Zarządzanie czasem wystąpienia, w szczególności przestrzeganie ram czasowych, elastyczne reagowanie na potrzeby audytorium.",
+          "Radzenie sobie ze stresem i emocjami, w szczególności wywołanymi krytyką i trudnymi pytaniami."
+        ]
+      },
+      {
+        "id": "people-management",
+        "name": "Zarządzanie ludźmi",
+        "indicators": [
+          "Przydzielanie zakresu odpowiedzialności, zadań i uprawnień pracownikom (delegowanie zadań).",
+          "Monitorowanie realizacji zadań oraz w razie potrzeby podejmowanie działań korygujących lub zapobiegawczych.",
+          "Motywowanie pracowników.",
+          "Udzielanie pracownikom informacji zwrotnej opartej na ocenie ich zaangażowania i sposobu realizacji zadań.",
+          "Rozwiązywanie konfliktów.",
+          "Wspieranie pracowników w rozwoju zawodowym, w szczególności identyfikowanie potrzeb rozwojowych, proponowanie działań rozwojowych oraz monitorowanie ich realizacji."
+        ]
+      },
+      {
+        "id": "strategic-management",
+        "name": "Zarządzanie strategiczne",
+        "indicators": [
+          "Tworzenie wizji oraz wyznaczanie celów strategicznych w oparciu o całościowe i perspektywiczne widzenie organizacji, otoczenia oraz strategie rozwoju.",
+          "Formułowanie celów operacyjnych na podstawie celów strategicznych.",
+          "Analiza ryzyka planowanych działań o charakterze strategicznym."
+        ]
+      }
+    ]
+  },
+  "additionalCriteria": {
+    "basis": "§ 2 ust. 2 i § 5 ust. 2 rozporządzenia, blokada kryterium obowiązkowego: spec funkcjonalny (P-10)",
+    "min": 0,
+    "max": 3,
+    "fromMandatoryAllowed": false
+  },
+  "sheets": [
+    {
+      "id": "A",
+      "annex": 2,
+      "basis": "§ 3 ust. 2 i § 4 ust. 1 rozporządzenia",
+      "position": "kierownik urzędu, gdy jest to stanowisko pracy w służbie cywilnej",
+      "mandatoryCriteria": [
+        "people-management",
+        "decision-making",
+        "work-organization",
+        "cooperation",
+        "communication",
+        "strategic-management"
+      ],
+      "orgUnitFields": false,
+      "objectionAddressee": null
+    },
+    {
+      "id": "B",
+      "annex": 3,
+      "basis": "§ 3 ust. 3 i § 4 ust. 2 rozporządzenia",
+      "position": "praca polegająca na bezpośrednim kierowaniu pracownikami, inna niż kierownik urzędu",
+      "mandatoryCriteria": [
+        "people-management",
+        "decision-making",
+        "work-organization",
+        "cooperation",
+        "communication"
+      ],
+      "orgUnitFields": true,
+      "objectionAddressee": "dyrektor generalny urzędu (albo kierownik urzędu, gdy nie ma stanowiska dyrektora generalnego)"
+    },
+    {
+      "id": "C",
+      "annex": 4,
+      "basis": "§ 3 ust. 4 i § 4 ust. 3 rozporządzenia",
+      "position": "pozostałe stanowiska",
+      "mandatoryCriteria": [
+        "knowledge-use",
+        "reliability",
+        "work-organization",
+        "cooperation",
+        "communication"
+      ],
+      "orgUnitFields": true,
+      "objectionAddressee": "dyrektor generalny urzędu (albo kierownik urzędu, gdy nie ma stanowiska dyrektora generalnego)"
+    }
+  ],
+  "deadlines": {
+    "startingInterview": {
+      "strategy": "daysFromEvent",
+      "event": "cycleStart",
+      "days": 30,
+      "shiftToWorkingDay": true,
+      "basis": "§ 7 pkt 1 rozporządzenia: 30 dni od sporządzenia poprzedniej oceny albo od zatrudnienia na czas nieokreślony"
+    },
+    "startingInterviewAfterNegative": {
+      "strategy": "daysFromEvent",
+      "event": "cycleStart",
+      "days": 7,
+      "shiftToWorkingDay": true,
+      "basis": "§ 7 pkt 2 rozporządzenia: 7 dni od sporządzenia oceny negatywnej"
+    },
+    "evaluationDeadline": {
+      "strategy": "monthsFromEvent",
+      "event": "cycleStart",
+      "months": 24,
+      "extendByAbsencesLongerThanMonth": true,
+      "shiftToWorkingDay": true,
+      "basis": "art. 81 ust. 4 i 7 ustawy: co 24 miesiące, przedłużenie o usprawiedliwioną nieobecność dłuższą niż miesiąc"
+    },
+    "reevaluationAfterNegative": {
+      "strategy": "monthsFromEvent",
+      "event": "acquaintance",
+      "months": 6,
+      "extendByAbsencesLongerThanMonth": false,
+      "shiftToWorkingDay": false,
+      "basis": "art. 81 ust. 9 ustawy: po upływie 6 miesięcy od zapoznania z oceną negatywną, bez przedłużenia o nieobecność (DSC FAQ 19). Data to dzień, po którym ocenę sporządza się niezwłocznie, więc nie przechodzi na dzień roboczy"
+    },
+    "criteriaResetAfterPositionChange": {
+      "strategy": "daysFromEvent",
+      "event": "positionChange",
+      "days": 30,
+      "shiftToWorkingDay": true,
+      "basis": "§ 9 ust. 1 rozporządzenia: ponowna rozmowa i ustalenie kryteriów w 30 dni od zmiany stanowiska, termin oceny bez zmian"
+    },
+    "evaluationOnPositionChange": {
+      "strategy": "windowAroundEvent",
+      "event": "positionChange",
+      "daysBefore": 7,
+      "daysAfter": 30,
+      "shiftToWorkingDay": true,
+      "basis": "art. 81 ust. 6 ustawy i § 9 ust. 2 rozporządzenia: ocena nie wcześniej niż 7 dni przed zmianą i nie później niż 30 dni po zmianie"
+    },
+    "objection": {
+      "strategy": "daysFromEvent",
+      "event": "acquaintance",
+      "days": 7,
+      "shiftToWorkingDay": true,
+      "basis": "art. 83 ust. 1 ustawy: sprzeciw w 7 dni od zapoznania z oceną"
+    },
+    "objectionDecision": {
+      "strategy": "daysFromEvent",
+      "event": "objectionFiled",
+      "days": 14,
+      "shiftToWorkingDay": true,
+      "basis": "art. 83 ust. 3 ustawy: rozpatrzenie sprzeciwu w 14 dni od wniesienia"
+    },
+    "labourCourtAppeal": {
+      "strategy": "daysFromEvent",
+      "event": "objectionOutcome",
+      "days": 14,
+      "shiftToWorkingDay": true,
+      "basis": "art. 83 ust. 5 ustawy: odwołanie do sądu pracy w 14 dni od doręczenia decyzji albo od upływu terminu na rozpatrzenie sprzeciwu"
+    },
+    "gradeByLawGrant": {
+      "strategy": "daysFromEvent",
+      "event": "acquaintance",
+      "days": 30,
+      "shiftToWorkingDay": true,
+      "basis": "art. 89 ust. 2 ustawy: kolejny stopień służbowy w 30 dni od zapoznania z oceną"
+    }
+  },
+  "termChange": {
+    "basis": "art. 81 ust. 8 ustawy i § 8 rozporządzenia",
+    "minimumElapsedMonths": 6,
+    "reasons": [
+      "evaluatorChange",
+      "expectedAbsenceOfEvaluated",
+      "expectedAbsenceOfEvaluator",
+      "requestOfEvaluated"
+    ],
+    "writtenNoticeRequired": true
+  },
+  "gradeByLaw": {
+    "basis": "art. 89 ust. 2 ustawy, wariant szerszy (P-18, spec funkcjonalny)",
+    "consecutiveEvaluations": 2,
+    "qualifyingLevels": ["above", "far-above"],
+    "sameLevelRequired": false
+  },
+  "feedback": {
+    "basis": "zarządzenie nr 6 Szefa SC, cz. IV pkt 6: system informacji zwrotnej, bieżącej i cyklicznej (standard obligatoryjny)",
+    "ongoing": true,
+    "periodic": true
+  }
+}
