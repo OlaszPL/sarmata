@@ -45,7 +45,7 @@ export function LoginForm() {
         label="Hasło"
         error={state.fieldErrors.password}
       />
-      <SubmitButton pendingLabel="Logowanie…">Zaloguj się</SubmitButton>
+      <SubmitButton pendingLabel="Trwa logowanie">Zaloguj się</SubmitButton>
     </form>
   );
 }

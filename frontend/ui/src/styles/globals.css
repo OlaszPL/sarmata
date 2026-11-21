@@ -135,6 +135,12 @@
   box-shadow: 0 0 0 2px #fff; /* triple ring: visible on white and on navy */
 }
 
+/* Programmatic focus targets (skip link target, main landmark) are not controls: no ring around the whole page. */
+[tabindex='-1']:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /* Inside a scrolling box the outer ring would be clipped, so the ring is drawn inside the element. */
 .focus-inset :focus-visible {
   outline-offset: -5px;
