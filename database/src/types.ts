@@ -81,6 +81,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "evaluations"
       referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluation_deadlines_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "statistics_evaluation_facts"
+      referencedColumns: ["evaluation_id","office_id"]
     }
                   ]
                 },"evaluation_events": {
@@ -101,6 +107,38 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "evaluations"
       referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluation_events_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "statistics_evaluation_facts"
+      referencedColumns: ["evaluation_id","office_id"]
+    }
+                  ]
+                },"evaluation_results": {
+                  Row: {
+                    "computed_at": string,"evaluation_id": string,"grade_by_law_due_on": string | null,"level_code": string | null,"mean": number | null,"office_id": string,"outcome": string | null,"second_consecutive_negative": boolean,"sheet_version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "computed_at"?: string,"evaluation_id": string,"grade_by_law_due_on"?: string | null,"level_code"?: string | null,"mean"?: number | null,"office_id": string,"outcome"?: string | null,"second_consecutive_negative": boolean,"sheet_version": number
+                  }
+                  Update: {
+                    "computed_at"?: string,"evaluation_id"?: string,"grade_by_law_due_on"?: string | null,"level_code"?: string | null,"mean"?: number | null,"office_id"?: string,"outcome"?: string | null,"second_consecutive_negative"?: boolean,"sheet_version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "evaluation_results_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "evaluations"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluation_results_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "statistics_evaluation_facts"
+      referencedColumns: ["evaluation_id","office_id"]
     }
                   ]
                 },"evaluation_sheets": {
@@ -121,6 +159,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "evaluations"
       referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluation_sheets_evaluation_fkey"
+      columns: ["evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "statistics_evaluation_facts"
+      referencedColumns: ["evaluation_id","office_id"]
     }
                   ]
                 },"evaluations": {
@@ -159,6 +203,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "evaluations"
       referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluations_previous_fkey"
+      columns: ["previous_evaluation_id","office_id"]
+isOneToOne: false
+      referencedRelation: "statistics_evaluation_facts"
+      referencedColumns: ["evaluation_id","office_id"]
     },{
       foreignKeyName: "evaluations_regulation_version_id_fkey"
       columns: ["regulation_version_id"]
@@ -296,7 +346,39 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "statistics_evaluation_facts": {
+                  Row: {
+                    "acquainted_on": string | null,"civil_servant": boolean | null,"content": NonNullable<Json>,"drafted_on": string | null,"employee_id": string,"evaluation_id": string,"evaluator_account_id": string,"grade_granted_on": string | null,"office_id": string,"org_unit": string | null,"regulation_version_id": string,"sheet_id": string,"sheet_version": number
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "evaluations_employee_fkey"
+      columns: ["employee_id","office_id"]
+isOneToOne: false
+      referencedRelation: "employees"
+      referencedColumns: ["id","office_id"]
+    },{
+      foreignKeyName: "evaluations_evaluator_fkey"
+      columns: ["evaluator_account_id","office_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["user_id","office_id"]
+    },{
+      foreignKeyName: "evaluations_office_id_fkey"
+      columns: ["office_id"]
+isOneToOne: false
+      referencedRelation: "offices"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "evaluations_regulation_version_id_fkey"
+      columns: ["regulation_version_id"]
+isOneToOne: false
+      referencedRelation: "regulation_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
             "apply_evaluation_transition":
@@ -331,6 +413,9 @@ isOneToOne: false
                            },
 "job_queue_send":
 { Args: { "delay_seconds"?: number,"message": Json }; Returns: number
+                           },
+"save_evaluation_results":
+{ Args: { "p_results": Json }; Returns: number
                            },
 "set_smtp_password":
 { Args: { "p_password": string }; Returns: undefined
