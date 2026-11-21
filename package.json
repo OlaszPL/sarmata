@@ -9,6 +9,9 @@
   "scripts": {
     "dev": "pnpm --filter @sarmata/web dev",
     "web:env": "node scripts/web-env.mjs",
+    "e2e": "pnpm --filter @sarmata/e2e e2e",
+    "e2e:ui": "pnpm --filter @sarmata/e2e e2e:ui",
+    "e2e:walk": "pnpm --filter @sarmata/e2e walk",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
