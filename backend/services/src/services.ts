@@ -196,9 +196,17 @@ export const servicesFor = (db: Db): AppServices => {
       return account.userId;
     },
   });
+  const ai = createAiService({
+    runs: createAiRunRepository(db),
+    notes,
+    settings: officeSettings,
+    evaluations: services.evaluations,
+    regulations: repositories.regulationVersions,
+  });
+  const noteService = createNoteService({ notes, ai });
   return {
     ...services,
-    notes: createNoteService(notes),
+    notes: noteService,
     officeSettings: createOfficeSettingsService(
       officeSettings,
       createNotesRetentionPreviewRepository(db),
@@ -211,13 +219,7 @@ export const servicesFor = (db: Db): AppServices => {
       history: (employeeId) => repositories.evaluations.history(employeeId),
       regulationInForceOn: (on) => services.regulations.inForceOn(on),
     }),
-    ai: createAiService({
-      runs: createAiRunRepository(db),
-      notes,
-      settings: officeSettings,
-      evaluations: services.evaluations,
-      regulations: repositories.regulationVersions,
-    }),
+    ai,
     regulationEditor: createRegulationEditorService({
       versions: repositories.regulationVersions,
       drafts: createRegulationDraftRepository(db),
