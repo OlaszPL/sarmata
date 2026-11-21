@@ -60,7 +60,10 @@ export interface EmployeeRepository {
 const COLUMNS =
   'id, office_id, first_name, last_name, email, user_id, position_title, org_unit, position_kind, service_status, employment_basis, employment_start, appointment_year, grade, grade_granted_on, employment_ended_on, supervisor_employee_id' as const;
 
-type EmployeeRow = Omit<Database['public']['Tables']['employees']['Row'], 'created_at'>;
+type EmployeeRow = Omit<
+  Database['public']['Tables']['employees']['Row'],
+  'created_at' | 'anonymized_at'
+>;
 type EmployeeColumns = Database['public']['Tables']['employees']['Update'];
 
 const optionalDate = (value: string | null): CalendarDate | null =>

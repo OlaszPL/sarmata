@@ -133,6 +133,28 @@ function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
   return columns;
 }
 
+/** How many notes and finished AI runs the next retention run would remove for a given period. */
+export interface NotesRetentionPreview {
+  readonly notes: number;
+  readonly aiRuns: number;
+}
+
+export interface NotesRetentionPreviewRepository {
+  /** Admin and hr only (42501 otherwise). The office comes from the session. */
+  preview(months: number): Promise<NotesRetentionPreview>;
+}
+
+export function createNotesRetentionPreviewRepository(db: Db): NotesRetentionPreviewRepository {
+  return {
+    async preview(months) {
+      const { data, error } = await db.rpc('notes_retention_preview', { p_months: months });
+      if (error) throw new RepositoryError('officeSettings.notesRetentionPreview', error);
+      const row = data[0];
+      return { notes: row?.notes ?? 0, aiRuns: row?.ai_runs ?? 0 };
+    },
+  };
+}
+
 export function createOfficeSettingsRepository(db: Db): OfficeSettingsRepository {
   async function officeId(operation: string): Promise<string> {
     const id = (await readAccountClaims(db))?.office_id;

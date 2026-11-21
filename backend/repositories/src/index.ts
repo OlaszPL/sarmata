@@ -56,8 +56,11 @@ export {
   createHrRegisterRepository,
 } from './hr-register';
 export {
+  type NotesRetentionPreview,
+  type NotesRetentionPreviewRepository,
   type OfficeSettings,
   type OfficeSettingsRepository,
+  createNotesRetentionPreviewRepository,
   createOfficeSettingsRepository,
 } from './office-settings';
 export {
@@ -100,3 +103,16 @@ export {
   createAiRunQueueStore,
   createAiRunRepository,
 } from './ai-runs';
+export {
+  type EmploymentRepository,
+  type EndEmploymentRecord,
+  type RetentionOverviewRow,
+  createEmploymentRepository,
+} from './employment';
+export {
+  type DueEmployee,
+  type PurgedContent,
+  type RetentionEvaluationSource,
+  type RetentionStore,
+  createRetentionStore,
+} from './retention-store';
