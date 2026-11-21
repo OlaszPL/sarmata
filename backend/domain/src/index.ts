@@ -19,9 +19,6 @@ export {
   regulationDocumentSchema,
 } from './regulations/regulation-document';
 export { versionInForce } from './regulations/version-in-force';
-export { errorMessage } from './support/error-message';
-export { parseEnv } from './support/parse-env';
-export { type OfficeId, officeIdSchema } from './identity/office-id';
 export {
   type EmploymentBasis,
   type NewEmployeeInput,
@@ -46,3 +43,6 @@ export {
 } from './evaluations/criteria';
 export { type SheetScore, scoreSheet } from './evaluations/score';
 export { proposeSheet } from './evaluations/sheet-selection';
+export { errorMessage } from './support/error-message';
+export { parseEnv } from './support/parse-env';
+export { type OfficeId, officeIdSchema } from './identity/office-id';

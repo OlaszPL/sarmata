@@ -18,7 +18,7 @@ function inMemoryRepositories(seed: { employees?: Employee[]; official?: Regulat
   const official = [...(seed.official ?? [])];
   const inserted: string[] = [];
   const created: Employee[] = [];
-  const repositories: Repositories = {
+  const repositories: Pick<Repositories, 'employees' | 'regulationVersions'> = {
     employees: {
       list: () => Promise.resolve([...(seed.employees ?? [])]),
       get: (id) => Promise.resolve((seed.employees ?? []).find((e) => e.id === id) ?? null),
