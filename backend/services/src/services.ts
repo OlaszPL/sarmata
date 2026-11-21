@@ -18,6 +18,7 @@ import {
   type OfficeSettingsRepository,
   type Repositories,
   type SimilarEmployee,
+  createAiRunRepository,
   createNoteRepository,
   createOfficeSettingsRepository,
   createRepositories,
@@ -30,6 +31,7 @@ import {
 } from './office-settings/office-settings-service';
 import { type EvaluationService, createEvaluationService } from './evaluations/evaluation-service';
 import { getCurrentAccount } from './account/current-account';
+import { type AiService, createAiService } from './ai/ai-service';
 
 export interface ServiceDependencies {
   readonly repositories: Repositories;
@@ -129,24 +131,35 @@ export function createServices(dependencies: ServiceDependencies): Services {
 export type AppServices = Services & {
   readonly notes: NoteService;
   readonly officeSettings: OfficeSettingsService;
+  readonly ai: AiService;
 };
 
 /** Services on a supabase-js client. The frontend passes a client with the user's JWT. */
 export const servicesFor = (db: Db): AppServices => {
   const officeSettings = createOfficeSettingsRepository(db);
+  const repositories = createRepositories(db);
+  const notes = createNoteRepository(db);
+  const services = createServices({
+    repositories,
+    officeSettings,
+    currentAccountId: async () => {
+      const account = await getCurrentAccount(db);
+      if (account.status === 'signed-out') {
+        throw new ServiceError('not_found', 'Nobody is signed in');
+      }
+      return account.userId;
+    },
+  });
   return {
-    ...createServices({
-      repositories: createRepositories(db),
-      officeSettings,
-      currentAccountId: async () => {
-        const account = await getCurrentAccount(db);
-        if (account.status === 'signed-out') {
-          throw new ServiceError('not_found', 'Nobody is signed in');
-        }
-        return account.userId;
-      },
-    }),
-    notes: createNoteService(createNoteRepository(db)),
+    ...services,
+    notes: createNoteService(notes),
     officeSettings: createOfficeSettingsService(officeSettings),
+    ai: createAiService({
+      runs: createAiRunRepository(db),
+      notes,
+      settings: officeSettings,
+      evaluations: services.evaluations,
+      regulations: repositories.regulationVersions,
+    }),
   };
 };

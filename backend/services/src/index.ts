@@ -91,3 +91,19 @@ export {
   sheetCriteria,
   parseEnv,
 } from '@sarmata/domain';
+export {
+  type AiDecisionInput,
+  type AiRunListFilter,
+  type AiService,
+  type AiServiceDependencies,
+  createAiService,
+} from './ai/ai-service';
+export type { AiFragmentDecision, AiRun } from '@sarmata/repositories';
+export type {
+  AiInputRefs,
+  AiOutput,
+  AiRequestInput,
+  AiRunKind,
+  AiRunStatus,
+  LegalFragment,
+} from '@sarmata/domain';
