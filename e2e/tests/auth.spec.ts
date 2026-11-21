@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { DEMO_OFFICE_NAME, demoAccounts } from '../src/demo-accounts';
+import {
+  DEMO_OFFICE_NAME,
+  DEMO_PASSWORD,
+  demoAccounts,
+  noOfficeAccount,
+} from '../src/demo-accounts';
 import { signIn, signOut } from '../src/session';
 
 test('redirects a signed-out visitor to the sign-in page', async ({ page }) => {
@@ -23,6 +28,20 @@ for (const account of demoAccounts) {
     await expect(page).toHaveURL(/\/logowanie$/);
   });
 }
+
+test('sends an account without an office to the no-office page', async ({ page }) => {
+  await page.goto('/logowanie');
+  await page.getByLabel('Adres e-mail').fill(noOfficeAccount.email);
+  await page.getByLabel('Hasło', { exact: true }).fill(DEMO_PASSWORD);
+  await page.getByRole('button', { name: 'Zaloguj się' }).click();
+
+  await expect(page).toHaveURL(/\/brak-urzedu$/);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Konto bez przypisanego urzędu' }),
+  ).toBeVisible();
+  await expect(page.getByText(noOfficeAccount.email)).toBeVisible();
+  await signOut(page);
+});
 
 test('rejects a wrong password with a message', async ({ page }) => {
   await page.goto('/logowanie');

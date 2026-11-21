@@ -45,6 +45,26 @@ create trigger regulation_versions_official_immutable
   before update or delete on public.regulation_versions
   for each row execute function public.prevent_official_regulation_version_change();
 
+-- TRUNCATE skips row triggers, so it gets its own guard and no grant for service_role.
+create function public.prevent_regulation_versions_truncate()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if exists (select 1 from public.regulation_versions where is_official) then
+    raise exception 'official regulation versions are immutable, truncate refused';
+  end if;
+  return null;
+end;
+$$;
+
+create trigger regulation_versions_official_no_truncate
+  before truncate on public.regulation_versions
+  for each statement execute function public.prevent_regulation_versions_truncate();
+
+revoke truncate on public.regulation_versions from service_role;
+
 -- Role of the signed-in account in its office (claim set by the JWT hook). Like current_office_id():
 -- no SET search_path, so it stays inlinable.
 create function access.current_office_role()
@@ -57,18 +77,21 @@ $$;
 
 -- Single access decision point, extended for regulation versions. Still one expression over the arguments
 -- and JWT claims, without table lookups, so the planner inlines it into policies (plan 2 rule).
+-- Keep every branch indexable: an "or" of conditions on office_id lets the planner use
+-- regulation_versions_office_id_idx (BitmapOr), a nested CASE would force a Seq Scan with the JWT
+-- parsed for each row. Check new branches with EXPLAIN.
 create or replace function access.can(action access.action, resource access.resource, office_id uuid, resource_id uuid)
 returns boolean
 language sql
 stable
 as $$
   select case
-    -- Official versions (office_id null): global reference data, read by every account that belongs to an office.
-    when resource = 'regulation_version' and office_id is null then
-      action = 'read' and access.current_office_id() is not null
-    -- Local versions: the office reads them, only the office admin changes them (docs/funkcjonalnosci.md, rule editor).
-    when resource = 'regulation_version' and action <> 'read' then
-      office_id = access.current_office_id() and access.current_office_role() = 'admin'
+    when resource = 'regulation_version' then
+      -- Official versions (office_id null): global reference data, read by every account that belongs to an office.
+      (office_id is null and action = 'read' and access.current_office_id() is not null)
+      -- Local versions: the office reads them, only the office admin changes them (docs/funkcjonalnosci.md, rule editor).
+      or (office_id = access.current_office_id()
+          and (action = 'read' or access.current_office_role() = 'admin'))
     else
       office_id is not null and office_id = access.current_office_id()
   end

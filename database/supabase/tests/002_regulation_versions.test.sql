@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(11);
+select plan(16);
 
 insert into public.offices (id, name) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'Urząd A'),
@@ -39,6 +39,31 @@ select throws_ok(
   null,
   'a local version belongs to an office'
 );
+
+select throws_ok(
+  'truncate public.regulation_versions',
+  'P0001',
+  'official regulation versions are immutable, truncate refused',
+  'nobody truncates the table while official versions exist, not even the database owner'
+);
+
+set local role service_role;
+select throws_ok(
+  'truncate public.regulation_versions',
+  '42501',
+  null,
+  'service_role has no truncate privilege'
+);
+reset role;
+
+set local role anon;
+select throws_ok(
+  $$select 1 from public.regulation_versions$$,
+  '42501',
+  null,
+  'an anonymous client reads no versions'
+);
+reset role;
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"aaaaaaaa-1111-4000-8000-000000000001","role":"authenticated","office_id":"aaaaaaaa-0000-4000-8000-000000000001","office_role":"hr"}';
@@ -82,6 +107,17 @@ select throws_ok(
 
 update public.regulation_versions set document = document || '{"name":"hijacked"}' where code = 'test-local-b';
 
+select throws_ok(
+  $$update public.regulation_versions set office_id = 'bbbbbbbb-0000-4000-8000-000000000002',
+      code = 'test-moved', document = '{"id":"test-moved","effectiveFrom":"2016-04-23"}'
+    where code = 'test-local-a'$$,
+  '42501',
+  null,
+  'an admin cannot move a local version to another office'
+);
+
+delete from public.regulation_versions where code = 'test-local-b';
+
 set local request.jwt.claims = '{"sub":"cccccccc-1111-4000-8000-000000000003","role":"authenticated"}';
 
 select is_empty(
@@ -95,6 +131,12 @@ select is(
   (select document ->> 'name' from public.regulation_versions where code = 'test-local-b'),
   null,
   'an admin cannot edit a local version of another office'
+);
+
+select is(
+  (select count(*) from public.regulation_versions where code = 'test-local-b'),
+  1::bigint,
+  'an admin cannot delete a local version of another office'
 );
 
 select * from finish();

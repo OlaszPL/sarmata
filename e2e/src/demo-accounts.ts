@@ -8,6 +8,9 @@ export const demoAccounts = [
   { role: 'evaluator', email: 'oceniajacy@kropka.test', roleLabel: 'Oceniający' },
 ] as const;
 
+/** Signed-in account without a membership: the app sends it to /brak-urzedu. */
+export const noOfficeAccount = { email: 'bezurzedu@kropka.test' } as const;
+
 export type DemoAccount = (typeof demoAccounts)[number];
 
 export function demoAccount(role: string): DemoAccount {
