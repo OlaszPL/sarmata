@@ -3,20 +3,33 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 import { LoaderCircle } from 'lucide-react';
-import { Button } from '#shadcn/ui/button';
+import { Button, type ButtonSize, type ButtonVariant } from '#components/button';
 
 interface SubmitButtonProps {
   children: ReactNode;
-  /** Label shown while the form is being sent, e.g. "Logowanie…". */
+  /** Label shown while the form is being sent, e.g. "Trwa zapisywanie". */
   pendingLabel: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  /** Submits under this name, e.g. to tell "Zapisz" from "Zatwierdź" in one form. */
+  name?: string;
+  value?: string;
   className?: string;
 }
 
 /**
- * Primary submit button of a form. While sending it stays focusable and announces the pending
- * label instead of becoming disabled (UX recommendation 11 in FINDINGS).
+ * Submit button of a form. While sending it stays focusable and announces the pending label
+ * instead of becoming disabled (UX recommendation 11 in FINDINGS).
  */
-export function SubmitButton({ children, pendingLabel, className }: SubmitButtonProps) {
+export function SubmitButton({
+  children,
+  pendingLabel,
+  variant = 'primary',
+  size = 'md',
+  name,
+  value,
+  className,
+}: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const ignoreWhilePending = (event: MouseEvent<HTMLButtonElement>) => {
     if (pending) event.preventDefault();
@@ -25,9 +38,13 @@ export function SubmitButton({ children, pendingLabel, className }: SubmitButton
   return (
     <Button
       type="submit"
+      variant={variant}
+      size={size}
+      name={name}
+      value={value}
       aria-disabled={pending}
       onClick={ignoreWhilePending}
-      className={['font-heading h-11 px-5 text-base', className].filter(Boolean).join(' ')}
+      className={className}
     >
       {pending ? (
         <>

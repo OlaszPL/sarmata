@@ -55,7 +55,8 @@ export function AppShell({
           </a>
           {nav ? <div className="border-rule hidden shrink-0 border-b xl:flex">{nav}</div> : null}
           <div className="border-rule flex-1 border-b" />
-          <div className="flex min-h-16 min-w-0 grow items-stretch justify-end">
+          {/* -ml-px: when the filler shrinks to nothing, the first tool line lies on the last nav line. */}
+          <div className="-ml-px flex min-h-16 min-w-0 grow items-stretch justify-end">
             {tools}
             {primaryAction}
           </div>

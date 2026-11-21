@@ -23,7 +23,7 @@ export default async function NoOfficePage() {
           nadanie dostępu, a potem zaloguj się ponownie.
         </p>
         <form action={signOut} className="mt-6">
-          <Button type="submit" variant="outline" className="font-heading h-11 text-base">
+          <Button type="submit" variant="secondary">
             Wyloguj się
           </Button>
         </form>
