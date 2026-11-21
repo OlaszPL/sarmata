@@ -88,6 +88,10 @@ export interface FormLabels {
   readonly gradeRequestMotivation: string;
   readonly partThreeIntro: string;
   readonly signatureBoxNote: string;
+  readonly approvedInSystem: string;
+  readonly noApproval: string;
+  readonly noApprovals: string;
+  readonly reasonLabel: string;
 }
 
 export interface NoticeLabels {
@@ -222,6 +226,10 @@ export const regulation2016Text: RegulationText = {
     partThreeIntro:
       'Wniosek jest wypełniany i dołączany do arkusza oceny okresowej ocenianego tylko w sytuacji skorzystania przez oceniającego z możliwości przewidzianej w art. 89 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej.',
     signatureBoxNote: 'Podpis odręczny (dla urzędów, które drukują dokument)',
+    approvedInSystem: 'zatwierdzono w systemie',
+    noApproval: 'brak zatwierdzenia',
+    noApprovals: 'Brak zatwierdzeń dla tej wersji arkusza.',
+    reasonLabel: 'Powód',
   },
   notice: {
     title: 'Zawiadomienie o zmianie terminu sporządzenia oceny okresowej',
