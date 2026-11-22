@@ -145,7 +145,7 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`) |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy, lista i karta pracownika, nowy pracownik z błędami, notatki ze strażnikiem danych wrażliwych, panel HR partnera. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`) |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
@@ -178,10 +178,10 @@ Oceny:
 
 Pracownicy i notatki:
 
-- `/pracownicy`: lista pracowników (zaślepka)
-- `/pracownicy/nowy`: nowy pracownik (trasa zarezerwowana)
-- `/pracownicy/[id]`: karta pracownika (zaślepka)
-- `/notatki`: notatki (zaślepka)
+- `/pracownicy`: lista pracowników z wyszukiwaniem, u oceniającego zakres „moi” albo wszyscy w urzędzie (`?zakres=wszyscy`)
+- `/pracownicy/nowy`: nowy pracownik z kontrolą podobnych osób (oceniający i kadry)
+- `/pracownicy/[id]`: karta pracownika: przebieg ocen, zmiana w kryteriach, notatki z filtrem rodzaju i wydźwięku (`?rodzaj=`, `?znak=`), formularz notatki (`?notatka=nowa` albo id), historia zmian notatki (`?historia=`), panel HR partnera (sygnały przeciążenia i wypalenia z notatek, moment na docenienie, każdy wynik jako sugestia AI), blok „Sprawy kadrowe” dla kadr (ocena archiwalna, ustanie zatrudnienia, archiwum teczek ZIP), po dodaniu pracownika `?dodano=1`
+- `/notatki`: własne notatki oceniającego i kadr, nowa notatka ze strażnikiem danych wrażliwych (słownik od razu, AI przez odpytywanie, zapis po potwierdzeniu ostrzeżeń), lista z filtrem `?pracownik=<id>`, edycja `?notatka=<id>`, historia zmian `?historia=<id>`, po zapisie `?zapisano=1`
 
 Kadry:
 
