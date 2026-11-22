@@ -37,6 +37,7 @@ test.describe('evaluator dashboard', () => {
 
   test('meets WCAG 2.1 AA', async ({ page }) => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Dzień dobry.');
+    await expect(page).toHaveTitle(/\S/);
     const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA).analyze();
     expect(results.violations).toEqual([]);
   });

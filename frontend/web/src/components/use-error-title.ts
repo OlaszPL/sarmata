@@ -6,18 +6,24 @@ const PREFIX = 'Błąd: ';
 
 /**
  * GOV.UK error pattern: while a form shows errors, the page title starts with "Błąd: ",
- * so screen reader users hear the failure when the page title is read. The prefix is
- * removed again when the errors are gone or the component unmounts.
+ * so screen reader users hear the failure when the page title is read. Next.js streams
+ * metadata and can write the title after this effect ran, so a MutationObserver puts the
+ * prefix back whenever the title changes. The prefix goes away with the errors or on unmount.
  */
 export function useErrorTitle(hasErrors: boolean): void {
   useEffect(() => {
     if (!hasErrors) return;
-    const original = document.title.startsWith(PREFIX)
-      ? document.title.slice(PREFIX.length)
-      : document.title;
-    document.title = `${PREFIX}${original}`;
+    const strip = (title: string) =>
+      title.startsWith(PREFIX) ? title.slice(PREFIX.length) : title;
+    const apply = () => {
+      if (!document.title.startsWith(PREFIX)) document.title = `${PREFIX}${document.title}`;
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
     return () => {
-      if (document.title.startsWith(PREFIX)) document.title = original;
+      observer.disconnect();
+      document.title = strip(document.title);
     };
   }, [hasErrors]);
 }
