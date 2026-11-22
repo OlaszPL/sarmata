@@ -65,6 +65,17 @@ test.describe('evaluator dashboard', () => {
     expect(box?.height).toBeLessThanOrEqual(66);
   });
 
+  test('keeps the account name readable with larger text at 1280px', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.getByRole('button', { name: /Powiększ tekst/ }).click();
+    const account = page.getByRole('banner').getByRole('button', { name: /Menu konta/ });
+    // With A+ the navigation moves to a second row, so the account cell keeps its name.
+    await expect(account).toContainText('Olga');
+    const name = await account.locator('span').first().boundingBox();
+    expect(name?.width).toBeGreaterThan(150);
+    await page.getByRole('button', { name: /Powiększ tekst/ }).click();
+  });
+
   test('shows the year for a deadline in another year', async ({ page }) => {
     // The demo cycle starts on the day of the seed, so its deadline falls two years later.
     const todo = page.getByRole('region', { name: 'Zrób teraz' });
