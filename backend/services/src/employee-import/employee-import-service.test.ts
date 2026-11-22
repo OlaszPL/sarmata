@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Employee, NewEmployee, SimilarEmployee } from '@sarmata/repositories';
+import { RepositoryError } from '@sarmata/repositories';
 import { ServiceError } from '../errors';
 import { parseCsv } from './csv';
 import { createEmployeeImportService, proposeColumnMapping } from './employee-import-service';
@@ -35,7 +36,12 @@ const nowack: SimilarEmployee = {
   score: 0.8,
 };
 
-function setup(existing: Employee[], similar: SimilarEmployee[] = [], role: string | null = 'hr') {
+function setup(
+  existing: Employee[],
+  similar: SimilarEmployee[] = [],
+  role: string | null = 'hr',
+  createError?: unknown,
+) {
   const created: NewEmployee[] = [];
   const updated: { id: string; patch: unknown }[] = [];
   const service = createEmployeeImportService({
@@ -44,6 +50,7 @@ function setup(existing: Employee[], similar: SimilarEmployee[] = [], role: stri
       list: () => Promise.resolve(existing),
       findSimilar: (search) => Promise.resolve(search === 'Anna Nowak' ? similar : []),
       create: (input) => {
+        if (createError !== undefined) return Promise.reject(createError);
         created.push(input);
         return Promise.resolve(employee({}));
       },
@@ -200,5 +207,117 @@ describe('employee import', () => {
     await expect(hr.service.dryRun(csv, { firstName: 'Brak' })).rejects.toBeInstanceOf(
       ServiceError,
     );
+  });
+});
+
+describe('employee import row error codes', () => {
+  const cols = {
+    firstName: 'Imię',
+    lastName: 'Nazwisko',
+    email: 'E-mail',
+    positionKind: 'Rodzaj',
+    serviceStatus: 'Status',
+    employmentStart: 'Start',
+    appointmentYear: 'Rok',
+    grade: 'Stopień',
+    supervisorEmployeeId: 'Przełożony',
+  };
+  const header = 'Imię;Nazwisko;E-mail;Rodzaj;Status;Start;Rok;Stopień;Przełożony';
+  const row = (cells: Partial<Record<keyof typeof cols, string>>) =>
+    (Object.keys(cols) as (keyof typeof cols)[])
+      .map((key) => cells[key] ?? (key === 'firstName' ? 'Jan' : key === 'lastName' ? 'Test' : ''))
+      .join(';');
+  const errorsOf = async (cells: Partial<Record<keyof typeof cols, string>>) => {
+    const { service } = setup([]);
+    const result = await service.dryRun(`${header}\n${row(cells)}`, cols);
+    return result.rows[0]?.errors.map(({ field, code }) => ({ field, code }));
+  };
+
+  it('missing_field for a blank last name', async () => {
+    expect(await errorsOf({ lastName: '' })).toEqual([
+      { field: 'lastName', code: 'missing_field' },
+    ]);
+  });
+  it('invalid_date for a date that does not exist', async () => {
+    expect(await errorsOf({ employmentStart: '31.13.2026' })).toEqual([
+      { field: 'employmentStart', code: 'invalid_date' },
+    ]);
+  });
+  it('unknown_value for an unrecognised enum cell', async () => {
+    expect(await errorsOf({ positionKind: 'kierownik?' })).toEqual([
+      { field: 'positionKind', code: 'unknown_value' },
+    ]);
+  });
+  it('not_a_number for text in grade', async () => {
+    expect(await errorsOf({ serviceStatus: 'urzędnik', grade: 'abc' })).toEqual([
+      { field: 'grade', code: 'not_a_number' },
+    ]);
+  });
+  it('out_of_range for grade 12 and for a year past 2100', async () => {
+    expect(await errorsOf({ serviceStatus: 'urzędnik', grade: '12' })).toEqual([
+      { field: 'grade', code: 'out_of_range' },
+    ]);
+    expect(await errorsOf({ serviceStatus: 'urzędnik', appointmentYear: '3000' })).toEqual([
+      { field: 'appointmentYear', code: 'out_of_range' },
+    ]);
+  });
+  it('civil_servant_only for a grade of an employee', async () => {
+    expect(await errorsOf({ serviceStatus: 'pracownik', grade: '5' })).toEqual([
+      { field: 'grade', code: 'civil_servant_only' },
+    ]);
+  });
+  it('invalid_format for a supervisor id that is not a uuid', async () => {
+    expect(await errorsOf({ supervisorEmployeeId: 'xyz' })).toEqual([
+      { field: 'supervisorEmployeeId', code: 'invalid_format' },
+    ]);
+  });
+  it('duplicate_email for a repeated e-mail', async () => {
+    const { service } = setup([]);
+    const result = await service.dryRun(
+      `${header}\n${row({ email: 'a@x.test' })}\n${row({ email: 'a@x.test' })}`,
+      cols,
+    );
+    expect(result.rows[1]?.errors.map(({ field, code }) => ({ field, code }))).toEqual([
+      { field: 'email', code: 'duplicate_email' },
+    ]);
+  });
+
+  it('commit carries the same errors as the preview for an invalid row', async () => {
+    const { service } = setup([]);
+    const text = `${header}\n${row({ lastName: '' })}`;
+    const preview = await service.dryRun(text, cols);
+    const report = await service.commit(text, cols);
+    expect(report.failed[0]?.errors).toEqual(preview.rows[0]?.errors);
+    expect(report.failed[0]?.message).toEqual(expect.any(String));
+  });
+
+  it('commit maps a foreign key supervisor refusal to unknown_supervisor', async () => {
+    const refusal = new RepositoryError('employees.create', {
+      code: '23503',
+      message:
+        'insert or update on table "employees" violates foreign key constraint "employees_supervisor_fkey"',
+    });
+    const { service } = setup([], [], 'hr', refusal);
+    const report = await service.commit(`${header}\n${row({})}`, cols);
+    expect(report.failed[0]?.errors).toEqual([
+      { field: 'supervisorEmployeeId', code: 'unknown_supervisor', message: expect.any(String) },
+    ]);
+  });
+
+  it('commit maps another supervisor rule to invalid_supervisor and anything else to write_failed', async () => {
+    const cycle = new RepositoryError('employees.create', {
+      code: 'P0001',
+      message: 'supervisor cycle',
+    });
+    const a = setup([], [], 'hr', cycle);
+    const reportA = await a.service.commit(`${header}\n${row({})}`, cols);
+    expect(reportA.failed[0]?.errors).toEqual([
+      { field: 'supervisorEmployeeId', code: 'invalid_supervisor', message: expect.any(String) },
+    ]);
+    const b = setup([], [], 'hr', new Error('boom'));
+    const reportB = await b.service.commit(`${header}\n${row({})}`, cols);
+    expect(reportB.failed[0]?.errors).toEqual([
+      { field: null, code: 'write_failed', message: 'boom' },
+    ]);
   });
 });

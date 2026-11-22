@@ -8,7 +8,9 @@ import {
   computeDeadline,
   employeePatchSchema,
   newEmployeeSchema,
+  calendarDate,
   officeVersionInForce,
+  versionForReportDay,
 } from '@sarmata/domain';
 import {
   type Db,
@@ -91,6 +93,8 @@ export interface Services {
   };
   readonly regulations: {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
+    /** The version in force on 31 December of the year, or the earliest version for a year before it: reports of such a year are empty but keep the level names. `no_regulation_in_force` only when no version exists. */
+    forReportYear(year: number): Promise<RegulationDocument>;
     /** The regulation version the evaluation is pinned to. `not_found` for an evaluation the account cannot see, `unknown_regulation` for a missing version. */
     forEvaluation(evaluationId: string): Promise<RegulationDocument>;
   };
@@ -128,6 +132,22 @@ export function createServices(dependencies: ServiceDependencies): Services {
           'no_regulation_in_force',
           `No regulation version is in force on ${on}`,
         );
+      }
+      return version.document;
+    },
+
+    async forReportYear(year) {
+      const on = calendarDate(`${String(year)}-12-31`);
+      const candidates = await repositories.regulationVersions.listInForceCandidates();
+      const version = versionForReportDay(
+        candidates.map((candidate) => ({
+          ...candidate,
+          effectiveFrom: candidate.document.effectiveFrom,
+        })),
+        on,
+      );
+      if (version === null) {
+        throw new ServiceError('no_regulation_in_force', 'No regulation version exists');
       }
       return version.document;
     },
@@ -238,7 +258,7 @@ export const servicesFor = (db: Db): AppServices => {
       repository: createStatisticsRepository(db),
       settings: officeSettings,
       history: (employeeId) => repositories.evaluations.history(employeeId),
-      regulationInForceOn: (on) => services.regulations.inForceOn(on),
+      regulationForYear: (year) => services.regulations.forReportYear(year),
     }),
     ai,
     regulationEditor: createRegulationEditorService({

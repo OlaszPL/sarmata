@@ -186,6 +186,23 @@ describe('regulations.inForceOn', () => {
   });
 });
 
+describe('regulations.forReportYear', () => {
+  const { repositories } = inMemoryRepositories({ official: [regulation2016] });
+  const services = createServices({ repositories });
+
+  it('falls back to the earliest version for a year before it', async () => {
+    expect((await services.regulations.forReportYear(2010)).id).toBe('regulation-2016');
+    expect((await services.regulations.forReportYear(2026)).id).toBe('regulation-2016');
+  });
+
+  it('fails only when no version exists', async () => {
+    const empty = createServices({
+      repositories: inMemoryRepositories({ official: [] }).repositories,
+    });
+    await expectServiceError(empty.regulations.forReportYear(2026), 'no_regulation_in_force');
+  });
+});
+
 describe('syncOfficialRegulations', () => {
   it('inserts missing official versions', async () => {
     const { repositories, writer, inserted } = inMemoryRepositories({});

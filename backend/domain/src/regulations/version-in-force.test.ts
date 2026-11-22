@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calendarDate, officeVersionInForce, versionInForce } from '../index';
+import { calendarDate, officeVersionInForce, versionForReportDay, versionInForce } from '../index';
 
 const version = (effectiveFrom: string) => ({
   id: effectiveFrom,
@@ -54,5 +54,27 @@ describe('officeVersionInForce', () => {
 
   it('returns null before the first version', () => {
     expect(officeVersionInForce(versions, calendarDate('2016-04-22'))).toBeNull();
+  });
+});
+
+describe('versionForReportDay', () => {
+  const entry = (id: string, effectiveFrom: string, isOfficial = true) => ({
+    id,
+    effectiveFrom: calendarDate(effectiveFrom),
+    isOfficial,
+  });
+  const versions = [entry('official-2027', '2027-01-01'), entry('official-2016', '2016-04-23')];
+
+  it('returns the earliest version for a day before all of them', () => {
+    expect(versionForReportDay(versions, calendarDate('2010-12-31'))?.id).toBe('official-2016');
+  });
+
+  it('returns the version in force otherwise', () => {
+    expect(versionForReportDay(versions, calendarDate('2026-12-31'))?.id).toBe('official-2016');
+    expect(versionForReportDay(versions, calendarDate('2027-12-31'))?.id).toBe('official-2027');
+  });
+
+  it('returns null for an empty list', () => {
+    expect(versionForReportDay([], calendarDate('2026-12-31'))).toBeNull();
   });
 });

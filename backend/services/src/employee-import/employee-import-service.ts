@@ -1,7 +1,8 @@
 import { employeePatchSchema, newEmployeeSchema } from '@sarmata/domain';
 import type { Employee, EmployeeRepository, SimilarEmployee } from '@sarmata/repositories';
-import type { ZodError } from 'zod';
+import type { ZodError, ZodIssue } from 'zod';
 import { ServiceError } from '../errors';
+import { supervisorError } from '../employees/supervisor-error';
 import { type CsvDelimiter, parseCsv } from './csv';
 
 /** Employee fields a CSV column can fill. `supervisorEmployeeId` is never proposed: hr must map it explicitly. */
@@ -34,8 +35,25 @@ export interface MappingProposal {
   readonly missing: ImportField[];
 }
 
+/** Stable machine code of a row error. The UI maps it to a Polish message. */
+export type ImportRowErrorCode =
+  | 'missing_field'
+  | 'invalid_date'
+  | 'unknown_value'
+  | 'not_a_number'
+  | 'out_of_range'
+  | 'civil_servant_only'
+  | 'invalid_format'
+  | 'duplicate_email'
+  | 'unknown_supervisor'
+  | 'invalid_supervisor'
+  | 'write_failed'
+  | 'invalid_value';
+
 export interface RowError {
   readonly field: ImportField | null;
+  readonly code: ImportRowErrorCode;
+  /** English developer text, kept for compatibility. The UI maps `code`. */
   readonly message: string;
 }
 
@@ -73,7 +91,11 @@ export interface ImportReport {
   /** Rows with similar names and no decision: not written. */
   readonly undecided: number[];
   /** Invalid rows and rows the database refused. */
-  readonly failed: { readonly row: number; readonly message: string }[];
+  readonly failed: {
+    readonly row: number;
+    readonly message: string;
+    readonly errors: RowError[];
+  }[];
 }
 
 export interface EmployeeImportService {
@@ -194,13 +216,18 @@ function normalizeDate(raw: string): string {
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
-function convert(field: ImportField, raw: string): { value: unknown } | { error: string } {
+function convert(
+  field: ImportField,
+  raw: string,
+): { value: unknown } | { error: string; code: ImportRowErrorCode } {
   switch (field) {
     case 'positionKind':
     case 'serviceStatus':
     case 'employmentBasis': {
       const value = ENUM_VALUES[field]?.[normalize(raw)] ?? ENUM_VALUES[field]?.[raw];
-      return value === undefined ? { error: `Unknown value "${raw}"` } : { value };
+      return value === undefined
+        ? { error: `Unknown value "${raw}"`, code: 'unknown_value' }
+        : { value };
     }
     case 'employmentStart':
     case 'gradeGrantedOn':
@@ -209,7 +236,9 @@ function convert(field: ImportField, raw: string): { value: unknown } | { error:
     case 'grade': {
       const roman = ROMAN.indexOf(raw.toLowerCase());
       if (field === 'grade' && roman >= 0) return { value: roman + 1 };
-      return /^\d+$/.test(raw) ? { value: Number(raw) } : { error: `"${raw}" is not a number` };
+      return /^\d+$/.test(raw)
+        ? { value: Number(raw) }
+        : { error: `"${raw}" is not a number`, code: 'not_a_number' };
     }
     case 'email':
       return { value: raw.toLowerCase() };
@@ -218,12 +247,53 @@ function convert(field: ImportField, raw: string): { value: unknown } | { error:
   }
 }
 
+/** Maps a zod issue of the employee schemas to a stable code. */
+function rowErrorCode(issue: ZodIssue): ImportRowErrorCode {
+  switch (issue.code) {
+    case 'invalid_type':
+      return issue.input === undefined ? 'missing_field' : 'invalid_value';
+    case 'too_small':
+      if (issue.origin === 'string') return 'missing_field';
+      return issue.origin === 'number' ? 'out_of_range' : 'invalid_value';
+    case 'too_big':
+      return issue.origin === 'number' ? 'out_of_range' : 'invalid_value';
+    case 'invalid_format':
+      return 'invalid_format';
+    case 'custom':
+      // The date schema reports "invalid date ..." and the civil servant rule "... only allowed ...".
+      if (issue.message.startsWith('invalid date')) return 'invalid_date';
+      return issue.message.includes('only allowed for a civil servant')
+        ? 'civil_servant_only'
+        : 'invalid_value';
+    default:
+      return 'invalid_value';
+  }
+}
+
 function zodErrors(error: ZodError): RowError[] {
   return error.issues.map((issue) => {
     const key = issue.path[0];
     const field = importFields.find((name) => name === key) ?? null;
-    return { field, message: issue.message };
+    return { field, code: rowErrorCode(issue), message: issue.message };
   });
+}
+
+/** A refused write as one row error: supervisor rules keep their field, everything else is `write_failed`. */
+function writeError(error: unknown): RowError {
+  const mapped = supervisorError(error);
+  if (mapped instanceof ServiceError && mapped.code === 'invalid_supervisor') {
+    const reason = (mapped.details as { reason?: string } | undefined)?.reason;
+    return {
+      field: 'supervisorEmployeeId',
+      code: reason === 'other_office' ? 'unknown_supervisor' : 'invalid_supervisor',
+      message: mapped.message,
+    };
+  }
+  return {
+    field: null,
+    code: 'write_failed',
+    message: error instanceof Error ? error.message : 'Write failed',
+  };
 }
 
 const forbidden = () => new ServiceError('forbidden', 'Only hr can import employees');
@@ -274,7 +344,8 @@ export function createEmployeeImportService(
         const raw = cells[parsed.headers.indexOf(header)] ?? '';
         if (raw === '') continue;
         const converted = convert(field, raw);
-        if ('error' in converted) errors.push({ field, message: converted.error });
+        if ('error' in converted)
+          errors.push({ field, code: converted.code, message: converted.error });
         else values[field] = converted.value;
       }
 
@@ -282,7 +353,11 @@ export function createEmployeeImportService(
       const known = email === null ? undefined : byEmail.get(email);
       let match: RowMatch = { kind: 'none' };
       if (email !== null && seenEmails.has(email)) {
-        errors.push({ field: 'email', message: 'The e-mail repeats earlier in the file' });
+        errors.push({
+          field: 'email',
+          code: 'duplicate_email',
+          message: 'The e-mail repeats earlier in the file',
+        });
       }
       if (email !== null) seenEmails.add(email);
 
@@ -339,13 +414,14 @@ export function createEmployeeImportService(
       let updated = 0;
       let skipped = 0;
       const undecided: number[] = [];
-      const failed: { row: number; message: string }[] = [];
+      const failed: ImportReport['failed'][number][] = [];
 
       for (const row of rows) {
         if (row.proposedAction === 'invalid') {
           failed.push({
             row: row.row,
             message: row.errors.map((error) => error.message).join('; '),
+            errors: row.errors,
           });
           continue;
         }
@@ -375,6 +451,7 @@ export function createEmployeeImportService(
           failed.push({
             row: row.row,
             message: error instanceof Error ? error.message : 'Write failed',
+            errors: [writeError(error)],
           });
         }
       }

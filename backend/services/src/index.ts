@@ -198,6 +198,7 @@ export {
   type EmployeeImportService,
   type ImportField,
   type ImportPreview,
+  type ImportRowErrorCode,
   type ImportReport,
   type MappingProposal,
   type RowDecision,

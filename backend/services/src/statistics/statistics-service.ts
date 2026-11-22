@@ -4,7 +4,6 @@ import {
   type HistoryEntry,
   type RegulationDocument,
   DEFAULT_EVALUATOR_FLAG_THRESHOLDS,
-  calendarDate,
   evaluationResult,
 } from '@sarmata/domain';
 import {
@@ -39,7 +38,7 @@ export interface StatisticsServiceDependencies {
   readonly repository: StatisticsRepository;
   readonly settings: Pick<OfficeSettingsRepository, 'get'>;
   readonly history: (employeeId: string) => Promise<HistoryEntry[]>;
-  readonly regulationInForceOn: (on: CalendarDate) => Promise<RegulationDocument>;
+  readonly regulationForYear: (year: number) => Promise<RegulationDocument>;
 }
 
 /** Postgres 42501 from the report functions is a denied role. */
@@ -87,9 +86,6 @@ export function createStatisticsService(deps: StatisticsServiceDependencies): St
     await repository.saveResults(rows);
   }
 
-  const regulationOfYear = (year: number) =>
-    deps.regulationInForceOn(calendarDate(`${String(year)}-12-31`));
-
   return {
     schedule: ({ today, horizonDays }) =>
       guarded(async () =>
@@ -102,7 +98,7 @@ export function createStatisticsService(deps: StatisticsServiceDependencies): St
         await refresh(validYear);
         const [figures, regulation] = await Promise.all([
           repository.officeFigures(validYear),
-          regulationOfYear(validYear),
+          deps.regulationForYear(validYear),
         ]);
         return officeReport(validYear, regulation, figures);
       }),
@@ -113,7 +109,7 @@ export function createStatisticsService(deps: StatisticsServiceDependencies): St
         await refresh(validYear);
         const [rows, regulation, settings] = await Promise.all([
           repository.evaluatorFigures(validYear),
-          regulationOfYear(validYear),
+          deps.regulationForYear(validYear),
           deps.settings.get(),
         ]);
         return evaluatorReport(
