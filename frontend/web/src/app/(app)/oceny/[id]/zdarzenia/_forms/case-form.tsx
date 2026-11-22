@@ -2,7 +2,7 @@
 
 import { type ReactNode, useActionState } from 'react';
 import { ErrorSummary } from '@sarmata/ui';
-import { ErrorTitle } from '@/components/evaluations/error-title';
+import { useErrorTitle } from '@/components/use-error-title';
 import type { FormState, FormValues } from '@/lib/form-action';
 import { summaryItems } from './summary-items';
 
@@ -43,9 +43,9 @@ interface FormErrorsProps {
 export function FormErrors({ title, state, fields, prefix }: FormErrorsProps): ReactNode {
   const hasErrors = stateHasErrors(state);
   const { linked, unlinked } = summaryItems(state.fieldErrors, fields, prefix);
+  useErrorTitle(hasErrors);
   return (
     <>
-      <ErrorTitle active={hasErrors} />
       {hasErrors ? (
         <ErrorSummary title={title} errors={linked}>
           {state.formError ? <p>{state.formError}</p> : null}
