@@ -106,6 +106,11 @@ describe('planInstall', () => {
     expect(build?.action).toMatchObject({ kind: 'run', interactive: true });
   });
 
+  it('starts auth with the database, so migrations find auth.jwt()', () => {
+    const argv = argvOf(byTitle(install(macEnvironment()), 'Uruchamianie bazy danych'));
+    expect(argv.slice(-2)).toEqual(['db', 'auth']);
+  });
+
   it('build image passes the host CA as a build secret', () => {
     const build = byTitle(
       install(macEnvironment({ buildCaFile: '/etc/ssl/proxy.pem' })),

@@ -95,8 +95,11 @@ function stack(env: Environment, config: InstallConfig, dockerPrefix: readonly s
   };
 }
 
+// auth (GoTrue) creates auth.jwt() with its own migrations on start, and our policies call it.
 const upDatabase = (s: Stack): Step[] =>
-  s.local ? [engineRun('Uruchamianie bazy danych', [...s.compose, 'up', '-d', ...WAIT, 'db'])] : [];
+  s.local
+    ? [engineRun('Uruchamianie bazy danych', [...s.compose, 'up', '-d', ...WAIT, 'db', 'auth'])]
+    : [];
 const migrate = (s: Stack): Step =>
   engineRun('Nakładanie migracji bazy', [...s.compose, ...TOOLS, 'migrate']);
 const dumpStep = (s: Stack, title: string, file: string, undo: readonly Step[] = []): Step =>
