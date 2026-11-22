@@ -5,13 +5,18 @@ import { signIn } from '../src/session';
 
 /**
  * The response of the next server action call (a POST with the `Next-Action` header), e.g. an
- * autosave. Its arrival also proves the page is hydrated, without waiting a fixed time.
+ * autosave, optionally the one whose posted fields contain `text`. Its arrival also proves the page
+ * is hydrated, without waiting a fixed time.
  */
-function nextServerAction(page: Page): Promise<Response> {
-  return page.waitForResponse(
-    (response) =>
-      response.request().method() === 'POST' && 'next-action' in response.request().headers(),
-  );
+function nextServerAction(page: Page, text?: string): Promise<Response> {
+  return page.waitForResponse((response) => {
+    const request = response.request();
+    return (
+      request.method() === 'POST' &&
+      'next-action' in request.headers() &&
+      (text === undefined || (request.postData() ?? '').includes(text))
+    );
+  });
 }
 
 // These tests change the demo data, so they run in the "mutating" project after the read-only
@@ -36,17 +41,21 @@ test.describe.serial('case sheet changes', () => {
 
     // A draft saved by the button keeps the chosen tile (no form reset), and the next autosave
     // stores it, so it is still there after a reload.
+    const draftSaved = nextServerAction(page);
     await page.getByRole('button', { name: 'Zapisz szkic' }).click();
-    await expect(page.getByText(/Zapisano o/)).toBeVisible({ timeout: 15_000 });
+    await draftSaved;
+    await expect(page.getByText(/Zapisano o/)).toBeVisible();
     await expect(nine).toBeChecked();
-    const textSaved = nextServerAction(page);
-    await page.locator('#justification').fill('Szkic uzasadnienia przed rozmową.');
-    await textSaved;
 
+    // Text typed right before recording the interview is saved first, within the autosave pause.
     // The editor has its own interview date field with the same label, so the id picks the form's.
+    const justification = 'Szkic uzasadnienia przed rozmową.';
+    const textSaved = nextServerAction(page, justification);
+    await page.locator('#justification').fill(justification);
     const heldOn = page.locator('#heldOn');
-    await heldOn.fill(await heldOn.inputValue());
+    const heldOnValue = await heldOn.inputValue();
     await page.getByRole('button', { name: 'Odnotuj rozmowę oceniającą' }).click();
+    await textSaved;
 
     await expect(page.locator(':focus')).toContainText('Rozmowę odnotowano.');
     const stages = page.getByRole('main').getByRole('list', { name: 'Etapy oceny' });
@@ -55,7 +64,9 @@ test.describe.serial('case sheet changes', () => {
 
     await page.reload();
     await expect(nine).toBeChecked();
-    await expect(page.locator('#justification')).toHaveValue('Szkic uzasadnienia przed rozmową.');
+    await expect(page.locator('#justification')).toHaveValue(justification);
+    // The sheet save before the interview did not wipe the interview date the action set.
+    await expect(page.locator('#interviewOn')).toHaveValue(heldOnValue);
   });
 
   test('Ewa: conclusions then approval moves to acquaintance', async ({ page }) => {

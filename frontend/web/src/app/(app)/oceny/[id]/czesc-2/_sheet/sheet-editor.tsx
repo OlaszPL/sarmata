@@ -17,8 +17,6 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, CircleCheck, LoaderCircle, TriangleAlert } from 'lucide-react';
 import {
   Button,
-  type ButtonSize,
-  type ButtonVariant,
   DateInput,
   ErrorSummary,
   Field,
@@ -54,6 +52,7 @@ import {
   SentenceSuggestion,
 } from './ai-proposals';
 import { DevelopmentHints, type DevelopmentRecommendation } from './development-hints';
+import { PendingSubmit, SheetSaveProvider } from './sheet-save-context';
 
 /** Pause after the last change before the sheet is saved. */
 const AUTOSAVE_DELAY_MS = 1500;
@@ -132,45 +131,6 @@ function SaveStatusLine({ status, onRetry }: { status: SaveStatus; onRetry: () =
   );
 }
 
-/**
- * Submit button of the sheet form. The form dispatches its action itself (see `onSubmit`), so the
- * pending state comes from `useActionState`, not from `useFormStatus`.
- */
-function SheetSubmit({
-  pending,
-  pendingLabel,
-  variant,
-  size,
-  className,
-  children,
-}: {
-  pending: boolean;
-  pendingLabel: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Button
-      type="submit"
-      variant={variant}
-      size={size}
-      aria-disabled={pending}
-      className={className}
-    >
-      {pending ? (
-        <>
-          <LoaderCircle className="animate-spin" aria-hidden />
-          {pendingLabel}
-        </>
-      ) : (
-        children
-      )}
-    </Button>
-  );
-}
-
 export function SheetEditor({
   id,
   criteria,
@@ -189,6 +149,28 @@ export function SheetEditor({
   const formRef = useRef<HTMLFormElement>(null);
   const inFlight = useRef(false);
   const queued = useRef(false);
+  /** The save running now, including the saves queued behind it. */
+  const savePromise = useRef<Promise<void> | null>(null);
+  /** The fields as of the last change or render, for a save after the form left the page. */
+  const snapshot = useRef<FormData | null>(null);
+
+  /**
+   * The posted fields: read from the form while it is on the page (the dates join it through the
+   * `form` attribute, which only works while connected), otherwise the last snapshot.
+   */
+  const currentFields = useCallback((): FormData | null => {
+    const form = formRef.current;
+    if (form?.isConnected) return new FormData(form);
+    return snapshot.current;
+  }, []);
+  const takeSnapshot = useCallback(() => {
+    const form = formRef.current;
+    if (form?.isConnected) snapshot.current = new FormData(form);
+  }, []);
+  // After every render the DOM shows the state, e.g. a rating accepted from the AI.
+  useLayoutEffect(() => {
+    takeSnapshot();
+  });
 
   const [ratings, setRatings] = useState<Record<string, number>>(initial.ratings);
   const [justification, setJustification] = useState(initial.justification);
@@ -230,38 +212,45 @@ export function SheetEditor({
     if (state.savedAt !== undefined) setStatus({ kind: 'saved', at: state.savedAt });
   }
 
-  const run = useCallback(async () => {
-    const form = formRef.current;
-    if (form === null) return;
+  /** Saves the sheet. A call during a save queues one more and resolves with the running save. */
+  const run = useCallback((): Promise<void> => {
     if (inFlight.current) {
       queued.current = true;
-      return;
+      return savePromise.current ?? Promise.resolve();
     }
+    if (currentFields() === null) return Promise.resolve();
     inFlight.current = true;
     setStatus({ kind: 'saving' });
-    try {
-      let result: SaveResult;
-      const takeQueued = () => {
-        const wasQueued = queued.current;
-        queued.current = false;
-        return wasQueued;
-      };
-      do {
-        result = await saveSheet(id, new FormData(form));
-      } while (takeQueued() && result.ok);
-      if (result.ok) {
-        setStatus({ kind: 'saved', at: result.savedAt ?? '' });
-        setIssues(result.issues);
-        router.refresh();
-      } else {
-        setStatus({ kind: 'error', message: result.formError ?? SAVE_FAILED });
+    const takeQueued = () => {
+      const wasQueued = queued.current;
+      queued.current = false;
+      return wasQueued;
+    };
+    const saving = (async () => {
+      try {
+        let result: SaveResult = { ok: false, issues: [] };
+        let fields = currentFields();
+        while (fields !== null) {
+          result = await saveSheet(id, fields);
+          fields = takeQueued() && result.ok ? currentFields() : null;
+        }
+        if (result.ok) {
+          setStatus({ kind: 'saved', at: result.savedAt ?? '' });
+          setIssues(result.issues);
+          router.refresh();
+        } else {
+          setStatus({ kind: 'error', message: result.formError ?? SAVE_FAILED });
+        }
+      } catch {
+        setStatus({ kind: 'error', message: SAVE_FAILED });
+      } finally {
+        inFlight.current = false;
+        savePromise.current = null;
       }
-    } catch {
-      setStatus({ kind: 'error', message: SAVE_FAILED });
-    } finally {
-      inFlight.current = false;
-    }
-  }, [id, router]);
+    })();
+    savePromise.current = saving;
+    return saving;
+  }, [currentFields, id, router]);
 
   const runRef = useRef(run);
   useEffect(() => {
@@ -273,7 +262,17 @@ export function SheetEditor({
     }, AUTOSAVE_DELAY_MS),
   );
   const schedule = useCallback(() => {
+    takeSnapshot();
     autosave.schedule();
+  }, [autosave, takeSnapshot]);
+
+  /**
+   * Stores a change that waits for the pause, or waits for the save that runs. Every other submit
+   * on part II (interview, AI start, AI decisions) calls it first.
+   */
+  const flush = useCallback(async () => {
+    if (autosave.takePending()) await runRef.current();
+    else if (savePromise.current !== null) await savePromise.current;
   }, [autosave]);
 
   // A fast typist on a slow machine can fill the controls before React hydrates them, and React
@@ -300,13 +299,15 @@ export function SheetEditor({
   }, [autosave, criteria, initial]);
 
   // Leaving the page (a tab, the sidebar, the back link) must not drop a change that waits for the
-  // pause. A layout cleanup runs before React removes the form, so it still reads every field.
-  useLayoutEffect(() => {
-    const form = formRef.current;
-    return () => {
-      if (form !== null && autosave.takePending()) void saveSheet(id, new FormData(form));
-    };
-  }, [autosave, id]);
+  // pause. The form may already be detached here, so the snapshot of the last change stands in.
+  useLayoutEffect(
+    () => () => {
+      if (!autosave.takePending()) return;
+      const fields = currentFields();
+      if (fields !== null) void saveSheet(id, fields);
+    },
+    [autosave, currentFields, id],
+  );
 
   /**
    * React resets a form after its action. That unchecks the controlled rating tiles (their
@@ -336,7 +337,9 @@ export function SheetEditor({
 
   const negative =
     negativePoints !== null && Object.values(ratings).some((points) => points === negativePoints);
-  const dates = state.values;
+  // Typed dates of a failed submit win. After a saved one the page brings them back as `initial`,
+  // together with what an action set meanwhile (the interview date).
+  const dates = state.ok === true ? {} : state.values;
   const dateDefault = (name: 'interviewOn' | 'periodFrom' | 'periodTo'): string => {
     const typed = dates[name];
     if (typeof typed === 'string') return typed;
@@ -360,6 +363,7 @@ export function SheetEditor({
 
   const onDecide: DecideFn = async (fragment, decision, finalText) => {
     if (draft === null || draft === undefined) return null;
+    await flush();
     const result = await decideFragment(id, draft.runId, fragment, decision, finalText);
     if (!result.ok) return result.formError ?? 'Nie udało się zapisać decyzji. Spróbuj ponownie.';
     if (decision !== 'rejected') {
@@ -432,7 +436,7 @@ export function SheetEditor({
   };
 
   return (
-    <>
+    <SheetSaveProvider value={flush}>
       {mode === 'edit' && issues.length > 0 ? (
         <ErrorSummary title={gateTitle(issues.length)} errors={issues} autoFocus={false} />
       ) : null}
@@ -464,7 +468,9 @@ export function SheetEditor({
 
         {/* The dates belong to the sheet form through the `form` attribute: the AI band below has a
             form of its own and must not sit inside the sheet form. */}
-        <div className="border-rule grid border-b md:grid-cols-3" onChange={schedule}>
+        {/* Keyed by mode: after the interview is recorded the inputs start again from the saved
+            dates, which now hold the interview date the action set. */}
+        <div key={mode} className="border-rule grid border-b md:grid-cols-3" onChange={schedule}>
           {(
             [
               ['interviewOn', 'Data rozmowy oceniającej'],
@@ -609,7 +615,7 @@ export function SheetEditor({
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-6 py-6 sm:px-8">
             {mode === 'edit' ? (
               <>
-                <SheetSubmit
+                <PendingSubmit
                   pending={submitting}
                   pendingLabel="Zapisuję"
                   size="lg"
@@ -617,7 +623,7 @@ export function SheetEditor({
                 >
                   Sprawdź i zatwierdź ocenę
                   <ArrowRight aria-hidden />
-                </SheetSubmit>
+                </PendingSubmit>
                 <Link
                   href={routes.home}
                   onClick={() => {
@@ -629,13 +635,13 @@ export function SheetEditor({
                 </Link>
               </>
             ) : (
-              <SheetSubmit pending={submitting} pendingLabel="Zapisuję" variant="secondary">
+              <PendingSubmit pending={submitting} pendingLabel="Zapisuję" variant="secondary">
                 Zapisz szkic
-              </SheetSubmit>
+              </PendingSubmit>
             )}
           </div>
         </form>
       </Section>
-    </>
+    </SheetSaveProvider>
   );
 }
