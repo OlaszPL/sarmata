@@ -178,8 +178,8 @@ Oceny:
 
 Pracownicy i notatki:
 
-- `/pracownicy`: lista pracowników (zaślepka)
-- `/pracownicy/nowy`: nowy pracownik (trasa zarezerwowana)
+- `/pracownicy`: lista pracowników z wyszukiwaniem, u oceniającego zakres „moi” albo wszyscy w urzędzie (`?zakres=wszyscy`)
+- `/pracownicy/nowy`: nowy pracownik z kontrolą podobnych osób (oceniający i kadry)
 - `/pracownicy/[id]`: karta pracownika (zaślepka)
 - `/notatki`: notatki (zaślepka)
 
