@@ -32,6 +32,19 @@ for (const role of ['hr', 'evaluator']) {
   });
 }
 
+test('an unknown case shows the Polish not-found page', async ({ page }) => {
+  await signIn(page, demoAccount('evaluator'));
+  // A case link from before a database reset: the demo evaluations get new ids.
+  const response = await page.goto('/oceny/00000000-0000-4000-8000-000000000000');
+  expect(response?.status()).toBe(404);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Nie znaleziono strony' }),
+  ).toBeVisible();
+  await expect(page).toHaveTitle(/^Nie znaleziono strony/);
+  await expect(page.getByRole('link', { name: 'Przejdź do pulpitu' })).toBeVisible();
+  await expectNoViolations(page);
+});
+
 test('accessibility statement is public and meets WCAG 2.1 AA', async ({ page }) => {
   await page.goto('/logowanie');
   await page.getByRole('contentinfo').getByRole('link', { name: 'Deklaracja dostępności' }).click();
