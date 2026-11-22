@@ -5,6 +5,8 @@ import type { FormState, FormValues } from '@/lib/form-action';
 import { textValue } from './case-form';
 
 interface SheetFieldsProps {
+  /** Form key, control ids are `${idPrefix}-${name}`. */
+  idPrefix: string;
   criteria: readonly { id: string; name: string; indicators: string[] }[];
   scale: readonly { value: number; label: string }[];
   values: FormValues;
@@ -21,11 +23,12 @@ export function sheetFieldIds(criteria: readonly { id: string }[]): string[] {
 }
 
 /** Part II of the sheet: a rating per criterion, the justification and the development conclusions. */
-export function SheetFields({ criteria, scale, values, fieldErrors }: SheetFieldsProps) {
+export function SheetFields({ idPrefix, criteria, scale, values, fieldErrors }: SheetFieldsProps) {
   return (
     <div className="flex flex-col gap-8">
       {criteria.map((criterion) => {
         const key = `rating-${criterion.id}`;
+        const domId = `${idPrefix}-${key}`;
         const error = fieldErrors[key];
         const raw = textValue(values, key);
         const current = raw === '' ? null : Number(raw);
@@ -35,7 +38,7 @@ export function SheetFields({ criteria, scale, values, fieldErrors }: SheetField
             className={`grid gap-2 ${error ? 'border-error border-l-[0.3125rem] pl-4' : ''}`}
           >
             <legend
-              id={`${key}-legend`}
+              id={`${domId}-legend`}
               className="font-heading text-ink mb-2 text-base leading-[normal] font-semibold"
             >
               {criterion.name}
@@ -47,14 +50,14 @@ export function SheetFields({ criteria, scale, values, fieldErrors }: SheetField
                 ))}
               </ul>
             ) : null}
-            {error ? <FieldError id={key}>{error}</FieldError> : null}
+            {error ? <FieldError id={domId}>{error}</FieldError> : null}
             <ScaleChoice
-              id={key}
+              id={domId}
               name={key}
               options={scale}
               defaultValue={Number.isFinite(current) ? current : null}
-              labelledBy={`${key}-legend`}
-              describedBy={error ? `${key}-error` : undefined}
+              labelledBy={`${domId}-legend`}
+              describedBy={error ? `${domId}-error` : undefined}
               invalid={error ? true : undefined}
             />
           </fieldset>
@@ -69,7 +72,7 @@ export function SheetFields({ criteria, scale, values, fieldErrors }: SheetField
         <Textarea name="justification" rows={5} defaultValue={textValue(values, 'justification')} />
       </Field>
       <Field
-        id="developmentConclusions"
+        id={`${idPrefix}-developmentConclusions`}
         label="Wnioski do IPRZ"
         error={fieldErrors.developmentConclusions}
       >

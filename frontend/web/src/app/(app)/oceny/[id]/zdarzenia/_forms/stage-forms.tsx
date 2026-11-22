@@ -29,10 +29,12 @@ const FORM_CLASS = 'flex flex-col gap-8';
 
 export function AcquaintanceForm({ action, initial }: BaseProps) {
   const { state, formAction } = useCaseForm(action, initial);
+  const prefix = 'acquaintance';
   const [signature, setSignature] = useState(textValue(state.values, 'signature'));
   return (
     <div className={FORM_CLASS}>
       <FormErrors
+        prefix={prefix}
         title="Popraw zapoznanie z oceną"
         state={state}
         fields={['acquaintedOn', 'signature', 'refusalNote', 'witnesses', 'place']}
@@ -40,13 +42,14 @@ export function AcquaintanceForm({ action, initial }: BaseProps) {
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="acquaintance" />
         <Field
-          id="acquaintedOn"
+          id={`${prefix}-acquaintedOn`}
           label="Data zapoznania osoby ocenianej z oceną"
           error={state.fieldErrors.acquaintedOn}
         >
           <DateInput name="acquaintedOn" defaultValue={textValue(state.values, 'acquaintedOn')} />
         </Field>
         <RadioGroup
+          id={`${prefix}-signature`}
           name="signature"
           legend="Czy osoba oceniana podpisała zapoznanie"
           defaultValue={textValue(state.values, 'signature') || null}
@@ -60,7 +63,7 @@ export function AcquaintanceForm({ action, initial }: BaseProps) {
         {signature === 'refused' ? (
           <>
             <Field
-              id="refusalNote"
+              id={`${prefix}-refusalNote`}
               label="Adnotacja o odmowie podpisu"
               optional
               hint="Zostaw puste, a wpiszemy adnotację ze wzoru arkusza"
@@ -73,7 +76,7 @@ export function AcquaintanceForm({ action, initial }: BaseProps) {
               />
             </Field>
             <Field
-              id="witnesses"
+              id={`${prefix}-witnesses`}
               label="Osoby obecne przy odmowie (opcjonalnie)"
               hint="Jedna osoba w wierszu"
               error={state.fieldErrors.witnesses}
@@ -87,7 +90,7 @@ export function AcquaintanceForm({ action, initial }: BaseProps) {
           </>
         ) : null}
         <Field
-          id="place"
+          id={`${prefix}-place`}
           label="Miejscowość"
           optional
           hint="Zostaw puste, a użyjemy domyślnej miejscowości urzędu"
@@ -110,13 +113,19 @@ export function AcquaintanceForm({ action, initial }: BaseProps) {
 
 export function ClosingForm({ action, initial, dueText }: BaseProps & { dueText: string | null }) {
   const { state, formAction } = useCaseForm(action, initial);
+  const prefix = 'closing';
   return (
     <div className={FORM_CLASS}>
-      <FormErrors title="Popraw zamknięcie oceny" state={state} fields={['closedOn']} />
+      <FormErrors
+        prefix={prefix}
+        title="Popraw zamknięcie oceny"
+        state={state}
+        fields={['closedOn']}
+      />
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="closing" />
         <Field
-          id="closedOn"
+          id={`${prefix}-closedOn`}
           label="Data zamknięcia oceny"
           hint={dueText ? `Termin na sprzeciw mija ${dueText}` : undefined}
           error={state.fieldErrors.closedOn}
@@ -137,13 +146,19 @@ export function ObjectionFilingForm({
   dueText,
 }: BaseProps & { dueText: string | null }) {
   const { state, formAction } = useCaseForm(action, initial);
+  const prefix = 'objection';
   return (
     <div className={FORM_CLASS}>
-      <FormErrors title="Popraw wniesienie sprzeciwu" state={state} fields={['filedOn']} />
+      <FormErrors
+        prefix={prefix}
+        title="Popraw wniesienie sprzeciwu"
+        state={state}
+        fields={['filedOn']}
+      />
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="objection" />
         <Field
-          id="filedOn"
+          id={`${prefix}-filedOn`}
           label="Data wniesienia sprzeciwu"
           hint={dueText ? `Sprzeciw można wnieść do ${dueText}` : undefined}
           error={state.fieldErrors.filedOn}
@@ -168,10 +183,12 @@ export function ObjectionDecisionForm({
   currentLevel,
 }: BaseProps & SheetProps & { currentLevel: string | null }) {
   const { state, formAction } = useCaseForm(action, initial);
+  const prefix = 'decision';
   const [outcome, setOutcome] = useState(textValue(state.values, 'outcome'));
   return (
     <div className={FORM_CLASS}>
       <FormErrors
+        prefix={prefix}
         title="Popraw wynik sprzeciwu"
         state={state}
         fields={['decidedOn', 'outcome', ...sheetFieldIds(criteria)]}
@@ -179,13 +196,14 @@ export function ObjectionDecisionForm({
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="decision" />
         <Field
-          id="decidedOn"
+          id={`${prefix}-decidedOn`}
           label="Data rozpatrzenia sprzeciwu"
           error={state.fieldErrors.decidedOn}
         >
           <DateInput name="decidedOn" defaultValue={textValue(state.values, 'decidedOn')} />
         </Field>
         <RadioGroup
+          id={`${prefix}-outcome`}
           name="outcome"
           legend="Wynik rozpatrzenia sprzeciwu"
           defaultValue={textValue(state.values, 'outcome') || null}
@@ -217,6 +235,7 @@ export function ObjectionDecisionForm({
               </Notice>
             ) : null}
             <SheetFields
+              idPrefix={prefix}
               criteria={criteria}
               scale={scale}
               values={state.values}
@@ -234,9 +253,11 @@ export function ObjectionDecisionForm({
 
 export function InterruptionForm({ action, initial }: BaseProps) {
   const { state, formAction } = useCaseForm(action, initial);
+  const prefix = 'interruption';
   return (
     <div className={FORM_CLASS}>
       <FormErrors
+        prefix={prefix}
         title="Popraw przerwanie oceny"
         state={state}
         fields={['interruptedOn', 'reason', 'confirm']}
@@ -244,17 +265,17 @@ export function InterruptionForm({ action, initial }: BaseProps) {
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="interruption" />
         <Field
-          id="interruptedOn"
+          id={`${prefix}-interruptedOn`}
           label="Data przerwania oceny"
           error={state.fieldErrors.interruptedOn}
         >
           <DateInput name="interruptedOn" defaultValue={textValue(state.values, 'interruptedOn')} />
         </Field>
-        <Field id="reason" label="Powód przerwania" error={state.fieldErrors.reason}>
+        <Field id={`${prefix}-reason`} label="Powód przerwania" error={state.fieldErrors.reason}>
           <Textarea name="reason" rows={4} defaultValue={textValue(state.values, 'reason')} />
         </Field>
         <Checkbox
-          id="confirm"
+          id={`${prefix}-confirm`}
           name="confirm"
           value="yes"
           label="Rozumiem, że przerwanej oceny nie można wznowić"

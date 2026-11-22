@@ -43,16 +43,22 @@ function SideDetails({
 
 export function AbsenceForm({ action, initial }: BaseProps) {
   const { state, formAction, hasErrors } = useCaseForm(action, initial);
+  const prefix = 'absence';
   return (
     <SideDetails summary="Odnotuj nieobecność" open={hasErrors}>
-      <FormErrors title="Popraw nieobecność" state={state} fields={['from', 'to']} />
+      <FormErrors
+        prefix={prefix}
+        title="Popraw nieobecność"
+        state={state}
+        fields={['from', 'to']}
+      />
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="absence" />
-        <Field id="from" label="Początek nieobecności" error={state.fieldErrors.from}>
+        <Field id={`${prefix}-from`} label="Początek nieobecności" error={state.fieldErrors.from}>
           <DateInput name="from" defaultValue={textValue(state.values, 'from')} />
         </Field>
         <Field
-          id="to"
+          id={`${prefix}-to`}
           label="Koniec nieobecności"
           optional
           hint="Zostaw puste, jeśli nieobecność trwa"
@@ -76,14 +82,20 @@ export function ReturnForm({
   absence,
 }: BaseProps & { absence: { absenceId: string; from: string; fromText: string } }) {
   const { state, formAction, hasErrors } = useCaseForm(action, initial);
+  const prefix = `return-${absence.absenceId}`;
   return (
     <SideDetails summary={`Odnotuj powrót z nieobecności od ${absence.fromText}`} open={hasErrors}>
-      <FormErrors title="Popraw powrót z nieobecności" state={state} fields={['to']} />
+      <FormErrors
+        prefix={prefix}
+        title="Popraw powrót z nieobecności"
+        state={state}
+        fields={['to']}
+      />
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="return" />
         <input type="hidden" name="absenceId" value={absence.absenceId} />
         <input type="hidden" name="from" value={absence.from} />
-        <Field id="to" label="Data powrotu" error={state.fieldErrors.to}>
+        <Field id={`${prefix}-to`} label="Data powrotu" error={state.fieldErrors.to}>
           <DateInput name="to" defaultValue={textValue(state.values, 'to')} />
         </Field>
         <div>
@@ -103,9 +115,11 @@ export function TermChangeForm({
   hint,
 }: BaseProps & { reasons: { value: string; label: string }[]; hint: string }) {
   const { state, formAction, hasErrors } = useCaseForm(action, initial);
+  const prefix = 'term';
   return (
     <SideDetails summary="Zmień termin oceny" open={hasErrors}>
       <FormErrors
+        prefix={prefix}
         title="Popraw zmianę terminu"
         state={state}
         fields={['newDueOn', 'reason', 'noticeOn']}
@@ -113,7 +127,7 @@ export function TermChangeForm({
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="term" />
         <Field
-          id="newDueOn"
+          id={`${prefix}-newDueOn`}
           label="Nowy termin oceny"
           hint={hint}
           error={state.fieldErrors.newDueOn}
@@ -121,6 +135,7 @@ export function TermChangeForm({
           <DateInput name="newDueOn" defaultValue={textValue(state.values, 'newDueOn')} />
         </Field>
         <RadioGroup
+          id={`${prefix}-reason`}
           name="reason"
           legend="Przyczyna zmiany terminu"
           defaultValue={textValue(state.values, 'reason') || null}
@@ -128,7 +143,7 @@ export function TermChangeForm({
           options={reasons}
         />
         <Field
-          id="noticeOn"
+          id={`${prefix}-noticeOn`}
           label="Data zawiadomienia osoby ocenianej"
           error={state.fieldErrors.noticeOn}
         >
@@ -146,20 +161,22 @@ export function TermChangeForm({
 
 export function PositionChangeForm({ action, initial }: BaseProps) {
   const { state, formAction, hasErrors } = useCaseForm(action, initial);
+  const prefix = 'position';
   return (
     <SideDetails summary="Odnotuj zmianę stanowiska" open={hasErrors}>
       <FormErrors
+        prefix={prefix}
         title="Popraw zmianę stanowiska"
         state={state}
         fields={['changedOn', 'positionTitle', 'orgUnit', 'significant', 'justification']}
       />
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="position" />
-        <Field id="changedOn" label="Data zmiany" error={state.fieldErrors.changedOn}>
+        <Field id={`${prefix}-changedOn`} label="Data zmiany" error={state.fieldErrors.changedOn}>
           <DateInput name="changedOn" defaultValue={textValue(state.values, 'changedOn')} />
         </Field>
         <Field
-          id="positionTitle"
+          id={`${prefix}-positionTitle`}
           label="Nowe stanowisko"
           optional
           error={state.fieldErrors.positionTitle}
@@ -171,7 +188,7 @@ export function PositionChangeForm({ action, initial }: BaseProps) {
           />
         </Field>
         <Field
-          id="orgUnit"
+          id={`${prefix}-orgUnit`}
           label="Nowa komórka organizacyjna"
           optional
           error={state.fieldErrors.orgUnit}
@@ -183,6 +200,7 @@ export function PositionChangeForm({ action, initial }: BaseProps) {
           />
         </Field>
         <RadioGroup
+          id={`${prefix}-significant`}
           name="significant"
           legend="Czy zmieniły się istotnie obowiązki"
           defaultValue={textValue(state.values, 'significant') || null}
@@ -192,7 +210,11 @@ export function PositionChangeForm({ action, initial }: BaseProps) {
             { value: 'no', label: 'Nie, obowiązki zmieniły się nieistotnie' },
           ]}
         />
-        <Field id="justification" label="Uzasadnienie" error={state.fieldErrors.justification}>
+        <Field
+          id={`${prefix}-justification`}
+          label="Uzasadnienie"
+          error={state.fieldErrors.justification}
+        >
           <Textarea
             name="justification"
             rows={4}
@@ -215,16 +237,22 @@ export function EvaluatorChangeForm({
   people,
 }: BaseProps & { people: { accountId: string; name: string }[] }) {
   const { state, formAction, hasErrors } = useCaseForm(action, initial);
+  const prefix = 'evaluator';
   return (
     <SideDetails summary="Zmień osobę oceniającą" open={hasErrors}>
       <FormErrors
+        prefix={prefix}
         title="Popraw zmianę osoby oceniającej"
         state={state}
         fields={['accountId', 'occurredOn', 'reason']}
       />
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="evaluator" />
-        <Field id="accountId" label="Nowa osoba oceniająca" error={state.fieldErrors.accountId}>
+        <Field
+          id={`${prefix}-accountId`}
+          label="Nowa osoba oceniająca"
+          error={state.fieldErrors.accountId}
+        >
           <Select
             name="accountId"
             defaultValue={textValue(state.values, 'accountId')}
@@ -238,10 +266,10 @@ export function EvaluatorChangeForm({
             ))}
           </Select>
         </Field>
-        <Field id="occurredOn" label="Data zmiany" error={state.fieldErrors.occurredOn}>
+        <Field id={`${prefix}-occurredOn`} label="Data zmiany" error={state.fieldErrors.occurredOn}>
           <DateInput name="occurredOn" defaultValue={textValue(state.values, 'occurredOn')} />
         </Field>
-        <Field id="reason" label="Powód zmiany" error={state.fieldErrors.reason}>
+        <Field id={`${prefix}-reason`} label="Powód zmiany" error={state.fieldErrors.reason}>
           <Textarea name="reason" rows={3} defaultValue={textValue(state.values, 'reason')} />
         </Field>
         <div>
@@ -264,9 +292,11 @@ export function CorrectionForm({
   scale: readonly { value: number; label: string }[];
 }) {
   const { state, formAction } = useCaseForm(action, initial);
+  const prefix = 'correction';
   return (
     <div className={FORM_CLASS}>
       <FormErrors
+        prefix={prefix}
         title="Popraw korektę arkusza"
         state={state}
         fields={[...sheetFieldIds(criteria), 'reason']}
@@ -274,12 +304,13 @@ export function CorrectionForm({
       <form action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="correction" />
         <SheetFields
+          idPrefix={prefix}
           criteria={criteria}
           scale={scale}
           values={state.values}
           fieldErrors={state.fieldErrors}
         />
-        <Field id="reason" label="Powód korekty" error={state.fieldErrors.reason}>
+        <Field id={`${prefix}-reason`} label="Powód korekty" error={state.fieldErrors.reason}>
           <Textarea name="reason" rows={3} defaultValue={textValue(state.values, 'reason')} />
         </Field>
         <div>

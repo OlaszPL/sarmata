@@ -7,16 +7,18 @@ export interface SummaryItems {
 
 /**
  * Splits field errors for the error summary. Errors of known fields become links in the order of
- * `fields` (the order on the page), errors of any other key have no control to link to.
+ * `fields` (the order on the page), errors of any other key have no control to link to. With a
+ * `prefix` the control ids are `${prefix}-${name}`, as the form gives them to avoid duplicate ids.
  */
 export function summaryItems(
   fieldErrors: FormState['fieldErrors'],
   fields: readonly string[],
+  prefix?: string,
 ): SummaryItems {
   const linked: SummaryItems['linked'] = [];
   for (const fieldId of fields) {
     const message = fieldErrors[fieldId];
-    if (message) linked.push({ fieldId, message });
+    if (message) linked.push({ fieldId: prefix ? `${prefix}-${fieldId}` : fieldId, message });
   }
   const unlinked: string[] = [];
   for (const [key, message] of Object.entries(fieldErrors)) {

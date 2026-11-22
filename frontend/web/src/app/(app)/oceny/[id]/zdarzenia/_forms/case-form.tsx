@@ -35,12 +35,14 @@ interface FormErrorsProps {
   state: FormState;
   /** Field ids top to bottom. */
   fields: readonly string[];
+  /** Form key, control ids are `${prefix}-${name}`. */
+  prefix: string;
 }
 
 /** Page title prefix and error summary of a form. Errors without a control and the form error are listed as text. */
-export function FormErrors({ title, state, fields }: FormErrorsProps): ReactNode {
+export function FormErrors({ title, state, fields, prefix }: FormErrorsProps): ReactNode {
   const hasErrors = stateHasErrors(state);
-  const { linked, unlinked } = summaryItems(state.fieldErrors, fields);
+  const { linked, unlinked } = summaryItems(state.fieldErrors, fields, prefix);
   return (
     <>
       <ErrorTitle active={hasErrors} />

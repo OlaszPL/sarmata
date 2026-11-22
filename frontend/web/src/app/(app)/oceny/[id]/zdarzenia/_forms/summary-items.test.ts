@@ -12,4 +12,11 @@ describe('summaryItems', () => {
     const result = summaryItems({ b: 'two', a: 'one' }, ['a', 'b']);
     expect(result.linked.map((item) => item.fieldId)).toEqual(['a', 'b']);
   });
+
+  it('prefixes the linked field ids with the form key', () => {
+    expect(summaryItems({ reason: 'A', other: 'B' }, ['reason'], 'term')).toEqual({
+      linked: [{ fieldId: 'term-reason', message: 'A' }],
+      unlinked: ['B'],
+    });
+  });
 });
