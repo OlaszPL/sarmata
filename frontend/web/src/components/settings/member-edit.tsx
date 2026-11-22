@@ -35,7 +35,7 @@ function RoleForm({ accountId, currentRole }: { accountId: string; currentRole: 
       {hasErrors ? (
         <ErrorSummary
           title="Nie udało się zmienić roli"
-          errors={message ? [{ fieldId: 'role', message }] : []}
+          errors={message ? [{ fieldId: 'memberRole', message }] : []}
         >
           {state.formError}
         </ErrorSummary>
@@ -48,6 +48,7 @@ function RoleForm({ accountId, currentRole }: { accountId: string; currentRole: 
       >
         <input type="hidden" name="accountId" value={accountId} />
         <RadioGroup
+          id="memberRole"
           name="role"
           legend="Rola w urzędzie"
           hint="Zmiana działa od następnego odświeżenia sesji tej osoby."

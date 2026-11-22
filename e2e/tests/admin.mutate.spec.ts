@@ -60,11 +60,29 @@ test.describe('admin changes', () => {
     await page.getByLabel('Imię', { exact: true }).fill('Tadeusz');
     await page.getByLabel('Nazwisko').fill('Testowy');
     await page.getByLabel('Adres e-mail').fill(`test-${Date.now()}@kropka.test`);
-    await page.getByRole('radio', { name: 'Oceniający' }).check();
+    await page.getByRole('radio', { name: 'Oceniający', exact: true }).check();
     await page.getByRole('button', { name: 'Wyślij zaproszenie' }).click();
 
     await expect(page).toHaveURL(/zaproszenie=/);
     await expect(page.getByText('Zaproszenie czeka na wysłanie')).toBeVisible();
+  });
+
+  test('the only admin cannot give up the admin role', async ({ page }) => {
+    await page.goto('/ustawienia/konta');
+    await page.getByRole('link', { name: 'Zmień, Anna Administracyjna' }).click();
+    const panel = page.locator('#konto');
+    await expect(panel.getByRole('heading', { name: 'Zmiana konta' })).toBeVisible();
+    await panel.getByRole('radio', { name: 'Kadry', exact: true }).check();
+    await panel.getByRole('button', { name: 'Zapisz rolę' }).click();
+
+    await expect(errorSummary(page, 'Nie udało się zmienić roli')).toBeVisible();
+    await expect(
+      page.getByText('Urząd musi mieć co najmniej jednego aktywnego administratora.'),
+    ).toBeVisible();
+    await page.goto('/ustawienia/konta');
+    await expect(
+      page.getByRole('row', { name: /admin@kropka.test/ }).getByText('Administrator'),
+    ).toBeVisible();
   });
 
   test('clones the regulation in force, runs its worked examples and deletes the draft', async ({
