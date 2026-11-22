@@ -4,6 +4,8 @@ import { expect, type Page } from '@playwright/test';
 const WCAG_21_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 export async function expectNoViolations(page: Page): Promise<void> {
+  // Next.js streams metadata, in dev under load the <title> can land after the page body.
+  await expect(page).toHaveTitle(/\S/);
   const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA).analyze();
   expect(results.violations).toEqual([]);
 }
