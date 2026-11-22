@@ -7,6 +7,7 @@ import { type CaseRegulation, criterionName } from '@/lib/case-regulation';
 import { type FormState, formValues, parseForm, runService } from '@/lib/form-action';
 import { regulationForEvaluation } from '@/lib/regulation';
 import { routes } from '@/lib/routes';
+import { approvalIssueItems } from '@/lib/service-errors';
 import { createSupabase } from '@/lib/supabase';
 import { partOneContent, partOneSchema } from './part-one';
 
@@ -39,6 +40,52 @@ async function runWithNames(
   return { values, fieldErrors: {}, ok: true };
 }
 
+function isIsoDate(value: string): boolean {
+  try {
+    calendarDate(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A form that fails its own checks (no interview date) still gets the gate errors of what was
+ * typed (too many criteria, a due date past the deadline), so the person fixes all at once. The
+ * gates are a hint here, a failure to read them leaves the state as it was.
+ */
+async function withGateErrors(id: string, state: FormState): Promise<FormState> {
+  if (state.values.intent !== 'approve') return state;
+  const raw = state.values.additionalCriteria;
+  const additionalCriteria = raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
+  const dueOn = typeof state.values.dueOn === 'string' ? state.values.dueOn : '';
+  try {
+    const services = servicesFor(await createSupabase());
+    const view = await services.evaluations.get(id);
+    if (view === null) return state;
+    const [regulation, preview] = await Promise.all([
+      regulationForEvaluation(view),
+      services.evaluations.approvalIssues(
+        id,
+        partOneContent(view.sheet.content, {
+          additionalCriteria,
+          dueOn: isIsoDate(dueOn) ? dueOn : '',
+        }),
+      ),
+    ]);
+    const fieldErrors = { ...state.fieldErrors };
+    for (const item of approvalIssueItems(preview.issues, (criterionId) =>
+      criterionName(regulation, criterionId),
+    )) {
+      fieldErrors[item.fieldId] ??= item.message;
+    }
+    return { ...state, fieldErrors };
+  } catch (error) {
+    console.warn(`part one: gate preview of ${id} failed`, error);
+    return state;
+  }
+}
+
 /**
  * Saves part I (criteria and due date) and, for `intent=approve`, approves it with the starting
  * interview. The approval checks the saved sheet, so the draft is saved first.
@@ -49,7 +96,7 @@ export async function savePartOne(
   formData: FormData,
 ): Promise<FormState> {
   const parsed = parseForm(partOneSchema, formData);
-  if ('state' in parsed) return parsed.state;
+  if ('state' in parsed) return withGateErrors(id, parsed.state);
   const data = parsed.data;
 
   return runWithNames(id, formData, async (services, keep) => {

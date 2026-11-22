@@ -59,6 +59,16 @@ test.describe('evaluations list', () => {
     ).toBeVisible();
   });
 
+  test('filters fit a narrow screen with larger text', async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem('sarmata.textSize', 'large');
+    });
+    await page.setViewportSize({ width: 400, height: 900 });
+    await page.reload();
+    await expect(page.getByLabel('Pracownik')).toBeVisible();
+    await expectNoSidewaysScroll(page);
+  });
+
   test('meets WCAG 2.1 AA and fits a narrow screen', async ({ page }) => {
     await expect(page.getByRole('heading', { level: 1, name: 'Oceny' })).toBeVisible();
     await expectNoViolations(page);
@@ -103,6 +113,19 @@ test.describe('new evaluation', () => {
     await expectNoViolations(page);
   });
 
+  test('asks for a choice when nobody is picked', async ({ page }) => {
+    await signIn(page, demoAccount('evaluator'));
+    await page.goto('/oceny/nowa');
+    await page.getByRole('button', { name: 'Dalej' }).click();
+    const summary = errorSummary(page, 'Nie można przejść dalej');
+    await expect(summary).toBeFocused();
+    await expect(summary.getByRole('link', { name: 'Wybierz pracownika' })).toHaveAttribute(
+      'href',
+      '#pracownik',
+    );
+    await expect(page).toHaveTitle(/^Błąd: /);
+  });
+
   test('admin cannot start an evaluation', async ({ page }) => {
     await signIn(page, demoAccount('admin'));
     await page.goto('/oceny/nowa');
@@ -130,6 +153,7 @@ test('admin sees part I of Ewa without forms', async ({ page }) => {
 // Starts a real evaluation, so the steps share one browser page and run in order.
 test.describe.serial('new evaluation of Anna through part I', () => {
   let page: Page;
+  let interviewDate = '';
 
   test.beforeAll(async ({ browser }) => {
     // AxeBuilder needs a page of an explicit context.
@@ -159,9 +183,15 @@ test.describe.serial('new evaluation of Anna through part I', () => {
   test('part I rejects too many additional criteria and keeps the ticks', async () => {
     const criteria = page.getByRole('group', { name: /Kryteria dodatkowe/ }).getByRole('checkbox');
     for (let index = 0; index < 4; index += 1) await criteria.nth(index).check();
+    // A missing interview date must not hide the gate errors: everything is listed at once.
+    const interview = page.getByLabel('Data rozmowy rozpoczynającej');
+    interviewDate = await interview.inputValue();
+    await interview.fill('');
     await page.getByRole('button', { name: 'Zatwierdź część I' }).click();
 
     const summary = errorSummary(page, 'Popraw część I');
+    await expect(summary.getByRole('link')).toHaveCount(2);
+    await expect(summary.getByRole('link').nth(1)).toHaveAttribute('href', '#startingInterviewOn');
     await expect(summary).toBeVisible();
     await expect(summary).toBeFocused();
     await expect(summary.getByRole('link').first()).toHaveAttribute('href', '#additionalCriteria');
@@ -173,6 +203,7 @@ test.describe.serial('new evaluation of Anna through part I', () => {
   test('part I approves with one criterion and records the signature', async () => {
     const criteria = page.getByRole('group', { name: /Kryteria dodatkowe/ }).getByRole('checkbox');
     for (let index = 1; index < 4; index += 1) await criteria.nth(index).uncheck();
+    await page.getByLabel('Data rozmowy rozpoczynającej').fill(interviewDate);
     await page.getByRole('button', { name: 'Zatwierdź część I' }).click();
 
     await expect(page.getByRole('button', { name: 'Odnotuj podpis części I' })).toBeVisible();

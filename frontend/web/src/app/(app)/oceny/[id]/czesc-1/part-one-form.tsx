@@ -35,11 +35,19 @@ function listValue(values: FormValues, key: string): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-/** Error summary items of a form state, in the order the fields reported them. */
+/** Fields of the form top to bottom, so the error summary lists them in reading order. */
+const FIELD_ORDER = ['additionalCriteria', 'dueOn', 'startingInterviewOn', 'place', 'signedOn'];
+
+const rank = (fieldId: string): number => {
+  const index = FIELD_ORDER.indexOf(fieldId);
+  return index === -1 ? FIELD_ORDER.length : index;
+};
+
+/** Error summary items of a form state, in the order of the fields on the page. */
 export function errorItems(state: FormState): Item[] {
-  return Object.entries(state.fieldErrors).flatMap(([fieldId, message]) =>
-    message ? [{ fieldId, message }] : [],
-  );
+  return Object.entries(state.fieldErrors)
+    .flatMap(([fieldId, message]) => (message ? [{ fieldId, message }] : []))
+    .sort((a, b) => rank(a.fieldId) - rank(b.fieldId));
 }
 
 interface PartOneFormProps {

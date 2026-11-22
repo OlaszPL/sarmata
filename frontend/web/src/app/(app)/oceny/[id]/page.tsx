@@ -95,12 +95,15 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           </Notice>
         ) : null}
 
-        <Section title="Dane sprawy" titleLevel={3}>
+        <section aria-labelledby="case-data-heading" className="flex flex-col gap-3">
+          <h3 id="case-data-heading" className="text-[1.375rem] leading-[normal] font-semibold">
+            Dane sprawy
+          </h3>
           <SummaryList
             rows={[
               { key: 'Osoba oceniana', value: data.employeeName },
-              { key: 'Stanowisko', value: view.currentPosition.positionTitle },
-              { key: 'Komórka', value: view.currentPosition.orgUnit },
+              { key: 'Stanowisko', value: view.currentPosition.positionTitle ?? 'Brak' },
+              { key: 'Komórka', value: view.currentPosition.orgUnit ?? 'Brak' },
               { key: 'Arkusz', value: view.sheetId },
               {
                 key: 'Prowadzi ocenę',
@@ -114,7 +117,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               },
             ]}
           />
-        </Section>
+        </section>
       </div>
     </Section>
   );

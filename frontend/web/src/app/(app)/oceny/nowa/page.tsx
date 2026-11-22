@@ -22,9 +22,18 @@ import { createSupabase } from '@/lib/supabase';
 import { StartForm } from './start-form';
 import { eligibilityNote, searchEmployees, sheetOptions } from './start-options';
 
-export const metadata: Metadata = { title: 'Nowa ocena' };
-
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+/** "Dalej" without a choice reloads step 1 with an error, so the title gets the "Błąd: " prefix. */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const missingChoice = param(params.krok) === '2' && param(params.pracownik) === '';
+  return { title: missingChoice ? 'Błąd: Nowa ocena' : 'Nowa ocena' };
+}
 
 const FINISHED = new Set<Evaluation['status']>(['closed', 'interrupted']);
 

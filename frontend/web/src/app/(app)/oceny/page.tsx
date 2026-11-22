@@ -64,23 +64,25 @@ export default async function EvaluationsPage({ searchParams }: { searchParams: 
   );
 
   const canStart = account.role === 'evaluator' || account.role === 'hr';
-  const startLink = canStart ? (
-    <Button asChild>
-      <Link href={routes.newEvaluation}>Rozpocznij nową ocenę</Link>
-    </Button>
-  ) : null;
+  // On the navy hero the white block stands out, a navy primary block would vanish into it.
+  const startLink = (variant: 'primary' | 'secondary') =>
+    canStart ? (
+      <Button asChild variant={variant}>
+        <Link href={routes.newEvaluation}>Rozpocznij nową ocenę</Link>
+      </Button>
+    ) : null;
 
   return (
     <div className="flex flex-1 flex-col">
       <PageHero
         title="Oceny"
         meta="Wszystkie oceny okresowe, które widzisz w urzędzie."
-        actions={startLink}
+        actions={startLink('secondary')}
         linkAs={Link}
       />
       <div className="px-6 py-7 sm:px-10">
         {all.length === 0 ? (
-          <EmptyState title="Nie ma jeszcze ocen" action={startLink}>
+          <EmptyState title="Nie ma jeszcze ocen" action={startLink('primary')}>
             {canStart
               ? 'Rozpocznij ocenę wybranego pracownika. Gdy ją utworzysz, pojawi się tutaj.'
               : 'Oceny pojawią się tutaj, gdy oceniający je rozpocznie.'}
@@ -92,8 +94,12 @@ export default async function EvaluationsPage({ searchParams }: { searchParams: 
               method="get"
               className="flex flex-wrap items-end gap-x-6 gap-y-4"
             >
-              <Field id="status" label="Etap">
-                <Select name="status" defaultValue={filters.status ?? ''} className="w-64">
+              <Field id="status" label="Etap" className="max-w-full">
+                <Select
+                  name="status"
+                  defaultValue={filters.status ?? ''}
+                  className="w-64 max-w-full"
+                >
                   <option value="">Wszystkie</option>
                   {evaluationStatuses.map((status) => (
                     <option key={status} value={status}>
@@ -102,8 +108,12 @@ export default async function EvaluationsPage({ searchParams }: { searchParams: 
                   ))}
                 </Select>
               </Field>
-              <Field id="pracownik" label="Pracownik">
-                <Select name="pracownik" defaultValue={filters.employeeId ?? ''} className="w-72">
+              <Field id="pracownik" label="Pracownik" className="max-w-full">
+                <Select
+                  name="pracownik"
+                  defaultValue={filters.employeeId ?? ''}
+                  className="w-72 max-w-full"
+                >
                   <option value="">Wszyscy</option>
                   {employeeOptions.map((option) => (
                     <option key={option.id} value={option.id}>
