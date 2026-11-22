@@ -104,9 +104,9 @@ function TermChange({ data, termChange }: Pick<SideProps, 'data' | 'termChange'>
         value,
         label: termChangeReasonLabels[value],
       }))}
-      hint={`Termin zmienisz po upływie ${String(months)} ${
-        months === 1 ? 'miesiąca' : 'miesięcy'
-      } od początku cyklu, czyli po ${formatDate(earliest)}`}
+      hint={`Zawiadomienie musi mieć datę późniejszą niż ${formatDate(earliest)}, bo od początku cyklu musi minąć ${String(months)} ${
+        months === 1 ? 'miesiąc' : months < 5 ? 'miesiące' : 'miesięcy'
+      }.`}
     />
   );
 }

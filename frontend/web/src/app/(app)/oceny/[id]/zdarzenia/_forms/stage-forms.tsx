@@ -213,7 +213,7 @@ export function ObjectionDecisionForm({
             {
               value: 'rejected',
               label: 'Sprzeciw nieuwzględniony',
-              hint: 'Ocena zostaje i zostaje zamknięta',
+              hint: 'Ocena zostaje bez zmian, a sprawa się zamyka',
             },
             {
               value: 'changed',
@@ -238,7 +238,9 @@ export function ObjectionDecisionForm({
               idPrefix={prefix}
               criteria={criteria}
               scale={scale}
-              values={state.values}
+              // A post without the sheet (no outcome chosen yet) carries no ratings, so the saved
+              // sheet fills what the post does not have.
+              values={{ ...initial.values, ...state.values }}
               fieldErrors={state.fieldErrors}
             />
           </>

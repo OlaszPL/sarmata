@@ -68,11 +68,13 @@ export default async function Page({
   );
 
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col">
       {saved ? (
-        <Notice tone="success" role="status">
-          {savedMessages[saved]}
-        </Notice>
+        <div className="px-6 pt-8 sm:px-8">
+          <Notice tone="success" role="status">
+            {savedMessages[saved]}
+          </Notice>
+        </div>
       ) : null}
       <StageSection data={data} panels={panels} defaultPlace={settings.defaultPlace} />
       <SideSection

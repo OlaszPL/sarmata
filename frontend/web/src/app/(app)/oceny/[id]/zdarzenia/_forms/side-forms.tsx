@@ -129,7 +129,6 @@ export function TermChangeForm({
         <Field
           id={`${prefix}-newDueOn`}
           label="Nowy termin oceny"
-          hint={hint}
           error={state.fieldErrors.newDueOn}
         >
           <DateInput name="newDueOn" defaultValue={textValue(state.values, 'newDueOn')} />
@@ -145,6 +144,7 @@ export function TermChangeForm({
         <Field
           id={`${prefix}-noticeOn`}
           label="Data zawiadomienia osoby ocenianej"
+          hint={hint}
           error={state.fieldErrors.noticeOn}
         >
           <DateInput name="noticeOn" defaultValue={textValue(state.values, 'noticeOn')} />
