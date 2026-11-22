@@ -180,7 +180,10 @@ describe('employee import', () => {
 
   it('sets the supervisor only when it is mapped explicitly', async () => {
     const id = '11111111-1111-4111-8111-111111111111';
-    const { service, updated } = setup([employee({ id: 'e1', email: 'jan@x.test' })]);
+    const { service, updated } = setup([
+      employee({ id: 'e1', email: 'jan@x.test' }),
+      employee({ id, email: 'boss@x.test' }),
+    ]);
     await service.commit(`Imię;Nazwisko;E-mail;Przełożony\nJan;Kowalski;jan@x.test;${id}`, {
       firstName: 'Imię',
       lastName: 'Nazwisko',
@@ -270,6 +273,17 @@ describe('employee import row error codes', () => {
     expect(await errorsOf({ supervisorEmployeeId: 'xyz' })).toEqual([
       { field: 'supervisorEmployeeId', code: 'invalid_format' },
     ]);
+  });
+  it('unknown_supervisor in the preview for a well-formed uuid outside the office', async () => {
+    expect(
+      await errorsOf({ supervisorEmployeeId: '11111111-1111-4111-8111-111111111111' }),
+    ).toEqual([{ field: 'supervisorEmployeeId', code: 'unknown_supervisor' }]);
+  });
+  it('no preview error for a supervisor among the office employees', async () => {
+    const id = '22222222-2222-4222-8222-222222222222';
+    const { service } = setup([employee({ id })]);
+    const result = await service.dryRun(`${header}\n${row({ supervisorEmployeeId: id })}`, cols);
+    expect(result.rows[0]?.errors).toEqual([]);
   });
   it('duplicate_email for a repeated e-mail', async () => {
     const { service } = setup([]);

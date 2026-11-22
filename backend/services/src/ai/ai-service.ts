@@ -63,6 +63,7 @@ export interface AiService {
 }
 
 const DEFAULT_USAGE_LOG_LIMIT = 100;
+const usageLogOptionsSchema = z.object({ limit: z.number().int().optional() });
 
 export interface AiServiceDependencies {
   readonly runs: AiRunRepository;
@@ -149,8 +150,9 @@ export function createAiService(deps: AiServiceDependencies): AiService {
     },
 
     async usageLog(options = {}) {
+      const { limit } = usageLogOptionsSchema.parse(options);
       try {
-        return await deps.runs.usageLog(options.limit ?? DEFAULT_USAGE_LOG_LIMIT);
+        return await deps.runs.usageLog(limit ?? DEFAULT_USAGE_LOG_LIMIT);
       } catch (error) {
         if (error instanceof RepositoryError && error.code === '42501') {
           throw new ServiceError('forbidden', 'Only the office admin reads the AI usage log');

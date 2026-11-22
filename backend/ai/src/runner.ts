@@ -35,8 +35,9 @@ export interface AiRunResult {
   readonly output: AiOutput<AiRunKind>;
   readonly promptVersion: string;
   /**
-   * Model(s) that produced the result: the text model, plus ` + <decision model>` for hr_signals when
-   * Bielik-One is configured, or the decision model alone without a text model.
+   * Model(s) available to the task when it ran: the text model, plus ` + <decision model>` for hr_signals
+   * when Bielik-One is configured, or the decision model alone without a text model. It names the
+   * configured models, not the ones that were actually called.
    */
   readonly model: string | null;
 }
@@ -58,44 +59,39 @@ interface TaskEntry<K extends AiRunKind> {
   readonly run: Task<K>;
   /** The model writes long text: the call gets `AiConfig.longTimeoutMs`. */
   readonly long: boolean;
-  /** The task calls `ai.decide` (Bielik-One, or the text model in its place). */
-  readonly usesDecision: boolean;
+  /** Set only on tasks that call `ai.decide` (Bielik-One, or the text model in its place). */
+  readonly usesDecision?: true;
 }
 
 const TASKS: { readonly [K in AiRunKind]: TaskEntry<K> } = {
-  sheet_draft: { prompt: 'sheet-draft', run: sheetDraft, long: true, usesDecision: false },
-  quality_check: { prompt: 'quality-check', run: qualityCheck, long: false, usesDecision: false },
+  sheet_draft: { prompt: 'sheet-draft', run: sheetDraft, long: true },
+  quality_check: { prompt: 'quality-check', run: qualityCheck, long: false },
   sensitive_data: {
     prompt: 'sensitive-data',
     run: sensitiveData,
     long: false,
-    usesDecision: false,
   },
   conversation_prep: {
     prompt: 'conversation-prep',
     run: conversationPrep,
     long: true,
-    usesDecision: false,
   },
   // Expectations for every criterion of the sheet: about 120 s on a 16 GB Mac, past the short limit.
   criteria_proposals: {
     prompt: 'criteria-proposals',
     run: criteriaProposals,
     long: true,
-    usesDecision: false,
   },
   appreciation_moments: {
     prompt: 'appreciation-moments',
     run: appreciationMoments,
     long: false,
-    usesDecision: false,
   },
   hr_signals: { prompt: 'hr-signals', run: hrSignals, long: true, usesDecision: true },
   procedure_question: {
     prompt: 'procedure-question',
     run: procedureQuestion,
     long: false,
-    usesDecision: false,
   },
 };
 
@@ -141,7 +137,7 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
       value: {
         output: output.data as AiOutput<K>,
         promptVersion: prompt.id,
-        model: modelLabel(deps.ai.models, entry.usesDecision),
+        model: modelLabel(deps.ai.models, entry.usesDecision === true),
       },
     };
   }

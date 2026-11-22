@@ -117,16 +117,17 @@ export function createServices(dependencies: ServiceDependencies): Services {
     ...(officeSettings === undefined ? {} : { officeSettings }),
   });
 
+  async function candidatesWithDates() {
+    const candidates = await repositories.regulationVersions.listInForceCandidates();
+    return candidates.map((candidate) => ({
+      ...candidate,
+      effectiveFrom: candidate.document.effectiveFrom,
+    }));
+  }
+
   const regulations: Services['regulations'] = {
     async inForceOn(on) {
-      const candidates = await repositories.regulationVersions.listInForceCandidates();
-      const version = officeVersionInForce(
-        candidates.map((candidate) => ({
-          ...candidate,
-          effectiveFrom: candidate.document.effectiveFrom,
-        })),
-        on,
-      );
+      const version = officeVersionInForce(await candidatesWithDates(), on);
       if (version === null) {
         throw new ServiceError(
           'no_regulation_in_force',
@@ -138,14 +139,7 @@ export function createServices(dependencies: ServiceDependencies): Services {
 
     async forReportYear(year) {
       const on = calendarDate(`${String(year)}-12-31`);
-      const candidates = await repositories.regulationVersions.listInForceCandidates();
-      const version = versionForReportDay(
-        candidates.map((candidate) => ({
-          ...candidate,
-          effectiveFrom: candidate.document.effectiveFrom,
-        })),
-        on,
-      );
+      const version = versionForReportDay(await candidatesWithDates(), on);
       if (version === null) {
         throw new ServiceError('no_regulation_in_force', 'No regulation version exists');
       }
@@ -275,6 +269,7 @@ export const servicesFor = (db: Db): AppServices => {
     }),
     accounts: createAccountsService({
       repository: createAccountRepository(db),
+      today: todayUtc,
       current: async () => {
         const account = await getCurrentAccount(db);
         return account.status === 'member'

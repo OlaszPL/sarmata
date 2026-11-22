@@ -1,6 +1,6 @@
 import { employeePatchSchema, newEmployeeSchema } from '@sarmata/domain';
 import type { Employee, EmployeeRepository, SimilarEmployee } from '@sarmata/repositories';
-import type { ZodError, core } from 'zod';
+import { z, type ZodError, type core } from 'zod';
 import { ServiceError } from '../errors';
 import { supervisorError } from '../employees/supervisor-error';
 import { type CsvDelimiter, parseCsv } from './csv';
@@ -260,11 +260,9 @@ function rowErrorCode(issue: core.$ZodIssue): ImportRowErrorCode {
     case 'invalid_format':
       return 'invalid_format';
     case 'custom':
-      // The date schema reports "invalid date ..." and the civil servant rule "... only allowed ...".
-      if (issue.message.startsWith('invalid date')) return 'invalid_date';
-      return issue.message.includes('only allowed for a civil servant')
-        ? 'civil_servant_only'
-        : 'invalid_value';
+      // The domain schemas mark their custom issues with `params.code`.
+      if (issue.params?.code === 'invalid_date') return 'invalid_date';
+      return issue.params?.code === 'civil_servant_only' ? 'civil_servant_only' : 'invalid_value';
     default:
       return 'invalid_value';
   }
@@ -332,6 +330,7 @@ export function createEmployeeImportService(
     for (const employee of existing) {
       if (employee.email !== null) byEmail.set(employee.email.toLowerCase(), employee);
     }
+    const knownIds = new Set(existing.map((employee) => employee.id));
     const seenEmails = new Set<string>();
     const rows: RowPreview[] = [];
 
@@ -360,6 +359,19 @@ export function createEmployeeImportService(
         });
       }
       if (email !== null) seenEmails.add(email);
+
+      const supervisor = values.supervisorEmployeeId;
+      if (
+        typeof supervisor === 'string' &&
+        z.uuid().safeParse(supervisor).success &&
+        !knownIds.has(supervisor)
+      ) {
+        errors.push({
+          field: 'supervisorEmployeeId',
+          code: 'unknown_supervisor',
+          message: 'The supervisor is not an employee of this office',
+        });
+      }
 
       if (known !== undefined) {
         match = { kind: 'email', employeeId: known.id };

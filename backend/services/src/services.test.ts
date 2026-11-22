@@ -1,6 +1,7 @@
 import { type RegulationDocument, calendarDate } from '@sarmata/domain';
 import { officialRegulations } from '@sarmata/regulations';
 import {
+  RepositoryError,
   type Employee,
   type NewEmployee,
   type OfficialRegulationWriter,
@@ -139,6 +140,44 @@ describe('employees.create', () => {
       positionKind: 'other',
       email: null,
     });
+  });
+});
+
+describe('employees supervisor errors', () => {
+  const cycle = new RepositoryError('employees.update', {
+    code: 'P0001',
+    message: 'supervisor cycle',
+  });
+  const rejecting = (error: Error) => {
+    const { repositories } = inMemoryRepositories({});
+    return createServices({
+      repositories: {
+        ...repositories,
+        employees: {
+          ...repositories.employees,
+          create: () => Promise.reject(error),
+          update: () => Promise.reject(error),
+        },
+      },
+    });
+  };
+
+  it('update maps a supervisor cycle to invalid_supervisor', async () => {
+    await expect(rejecting(cycle).employees.update('e1', { lastName: 'X' })).rejects.toMatchObject({
+      code: 'invalid_supervisor',
+      details: { reason: 'cycle' },
+    });
+  });
+
+  it('create maps a supervisor cycle to invalid_supervisor', async () => {
+    await expect(
+      rejecting(cycle).employees.create({ firstName: 'Ewa', lastName: 'Ewidencyjna' }),
+    ).rejects.toMatchObject({ code: 'invalid_supervisor', details: { reason: 'cycle' } });
+  });
+
+  it('passes unrelated repository errors through', async () => {
+    const other = new Error('boom');
+    await expect(rejecting(other).employees.update('e1', { lastName: 'X' })).rejects.toBe(other);
   });
 });
 

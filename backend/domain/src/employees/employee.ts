@@ -14,7 +14,12 @@ const isoDate = z.string().transform((value, ctx) => {
   try {
     return calendarDate(value);
   } catch {
-    ctx.issues.push({ code: 'custom', message: `invalid date ${value}`, input: value });
+    ctx.issues.push({
+      code: 'custom',
+      message: `invalid date ${value}`,
+      input: value,
+      params: { code: 'invalid_date' },
+    });
     return z.NEVER;
   }
 });
@@ -68,6 +73,7 @@ export const newEmployeeSchema = z
           code: 'custom',
           path: [key],
           message: `${key} is only allowed for a civil servant`,
+          params: { code: 'civil_servant_only' },
         });
       }
     }

@@ -202,6 +202,7 @@ export {
   type ImportReport,
   type MappingProposal,
   type RowDecision,
+  type RowError,
   type RowPreview,
   createEmployeeImportService,
   importFields,

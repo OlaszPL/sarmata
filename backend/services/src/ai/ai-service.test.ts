@@ -12,6 +12,7 @@ import {
   RepositoryError,
 } from '@sarmata/repositories';
 import { describe, expect, it, vi } from 'vitest';
+import { ZodError } from 'zod';
 import { ServiceError } from '../errors';
 import { type EvaluationService, type EvaluationView } from '../evaluations/evaluation-service';
 import { createAiService } from './ai-service';
@@ -339,6 +340,12 @@ describe('ai service usage log', () => {
     const { service, runs } = setup();
     await service.usageLog({ limit: 1000 });
     expect(runs.usageLog).toHaveBeenCalledWith(1000);
+  });
+
+  it('usageLog rejects a non-integer limit before the repository call', async () => {
+    const { service, runs } = setup();
+    await expect(service.usageLog({ limit: 1.5 })).rejects.toBeInstanceOf(ZodError);
+    expect(runs.usageLog).not.toHaveBeenCalled();
   });
 
   it('usageLog maps 42501 to forbidden', async () => {

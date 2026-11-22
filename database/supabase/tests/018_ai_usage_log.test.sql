@@ -1,4 +1,5 @@
 begin;
+set local search_path = public, extensions;
 create extension if not exists pgtap with schema extensions;
 select plan(14);
 
@@ -27,9 +28,10 @@ insert into public.evaluations (id, office_id, employee_id, evaluator_account_id
    'a1818181-1111-4000-8000-000000000003', 'a1818181-3333-4000-8000-000000000001', 'A', 'period', '2026-01-01', '{}',
    'a1818181-1111-4000-8000-000000000002');
 -- A finished HR signals run of the evaluator, with its content, inserted as the worker leaves it.
-insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, input, status, output, model, prompt_version, output_tokens, finished_at) values
+insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, evaluation_id, input, status, output, model, prompt_version, output_tokens, finished_at) values
   ('a1818181-5555-4000-8000-000000000001', 'a1818181-0000-4000-8000-000000000001', 'hr_signals',
-   'a1818181-1111-4000-8000-000000000003', 'a1818181-2222-4000-8000-000000000001', '{"notes":[]}', 'done',
+   'a1818181-1111-4000-8000-000000000003', 'a1818181-2222-4000-8000-000000000001',
+   'a1818181-4444-4000-8000-000000000001', '{"notes":[]}', 'done',
    '{"signals":[]}', 'bielik-test + decision-test', 'hr-signals.v1', 42, now());
 -- Two decisions about action.0: an older acceptance, then an edit with its text. The edit wins.
 insert into public.ai_fragment_decisions (run_id, office_id, fragment, decision, decided_by) values
@@ -71,11 +73,12 @@ select is_empty(
 );
 select results_eq(
   $$select id, kind::text, status::text, requested_by, requester_first_name, requester_last_name,
-           employee_id, model, prompt_version, output_tokens
+           employee_id, evaluation_id, model, prompt_version, output_tokens
       from public.ai_usage_log()$$,
   $$values ('a1818181-5555-4000-8000-000000000001'::uuid, 'hr_signals', 'done',
             'a1818181-1111-4000-8000-000000000003'::uuid, 'Olga', 'Oceniająca',
-            'a1818181-2222-4000-8000-000000000001'::uuid, 'bielik-test + decision-test', 'hr-signals.v1', 42)$$,
+            'a1818181-2222-4000-8000-000000000001'::uuid, 'a1818181-4444-4000-8000-000000000001'::uuid,
+            'bielik-test + decision-test', 'hr-signals.v1', 42)$$,
   'admin reads the run metadata with the model and the requester name'
 );
 select is(

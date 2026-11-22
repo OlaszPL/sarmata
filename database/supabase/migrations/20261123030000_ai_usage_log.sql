@@ -7,7 +7,7 @@
 alter table public.ai_runs add column model text;
 
 comment on column public.ai_runs.model is
-  'Model(s) that produced the result, e.g. `bielik-4.5b-v3.0-instruct`. Usage metadata, kept by retention.';
+  'Model(s) available to the task when it ran, e.g. `bielik-4.5b-v3.0-instruct`. Usage metadata, kept by retention.';
 
 -- Admin only (42501 otherwise). Runs of the own office, newest first, p_limit clamped to 1..500.
 -- decisions: the latest decision per fragment as {fragment, decision, decidedBy, decidedAt}, ordered by
