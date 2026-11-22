@@ -18,11 +18,11 @@ export function MainNav({ items }: { items: readonly NavItem[] }) {
 
   return (
     <nav aria-label="Główna nawigacja">
-      <ul className="flex h-full">
+      <ul className="flex h-full flex-wrap">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
           return (
-            <li key={item.href} className="border-rule flex border-r">
+            <li key={item.href} className="border-rule flex border-r border-b xl:border-b-0">
               <Link
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
