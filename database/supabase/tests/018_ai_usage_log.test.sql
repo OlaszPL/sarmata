@@ -41,37 +41,19 @@ insert into public.ai_fragment_decisions (run_id, office_id, fragment, decision,
   ('a1818181-5555-4000-8000-000000000001', 'a1818181-0000-4000-8000-000000000001', 'action.0', 'edited',
    'Rozmowa o priorytetach.', 'a1818181-1111-4000-8000-000000000003'),
   ('a1818181-5555-4000-8000-000000000001', 'a1818181-0000-4000-8000-000000000001', 'question.0', 'accepted',
-   'a1818181-1111-4000-8000-000000000003');
+   null, 'a1818181-1111-4000-8000-000000000003');
 
 select has_column('public', 'ai_runs', 'model', 'ai_runs has the model column');
 
 -- The result columns are exactly the metadata: no input, output, partial_text, partial_output,
--- failure_message or final_text. Types compared as oids, so the search path does not matter.
-select results_eq(
-  $$select a.name::text, a.typ::oid
-      from pg_proc p,
-           unnest(p.proargnames, p.proallargtypes::oid[], p.proargmodes::text[])
-             with ordinality as a(name, typ, mode, ord)
-     where p.oid = 'public.ai_usage_log(integer)'::regprocedure and a.mode = 't'
-     order by a.ord$$,
-  $$values
-      ('id', 'uuid'::regtype::oid),
-      ('kind', 'public.ai_run_kind'::regtype::oid),
-      ('status', 'public.ai_run_status'::regtype::oid),
-      ('requested_by', 'uuid'::regtype::oid),
-      ('requester_first_name', 'text'::regtype::oid),
-      ('requester_last_name', 'text'::regtype::oid),
-      ('employee_id', 'uuid'::regtype::oid),
-      ('evaluation_id', 'uuid'::regtype::oid),
-      ('model', 'text'::regtype::oid),
-      ('prompt_version', 'text'::regtype::oid),
-      ('output_tokens', 'integer'::regtype::oid),
-      ('failure_reason', 'text'::regtype::oid),
-      ('requested_at', 'timestamptz'::regtype::oid),
-      ('started_at', 'timestamptz'::regtype::oid),
-      ('finished_at', 'timestamptz'::regtype::oid),
-      ('content_deleted_at', 'timestamptz'::regtype::oid),
-      ('decisions', 'jsonb'::regtype::oid)$$,
+-- failure_message or final_text.
+select is(
+  pg_get_function_result('public.ai_usage_log(integer)'::regprocedure),
+  'TABLE(id uuid, kind ai_run_kind, status ai_run_status, requested_by uuid, requester_first_name text, '
+  'requester_last_name text, employee_id uuid, evaluation_id uuid, model text, prompt_version text, '
+  'output_tokens integer, failure_reason text, requested_at timestamp with time zone, '
+  'started_at timestamp with time zone, finished_at timestamp with time zone, '
+  'content_deleted_at timestamp with time zone, decisions jsonb)',
   'ai_usage_log returns exactly the metadata columns'
 );
 select ok(
