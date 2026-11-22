@@ -6,11 +6,11 @@ import { routes } from '@/lib/routes';
 
 const items = [
   { href: routes.hr, label: 'Zadania' },
-  { href: `${routes.hr}/harmonogram`, label: 'Harmonogram' },
-  { href: `${routes.hr}/statystyki`, label: 'Statystyki' },
-  { href: `${routes.hr}/rejestr`, label: 'Rejestr' },
-  { href: `${routes.hr}/import`, label: 'Import pracowników' },
-  { href: `${routes.hr}/struktura`, label: 'Struktura' },
+  { href: routes.hrSchedule, label: 'Harmonogram' },
+  { href: routes.hrStatistics, label: 'Statystyki' },
+  { href: routes.hrRegister, label: 'Rejestr' },
+  { href: routes.hrImport, label: 'Import pracowników' },
+  { href: routes.hrTree, label: 'Struktura' },
 ];
 
 /** Section links of the HR panel. The current one is a navy block with `aria-current`. */
