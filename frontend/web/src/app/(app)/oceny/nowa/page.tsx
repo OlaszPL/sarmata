@@ -20,7 +20,7 @@ import { pluralPl, todayInWarsaw } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { createSupabase } from '@/lib/supabase';
 import { StartForm } from './start-form';
-import { eligibilityNote, sheetOptions } from './start-options';
+import { eligibilityNote, searchEmployees, sheetOptions } from './start-options';
 
 export const metadata: Metadata = { title: 'Nowa ocena' };
 
@@ -123,12 +123,12 @@ async function StepOne({
     services.evaluations.list(),
   ]);
 
-  const byId = new Map(employees.map((employee) => [employee.id, employee]));
   const candidates = similar
-    ? similar.flatMap((match) => {
-        const employee = byId.get(match.id);
-        return employee ? [employee] : [];
-      })
+    ? searchEmployees(
+        employees,
+        similar.map((match) => match.id),
+        search,
+      )
     : employees;
   const open = new Map(
     evaluations

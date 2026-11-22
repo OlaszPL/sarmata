@@ -101,7 +101,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               { key: 'Osoba oceniana', value: data.employeeName },
               { key: 'Stanowisko', value: view.currentPosition.positionTitle },
               { key: 'Komórka', value: view.currentPosition.orgUnit },
-              { key: 'Arkusz', value: `Arkusz ${view.sheetId}` },
+              { key: 'Arkusz', value: view.sheetId },
               {
                 key: 'Prowadzi ocenę',
                 value: data.evaluatorName ?? 'Konto spoza listy pracowników',

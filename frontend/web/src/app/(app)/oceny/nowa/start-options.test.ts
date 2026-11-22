@@ -1,6 +1,6 @@
 import { type RegulationDocument } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
-import { eligibilityNote, sheetOptions, startSchema } from './start-options';
+import { eligibilityNote, searchEmployees, sheetOptions, startSchema } from './start-options';
 
 const sheet = (id: string, positionKind: string, position: string) => ({
   id,
@@ -84,5 +84,26 @@ describe('startSchema', () => {
       sheetId: '',
     });
     expect(parsed.error?.issues[0]?.message).toBe('Wybierz arkusz');
+  });
+});
+
+describe('searchEmployees', () => {
+  const people = [
+    { id: 'e', firstName: 'Ewa', lastName: 'Ewidencyjna' },
+    { id: 'a', firstName: 'Anna', lastName: 'Administracyjna' },
+    { id: 'o', firstName: 'Olga', lastName: 'Oceniająca' },
+  ];
+
+  it('finds a first name alone, ignoring case and Polish letters', () => {
+    expect(searchEmployees(people, [], 'ewa').map((p) => p.id)).toEqual(['e']);
+    expect(searchEmployees(people, [], 'oceniajaca').map((p) => p.id)).toEqual(['o']);
+  });
+
+  it('adds the typo-tolerant matches after the direct ones, without repeats', () => {
+    expect(searchEmployees(people, ['a', 'e'], 'Ewa').map((p) => p.id)).toEqual(['e', 'a']);
+  });
+
+  it('skips similar ids that are not in the list', () => {
+    expect(searchEmployees(people, ['x'], 'zzz')).toEqual([]);
   });
 });

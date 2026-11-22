@@ -19,7 +19,7 @@ async function expectNoSidewaysScroll(page: Page): Promise<void> {
 
 /** The GOV.UK error summary: a focusable block led by its H2 title. */
 function errorSummary(page: Page, title: string) {
-  return page.locator('[tabindex="-1"]', {
+  return page.locator('div[tabindex="-1"][aria-labelledby]', {
     has: page.getByRole('heading', { level: 2, name: title }),
   });
 }
@@ -55,7 +55,7 @@ test.describe('evaluations list', () => {
     await page.goto('/oceny?status=interrupted');
     await expect(page.getByText('Żadna ocena nie pasuje do filtrów')).toBeVisible();
     await expect(
-      page.getByRole('main').getByRole('link', { name: 'Wyczyść filtry' }),
+      page.getByRole('main').getByRole('link', { name: 'Wyczyść filtry' }).last(),
     ).toBeVisible();
   });
 
@@ -132,12 +132,13 @@ test.describe.serial('new evaluation of Anna through part I', () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
-    page = await browser.newPage();
+    // AxeBuilder needs a page of an explicit context.
+    page = await (await browser.newContext()).newPage();
     await signIn(page, demoAccount('evaluator'));
   });
 
   test.afterAll(async () => {
-    await page.close();
+    await page.context().close();
   });
 
   test('finds Anna despite a typo and proposes sheet C', async () => {

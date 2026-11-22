@@ -58,3 +58,39 @@ export const startSchema = z.object({
 });
 
 export type StartInput = z.infer<typeof startSchema>;
+
+/** Lower case without Polish diacritics, so "oceniajaca" matches "Oceniająca". */
+function folded(text: string): string {
+  return text
+    .toLocaleLowerCase('pl-PL')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/ł/g, 'l');
+}
+
+/**
+ * Employees for the search on the picker: first those whose name contains the search (a first
+ * name alone works), then the typo-tolerant matches of `employees.findSimilar` (`similarIds`, best
+ * first). The similarity search alone misses a short fragment such as "Ewa".
+ */
+export function searchEmployees<T extends Pick<Employee, 'id' | 'firstName' | 'lastName'>>(
+  employees: readonly T[],
+  similarIds: readonly string[],
+  search: string,
+): T[] {
+  const needle = folded(search.trim());
+  const direct = employees.filter((employee) => {
+    const name = folded(`${employee.firstName} ${employee.lastName}`);
+    const reversed = folded(`${employee.lastName} ${employee.firstName}`);
+    return needle !== '' && (name.includes(needle) || reversed.includes(needle));
+  });
+  const seen = new Set(direct.map((employee) => employee.id));
+  const byId = new Map(employees.map((employee) => [employee.id, employee]));
+  const similar = similarIds.flatMap((id) => {
+    const employee = byId.get(id);
+    if (employee === undefined || seen.has(id)) return [];
+    seen.add(id);
+    return [employee];
+  });
+  return [...direct, ...similar];
+}
