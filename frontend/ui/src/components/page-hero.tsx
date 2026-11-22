@@ -4,35 +4,38 @@ import { cn } from 'cn';
 
 export interface HeroCrumb {
   /** Leave out for the current page. */
-  href?: string;
+  href?: string | undefined;
   label: string;
 }
 
 export interface HeroStat {
   label: string;
   value: string;
-  hint?: string;
+  hint?: string | undefined;
 }
 
 interface PageHeroProps {
-  crumbs?: readonly HeroCrumb[];
+  crumbs?: readonly HeroCrumb[] | undefined;
   title: ReactNode;
   /** Line under the title, e.g. position, unit and evaluator. */
-  meta?: ReactNode;
+  meta?: ReactNode | undefined;
   /** Short framed labels, e.g. the sheet and the regulation version. */
-  tags?: readonly string[];
-  /** Number cells on the right, separated by thin lines. */
-  stats?: readonly HeroStat[];
+  tags?: readonly string[] | undefined;
+  /** Number cells on the right, separated by thin lines. Label and value stay on one line each, the hint wraps. */
+  stats?: readonly HeroStat[] | undefined;
   /** Buttons or links under the tags. */
-  actions?: ReactNode;
+  actions?: ReactNode | undefined;
   /** Link element for the crumbs, e.g. Next.js `Link`. A plain `<a>` by default. */
-  linkAs?: ElementType;
+  linkAs?: ElementType | undefined;
   /** Id of the H1, for `aria-labelledby` of a surrounding region. */
-  titleId?: string;
-  className?: string;
+  titleId?: string | undefined;
+  className?: string | undefined;
 }
 
-/** Navy block at the top of a case or a person: crumbs, H1, meta, tags and the key numbers. */
+/**
+ * Navy block at the top of a case or a person: crumbs, H1, meta, tags and the key numbers. The stat
+ * cells start at the top and stretch to the tallest one, so labels and values form even rows.
+ */
 export function PageHero({
   crumbs,
   title,
@@ -101,14 +104,14 @@ export function PageHero({
             <div
               key={stat.label}
               className={cn(
-                'flex min-w-[10rem] flex-1 flex-col justify-end gap-1.5 px-6 py-7',
+                'flex min-w-[10rem] flex-1 flex-col justify-start gap-1.5 px-6 py-7',
                 index < stats.length - 1 ? 'border-r border-white/40' : null,
               )}
             >
-              <dt className="font-heading text-on-navy-muted text-[0.9375rem] leading-[normal] font-medium">
+              <dt className="font-heading text-on-navy-muted text-[0.9375rem] leading-[normal] font-medium whitespace-nowrap">
                 {stat.label}
               </dt>
-              <dd className="font-heading text-[2.75rem] leading-none font-semibold tracking-[-0.0227em]">
+              <dd className="font-heading text-[2.75rem] leading-none font-semibold tracking-[-0.0227em] whitespace-nowrap">
                 {stat.value}
               </dd>
               {stat.hint ? <dd className="text-sm leading-[normal]">{stat.hint}</dd> : null}

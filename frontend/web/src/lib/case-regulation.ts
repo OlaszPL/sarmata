@@ -42,6 +42,10 @@ export interface CaseRegulation {
   /** Regulation document id, e.g. `regulation-2016`. */
   id: string;
   name: string;
+  /** First day of the version, e.g. `2016-04-23`. Its year names the version in the case hero. */
+  effectiveFrom: string;
+  /** Legal basis of the outcome rule, e.g. "§ 11 ust. 1 pkt 3 i 4 rozporządzenia". */
+  outcomeBasis: string;
   /** Mandatory criteria of the sheet of this case. */
   mandatoryIds: string[];
   /** Limits of additional criteria and whether a mandatory one may be repeated. */
@@ -104,6 +108,8 @@ export function caseRegulationOf(
     catalog: document.criteria.catalog.map(({ id, name }) => ({ id, name })),
     id: document.id,
     name: document.name,
+    effectiveFrom: document.effectiveFrom,
+    outcomeBasis: document.outcome.basis,
     mandatoryIds,
     additionalMin: document.additionalCriteria.min,
     additionalMax: document.additionalCriteria.max,

@@ -16,7 +16,7 @@ const tones: Record<TagTone, { icon: typeof Clock | null; className: string }> =
 interface TagProps {
   tone: TagTone;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 /** A framed status label. The icon and the text carry the state, never the color alone. */

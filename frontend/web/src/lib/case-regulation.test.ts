@@ -5,6 +5,7 @@ import { caseRegulationOf, levelName } from './case-regulation';
 const document = {
   id: 'regulation-2016',
   name: 'Ocena okresowa 2016',
+  effectiveFrom: '2016-04-23',
   partialScale: {
     basis: '§ 11',
     levels: [
@@ -95,6 +96,8 @@ describe('caseRegulationOf', () => {
   it('says which partial rating makes the evaluation negative', () => {
     expect(regulation.negativePoints).toBe(1);
     expect(regulation.justificationRequiredForNegative).toBe(true);
+    expect(regulation.outcomeBasis).toBe('§ 11');
+    expect(regulation.effectiveFrom).toBe('2016-04-23');
   });
 
   it('names a level by its code', () => {

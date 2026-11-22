@@ -145,11 +145,61 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
-Trasy po zalogowaniu: `/` (pulpit), `/pracownicy`, `/pracownicy/[id]`, `/oceny`, `/oceny/[id]`, `/oceny/nowa`, `/notatki`, `/kadry`, `/ustawienia`, `/powiadomienia`, `/pomoc`, `/dziennik-ai` (to zaślepki „Ta część aplikacji jest w przygotowaniu”). Bez logowania: `/logowanie` i `/deklaracja-dostepnosci` (link w stopce, po zalogowaniu w pełnej powłoce), bez urzędu: `/brak-urzedu`. Wylogowanie jest w menu konta w nagłówku. Menu zależy od roli: oceniający widzi Pulpit, Moi pracownicy, Oceny, Notatki, kadry dodatkowo Kadry, administrator Pulpit i Ustawienia.
+Trasy (jedna linia na trasę, obszarami). Strony oznaczone „zaślepka” pokazują „Ta część aplikacji jest w przygotowaniu”.
+
+Bez logowania i bez urzędu:
+
+- `/logowanie`: logowanie
+- `/deklaracja-dostepnosci`: deklaracja dostępności (link w stopce, po zalogowaniu w pełnej powłoce)
+- `/brak-urzedu`: konto bez urzędu i roli
+
+Pulpit i wspólne:
+
+- `/`: pulpit
+- `/powiadomienia`: powiadomienia (zaślepka)
+- `/pomoc`: pomoc (zaślepka)
+- `/komponenty`: katalog komponentów `@sarmata/ui`, tylko w trybie deweloperskim (404 w produkcji), poza menu
+
+Oceny:
+
+- `/oceny`: lista ocen (zaślepka)
+- `/oceny/nowa`: nowa ocena (zaślepka)
+- `/oceny/[id]`: sprawa oceny, przegląd (szkielet: nagłówek, etapy, zakładki, panel boczny)
+- `/oceny/[id]/czesc-1`: część I, kryteria i termin (zaślepka zakładki)
+- `/oceny/[id]/czesc-2`: część II, ocena (zaślepka zakładki)
+- `/oceny/[id]/czesc-3`: część III, wniosek o stopień (zaślepka zakładki)
+- `/oceny/[id]/sprawdz`: sprawdzenie i zatwierdzenie arkusza (zaślepka zakładki)
+- `/oceny/[id]/zdarzenia`: zapoznanie, sprzeciw, zdarzenia boczne (zaślepka zakładki)
+- `/oceny/[id]/dziennik`: dziennik zdarzeń (zaślepka zakładki)
+
+Pracownicy i notatki:
+
+- `/pracownicy`: lista pracowników (zaślepka)
+- `/pracownicy/nowy`: nowy pracownik (trasa zarezerwowana)
+- `/pracownicy/[id]`: karta pracownika (zaślepka)
+- `/notatki`: notatki (zaślepka)
+
+Kadry:
+
+- `/kadry`: panel kadr (zaślepka)
+- `/kadry/harmonogram`: harmonogram ocen (trasa zarezerwowana)
+- `/kadry/statystyki`: statystyki i DSC-OCK (trasa zarezerwowana)
+- `/kadry/rejestr`: rejestr kadr (trasa zarezerwowana)
+- `/kadry/import`: import pracowników z CSV (trasa zarezerwowana)
+- `/kadry/struktura`: struktura przełożonych (trasa zarezerwowana)
+
+Administrator:
+
+- `/ustawienia`: ustawienia urzędu (zaślepka)
+- `/ustawienia/konta`: konta i zaproszenia (trasa zarezerwowana)
+- `/ustawienia/przepisy`: edytor wersji przepisów (trasa zarezerwowana)
+- `/dziennik-ai`: dziennik użycia AI (zaślepka)
+
+Ścieżki są w `frontend/web/src/lib/routes.ts`, „trasa zarezerwowana” ma tam ścieżkę, ale jeszcze nie ma strony. Wylogowanie jest w menu konta w nagłówku. Menu zależy od roli: oceniający widzi Pulpit, Moi pracownicy, Oceny, Notatki, kadry dodatkowo Kadry, administrator Pulpit i Ustawienia.
 
 Czcionki Open Sans (treść) i Fira Sans (nagłówki, menu, przyciski, liczby, pakiet `@fontsource/fira-sans`) są na licencji SIL Open Font License 1.1.
 

@@ -6,19 +6,19 @@ export interface SideTab {
   href: string;
   label: string;
   /** Second line, e.g. "Kryteria i termin" or "14 wpisów". */
-  hint?: string;
+  hint?: string | undefined;
   /** A finished part: a check icon and hidden text. */
-  done?: boolean;
+  done?: boolean | undefined;
   current: boolean;
 }
 
 interface SideTabsProps {
   items: readonly SideTab[];
   /** Accessible name of the navigation. */
-  label?: string;
+  label?: string | undefined;
   /** Link element, e.g. Next.js `Link`. A plain `<a>` by default. */
-  linkAs?: ElementType;
-  className?: string;
+  linkAs?: ElementType | undefined;
+  className?: string | undefined;
 }
 
 /** Vertical section tabs of a case. The current one is a navy block with an arrow and `aria-current`. */
@@ -37,7 +37,7 @@ export function SideTabs({
               href={item.href}
               aria-current={item.current ? 'page' : undefined}
               className={cn(
-                'flex min-h-12 items-center gap-2.5 px-5 py-3.5 no-underline',
+                'flex min-h-11 items-center gap-2.5 px-5 py-[0.8125rem] no-underline',
                 item.current ? 'bg-navy text-white' : 'text-ink hover:bg-band bg-white',
               )}
             >

@@ -3,13 +3,13 @@ import { cn } from 'cn';
 import { AiMark } from '#components/ai-mark';
 
 interface AiSuggestionProps {
-  title?: ReactNode;
+  title?: ReactNode | undefined;
   children: ReactNode;
   /** Where the suggestion comes from, e.g. links to the source notes. */
-  sources?: ReactNode;
+  sources?: ReactNode | undefined;
   /** Accept, edit and reject for this one fragment. Never "accept all". */
   actions: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 /**

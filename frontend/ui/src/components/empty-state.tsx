@@ -24,8 +24,8 @@ interface EmptyStateProps {
   title: string;
   /** What to do next. */
   children: ReactNode;
-  action?: ReactNode;
-  className?: string;
+  action?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 /** Nothing to show yet: a small pixel drawing, a title, the next step and an optional action. */

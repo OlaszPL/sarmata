@@ -1,8 +1,20 @@
 import type { Metadata } from 'next';
-import { ComingSoon } from '@/components/coming-soon';
+import { Section } from '@sarmata/ui';
+import { caseTitle } from './loader';
 
-export const metadata: Metadata = { title: 'Sprawa oceny' };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  return { title: await caseTitle((await params).id, 'Przegląd sprawy') };
+}
 
+/** Placeholder of the tab until its stream builds it. The layout holds the H1 and the case frame. */
 export default function Page() {
-  return <ComingSoon title="Sprawa oceny" />;
+  return (
+    <Section title="Przegląd sprawy">
+      <p>Ta część sprawy jest w przygotowaniu.</p>
+    </Section>
+  );
 }

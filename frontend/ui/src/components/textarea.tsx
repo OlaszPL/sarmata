@@ -6,9 +6,9 @@ import { controlClasses } from '#components/field';
 
 export type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'maxLength'> & {
   /** Limit shown by the counter. It never blocks typing (GOV.UK character count). */
-  maxLength?: number;
+  maxLength?: number | undefined;
   /** Shows "Pozostało N znaków" under the field. Needs `maxLength`. */
-  showCount?: boolean;
+  showCount?: boolean | undefined;
 };
 
 /** Delay before screen readers hear the new count, so they are not interrupted on every key. */

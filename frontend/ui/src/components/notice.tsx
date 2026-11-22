@@ -13,7 +13,7 @@ const tones: Record<NoticeTone, { icon: typeof Info; line: string; text: string 
 
 type NoticeProps = Omit<HTMLAttributes<HTMLDivElement>, 'title'> & {
   tone: NoticeTone;
-  title?: ReactNode;
+  title?: ReactNode | undefined;
   children: ReactNode;
 };
 

@@ -4,15 +4,15 @@ import { cn } from 'cn';
 interface SectionProps {
   title: ReactNode;
   /** 2 for a part of the page (30px), 3 for a compact panel such as the side band (20px). */
-  titleLevel?: 2 | 3;
+  titleLevel?: 2 | 3 | undefined;
   /** Links or buttons on the right of the title, e.g. "Zapisano o 14:32". */
-  actions?: ReactNode;
+  actions?: ReactNode | undefined;
   /** `band` paints the panel in the band color, as the side panels of the case. */
-  tone?: 'plain' | 'band';
+  tone?: 'plain' | 'band' | undefined;
   /** Children go edge to edge, for rows that draw their own lines and padding. */
-  flush?: boolean;
-  id?: string;
-  className?: string;
+  flush?: boolean | undefined;
+  id?: string | undefined;
+  className?: string | undefined;
   children: ReactNode;
 }
 

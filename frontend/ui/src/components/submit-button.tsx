@@ -9,12 +9,12 @@ interface SubmitButtonProps {
   children: ReactNode;
   /** Label shown while the form is being sent, e.g. "Trwa zapisywanie". */
   pendingLabel: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+  variant?: ButtonVariant | undefined;
+  size?: ButtonSize | undefined;
   /** Submits under this name, e.g. to tell "Zapisz" from "Zatwierdź" in one form. */
-  name?: string;
-  value?: string;
-  className?: string;
+  name?: string | undefined;
+  value?: string | undefined;
+  className?: string | undefined;
 }
 
 /**

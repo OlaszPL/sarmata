@@ -37,10 +37,10 @@ export function buttonClasses({
 }
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+  variant?: ButtonVariant | undefined;
+  size?: ButtonSize | undefined;
   /** Renders the single child (e.g. a link) with the button styles instead of a `<button>`. */
-  asChild?: boolean;
+  asChild?: boolean | undefined;
 };
 
 /**

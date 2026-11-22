@@ -13,8 +13,8 @@ interface ErrorSummaryProps {
   title: string;
   errors: readonly ErrorSummaryItem[];
   /** Text under the title, e.g. a form error that belongs to no field. */
-  children?: ReactNode;
-  className?: string;
+  children?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 /** Moves to the control and scrolls its label (or legend) into view, as GOV.UK does. */

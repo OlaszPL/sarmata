@@ -5,14 +5,14 @@ export interface SummaryRow {
   key: string;
   value: ReactNode;
   /** Where "Zmień" goes. No link when left out. */
-  changeHref?: string;
+  changeHref?: string | undefined;
 }
 
 interface SummaryListProps {
   rows: readonly SummaryRow[];
   /** Link element for "Zmień", e.g. Next.js `Link`. A plain `<a>` by default. */
-  linkAs?: ElementType;
-  className?: string;
+  linkAs?: ElementType | undefined;
+  className?: string | undefined;
 }
 
 /** "Check your answers" list from GOV.UK: key, value and a "Zmień" link per row. */

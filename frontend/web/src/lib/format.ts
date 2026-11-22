@@ -63,3 +63,34 @@ export function longDate(d: CalendarDate): string {
   const text = longParts.format(new Date(toUtcMs(d)));
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+const decimal = new Intl.NumberFormat('pl-PL', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** A score with two decimals and a Polish comma, e.g. `6,33`. */
+export function formatScore(value: number): string {
+  return decimal.format(value);
+}
+
+const ROMAN: readonly [number, string][] = [
+  [10, 'X'],
+  [9, 'IX'],
+  [5, 'V'],
+  [4, 'IV'],
+  [1, 'I'],
+];
+
+/** Civil service grades are written in Roman numerals, e.g. `IV`. */
+export function romanNumeral(n: number): string {
+  let rest = n;
+  let out = '';
+  for (const [value, letters] of ROMAN) {
+    while (rest >= value) {
+      out += letters;
+      rest -= value;
+    }
+  }
+  return out;
+}

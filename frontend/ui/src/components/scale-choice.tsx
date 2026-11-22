@@ -10,21 +10,21 @@ interface ScaleChoiceProps {
   name: string;
   options: readonly ScaleOption[];
   /** Controlled value. Leave it out and use `defaultValue` in a plain form. */
-  value?: number | null;
-  defaultValue?: number | null;
+  value?: number | null | undefined;
+  defaultValue?: number | null | undefined;
   /** A value proposed by the AI: a dashed navy frame and a hidden note for screen readers. */
-  suggested?: number | null;
-  onChange?: (value: number, event: ChangeEvent<HTMLInputElement>) => void;
+  suggested?: number | null | undefined;
+  onChange?: ((value: number, event: ChangeEvent<HTMLInputElement>) => void) | undefined;
   /** Id of the first tile's radio, the target of error summary links. Defaults to `name`. */
-  id?: string;
+  id?: string | undefined;
   /** Accessible name of the group, e.g. the criterion. Visible labels sit outside. */
-  label?: string;
+  label?: string | undefined;
   /** Id of a visible heading that names the group, used instead of `label`. */
-  labelledBy?: string;
-  describedBy?: string;
-  invalid?: boolean;
-  disabled?: boolean;
-  className?: string;
+  labelledBy?: string | undefined;
+  describedBy?: string | undefined;
+  invalid?: boolean | undefined;
+  disabled?: boolean | undefined;
+  className?: string | undefined;
 }
 
 /**

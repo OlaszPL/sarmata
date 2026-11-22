@@ -5,7 +5,7 @@ import { FieldError } from '#components/field';
 export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'id'> & {
   id: string;
   label: ReactNode;
-  hint?: ReactNode;
+  hint?: ReactNode | undefined;
   error?: string | undefined;
 };
 

@@ -56,11 +56,11 @@ export function fieldGroupClasses(error: unknown, className?: string): string {
 interface FieldProps {
   id: string;
   label: ReactNode;
-  hint?: ReactNode;
+  hint?: ReactNode | undefined;
   error?: string | undefined;
   /** Adds "(opcjonalnie)" to the label. Required fields carry no mark (GOV.UK). */
-  optional?: boolean;
-  className?: string;
+  optional?: boolean | undefined;
+  className?: string | undefined;
   /** One control. It receives `id`, `aria-describedby` and `aria-invalid`. */
   children: ReactNode;
 }

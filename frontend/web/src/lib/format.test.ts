@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import {
   daysUntil,
   formatDate,
+  formatScore,
   formatShortDate,
   longDate,
   pluralPl,
   relativeDays,
+  romanNumeral,
   todayInWarsaw,
 } from './format';
 
@@ -60,5 +62,23 @@ describe('dates', () => {
     [-3, '3 dni po terminie'],
   ])('describes %i days', (days, expected) => {
     expect(relativeDays(days)).toBe(expected);
+  });
+});
+
+describe('formatScore', () => {
+  it('uses two decimals and a comma', () => {
+    expect(formatScore(6.333333)).toBe('6,33');
+    expect(formatScore(7)).toBe('7,00');
+  });
+});
+
+describe('romanNumeral', () => {
+  it.each([
+    [1, 'I'],
+    [4, 'IV'],
+    [6, 'VI'],
+    [9, 'IX'],
+  ])('%i is %s', (n, roman) => {
+    expect(romanNumeral(n)).toBe(roman);
   });
 });

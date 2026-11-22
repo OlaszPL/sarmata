@@ -11,7 +11,7 @@ import {
 export interface RadioOption {
   value: string;
   label: ReactNode;
-  hint?: ReactNode;
+  hint?: ReactNode | undefined;
 }
 
 interface RadioGroupProps {
@@ -19,18 +19,18 @@ interface RadioGroupProps {
   legend: ReactNode;
   options: readonly RadioOption[];
   /** Id of the first radio, the target of error summary links. Defaults to `name`. */
-  id?: string;
+  id?: string | undefined;
   /** Controlled value. Leave it out and use `defaultValue` in a plain form. */
-  value?: string | null;
-  defaultValue?: string | null;
-  hint?: ReactNode;
+  value?: string | null | undefined;
+  defaultValue?: string | null | undefined;
+  hint?: ReactNode | undefined;
   error?: string | undefined;
-  optional?: boolean;
+  optional?: boolean | undefined;
   /** Options side by side, for short answers such as "Tak" and "Nie". */
-  inline?: boolean;
-  disabled?: boolean;
-  onChange?: (value: string, event: ChangeEvent<HTMLInputElement>) => void;
-  className?: string;
+  inline?: boolean | undefined;
+  disabled?: boolean | undefined;
+  onChange?: ((value: string, event: ChangeEvent<HTMLInputElement>) => void) | undefined;
+  className?: string | undefined;
 }
 
 /** A group of radio buttons in a fieldset with a legend, hint and error as in GOV.UK. */

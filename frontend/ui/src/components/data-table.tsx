@@ -6,22 +6,22 @@ export interface DataTableColumn<Row> {
   header: ReactNode;
   cell: (row: Row) => ReactNode;
   /** Width or alignment classes of the column, e.g. `w-[8rem] text-right`. */
-  className?: string;
+  className?: string | undefined;
   /** The column that names the row: rendered as `<th scope="row">`. */
-  rowHeader?: boolean;
+  rowHeader?: boolean | undefined;
 }
 
 interface DataTableProps<Row> {
   /** Required: names the table for screen readers. */
   caption: string;
   /** Shows the caption above the table instead of hiding it. */
-  captionVisible?: boolean;
+  captionVisible?: boolean | undefined;
   columns: readonly DataTableColumn<Row>[];
   rows: readonly Row[];
   rowKey: (row: Row) => string;
   /** Shown in place of the table when there are no rows. */
-  empty?: ReactNode;
-  className?: string;
+  empty?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 /** Table in the dashboard style: a 2px line over the header, 1px lines between rows, sideways scroll. */
