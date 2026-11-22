@@ -11,10 +11,33 @@ test.describe.serial('case sheet changes', () => {
     const marek = await caseIdOf(page, 'Marek Merytoryczny');
     await page.goto(`/oceny/${marek}/czesc-2`);
 
-    const heldOn = page.getByLabel('Data rozmowy oceniającej');
+    // A draft saved by the button keeps the chosen tile (no form reset), and the next autosave
+    // stores it, so it is still there after a reload.
+    const firstCriterion = page.locator('#part-two section[aria-labelledby^="criterion-"]').first();
+    const tiles = firstCriterion.getByRole('radiogroup');
+    const nine = tiles.locator('input[type="radio"][value="9"]');
+    await expect(nine).not.toBeChecked();
+    await tiles.locator('label:has(input[value="9"])').click();
+    await expect(nine).toBeChecked();
+    await page.getByRole('button', { name: 'Zapisz szkic' }).click();
+    await expect(page.getByText(/Zapisano o/)).toBeVisible({ timeout: 15_000 });
+    await expect(nine).toBeChecked();
+    const autosaved = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' && 'next-action' in response.request().headers(),
+    );
+    await page.locator('#justification').fill('Szkic uzasadnienia przed rozmową.');
+    await autosaved;
+    await page.reload();
+    await expect(nine).toBeChecked();
+    await expect(page.locator('#justification')).toHaveValue('Szkic uzasadnienia przed rozmową.');
+
+    // The editor has its own interview date field with the same label, so the id picks the form's.
+    const heldOn = page.locator('#heldOn');
     await heldOn.fill(await heldOn.inputValue());
     await page.getByRole('button', { name: 'Odnotuj rozmowę oceniającą' }).click();
 
+    await expect(page.locator(':focus')).toContainText('Rozmowę odnotowano.');
     const stages = page.getByRole('main').getByRole('list', { name: 'Etapy oceny' });
     await expect(stages.locator('[aria-current="step"]')).toContainText('Część II');
     await expect(page.getByRole('button', { name: 'Sprawdź i zatwierdź ocenę' })).toBeVisible();
@@ -38,6 +61,9 @@ test.describe.serial('case sheet changes', () => {
 
     await page.getByRole('button', { name: 'Zatwierdź i przekaż do zapoznania' }).click();
     await expect(page.getByText('Arkusz zatwierdzony.')).toBeVisible();
+    await expect(
+      page.getByRole('main').getByRole('heading', { level: 2, name: 'Zatwierdzony arkusz' }),
+    ).toBeVisible();
     const stages = page.getByRole('main').getByRole('list', { name: 'Etapy oceny' });
     await expect(stages.locator('[aria-current="step"]')).toContainText('Zapoznanie');
   });

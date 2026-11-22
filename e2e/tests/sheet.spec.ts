@@ -71,9 +71,23 @@ test.describe('case sheet', () => {
     await expect(main.getByText('Arkusz jest tylko do odczytu.')).toBeVisible();
     await expect(main.locator('form:has(button[type="submit"])')).toHaveCount(0);
 
-    await page.goto(`/oceny/${ewa}/sprawdz`);
-    await expect(main.getByRole('heading', { level: 2, name: /^Sprawdź arkusz/ })).toBeVisible();
+    await page.goto(`/oceny/${ewa}/czesc-3`);
+    await expect(main.getByText('Arkusz jest tylko do odczytu.')).toBeVisible();
     await expect(main.locator('form:has(button[type="submit"])')).toHaveCount(0);
+
+    await page.goto(`/oceny/${ewa}/sprawdz`);
+    await expect(main.getByRole('heading', { level: 2, name: 'Arkusz oceny' })).toBeVisible();
+    await expect(main.getByText('Arkusz jest tylko do odczytu.')).toBeVisible();
+    await expect(main.locator('form:has(button[type="submit"])')).toHaveCount(0);
+  });
+
+  test('part II of Marek shows the seeded AI draft', async ({ page }) => {
+    const { marek } = await evaluatorCases(page);
+    await page.goto(`/oceny/${marek}/czesc-2`);
+    await expect(
+      page.getByRole('heading', { level: 3, name: /^Szkic AI jest gotowy/ }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Przyjmij \d$/ }).first()).toBeVisible();
   });
 
   test('does not scroll sideways at 400 px', async ({ page }) => {
