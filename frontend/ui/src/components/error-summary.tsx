@@ -7,6 +7,8 @@ export interface ErrorSummaryItem {
   /** Id of the control the link moves to. */
   fieldId: string;
   message: string;
+  /** Link to a field on another page, e.g. `/oceny/1/czesc-2#developmentConclusions`. Default `#fieldId`. */
+  href?: string | undefined;
 }
 
 interface ErrorSummaryProps {
@@ -15,6 +17,8 @@ interface ErrorSummaryProps {
   /** Text under the title, e.g. a form error that belongs to no field. */
   children?: ReactNode | undefined;
   className?: string | undefined;
+  /** Take the focus when shown (default). Off for a banner that is present on page load. */
+  autoFocus?: boolean | undefined;
 }
 
 /** Moves to the control and scrolls its label (or legend) into view, as GOV.UK does. */
@@ -33,14 +37,20 @@ function focusField(event: MouseEvent<HTMLAnchorElement>, fieldId: string) {
  * GOV.UK error summary: a red line on the left, the title and a link to every faulty field. It takes
  * the focus when it appears, so keyboard and screen reader users hear what went wrong.
  */
-export function ErrorSummary({ title, errors, children, className }: ErrorSummaryProps) {
+export function ErrorSummary({
+  title,
+  errors,
+  children,
+  className,
+  autoFocus = true,
+}: ErrorSummaryProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const signature = `${title}|${errors.map((error) => `${error.fieldId}:${error.message}`).join('|')}`;
 
   useEffect(() => {
-    ref.current?.focus();
-  }, [signature]);
+    if (autoFocus) ref.current?.focus();
+  }, [signature, autoFocus]);
 
   return (
     <div
@@ -61,9 +71,9 @@ export function ErrorSummary({ title, errors, children, className }: ErrorSummar
           {errors.map((error) => (
             <li key={`${error.fieldId}:${error.message}`}>
               <a
-                href={`#${error.fieldId}`}
+                href={error.href ?? `#${error.fieldId}`}
                 onClick={(event) => {
-                  focusField(event, error.fieldId);
+                  if (!error.href) focusField(event, error.fieldId);
                 }}
                 className="font-heading text-error text-[1.0625rem] leading-[normal] font-medium underline"
               >
