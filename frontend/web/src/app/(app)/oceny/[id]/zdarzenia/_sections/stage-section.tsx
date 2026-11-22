@@ -73,14 +73,17 @@ function Delivered({ data, panels }: Omit<StageProps, 'defaultPlace'>) {
       {window ? (
         <Notice tone="info">
           {window.open
-            ? `Sprzeciw do ${formatDate(window.dueOn)}, ${relativeDays(window.daysLeft)}`
-            : `Termin na sprzeciw minął ${formatDate(window.dueOn)}`}
+            ? `Sprzeciw do ${formatDate(window.dueOn)}, ${relativeDays(window.daysLeft)}.${
+                panels.has('closing') ? ' Ocenę zamkniesz, gdy ten termin minie.' : ''
+              }`
+            : `Termin na sprzeciw minął ${formatDate(window.dueOn)}.`}
         </Notice>
       ) : null}
       {view.objectionAddressee ? (
         <SummaryList rows={[{ key: 'Adresat sprzeciwu', value: view.objectionAddressee }]} />
       ) : null}
-      {panels.has('closing') ? (
+      {window?.open && panels.has('closing') ? null : panels.has('closing') ? (
+        // Closing needs the objection window to be over, so the form waits for it.
         <ClosingForm
           action={closeEvaluation.bind(null, view.id)}
           initial={{ values: { closedOn: today }, fieldErrors: {} }}

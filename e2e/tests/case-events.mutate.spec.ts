@@ -105,13 +105,13 @@ test.describe.serial('events tab changes', () => {
     const absenceFrom = isoDaysFromToday(-20);
     const returnOn = isoDaysFromToday(-15);
 
-    await main.getByText('Odnotuj nieobecność', { exact: true }).click();
+    await main.locator('summary', { hasText: 'Odnotuj nieobecność' }).click();
     await main.locator('#absence-from').fill(absenceFrom);
     await main.getByRole('button', { name: 'Odnotuj nieobecność' }).click();
     await expect(main.getByRole('status')).toContainText('Zapisano nieobecność');
     await expect(sideRow(page, `od ${polishDate(absenceFrom)}, trwa`)).toBeVisible();
 
-    await main.getByText(/^Odnotuj powrót z nieobecności od/).click();
+    await main.locator('summary', { hasText: /^Odnotuj powrót z nieobecności od/ }).click();
     await main.locator('input[id^="return-"][id$="-to"]').fill(returnOn);
     await main.getByRole('button', { name: 'Odnotuj powrót' }).click();
     await expect(main.getByRole('status')).toContainText('Zapisano powrót z nieobecności');
@@ -119,7 +119,7 @@ test.describe.serial('events tab changes', () => {
       sideRow(page, `od ${polishDate(absenceFrom)} do ${polishDate(returnOn)}`),
     ).toBeVisible();
 
-    await main.getByText('Zmień termin oceny', { exact: true }).click();
+    await main.locator('summary', { hasText: 'Zmień termin oceny' }).click();
     await main.locator('#term-newDueOn').fill(isoDaysFromToday(60));
     await main.getByRole('radio', { name: 'Wniosek osoby ocenianej' }).check();
     await main.locator('#term-noticeOn').fill(isoDaysFromToday(0));
@@ -132,7 +132,7 @@ test.describe.serial('events tab changes', () => {
       '',
     );
 
-    await main.getByText('Odnotuj zmianę stanowiska', { exact: true }).click();
+    await main.locator('summary', { hasText: 'Odnotuj zmianę stanowiska' }).click();
     await main.locator('#position-changedOn').fill(isoDaysFromToday(0));
     await main.locator('#position-positionTitle').fill('Specjalista ds. testów');
     await main.getByRole('radio', { name: /^Nie, obowiązki zmieniły się nieistotnie/ }).check();
