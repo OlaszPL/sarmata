@@ -1,0 +1,251 @@
+# Uruchomienie i konfiguracja dla deweloperów
+
+Dokładny sposób uruchomienia projektu od czystej maszyny, skrypty, zmienne środowiskowe i konfiguracja. Instalacja w urzędzie jest w [instalacja.md](instalacja.md).
+
+## Jak uruchomić (dev)
+
+Krok po kroku, od czystej maszyny do działającego środowiska.
+
+1. **Narzędzia systemowe:** Node 24, pnpm 12.21.0, Docker (działający), sops, age, opcjonalnie direnv. Sprawdzenie i polecenia instalacji dla macOS, Debiana/Ubuntu i Windowsa:
+
+       pnpm run doctor
+
+   (`pnpm doctor` bez `run` to wbudowana komenda pnpm 12, nie nasz skrypt.)
+
+2. **Klucz age zespołu** w `~/.config/sops/age/keys.txt` (albo ścieżka w `SOPS_AGE_KEY_FILE`). Nowa osoba generuje klucz `age-keygen -o ~/.config/sops/age/keys.txt`, przekazuje klucz publiczny, a ktoś z zespołu dopisuje go do `.sops.yaml` i robi `sops updatekeys secrets/dev.enc.env`.
+
+3. **Zależności:**
+
+       pnpm install
+
+   Supabase CLI 3.2.0 przychodzi z tym krokiem (devDependency `@sarmata/database`).
+
+4. **Sekrety i zmienne środowiskowe.** Pliki `.env*` nigdy nie trafiają do repo. `.env.local` w korzeniu powstaje z `secrets/dev.enc.env` (SOPS):
+   - z direnv: `direnv allow` (raz na worktree). Od tej pory direnv sam odszyfrowuje `.env.local`, gdy plik nie istnieje albo zaszyfrowany plik jest nowszy, i ładuje go do powłoki,
+   - bez direnv: `pnpm secrets:decrypt`.
+
+5. **Baza danych** (wspólna instancja `sarmata` dla wszystkich worktree, nie koliduje z innymi stackami Supabase na portach 54321 do 54323):
+
+       pnpm db:start
+       pnpm db:reset
+
+   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy otwarte oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa), pięć zamkniętych ocen tego roku, wszystkie liczone do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu, przyznanie stopnia oraz Jan Odwoławczy z oceną negatywną i sprzeciwem nieuwzględnionym przez kadry, bez odwołania do sądu pracy, z otwartym terminem odwołania), byłego pracownika Romana Dawnego z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu, a potem kolektor powiadomień na dziś, więc skrzynka kadr ma od razu zadania (stopień z mocy prawa i rozpatrzenie sprzeciwu Stefana). Notatki Marka, przebiegi AI (szkic arkusza z edytowanym fragmentem, sygnały HR, momenty docenienia Ewy i gotowa odpowiedź asystenta procedury z cytatami, widoczna dla Olgi pod `/pomoc?pytanie=44444444-4444-4444-8444-000000000004` bez workera), ustawienia SMTP wskazujące na Mailpit oraz dane urzędu do deklaracji dostępności (adres, kontakt, dostępność architektoniczna, tłumacz języka migowego) pochodzą z `database/supabase/seed.sql`.
+
+6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp z Metal (17 MB) i model zalecany dla tego komputera z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai`. Na Macu z 16 GB (np. M2) to Bielik-4.5B-v3.0 Q4_K_M (2,9 GB):
+
+       pnpm ai:setup
+       pnpm ai:start
+       pnpm ai:smoke
+
+   Serwer działa w tle pod `http://127.0.0.1:55490/v1`, zatrzymuje go `pnpm ai:stop`. Skrypty zapisują ustawienia `SARMATA_AI_*` (włączenie, adresy i modele, kontrakt z `backend/ai/src/config.ts`) do wygenerowanego `.env.ai.local` w korzeniu, który direnv ładuje zaraz po `.env.local` (bez direnv: `set -a; . ./.env.ai.local; set +a`). Sekretów ani tokenu Hugging Face nie trzeba.
+
+   **Który model tekstowy na jakim sprzęcie.** `ai:setup` wybiera model jak kreator (`recommendRuntime`, ADR 0005) i wypisuje po polsku dlaczego:
+
+   | Sprzęt | Model domyślny | Plik |
+   | --- | --- | --- |
+   | Mac z Apple Silicon poniżej 24 GB (8, 16, 18 GB) albo karta graficzna od 8 do 11 GB | Bielik-4.5B-v3.0 Q4_K_M, około 2 razy szybsze generowanie, trochę słabsza polszczyzna | 2,9 GB |
+   | Mac od 24 GB albo karta graficzna od 12 GB | Bielik-11B-v3.1 Q4_K_M (w profilu server najwyższa kwantyzacja, która się mieści) | 6,7 GB (Q5_K_M 7,9 GB, Q6_K 9,2 GB, Q8_0 11,9 GB) |
+   | Bez karty graficznej, od 8 GB RAM | Bielik-4.5B-v3.0 Q8_0 | 5,1 GB |
+
+   Na Macu M2 z 16 GB Bielik-11B Q4_K_M generuje 8 do 10 tokenów na sekundę i pełny szkic arkusza trwał około 4 minut, dlatego domyślny jest tam mniejszy model. Większy model instaluje się ręcznie i od razu staje się modelem `ai:start`:
+
+       pnpm ai:setup --model bielik-11b-v3.1-q4_k_m
+       pnpm ai:stop && pnpm ai:start
+
+   Powrót do domyślnego: `pnpm ai:setup` bez `--model`. Identyfikatory plików wypisuje `ai:setup`, działa też zmienna `SARMATA_AI_MODEL=<id>`. Pobrane modele zostają w katalogu danych, więc przełączanie niczego nie pobiera ponownie.
+
+   **Odpowiedź AI widać w trakcie.** Model streamuje odpowiedź, a worker co około sekundę zapisuje w `ai_runs` tekst, gotowe fragmenty wyniku i liczbę tokenów. Szkic arkusza powstaje kryterium po kryterium, więc pierwsze kryterium jest widoczne po kilkunastu sekundach (ADR 0008).
+
+   **Co się instaluje na jakim sprzęcie.** `ai:setup` wypisuje po polsku, czy Bielik-One (model decyzyjny) zmieści się na stałe obok modelu tekstowego i dlaczego. Na Macu z 16 GB (np. M2) instaluje się tylko Bielik-4.5B Q4_K_M, a decyzje podejmuje model tekstowy z wymuszonym formatem JSON: GPU Maca może użyć 10,7 GB, a oba modele razem potrzebują około 13,7 GB. Oba naraz (Bielik-One 4B na MLX) mieszczą się na Macu od 24 GB, gdy modelem tekstowym jest Bielik-4.5B, i od 32 GB z Bielik-11B, a na Linuksie od karty NVIDIA z 24 GB (vLLM). Tam, gdzie oba nie mieszczą się naraz, decyzje podejmuje model tekstowy (na M2 z 16 GB decyzja trwała 94 do 119 s przez Bielik-One wobec 13 s przez model tekstowy, przy silnym swapie). `--with-bielik-one` zostaje jawnym wyborem do testów. Progi i rachunek: ADR 0005.
+
+   **Test Bielik-One na Macu 16 GB, po jednym modelu.** Modele nie mogą tu działać jednocześnie, więc uruchamia się je po kolei:
+
+       pnpm ai:setup --with-bielik-one     # dodatkowo ok. 10,1 GB: pakiet Bielik-One 4B (0,8 GB) i Qwen3.5-4B (9,3 GB) oraz pakiety Pythona przez uv
+       pnpm ai:start --only text            # sam model tekstowy
+       pnpm ai:smoke                        # krótka odpowiedź po polsku z czasem, Bielik-One zgłoszony jako niedziałający
+       pnpm ai:stop
+       pnpm ai:start --only decision        # sam Bielik-One (pierwsze ładowanie trwa kilka minut)
+       pnpm ai:smoke                        # jedno pytanie tak/nie do /v1/systemone z czasem i prawdopodobieństwem
+       pnpm ai:stop
+
+   `ai:setup --with-bielik-one` ostrzega, że na tym sprzęcie modele działają tylko pojedynczo, a `ai:start` odmawia startu jednego, gdy działa drugi. Bez `--only` startuje sam model tekstowy (oba tylko tam, gdzie się mieszczą). `ai:smoke --only text|decision` sprawdza jeden endpoint. Pierwszy raz pobiera się łącznie około 13 GB.
+
+   **Model pobiera się raz na maszynę.** Katalog danych AI jest jeden na konto i system: `~/Library/Application Support/sarmata/ai` na macOS, `~/.local/share/sarmata/ai` (albo `$XDG_DATA_HOME/sarmata/ai`) na Linuksie i w WSL2, `%LOCALAPPDATA%\sarmata\ai` na Windows. Trzyma llama.cpp, modele GGUF, pamięć podręczną Hugging Face dla Bielik-One (`huggingface/`), środowisko Pythona Bielik-One i logi (`logs/`), a korzystają z niego wszystkie worktree i kreator. Ponowne `ai:setup` z dowolnego worktree niczego nie pobiera, jeśli pliki mają poprawne sumy SHA-256, przerwane pobieranie (`.part`) wznawia od miejsca przerwania, a drugi równoległy `ai:setup` kończy się komunikatem o blokadzie zamiast pobierać ten sam plik. W kolejnym worktree wystarczy `pnpm ai:env` (zapisuje tylko `.env.ai.local`, bez pobierania i bez startu serwera), a skrypt setup dla Termic woła go sam. Modele nie trafiają do obrazów Dockera ani do worktree: aplikacja łączy się z runtime przez HTTP. Windows i WSL2 to dwa systemy z osobnymi katalogami, ale runtime AI działa natywnie w Windows.
+
+7. **Wersja produkcyjna jedną komendą** (zamiast kroków 7 i 8, po `pnpm install` i sekretach):
+
+       pnpm build
+       pnpm start
+
+   `pnpm start` sam uruchamia Supabase, gdy nie działa, ładuje dane demo do pustej bazy (`SARMATA_SKIP_SEED=1` to wyłącza), zapisuje `frontend/web/.env.local`, robi build, gdy go nie ma, i uruchamia lokalne AI, gdy wcześniej było `pnpm ai:setup`. Potem działają razem serwer Next.js ze standalone buildu (`http://localhost:3000`, inny port przez `PORT`) i worker. Ctrl+C zatrzymuje oba oraz AI uruchomione przez ten skrypt. Po zmianie kodu znowu `pnpm build`.
+
+   Tryb deweloperski, krok po kroku:
+
+   **Aplikacja web** (po `pnpm db:start`):
+
+       pnpm web:env
+       pnpm --filter @sarmata/e2e exec playwright install chromium
+       pnpm dev
+
+   `web:env` zapisuje `frontend/web/.env.local` z adresem i kluczem lokalnego Supabase (oraz wszystkie `SARMATA_AI_*` z `.env.ai.local`, jeśli istnieje). Żeby aplikacja pracowała na zewnętrznej instancji Supabase, ustaw w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` przed `pnpm web:env`: skrypt użyje ich zamiast `supabase status`. Przeglądarka Chromium służy testom e2e i skillowi `app-walkthrough`. Aplikacja działa na `http://localhost:3000`.
+
+8. **Worker kolejki zadań** (opcjonalnie, potrzebny dopiero dla zadań w tle):
+
+       pnpm worker:dev
+
+   Najpierw synchronizuje wersje przepisów, potem czyta kolejkę pgmq `jobs`. Ctrl+C kończy go po bieżącym zadaniu. Próba: `docker exec supabase_db_sarmata psql -U postgres -c "select public.job_queue_send('{\"type\":\"system.ping\",\"payload\":{\"note\":\"hi\"}}')"`, w logu pojawi się `pong`.
+
+9. **Sprawdzenie całości.** CI na pull requeście robi tylko `pnpm check`, a pgTAP i e2e uruchamia na main:
+
+       pnpm check
+       pnpm db:test
+       pnpm test:integration
+
+   `pnpm test:integration` to testy repozytoriów i workera na działającej bazie, z kontami demo, przy zatrzymanym workerze (test czyta wspólną kolejkę). Test workera przeprowadza przebieg AI ze streamującym atrapowym modelem i sprawdza postęp widoczny w `ai.get`. CI ich nie uruchamia.
+
+10. **Instalator dla urzędów (opcjonalnie).** Testy, binarki kreatora i podgląd instalacji bez zmian w systemie:
+
+        pnpm --filter @sarmata/deploy test
+        pnpm --filter @sarmata/deploy compile
+        infra/deploy/dist/sarmata-macos-arm64 install --dry-run --answers infra/deploy/examples/light.json
+
+    Prawdziwą instalację (`install` bez `--dry-run`) uruchamiaj tylko na maszynie wirtualnej albo osobnym komputerze: zakłada `~/Sarmata` (macOS) albo `/opt/sarmata` (Linux), kontenery projektu `sarmata` i porty 3000 i 8000.
+
+Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej”): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test` (Olga Oceniająca, przełożona Marka, Ewy, Stefana i Jana). Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`. Pracownicy demo (Marek, Ewa, Stefan, Roman, Jan) nie mają kont, bo oceniany nie używa aplikacji.
+
+## Skrypty
+
+| Skrypt | Co robi |
+|---|---|
+| `pnpm run doctor` | sprawdza wymagane narzędzia i podpowiada instalację |
+| `pnpm check` | lint, format, typecheck i testy (to samo co CI) |
+| `pnpm build` | build wszystkich pakietów przez Turborepo, w tym produkcyjny build aplikacji (Next.js standalone z plikami statycznymi) |
+| `pnpm start` | cała aplikacja z buildu produkcyjnego jedną komendą: start Supabase, gdy nie działa, dane demo przy pustej bazie, `web:env`, build, gdy go brak, lokalne AI, gdy było `ai:setup`, potem aplikacja na porcie 3000 i worker do Ctrl+C |
+| `pnpm test` | testy wszystkich pakietów przez Turborepo (w tym logiki pulpitu w `frontend/web`) |
+| `pnpm typecheck` | kontrola typów |
+| `pnpm lint`, `pnpm lint:fix` | ESLint, z poprawianiem |
+| `pnpm format`, `pnpm format:check` | Prettier, z zapisem i tylko sprawdzenie |
+| `pnpm secrets:decrypt` | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
+| `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 (SMTP 55425) |
+| `pnpm db:reset` | migracje od zera, dane demo, synchronizacja oficjalnych wersji przepisów, oceny demo oraz powiadomienia demo z kolektorem na dziś (zadania kadr w skrzynce) |
+| `pnpm db:seed:demo` | zakłada oceny demo przez prawdziwy serwis jako `oceniajacy@kropka.test` (sprzeciw jako `kadry@kropka.test`), pomija, gdy oceny już istnieją (wymaga `pnpm regulations:sync`) |
+| `pnpm db:test` | testy pgTAP |
+| `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
+| `pnpm test:integration` | testy repozytoriów i workera na lokalnym Supabase, wymagają `pnpm db:reset` |
+| `pnpm regulations:sync` | wstawia brakujące oficjalne wersje przepisów, kończy się błędem, gdy wersja w bazie różni się od kodu |
+| `pnpm notifications:collect` | ręczne zebranie powiadomień na dziś (`-- --day RRRR-MM-DD` dla innego dnia), pg_cron robi to o 5:00 UTC. Raport JSON zawiera `created`, `queued` i `resolved` |
+| `pnpm retention:run` | ręczne uruchomienie retencji danych (`-- --day RRRR-MM-DD` dla innego dnia, np. po upływie 10 lat dla pracownika demo), pg_cron kolejkuje zadanie o 5:30 UTC. Raport JSON zawiera `notes`, `aiRuns`, `anonymized` i `failed` |
+| `pnpm worker:dev` | worker kolejki pgmq z przeładowaniem po zmianie kodu |
+| `pnpm worker:start` | worker kolejki pgmq bez przeładowania |
+| `pnpm ai:setup` | llama.cpp i model Bielik zalecany dla sprzętu (inny: `--model <id>`) do katalogu danych AI, wybór urządzenia, zapis `.env.ai.local`, z `--with-bielik-one` także Bielik-One |
+| `pnpm ai:env` | `.env.ai.local` dla tego worktree z już pobranego AI, bez pobierania |
+| `pnpm ai:start` / `ai:stop` | wspólny llama-server w tle na porcie 55490 i Bielik-One, gdy się mieści, `--only text\|decision` dla jednego |
+| `pnpm ai:smoke` | krótka odpowiedź modelu tekstowego i jedna decyzja Bielik-One, każdy endpoint osobno, z czasem odpowiedzi |
+| `pnpm --filter @sarmata/deploy test` | testy instalatora (plany kroków, compose, sekrety, skróty) bez Dockera |
+| `pnpm --filter @sarmata/deploy vendor:supabase [TAG]` | odświeża przypiętą kopię self-hosted Supabase w `infra/deploy/supabase/` |
+| `docker build -f infra/deploy/docker/app.Dockerfile --target web -t sarmata/web:check .` | sprawdzenie obrazu aplikacji tak, jak buduje go instalator (cele: `web`, `worker`) |
+| `pnpm --filter @sarmata/deploy compile` | binarki kreatora dla Windows x64, Linux x64 i arm64, macOS arm64 w `infra/deploy/dist/` (Bun pobiera runtime celu przy pierwszej kompilacji) |
+| `pnpm --filter @sarmata/deploy release 1.0.0` | paczka dla urzędów `infra/deploy/release/sarmata-1.0.0.zip`: źródła z HEAD, binarki, `VERSION` |
+| `infra/deploy/dist/sarmata-macos-arm64 install --dry-run --answers infra/deploy/examples/light.json` | lista kroków instalacji bez żadnych zmian (po `compile`) |
+| `infra/deploy/dist/sarmata-macos-arm64 render --answers infra/deploy/examples/server.json --out /tmp/sarmata-server` | `compose.yaml`, `.env` i `Caddyfile` do obejrzenia, bez instalacji |
+
+## Aplikacja web
+
+| Skrypt | Co robi |
+|---|---|
+| `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
+| `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px, a z A+ menu w drugim wierszu i czytelna nazwa konta), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy, lista i karta pracownika, nowy pracownik z błędami, notatki ze strażnikiem danych wrażliwych, panel HR partnera, część II, III i sprawdzenie arkusza (bramka IPRZ, szkic AI z seeda, odczyt dla kadr, odnotowanie rozmowy, zapis szkicu, zatwierdzenie do zapoznania), skrzynka powiadomień (oznaczenie jako przeczytane zmniejsza licznik w nagłówku, pusta skrzynka kadr, widok administratora), pomoc (instrukcje według roli, podsumowanie błędów pustego pytania, zadanie pytania asystentowi, nieznane pytanie, odpowiedź z seeda z pytaniem z przebiegu i źródłami), pełna struktura deklaracji dostępności z danymi urzędu z ustawień dla zalogowanych, dane deklaracji w ustawieniach admina z błędem przy złym telefonie. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`). Gdy którykolwiek test bez zmian danych nie przejdzie, Playwright pomija testy `mutating` i raportuje je jako pominięte, nie jako nieudane |
+| `pnpm e2e:ui` | te same testy w trybie UI Playwright |
+| `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
+
+Trasy (jedna linia na trasę, obszarami). Strony oznaczone „zaślepka” pokazują „Ta część aplikacji jest w przygotowaniu”.
+
+Bez logowania i bez urzędu:
+
+- `/logowanie`: logowanie
+- `/deklaracja-dostepnosci`: deklaracja dostępności według wzoru z ustawy o dostępności cyfrowej (stan zgodności, treści niedostępne, sposób oceny, skróty klawiaturowe, kontakt, procedura żądania i skargi, dostępność architektoniczna, tłumacz języka migowego, daty rrrr-mm-dd z identyfikatorami `a11y-*`), link w stopce, po zalogowaniu w pełnej powłoce z nazwą urzędu
+- `/brak-urzedu`: konto bez urzędu i roli
+
+Pulpit i wspólne:
+
+- `/`: pulpit osoby oceniającej, dla kadr z blokiem „Zadania kadr” (liczba zadań i link do `/kadry`), administrator trafia stąd do `/ustawienia`
+- `/powiadomienia`: skrzynka powiadomień: nieprzeczytane, przeczytane i załatwione, termin z liczbą dni, link do właściwej zakładki sprawy, oznaczenie jako przeczytane pojedynczo i wszystkich naraz (licznik w nagłówku maleje), po oznaczeniu `?oznaczono=jedno|wszystkie`, administrator widzi wyjaśnienie zamiast skrzynki
+- `/pomoc`: instrukcja krok po kroku dla oceniającego i kadr (własna rola pierwsza) oraz asystent przepisów (AI, pytanie o procedurę, odpowiedź z cytatami fragmentów przepisów, ocena odpowiedzi jako decyzja w dzienniku AI), wynik pytania `?pytanie=<id przebiegu>&tresc=<pytanie>` z odpytywaniem do limitu 4 minut, stany AI wyłączone, w toku, nieudane, po limicie i usunięte. Z `?ocena=<id oceny>` (link „Zapytaj o przepisy” w bocznym pasku sprawy) asystent odpowiada według wersji przepisów przypiętej do tej oceny
+- `/komponenty`: katalog komponentów `@sarmata/ui`, tylko w trybie deweloperskim (404 w produkcji), poza menu
+
+Oceny:
+
+- `/oceny`: lista ocen z filtrami etapu i pracownika
+- `/oceny/nowa`: rozpoczęcie oceny: wyszukanie pracownika (także z literówką), propozycja arkusza według rodzaju stanowiska, powód odmowy, gdy pracownik nie podlega ocenie
+- `/oceny/[id]`: sprawa oceny, przegląd: następny krok z przyciskiem do właściwej zakładki, brakujące pola przed zatwierdzeniem, ostrzeżenia i sygnały, dane sprawy (nad nim nagłówek, etapy, zakładki i panel boczny sprawy)
+- `/oceny/[id]/czesc-1`: część I: kryteria dodatkowe z katalogu, termin tylko skracany, zatwierdzenie z datą rozmowy rozpoczynającej i miejscowością, odnotowanie podpisu części I
+- `/oceny/[id]/czesc-2`: część II, oceny cząstkowe, uzasadnienie, wnioski IPRZ, autozapis, szkic AI, odnotowanie rozmowy oceniającej
+- `/oceny/[id]/czesc-3`: część III, wniosek o stopień, usunięcie zapisanego wniosku, gdy ocena go już nie dopuszcza
+- `/oceny/[id]/sprawdz`: sprawdzenie całego arkusza, bramki i zatwierdzenie do zapoznania
+- `/oceny/[id]/zdarzenia`: zapoznanie albo odmowa podpisu, czas na sprzeciw i zamknięcie, sprzeciw i jego wynik (kadry), przerwanie (kadry), zdarzenia boczne: nieobecność, zmiana terminu z zawiadomieniem PDF, zmiana stanowiska, zmiana oceniającego (kadry), korekta arkusza (administrator)
+- `/oceny/[id]/dziennik`: dziennik zdarzeń z datą faktyczną, autorem wpisu i czasem wpisania
+
+Pracownicy i notatki:
+
+- `/pracownicy`: lista pracowników z wyszukiwaniem, u oceniającego zakres „moi” albo wszyscy w urzędzie (`?zakres=wszyscy`)
+- `/pracownicy/nowy`: nowy pracownik z kontrolą podobnych osób (oceniający i kadry)
+- `/pracownicy/[id]`: karta pracownika: przebieg ocen, zmiana w kryteriach, notatki z filtrem rodzaju i wydźwięku (`?rodzaj=`, `?znak=`), formularz notatki (`?notatka=nowa` albo id), historia zmian notatki (`?historia=`), panel HR partnera (sygnały przeciążenia i wypalenia z notatek, moment na docenienie, każdy wynik jako sugestia AI), blok „Sprawy kadrowe” dla kadr (ocena archiwalna, ustanie zatrudnienia, archiwum teczek ZIP), po dodaniu pracownika `?dodano=1`
+- `/notatki`: własne notatki oceniającego i kadr, nowa notatka ze strażnikiem danych wrażliwych (słownik od razu, AI przez odpytywanie, zapis po potwierdzeniu ostrzeżeń), lista z filtrem `?pracownik=<id>`, edycja `?notatka=<id>`, historia zmian `?historia=<id>`, po zapisie `?zapisano=1`
+
+Kadry:
+
+- `/kadry`: zadania kadr z terminów i etapów ocen (sprzeciw do rozstrzygnięcia, stopień z mocy prawa, ocena po terminie)
+- `/kadry/harmonogram`: harmonogram ocen w toku z filtrami horyzontu, sytuacji i komórki (kadry i administrator)
+- `/kadry/statystyki`: rozkład ocen na tle kraju, potrzeby rozwojowe, raport oceniających i pobranie CSV do sprawozdania DSC-OCK (kadry i administrator)
+- `/api/kadry/dsc-ock?rok=<rok>`: plik CSV do sprawozdania DSC-OCK za rok (kadry i administrator)
+- `/kadry/rejestr`: rejestr odwołań do sądu pracy i przyznanych stopni służbowych
+- `/kadry/import`: import pracowników z CSV w czterech krokach z przebiegiem próbnym przed zapisem
+- `/kadry/struktura`: drzewo przełożonych ze zmianą przełożonego pracownika
+
+Administrator:
+
+- `/ustawienia`: ustawienia urzędu: AI, okres przechowywania notatek z ostrzeżeniem o liczbie notatek i przebiegów AI do usunięcia, przypomnienia, widoczność ocen, domyślna miejscowość, adresat sprzeciwu dla arkusza A, progi flag oceniających, dni bez docenienia, SMTP i osobno hasło SMTP, po zapisie `?zapisano=1` albo `?haslo=1` (inne role widzą informację, że ustawienia zmienia administrator)
+- `/ustawienia/konta`: konta urzędu, zaproszenie z rolą i jego status `?zaproszenie=<id>` odświeżany do wysłania, hasło jednorazowe pokazywane raz, zmiana roli i zakończenie dostępu `?konto=<id>`
+- `/ustawienia/przepisy`: wersje przepisów z oznaczeniem obowiązującej, nowy szkic na podstawie opublikowanej wersji, szczegóły `?wersja=<id>`: parametry i strategie terminów, wyniki przypadków testowych, publikacja z potwierdzeniem, usunięcie szkicu, powiązania przepisów z podstawą prawną
+- `/dziennik-ai`: dziennik użycia AI: administrator widzi dziennik całego urzędu bez treści (metadane i decyzje), pozostałe role przebiegi, które mogą czytać, filtry `?pracownik=<id>` i `?rodzaj=<rodzaj>`, decyzje o fragmentach `?przebieg=<id>`
+
+Ścieżki są w `frontend/web/src/lib/routes.ts`, „trasa zarezerwowana” ma tam ścieżkę, ale jeszcze nie ma strony. Wylogowanie jest w menu konta w nagłówku. Menu zależy od roli: oceniający widzi Pulpit, Moi pracownicy, Oceny, Notatki, kadry dodatkowo Kadry, administrator Pulpit, Ustawienia i Dziennik AI.
+
+Czcionki Open Sans (treść) i Fira Sans (nagłówki, menu, przyciski, liczby, pakiet `@fontsource/fira-sans`) są na licencji SIL Open Font License 1.1.
+
+## Zmienne środowiskowe
+
+Żadna z nich nie jest sekretem zespołu. Lokalne klucze Supabase podaje `supabase status`, więc nie trafiają do `secrets/dev.enc.env`. W instalacji u klienta ustawia je kreator.
+
+| Zmienna | Kto używa | Skąd w dev |
+|---|---|---|
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | testy integracyjne, worker | `scripts/with-supabase-env.mjs` czyta je z `supabase status`, chyba że `SUPABASE_URL` jest już ustawione (zewnętrzna instancja) |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | aplikacja web | `frontend/web/.env.local`, zapisuje go `pnpm web:env` (z `supabase status` albo z ustawionych w powłoce zmiennych zewnętrznej instancji) |
+| `SITE_URL` | aplikacja web, worker | domyślnie `http://localhost:3000`, `scripts/termic-run.sh` ustawia adres taska. Worker buduje z niego link do skrzynki powiadomień w zbiorczym mailu |
+| `PORT` | `pnpm dev` | domyślnie 3000, `scripts/termic-run.sh` ustawia port taska |
+| `SARMATA_AI_ENABLED` | `@sarmata/ai` | domyślnie `false`, AI wyłączone |
+| `SARMATA_AI_TIMEOUT_MS` | `@sarmata/ai` | domyślnie `60000` |
+| `SARMATA_AI_TEXT_BASE_URL`, `SARMATA_AI_TEXT_MODEL` | `@sarmata/ai`, model tekstowy zgodny z OpenAI | np. `http://127.0.0.1:55490/v1` i `bielik-4.5b-v3.0-instruct` (albo `bielik-11b-v3.1-instruct`, zależnie od modelu wybranego przez `pnpm ai:setup`) przy lokalnym llama-server z `pnpm ai:start`, bez nich model tekstowy jest wyłączony |
+| `SARMATA_AI_DECISION_BASE_URL`, `SARMATA_AI_DECISION_MODEL` | `@sarmata/ai`, Bielik-One `/v1/systemone` | np. `http://127.0.0.1:8026/v1` i `decision`, bez nich decyzje są wyłączone |
+| `SARMATA_AI_TEXT_API_KEY`, `SARMATA_AI_DECISION_API_KEY` | `@sarmata/ai` | tylko gdy serwer modelu wymaga klucza. To sekret: dopisz go do `secrets/dev.enc.env` przez `sops secrets/dev.enc.env`, nigdy jawnie do repo |
+| `SARMATA_WORKER_IDLE_DELAY_MS` | worker | domyślnie `1000`, przerwa po pustym odczycie kolejki |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SENDER_EMAIL`, `SMTP_SENDER_NAME` | worker | opcjonalne: domyślny SMTP instalatora, używany gdy urząd nie ma własnego w ustawieniach (te mają pierwszeństwo). `SMTP_HOST` wymaga też portu i adresu nadawcy |
+
+W instalacji urzędu te same zmienne ustawia kreator w `.env` katalogu instalacji. Kontener `web` dostaje `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SITE_URL` i `SARMATA_AI_*`, a `SUPABASE_SECRET_KEY` trafia wyłącznie do kontenera `worker` (ADR 0004).
+
+## Pliki konfiguracyjne
+
+- W repo: `.envrc`, `.sops.yaml`, `secrets/*.enc.env` (zaszyfrowane), `.mcp.json`, `.claude/`, `.agents/`, `.codex/`, `scripts/termic-*.sh`, `database/supabase/config.toml`, `infra/deploy/supabase/` (kopia `docker/` z supabase/supabase, nie edytować ręcznie), `infra/deploy/docker/` (Dockerfile aplikacji i `dbtool.sh` dla instalacji w urzędach).
+- Poza repo: `.env`, `.env.local` i inne `.env*` (powstają z SOPS albo ze skryptów, np. `.env.ai.local` z `pnpm ai:setup`), klucze age, katalog danych AI `~/Library/Application Support/sarmata/ai` (llama.cpp, modele, pamięć podręczna Hugging Face, logi), `.termic/customization-manifest.json` (generuje go Termic).
+
+## Termic
+
+W ustawieniach projektu sarmata w Termic ustaw:
+
+- skrypt setup: `./scripts/termic-setup.sh`. Robi automatycznie: ostrzeżenia z `doctor` (krok 1), `pnpm install` (krok 3), `direnv allow` i sekrety (krok 4), start wspólnej bazy bez `db:reset` oraz `pnpm regulations:sync` (krok 5), `pnpm ai:env` bez pobierania modeli (krok 6), `web:env` i Chromium dla Playwright (krok 7).
+- skrypt run: `./scripts/termic-run.sh`
+
+Skrypt run uruchamia `pnpm dev` na porcie wyliczonym z nazwy taska (`$TERMIC_TASK`, zakres 3001 do 3999, poza Termic port 3000) i ustawia `SITE_URL` aplikacji na ten sam adres. Port bieżącego taska pokazuje `node scripts/task-port.mjs`.
+
+Skrypt setup po starcie wspólnej bazy synchronizuje oficjalne wersje przepisów (`pnpm regulations:sync`).

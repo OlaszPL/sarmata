@@ -133,7 +133,7 @@ export async function prefetchBielikOne(
   );
   if (result.exitCode !== 0) {
     const login = pkg.gatedBase
-      ? ' The base model is gated: accept its terms on huggingface.co and log in with HF_HOME set to the AI data directory (README).'
+      ? ' The base model is gated: accept its terms on huggingface.co and log in with HF_HOME set to the AI data directory (docs/dla-deweloperow.md).'
       : '';
     throw new Error(`Downloading ${pkg.repo} failed (exit code ${result.exitCode}).${login}`);
   }

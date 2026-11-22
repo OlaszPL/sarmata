@@ -14,7 +14,7 @@ export interface ProfileSpec {
   readonly supabaseServices: readonly string[];
   /** A backup container dumps the database every night. */
   readonly nightlyBackups: boolean;
-  /** Systems the wizard offers the profile on (README "Wybór profilu"). */
+  /** Systems the wizard offers the profile on (docs/instalacja.md, "Wybór profilu"). */
   readonly systems: readonly OperatingSystem[];
   /** Size of the Colima VM the wizard creates on macOS. */
   readonly vm: { readonly cpus: number; readonly memoryGiB: number };

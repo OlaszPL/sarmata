@@ -33,6 +33,7 @@ export default defineConfig([
     '**/.turbo/**',
     'docs/**',
     'archive/**',
+    'video/**',
     '.agents/**',
     '.claude/**',
     '.codex/**',

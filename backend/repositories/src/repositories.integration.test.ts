@@ -157,7 +157,7 @@ describe('job queue', () => {
       { delaySeconds: 0 },
     );
     // Small batches with a short visibility timeout, so other jobs on the shared queue stay mostly
-    // untouched. Run this test with the worker stopped (README).
+    // untouched. Run this test with the worker stopped (docs/dla-deweloperow.md).
     let found: Awaited<ReturnType<typeof queue.read>>[number] | undefined;
     for (let attempt = 0; attempt < 50 && found === undefined; attempt += 1) {
       const batch = await queue.read(5, 1);

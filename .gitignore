@@ -299,3 +299,6 @@ e2e/.screenshots/
 
 # installer release archives (infra/deploy/dist is covered by dist/)
 infra/deploy/release/
+
+# demo video project (Remotion), kept locally
+video/

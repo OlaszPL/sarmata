@@ -10,7 +10,7 @@ Code is in English: identifiers, file names, comments, SQL tables, columns, enum
 
 - Commit all project configs (`.envrc`, `.sops.yaml`, `.mcp.json`, `.claude/`, `.agents/`, `scripts/termic-*.sh`, tool configs). Never commit `.env*` files: `.env.local` is decrypted from `secrets/*.enc.env` by SOPS (direnv does it automatically, or `pnpm secrets:decrypt`), app env files come from scripts.
 - Working implementation plans (`docs/superpowers/`) and agent scratch files stay out of git. Anything worth keeping becomes an ADR (`docs/adr/`), a doc in `docs/` or README content.
-- `README.md` always holds the exact, current way to run the project from a clean machine. Every change that adds or changes a script, service, port, env file or setup step updates README in the same commit.
+- `docs/dla-deweloperow.md` always holds the exact, current way to run the project from a clean machine, and `docs/instalacja.md` the office installation. Every change that adds or changes a script, service, port, env file or setup step updates them in the same commit. `README.md` stays short: description, links to these docs and the features with screenshots.
 
 ## Searching the repo: semble first
 
