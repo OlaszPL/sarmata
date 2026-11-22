@@ -1,26 +1,11 @@
-import { expect, test, type Page, type Response } from '@playwright/test';
-import { caseIdOf } from '../src/cases';
+import { expect, test } from '@playwright/test';
+import { caseIdOf, nextServerAction } from '../src/cases';
 import { demoAccount } from '../src/demo-accounts';
 import { signIn } from '../src/session';
 
-/**
- * The response of the next server action call (a POST with the `Next-Action` header), e.g. an
- * autosave, optionally the one whose posted fields contain `text`. Its arrival also proves the page
- * is hydrated, without waiting a fixed time.
- */
-function nextServerAction(page: Page, text?: string): Promise<Response> {
-  return page.waitForResponse((response) => {
-    const request = response.request();
-    return (
-      request.method() === 'POST' &&
-      'next-action' in request.headers() &&
-      (text === undefined || (request.postData() ?? '').includes(text))
-    );
-  });
-}
-
-// These tests change the demo data, so they run in the "mutating" project after the read-only
-// specs, one after another. They start from a freshly reset database.
+// Changes the demo data, so it runs in the "mutating" project, one file after another in name order.
+// Marek must still be in the evaluation period when case-events.mutate.spec.ts records his side
+// events, so this file sorts after it.
 test.describe.serial('case sheet changes', () => {
   test('Marek: recording the evaluation interview opens part II', async ({ page }) => {
     await signIn(page, demoAccount('evaluator'));
@@ -67,33 +52,5 @@ test.describe.serial('case sheet changes', () => {
     await expect(page.locator('#justification')).toHaveValue(justification);
     // The sheet save before the interview did not wipe the interview date the action set.
     await expect(page.locator('#interviewOn')).toHaveValue(heldOnValue);
-  });
-
-  test('Ewa: conclusions then approval moves to acquaintance', async ({ page }) => {
-    await signIn(page, demoAccount('evaluator'));
-    const ewa = await caseIdOf(page, 'Ewa Ewidencyjna');
-    await page.goto(`/oceny/${ewa}/czesc-2`);
-
-    // Typed right after the load, possibly before hydration: the autosave still sends it.
-    const saved = nextServerAction(page);
-    await page
-      .locator('#developmentConclusions')
-      .fill('Rozwijać umiejętność prowadzenia rejestrów w nowym systemie.');
-    await saved;
-    await expect(page.getByText(/Zapisano o/)).toBeVisible();
-    await expect(
-      page.getByRole('heading', { level: 2, name: /Zanim zatwierdzisz ocenę/ }),
-    ).toHaveCount(0);
-
-    await page.getByRole('button', { name: 'Sprawdź i zatwierdź ocenę' }).click();
-    await expect(page).toHaveURL(/\/sprawdz$/);
-
-    await page.getByRole('button', { name: 'Zatwierdź i przekaż do zapoznania' }).click();
-    await expect(page.getByText('Arkusz zatwierdzony.')).toBeVisible();
-    await expect(
-      page.getByRole('main').getByRole('heading', { level: 2, name: 'Zatwierdzony arkusz' }),
-    ).toBeVisible();
-    const stages = page.getByRole('main').getByRole('list', { name: 'Etapy oceny' });
-    await expect(stages.locator('[aria-current="step"]')).toContainText('Zapoznanie');
   });
 });
