@@ -63,8 +63,11 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
       stats={[
         { label: 'W toku', value: String(report.summary.inProgress) },
         { label: 'Po terminie', value: String(report.summary.overdue) },
-        { label: 'Bez rozmowy', value: String(report.summary.withoutInterview) },
-        { label: 'Rozmowy wkrótce', value: String(report.summary.startingInterviews) },
+        {
+          label: 'Bez rozmowy',
+          value: String(report.summary.withoutInterview),
+          hint: `Rozmowy w ciągu ${String(filters.horizon)} dni: ${String(report.summary.startingInterviews)}`,
+        },
       ]}
     >
       {report.rows.length === 0 ? (

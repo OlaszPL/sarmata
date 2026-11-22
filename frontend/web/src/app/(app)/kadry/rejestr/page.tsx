@@ -64,12 +64,12 @@ export default async function RegisterPage({ searchParams }: { searchParams: Sea
       meta="Odwołania do sądu pracy po nieuwzględnionym sprzeciwie i stopnie służbowe urzędników."
     >
       <div className="grid gap-8">
-        <Section title="Odwołania do sądu pracy" id="odwolania" flush>
+        <Section title="Odwołania do sądu pracy" id="odwolania">
           <DataTable
             caption="Sprawy z nieuwzględnionym sprzeciwem"
             rows={cases}
             rowKey={(c) => c.evaluationId}
-            empty={<p className="px-6 py-5">Nie ma jeszcze spraw z nieuwzględnionym sprzeciwem.</p>}
+            empty={<p className="py-5">Nie ma jeszcze spraw z nieuwzględnionym sprzeciwem.</p>}
             columns={[
               {
                 key: 'employee',
@@ -96,7 +96,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Sea
               },
             ]}
           />
-          <div className="grid gap-8 px-6 py-6 sm:px-8">
+          <div className="mt-6 grid gap-8">
             {openCases.length === 0 ? (
               <p className="max-w-[70ch]">
                 Nie ma spraw z nieuwzględnionym sprzeciwem bez zapisanego odwołania.

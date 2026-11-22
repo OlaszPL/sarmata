@@ -88,7 +88,7 @@ export function ImportWizard() {
   };
 
   return (
-    <div className="grid max-w-[60rem] gap-6">
+    <div className="grid gap-6">
       {state.step === 'file' ? (
         <FileStep
           error={state.error}

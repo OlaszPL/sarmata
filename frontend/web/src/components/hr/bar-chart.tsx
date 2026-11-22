@@ -23,6 +23,18 @@ export function BarChart({ caption, bars, max }: BarChartProps) {
   return (
     <figure className="m-0 grid gap-8 lg:grid-cols-2">
       <div aria-hidden="true" className="flex flex-col gap-4">
+        {hasCompare ? (
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[0.9375rem]">
+            <span className="flex items-center gap-2">
+              <span className="bg-navy inline-block h-4 w-6" />
+              Urząd
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="border-navy inline-block h-4 w-6 border-2 bg-white" />
+              Kraj
+            </span>
+          </div>
+        ) : null}
         {bars.map((bar) => (
           <div key={bar.label}>
             <div className="font-heading mb-1 text-[0.9375rem] font-semibold">{bar.label}</div>

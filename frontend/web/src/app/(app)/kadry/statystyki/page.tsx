@@ -78,8 +78,8 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
             </p>
             <p className="mb-6 max-w-[70ch]">
               Ocen negatywnych: {report.negative.count} ({formatShare(report.negative.share)}). W
-              kraju: {formatShare(report.negative.nationalShare)}. Różnica:{' '}
-              {formatPoints((report.negative.share - report.negative.nationalShare) * 100)}.
+              kraju: {formatShare(report.negative.nationalShare)}. Różnica względem kraju{' '}
+              {formatPoints((report.negative.share - report.negative.nationalShare) * 100)}
             </p>
             <BarChart
               caption="Udział ocen według poziomu"
@@ -222,7 +222,7 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
         <DataTable
           caption="Odpowiedzi do sprawozdania DSC-OCK"
           rows={report.dscOck}
-          rowKey={(answer) => String(answer.question)}
+          rowKey={(answer) => `${String(answer.question)} ${answer.label}`}
           columns={[
             { key: 'question', header: 'Pytanie', rowHeader: true, cell: (a) => a.question },
             { key: 'label', header: 'Opis', cell: (a) => a.label },
