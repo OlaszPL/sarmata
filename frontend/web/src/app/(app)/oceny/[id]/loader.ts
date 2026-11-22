@@ -2,8 +2,10 @@ import 'server-only';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import {
+  type ApprovalPreview,
   type CalendarDate,
   type EvaluationView,
+  type SheetContent,
   type MemberAccount,
   servicesFor,
 } from '@sarmata/services';
@@ -32,6 +34,36 @@ export interface CaseData {
   /** Name of the account that leads the evaluation, null when it is not in the office list. */
   evaluatorName: string | null;
   today: CalendarDate;
+  /**
+   * Gates of the next approval on the saved sheet (`services.evaluations.approvalIssues`): stage
+   * `part_one` in `criteria`, `sheet` in `interview`, null otherwise. Turn `issues` into an error
+   * summary with `approvalIssueItems` from `@/lib/service-errors`.
+   */
+  approval: ApprovalPreview;
+}
+
+const NO_APPROVAL: ApprovalPreview = { stage: null, issues: [] };
+
+/**
+ * Gates of the next approval for content that is not saved yet, e.g. a draft in a form. The
+ * approval itself checks the saved sheet, so save the draft before approving.
+ */
+export async function approvalPreview(
+  id: string,
+  content?: SheetContent,
+): Promise<ApprovalPreview> {
+  return servicesFor(await createSupabase()).evaluations.approvalIssues(id, content);
+}
+
+async function savedApproval(view: EvaluationView): Promise<ApprovalPreview> {
+  if (view.status !== 'criteria' && view.status !== 'interview') return NO_APPROVAL;
+  try {
+    return await approvalPreview(view.id);
+  } catch (error) {
+    // The preview is a hint, the frame of the case must not fail on it.
+    console.warn(`case: approval preview of ${view.id} failed`, error);
+    return NO_APPROVAL;
+  }
 }
 
 const idSchema = z.uuid();
@@ -54,9 +86,10 @@ export const loadCase = cache(async (id: string): Promise<CaseData> => {
   const account = await requireMember();
   const view = await servicesFor(await createSupabase()).evaluations.get(id);
   if (view === null) notFound();
-  const [regulation, evaluatorName] = await Promise.all([
+  const [regulation, evaluatorName, approval] = await Promise.all([
     regulationForEvaluation(view),
     evaluatorNameOf(view.evaluatorAccountId),
+    savedApproval(view),
   ]);
   const isAdmin = account.role === 'admin';
   return {
@@ -70,6 +103,7 @@ export const loadCase = cache(async (id: string): Promise<CaseData> => {
     employeeName: `${view.snapshot.firstName} ${view.snapshot.lastName}`,
     evaluatorName,
     today: todayInWarsaw(),
+    approval,
   };
 });
 

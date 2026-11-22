@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { type CalendarDate, type EvaluationView, servicesFor } from '@sarmata/services';
+import { type EvaluationView, servicesFor } from '@sarmata/services';
 import { createSupabase } from '@/lib/supabase';
 import { type CaseRegulation, caseRegulationOf } from './case-regulation';
 
@@ -14,23 +14,17 @@ export {
   levelName,
 } from './case-regulation';
 
-/** One regulation lookup per date and request. */
-const inForceOn = cache(async (on: CalendarDate) =>
-  servicesFor(await createSupabase()).regulations.inForceOn(on),
+/** One regulation lookup per evaluation and request. */
+const pinnedRegulation = cache(async (evaluationId: string) =>
+  servicesFor(await createSupabase()).regulations.forEvaluation(evaluationId),
 );
 
 /**
- * The regulation of an evaluation, cut to what its screens need: the case criteria with names and
- * indicators, the partial scale, the catalog and the overall bands. Read through
- * `services.regulations.inForceOn(view.cycleStart)`.
+ * The regulation version the evaluation is pinned to, cut to what its screens need: the case
+ * criteria with names and indicators, the partial scale, the catalog and the overall bands. Read
+ * through `services.regulations.forEvaluation(view.id)`, which throws `not_found` for an evaluation
+ * the account cannot see.
  */
 export async function regulationForEvaluation(view: EvaluationView): Promise<CaseRegulation> {
-  const document = await inForceOn(view.cycleStart);
-  if (document.id !== view.regulationId) {
-    // The evaluation keeps its pinned version, a newer one in force on the same day is unexpected.
-    console.warn(
-      `regulation: evaluation ${view.id} is pinned to ${view.regulationId}, ${document.id} is in force on ${view.cycleStart}`,
-    );
-  }
-  return caseRegulationOf(document, view);
+  return caseRegulationOf(await pinnedRegulation(view.id), view);
 }

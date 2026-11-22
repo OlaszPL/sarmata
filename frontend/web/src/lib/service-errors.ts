@@ -186,6 +186,27 @@ export function approvalIssueMessage(
   return { fieldId: rule.field(id), message: rule.message(id ? criterionName(id) : '') };
 }
 
+/**
+ * Error summary items of gate issues, e.g. of `services.evaluations.approvalIssues(id).issues`.
+ * `fieldMap` remaps the default field ids to the control ids of a form, one item per field.
+ */
+export function approvalIssueItems(
+  issues: readonly ApprovalIssue[],
+  criterionName?: (criterionId: string) => string,
+  fieldMap?: Record<string, string>,
+): { fieldId: string; message: string }[] {
+  const seen = new Set<string>();
+  const items: { fieldId: string; message: string }[] = [];
+  for (const issue of issues) {
+    const { fieldId, message } = approvalIssueMessage(issue, criterionName);
+    const target = fieldMap?.[fieldId] ?? fieldId;
+    if (seen.has(`${target}|${message}`)) continue;
+    seen.add(`${target}|${message}`);
+    items.push({ fieldId: target, message });
+  }
+  return items;
+}
+
 /** Gate issues found in `details`, skipping entries of unknown shape (e.g. `sheet_incomplete`). */
 export function approvalIssuesOf(details: unknown): ApprovalIssue[] {
   if (!Array.isArray(details)) return [];

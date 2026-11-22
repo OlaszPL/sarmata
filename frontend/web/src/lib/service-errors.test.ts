@@ -1,6 +1,7 @@
 import { type ApprovalIssue } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
 import {
+  approvalIssueItems,
   approvalIssueMessage,
   approvalIssueCodes,
   serviceErrorCodes,
@@ -97,5 +98,16 @@ describe('approvalIssueMessage', () => {
       fieldId: 'developmentConclusions',
       message: 'Wpisz wnioski do indywidualnego programu rozwoju zawodowego (IPRZ).',
     });
+  });
+});
+
+describe('approvalIssueItems', () => {
+  it('turns a gate preview into summary items with form ids, without duplicates', () => {
+    const items = approvalIssueItems(
+      [{ code: 'development_conclusions_missing' }, { code: 'too_many' }, { code: 'too_many' }],
+      undefined,
+      { developmentConclusions: 'conclusions' },
+    );
+    expect(items.map((item) => item.fieldId)).toEqual(['conclusions', 'additionalCriteria']);
   });
 });
