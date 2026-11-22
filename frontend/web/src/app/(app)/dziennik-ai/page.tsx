@@ -1,8 +1,116 @@
 import type { Metadata } from 'next';
-import { ComingSoon } from '@/components/coming-soon';
+import Link from 'next/link';
+import { servicesFor } from '@sarmata/services';
+import { DataTable, type DataTableColumn, EmptyState, PageHero, Section, Tag } from '@sarmata/ui';
+import { AiLogFilters } from '@/components/ai-log/ai-log-filters';
+import { RunDecisions } from '@/components/ai-log/run-decisions';
+import { officeEmployees, requireMember } from '@/lib/account';
+import { type AiLogRow, aiLogRows, parseAiLogFilter } from '@/lib/ai-log/ai-log';
+import { routes } from '@/lib/routes';
+import { type SearchParams, single } from '@/lib/search-params';
+import { createSupabase } from '@/lib/supabase';
 
 export const metadata: Metadata = { title: 'Dziennik użycia AI' };
 
-export default function Page() {
-  return <ComingSoon title="Dziennik użycia AI" />;
+const RUN_ANCHOR = 'przebieg';
+
+function emptyText(role: string, filtered: boolean): string {
+  if (filtered) return 'Żaden przebieg nie pasuje do filtrów.';
+  if (role === 'admin') {
+    return 'Administrator widzi dziś tylko przebiegi, które sam zlecił. Przebiegi oceniających i kadr pokażą się tu po rozszerzeniu uprawnień do dziennika.';
+  }
+  return 'Nie ma jeszcze przebiegów AI. Pojawią się po pierwszym użyciu sugestii AI w ocenie, notatce albo karcie pracownika.';
+}
+
+/** AI usage log (`/dziennik-ai`): every run and the human decision about each fragment. */
+export default async function AiLogPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const account = await requireMember();
+  const params = await searchParams;
+  const filter = parseAiLogFilter(params);
+  const selectedId = single(params[RUN_ANCHOR]);
+
+  const services = servicesFor(await createSupabase());
+  const [runs, employees] = await Promise.all([services.ai.list(filter), officeEmployees()]);
+
+  const people = new Map<string, string>();
+  for (const employee of employees) {
+    if (employee.anonymizedAt !== null) continue;
+    const name = `${employee.firstName} ${employee.lastName}`;
+    people.set(employee.id, name);
+    if (employee.userId !== null) people.set(employee.userId, name);
+  }
+  const options = employees
+    .filter((employee) => employee.anonymizedAt === null)
+    .map((employee) => ({ id: employee.id, name: `${employee.firstName} ${employee.lastName}` }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+
+  const rows = aiLogRows(runs, people);
+  const selected = runs.find((run) => run.id === selectedId) ?? null;
+  const filtered = filter.employeeId !== undefined || filter.kind !== undefined;
+
+  const columns: DataTableColumn<AiLogRow>[] = [
+    { key: 'when', header: 'Kiedy', className: 'w-[11rem]', cell: (row) => row.requestedAt },
+    { key: 'kind', header: 'Rodzaj', rowHeader: true, cell: (row) => row.kind },
+    {
+      key: 'employee',
+      header: 'Pracownik',
+      cell: (row) => row.employee ?? <span className="text-ink-muted">Bez pracownika</span>,
+    },
+    { key: 'by', header: 'Zlecił', cell: (row) => row.requestedBy },
+    {
+      key: 'status',
+      header: 'Stan',
+      cell: (row) => <Tag tone={row.status.tone}>{row.status.label}</Tag>,
+    },
+    { key: 'decisions', header: 'Decyzje', cell: (row) => row.decisions },
+    {
+      key: 'details',
+      header: 'Szczegóły',
+      cell: (row) => (
+        <Link
+          href={`${routes.aiLog}?${new URLSearchParams({
+            ...(filter.employeeId ? { pracownik: filter.employeeId } : {}),
+            ...(filter.kind ? { rodzaj: filter.kind } : {}),
+            [RUN_ANCHOR]: row.id,
+          }).toString()}#${RUN_ANCHOR}`}
+          className="font-heading text-link font-medium underline"
+        >
+          Pokaż
+          <span className="sr-only">
+            {' '}
+            decyzje, {row.kind}, {row.requestedAt}
+          </span>
+        </Link>
+      ),
+    },
+  ];
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <PageHero
+        title="Dziennik użycia AI"
+        meta="Każde użycie AI i decyzja człowieka o każdym fragmencie. Najnowsze 50 przebiegów."
+      />
+      <div className="flex flex-col gap-6 px-6 py-8 sm:px-10">
+        <AiLogFilters employees={options} employeeId={filter.employeeId} kind={filter.kind} />
+        {rows.length > 0 ? (
+          <DataTable
+            caption="Przebiegi AI"
+            columns={columns}
+            rows={rows}
+            rowKey={(row) => row.id}
+          />
+        ) : (
+          <EmptyState title="Brak przebiegów do pokazania" className="px-0 sm:px-0">
+            <p className="max-w-[70ch]">{emptyText(account.role, filtered)}</p>
+          </EmptyState>
+        )}
+      </div>
+      {selected ? (
+        <Section title="Decyzje o fragmentach" id={RUN_ANCHOR}>
+          <RunDecisions run={selected} people={people} />
+        </Section>
+      ) : null}
+    </div>
+  );
 }

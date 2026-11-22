@@ -17,7 +17,11 @@ const evaluatorItems: readonly NavItem[] = [
 
 const hrItems: readonly NavItem[] = [...evaluatorItems, { href: routes.hr, label: 'Kadry' }];
 
-const adminItems: readonly NavItem[] = [dashboard, { href: routes.settings, label: 'Ustawienia' }];
+const adminItems: readonly NavItem[] = [
+  dashboard,
+  { href: routes.settings, label: 'Ustawienia' },
+  { href: routes.aiLog, label: 'Dziennik AI' },
+];
 
 export function navForRole(role: OfficeRole): readonly NavItem[] {
   if (role === 'admin') return adminItems;
