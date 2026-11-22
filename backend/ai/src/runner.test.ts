@@ -122,7 +122,7 @@ describe('sheet draft', () => {
       },
     });
     const value = await executeOk(runner, 'sheet_draft', draftInput);
-    expect(value.promptVersion).toBe('sheet-draft.v3');
+    expect(value.promptVersion).toBe('sheet-draft.v4');
     expect(fake.requests.map((request) => schemaOf(request))).toEqual([
       'sheet_draft_criterion',
       'sheet_draft_criterion',

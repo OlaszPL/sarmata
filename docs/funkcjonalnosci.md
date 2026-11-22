@@ -52,7 +52,7 @@ Backend jest zaimplementowany w zakresie planów B1 do B10: dostęp i role (RLS,
 - Silnik terminów liczy kolejne kroki od dat faktycznych.
 - Podpis to zatwierdzenie w systemie (potwierdzone przez mentorów KPRM 21.11.2026). Zatwierdza oceniający: zalogowane konto, znacznik czasu i wpis w dzienniku. Potwierdzenie ocenianego (podpis części I, zapoznanie, odmowa) oceniający odnotowuje z datą, bo oceniany nie ma konta. Wydruk PDF zostaje jako opcja dla urzędu.
 
-- Do zdarzeń oceny wchodzą pola z wzorów arkuszy KPRM, zapisane w payloadzie zdarzenia. `record_acquaintance` przyjmuje opcjonalne `refusalNote` i `witnesses`, a przy odmowie podpisu notatka domyślnie brzmi „oceniany odmówił podpisania zapoznania się z oceną”. `approve_part_one`, `approve_sheet` i `record_acquaintance` przyjmują opcjonalne `place` (miejscowość), domyślnie z `OfficeSettings.defaultPlace`.
+- Do zdarzeń oceny wchodzą pola z wzorów arkuszy KPRM, zapisane w payloadzie zdarzenia. `record_acquaintance` przyjmuje opcjonalne `refusalNote` i `witnesses`, a przy odmowie podpisu notatka domyślnie brzmi „osoba oceniana odmówiła podpisania zapoznania się z oceną”. `approve_part_one`, `approve_sheet` i `record_acquaintance` przyjmują opcjonalne `place` (miejscowość), domyślnie z `OfficeSettings.defaultPlace`.
 
 ## Notatki
 
@@ -308,4 +308,4 @@ Te funkcje wynikają wprost z prawa i materiałów KPRM, więc wchodzą bez dysk
 - Część III (wniosek o stopień) tylko dla urzędnika przy ocenie pozytywnej, z umotywowaniem. Przy IX stopniu wniosek zablokowany (bramka `grade_request_max_grade`), wniosek tylko o stopień o jeden wyższy. Ostrzeżenie `grade_due_by_law` w `EvaluationView.warnings`, gdy arkusz zawiera wniosek, a stopień i tak przysługuje z mocy prawa (art. 89 ust. 2). Drugi kod, `second_consecutive_negative`, powtarza sygnał z art. 71. Ostrzeżenia nic nie blokują.
 - Sygnał dla kadr o drugiej kolejnej ocenie negatywnej (art. 71).
 - Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG, który rozpatruje sprzeciw. Niemożliwe bez roli DG w aplikacji, więc nie zaimplementowane.
-- Odmowa podpisu przy zapoznaniu jest zdarzeniem z datą i adnotacją na arkuszu („oceniany odmówił podpisania”), uruchamia te same terminy co zapoznanie.
+- Odmowa podpisu przy zapoznaniu jest zdarzeniem z datą i adnotacją na arkuszu („osoba oceniana odmówiła podpisania”), uruchamia te same terminy co zapoznanie.

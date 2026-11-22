@@ -99,7 +99,7 @@ insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, inpu
       {"criterionId":"reliability","points":7,"sentences":[{"text":"Od 20.10.2026 przejął obsługę dwóch dodatkowych spraw na czas urlopu współpracownika.","noteIds":["33333333-3333-4333-8333-000000000003"]}]}],
     "justification":[{"text":"Pracownik rzetelnie przekazuje ustalenia i przejmuje dodatkowe zadania, co potwierdzają notatki z września i października 2026.","noteIds":["33333333-3333-4333-8333-000000000001","33333333-3333-4333-8333-000000000003"]}],
     "developmentConclusions":[{"text":"Warto rozwijać planowanie pracy przy zwiększonym obciążeniu zadaniami.","noteIds":["33333333-3333-4333-8333-000000000003"]}],
-    "questions":["Jak ocenia Pan obciążenie po przejęciu dodatkowych spraw?"]}',
+    "questions":["Jak wygląda obciążenie po przejęciu dodatkowych spraw?"]}',
    'sheet-draft.v1', '2026-11-02 09:00:00+01', '2026-11-02 09:00:05+01', '2026-11-02 09:02:40+01'),
   ('44444444-4444-4444-8444-000000000002', '11111111-1111-4111-8111-111111111111', 'hr_signals',
    '22222222-2222-4222-8222-000000000003',

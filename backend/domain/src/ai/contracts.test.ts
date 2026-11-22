@@ -20,7 +20,7 @@ const outputExamples: Record<AiRunKind, unknown> = {
     ],
     justification: [sentence],
     developmentConclusions: [sentence, sentence],
-    questions: ['Jak ocenia Pan współpracę z zespołem?'],
+    questions: ['Jak przebiega współpraca z zespołem?'],
   },
   quality_check: {
     issues: [{ type: 'no_date', fragment: null, suggestion: 'Dodaj datę zdarzenia.' }],
@@ -60,7 +60,7 @@ const outputExamples: Record<AiRunKind, unknown> = {
         fragments: [{ noteId: 'n1', quote: 'dwóch dodatkowych spraw' }],
       },
     ],
-    questions: ['Jak ocenia Pan obecne obciążenie?'],
+    questions: ['Jak wygląda obecne obciążenie?'],
     actions: [{ framework: 'jd_r', signal: 'overload', text: 'Przegląd priorytetów zadań.' }],
   },
   procedure_question: {

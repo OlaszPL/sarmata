@@ -1086,7 +1086,7 @@ describe('fix wave 1: staffing review findings', () => {
         signatureRefused: true,
       });
       expect(payloadOf(first.store, a.id, 'signature_refused')).toEqual({
-        refusalNote: 'oceniany odmówił podpisania zapoznania się z oceną',
+        refusalNote: 'osoba oceniana odmówiła podpisania zapoznania się z oceną',
       });
 
       const second = setup([employee()]);

@@ -68,8 +68,8 @@ const year = Number(today.slice(0, 4));
 // on day 3 is inside the 7 days from the first acquaintance, the second window runs from day 6.
 const day = (offset: number): CalendarDate => addDays(today, offset);
 
-const FIRST_REFUSAL = 'Oceniany odmówił podpisu złotej ścieżki.';
-const SECOND_REFUSAL = 'Oceniany ponownie odmówił podpisu po ponownym sporządzeniu.';
+const FIRST_REFUSAL = 'Osoba oceniana odmówiła podpisu złotej ścieżki.';
+const SECOND_REFUSAL = 'Osoba oceniana ponownie odmówiła podpisu po ponownym sporządzeniu.';
 const JUSTIFICATION = 'Uzasadnienie złotej ścieżki: terminowo i rzetelnie.';
 const UNIT = 'Wydział Złotej Ścieżki';
 
