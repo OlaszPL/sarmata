@@ -91,7 +91,7 @@ test.describe('hr panel as hr', () => {
     await expect(table.getByText('Błąd', { exact: true })).toBeVisible();
     await expect(table.getByText('Wymaga decyzji')).toBeVisible();
     await expect(
-      table.getByText('Data nawiązania stosunku pracy: nieprawidłowa wartość'),
+      table.getByText('Data nawiązania stosunku pracy: nieprawidłowa data'),
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Zaimportuj pracowników' })).toBeVisible();
     await expectNoViolations(page);

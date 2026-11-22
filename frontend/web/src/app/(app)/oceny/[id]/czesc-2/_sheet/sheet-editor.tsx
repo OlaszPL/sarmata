@@ -301,13 +301,13 @@ export function SheetEditor({
 
   // Leaving the page (a tab, the sidebar, the back link) must not drop a change that waits for the
   // pause. The form may already be detached here, so the snapshot of the last change stands in.
+  // React also runs this cleanup when a Suspense boundary only hides the editor for a moment, so it
+  // takes the usual save path: the status line and the gate banner then follow the save.
   useLayoutEffect(
     () => () => {
-      if (!autosave.takePending()) return;
-      const fields = currentFields();
-      if (fields !== null) void saveSheet(id, fields);
+      if (autosave.takePending()) void runRef.current();
     },
-    [autosave, currentFields, id],
+    [autosave],
   );
 
   /**

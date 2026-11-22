@@ -49,10 +49,16 @@ test.describe('notifications inbox', () => {
     });
   });
 
-  test('hr sees an empty inbox', async ({ page }) => {
+  test('hr sees the tasks the seed collected', async ({ page }) => {
     await signIn(page, demoAccount('hr'));
     await page.goto('/powiadomienia');
-    await expect(page.getByText('Nie masz powiadomień', { exact: true })).toBeVisible();
+    // collect_notifications runs at the end of the demo seed: objection and grade by law of Stefan.
+    const main = page.getByRole('main');
+    await expect(
+      main.getByText('Wpisz rozstrzygnięcie sprzeciwu').filter({ visible: true }).first(),
+    ).toBeVisible();
+    await expect(main).toContainText('Stefan Sprzeciwny');
+    await expect(page.getByText('Nie masz powiadomień', { exact: true })).toHaveCount(0);
   });
 
   test('admin sees a notice and no table', async ({ page }) => {
