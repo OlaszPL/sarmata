@@ -52,6 +52,16 @@ describe('serviceErrorMessage', () => {
     expect(serviceErrorMessage('something_new')).toMatch(/Spróbuj ponownie/);
   });
 
+  it('explains why a supervisor cannot be set', () => {
+    expect(serviceErrorMessage('invalid_supervisor', { reason: 'cycle' })).toMatch(/podwładnym/);
+    expect(serviceErrorMessage('invalid_supervisor', { reason: 'self' })).toMatch(
+      /swoim przełożonym/,
+    );
+    expect(serviceErrorMessage('invalid_supervisor', { reason: 'other_office' })).toMatch(/urzędu/);
+    expect(serviceErrorMessage('invalid_supervisor', { reason: 'not_allowed' })).toMatch(/kadry/);
+    expect(serviceErrorMessage('invalid_supervisor', { reason: 'new_one' })).toMatch(/przełożon/);
+  });
+
   it('explains why an employee is not eligible', () => {
     expect(serviceErrorMessage('not_eligible', { reason: 'fixed_term' })).toMatch(/czas określony/);
     expect(serviceErrorMessage('not_eligible', { reason: 'employment_ended' })).toMatch(/ustało/);

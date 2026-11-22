@@ -19,7 +19,7 @@ import {
 } from '@sarmata/ui';
 import { useErrorTitle } from '@/components/use-error-title';
 import {
-  FAILED_ROW_TEXT,
+  failedRowText,
   actionLabels,
   importFieldKeys,
   importFieldLabels,
@@ -256,7 +256,7 @@ function PreviewStep({
         ) : (
           <ul className="grid gap-1">
             {row.errors.map((error) => (
-              <li key={`${error.field ?? ''}:${error.message}`}>{rowErrorText(error)}</li>
+              <li key={`${error.field ?? ''}:${error.code}`}>{rowErrorText(error)}</li>
             ))}
           </ul>
         ),
@@ -363,7 +363,7 @@ function DoneStep({
                 <ul className="mt-1 grid gap-1 pl-5">
                   {report.failed.map((failure) => (
                     <li key={failure.row}>
-                      Wiersz {failure.row}: {FAILED_ROW_TEXT}
+                      Wiersz {failure.row}: {failedRowText(failure.errors)}
                     </li>
                   ))}
                 </ul>

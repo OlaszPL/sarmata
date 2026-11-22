@@ -1,4 +1,8 @@
-import { type ApprovalIssue, type ServiceErrorCode } from '@sarmata/services';
+import {
+  type ApprovalIssue,
+  type InvalidSupervisorReason,
+  type ServiceErrorCode,
+} from '@sarmata/services';
 
 /**
  * Polish messages for every `ServiceError` code. The `Record` makes the compiler demand a message
@@ -26,6 +30,7 @@ const messages: Record<ServiceErrorCode, string> = {
   term_change_invalid: 'Nie można zmienić terminu tej oceny.',
   forbidden:
     'Twoja rola nie pozwala na tę czynność. Jeśli to pomyłka, poproś administratora urzędu o zmianę roli.',
+  invalid_supervisor: 'Nie można ustawić tego przełożonego. Wybierz inną osobę.',
   invalid_evaluator: 'Wybrana osoba nie może prowadzić oceny w tym urzędzie. Wybierz inną osobę.',
   no_locked_sheet: 'Ta ocena nie ma zatwierdzonego arkusza, więc nie ma czego korygować.',
   not_found: 'Nie znaleziono danych. Mogły zostać usunięte, odśwież stronę.',
@@ -61,6 +66,13 @@ const notEligibleReasons: Record<string, string> = {
   evaluation_in_progress: 'Ten pracownik ma już ocenę w toku. Otwórz ją z listy ocen.',
 };
 
+const invalidSupervisorReasons: Record<InvalidSupervisorReason, string> = {
+  cycle: 'Ta osoba jest już podwładnym wybranego przełożonego. Wybierz inną osobę.',
+  self: 'Pracownik nie może być swoim przełożonym.',
+  other_office: 'Wybrany przełożony nie należy do urzędu.',
+  not_allowed: 'Przełożonego zmieniają tylko kadry.',
+};
+
 const termChangeIssues: Record<string, string> = {
   term_change_too_early:
     'Termin można zmienić dopiero po upływie okresu wymaganego przepisami od początku cyklu.',
@@ -82,6 +94,12 @@ function polishDate(value: string): string {
 export function serviceErrorMessage(code: string, details?: unknown): string {
   if (code === 'not_eligible' && isRecord(details) && typeof details.reason === 'string') {
     return notEligibleReasons[details.reason] ?? messages.not_eligible;
+  }
+  if (code === 'invalid_supervisor' && isRecord(details) && typeof details.reason === 'string') {
+    return (
+      (invalidSupervisorReasons as Record<string, string>)[details.reason] ??
+      messages.invalid_supervisor
+    );
   }
   if (code === 'objection_late' && isRecord(details) && typeof details.dueOn === 'string') {
     return `Termin na wniesienie sprzeciwu minął ${polishDate(details.dueOn)}. Sprzeciwu po terminie nie można przyjąć.`;

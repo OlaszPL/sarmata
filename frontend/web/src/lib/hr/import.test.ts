@@ -5,6 +5,8 @@ import {
   decisionsFromForm,
   importFieldLabels,
   mappingFromForm,
+  FAILED_ROW_TEXT,
+  failedRowText,
   rowErrorText,
 } from './import';
 
@@ -51,19 +53,36 @@ describe('labels', () => {
 });
 
 describe('rowErrorText', () => {
-  it('names the field in Polish instead of the English backend message', () => {
-    expect(rowErrorText({ field: 'employmentStart', message: 'invalid date nie wiem' })).toBe(
-      'Data nawiązania stosunku pracy: nieprawidłowa wartość',
-    );
+  it('names the field in Polish and says what is wrong from the code', () => {
+    expect(
+      rowErrorText({ field: 'employmentStart', code: 'invalid_date', message: 'invalid date' }),
+    ).toBe('Data nawiązania stosunku pracy: nieprawidłowa data');
   });
 
   it('explains a repeated e-mail', () => {
-    expect(
-      rowErrorText({ field: 'email', message: 'The e-mail repeats earlier in the file' }),
-    ).toBe('Adres e-mail powtarza się wcześniej w pliku');
+    expect(rowErrorText({ field: 'email', code: 'duplicate_email', message: 'repeats' })).toBe(
+      'Adres e-mail: powtarza się wcześniej w pliku',
+    );
   });
 
-  it('falls back to the row when no field is known', () => {
-    expect(rowErrorText({ field: null, message: 'whatever' })).toBe('Nieprawidłowe dane w wierszu');
+  it('starts with a capital letter when no field is known', () => {
+    expect(rowErrorText({ field: null, code: 'write_failed', message: 'whatever' })).toBe(
+      'Nie udało się zapisać',
+    );
+  });
+});
+
+describe('failedRowText', () => {
+  it('lists the row errors', () => {
+    expect(
+      failedRowText([
+        { field: 'email', code: 'invalid_format', message: 'x' },
+        { field: null, code: 'unknown_supervisor', message: 'y' },
+      ]),
+    ).toBe('Adres e-mail: nieprawidłowy format. Takiego przełożonego nie ma w urzędzie');
+  });
+
+  it('falls back to the general hint without row errors', () => {
+    expect(failedRowText([])).toBe(FAILED_ROW_TEXT);
   });
 });
