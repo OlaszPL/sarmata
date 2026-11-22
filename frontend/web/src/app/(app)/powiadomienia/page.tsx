@@ -104,7 +104,11 @@ export default async function NotificationsPage({
             actions={
               unread.length > 0 ? (
                 <form action={markAllNotificationsRead}>
-                  <Button type="submit" variant="secondary">
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    className="h-auto min-h-11 max-w-full py-2 text-left whitespace-normal"
+                  >
                     Oznacz wszystkie jako przeczytane
                   </Button>
                 </form>

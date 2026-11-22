@@ -34,7 +34,7 @@ function SubHeading({ children }: { children: ReactNode }) {
 }
 
 function BulletList({ children }: { children: ReactNode }) {
-  return <ul className="max-w-[70ch] list-disc space-y-2 pl-6">{children}</ul>;
+  return <ul className="mt-2 mb-4 max-w-[70ch] list-disc space-y-2 pl-6 last:mb-0">{children}</ul>;
 }
 
 /**
