@@ -28,6 +28,9 @@ export async function GET(request: Request): Promise<Response> {
     if (error instanceof ServiceError && error.code === 'forbidden') {
       return Response.json({ error: 'forbidden' }, { status: 403 });
     }
+    if (error instanceof ServiceError && error.code === 'no_regulation_in_force') {
+      return Response.json({ error: 'not_found' }, { status: 404 });
+    }
     throw error;
   }
 }

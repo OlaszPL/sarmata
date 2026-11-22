@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { servicesFor, type EvaluatorFlag } from '@sarmata/services';
+import { ServiceError, servicesFor, type EvaluatorFlag } from '@sarmata/services';
 import { Button, DataTable, EmptyState, Field, Section, Select, Tag } from '@sarmata/ui';
 import { BarChart } from '@/components/hr/bar-chart';
 import { HrPage } from '@/components/hr/hr-page';
@@ -34,10 +34,50 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
   const year = parseYear((await searchParams).rok, currentYear);
   const services = servicesFor(await createSupabase());
   const canSeeEvaluators = hrAccess(account.role, 'evaluatorReport') !== 'none';
-  const [report, evaluators] = await Promise.all([
+  const reports = await Promise.all([
     services.statistics.officeReport(year),
     canSeeEvaluators ? services.statistics.evaluatorReport(year) : Promise.resolve(null),
-  ]);
+  ]).catch((error: unknown) => {
+    // A year before the first regulation version in force has no reports at all.
+    if (error instanceof ServiceError && error.code === 'no_regulation_in_force') return null;
+    throw error;
+  });
+
+  const yearForm = (
+    <form
+      action={routes.hrStatistics}
+      method="get"
+      className="mb-6 flex flex-wrap items-end gap-x-6 gap-y-4"
+    >
+      <Field id="rok" label="Rok" className="max-w-full">
+        <Select name="rok" defaultValue={String(year)} className="w-40 max-w-full">
+          {yearOptions(currentYear).map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Button type="submit" variant="secondary">
+        Pokaż rok
+      </Button>
+    </form>
+  );
+  const emptyYear = (
+    <EmptyState title={`Brak ocen w ${year} r.`}>
+      Statystyki pojawią się, gdy w tym roku zamkniesz pierwsze oceny. Wybierz inny rok.
+    </EmptyState>
+  );
+
+  if (reports === null) {
+    return (
+      <HrPage title="Statystyki ocen" meta={`Rok ${year}`}>
+        {yearForm}
+        {emptyYear}
+      </HrPage>
+    );
+  }
+  const [report, evaluators] = reports;
 
   const hasNational = report.levels.some((level) => level.nationalShare !== null);
   const maxShare = Math.max(
@@ -47,29 +87,10 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
 
   return (
     <HrPage title="Statystyki ocen" meta={`Rok ${year}`}>
-      <form
-        action={routes.hrStatistics}
-        method="get"
-        className="mb-6 flex flex-wrap items-end gap-x-6 gap-y-4"
-      >
-        <Field id="rok" label="Rok" className="max-w-full">
-          <Select name="rok" defaultValue={String(year)} className="w-40 max-w-full">
-            {yearOptions(currentYear).map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Button type="submit" variant="secondary">
-          Pokaż rok
-        </Button>
-      </form>
+      {yearForm}
 
       {report.total === 0 ? (
-        <EmptyState title={`Brak ocen w ${year} r.`}>
-          Statystyki pojawią się, gdy w tym roku zamkniesz pierwsze oceny. Wybierz inny rok.
-        </EmptyState>
+        emptyYear
       ) : (
         <>
           <Section title="Rozkład ocen na tle kraju">
