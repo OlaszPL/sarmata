@@ -21,7 +21,23 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'chromium', testDir: './tests', use: { ...devices['Desktop Chrome'] } },
+    // Read-only specs run in parallel. Specs that change the demo data (*.mutate.spec.ts) run
+    // afterwards in their own project, one file at a time, so they never race the read-only ones.
+    {
+      name: 'chromium',
+      testDir: './tests',
+      testIgnore: /\.mutate\.spec\.ts$/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'mutating',
+      testDir: './tests',
+      testMatch: /\.mutate\.spec\.ts$/,
+      dependencies: ['chromium'],
+      fullyParallel: false,
+      workers: 1,
+      use: { ...devices['Desktop Chrome'] },
+    },
     { name: 'walk', testDir: './walk', use: { ...devices['Desktop Chrome'] } },
   ],
   // Locally: reuse the server of this task (termic run) or start it the same way.

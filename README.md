@@ -111,7 +111,7 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 | `pnpm run doctor` | sprawdza wymagane narzędzia i podpowiada instalację |
 | `pnpm check` | lint, format, typecheck i testy (to samo co CI) |
 | `pnpm build` | build wszystkich pakietów przez Turborepo |
-| `pnpm test` | testy wszystkich pakietów przez Turborepo |
+| `pnpm test` | testy wszystkich pakietów przez Turborepo (w tym logiki pulpitu w `frontend/web`) |
 | `pnpm typecheck` | kontrola typów |
 | `pnpm lint`, `pnpm lint:fix` | ESLint, z poprawianiem |
 | `pnpm format`, `pnpm format:check` | Prettier, z zapisem i tylko sprawdzenie |
@@ -145,11 +145,64 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409) |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px, a z A+ menu w drugim wierszu i czytelna nazwa konta), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy, lista i karta pracownika, nowy pracownik z błędami, notatki ze strażnikiem danych wrażliwych, panel HR partnera, część II, III i sprawdzenie arkusza (bramka IPRZ, szkic AI z seeda, odczyt dla kadr, odnotowanie rozmowy, zapis szkicu, zatwierdzenie do zapoznania), skrzynka powiadomień (oznaczenie jako przeczytane zmniejsza licznik w nagłówku, pusta skrzynka kadr, widok administratora), pomoc (instrukcje według roli, podsumowanie błędów pustego pytania, zadanie pytania asystentowi, nieznane pytanie), pełna struktura deklaracji dostępności. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`). Gdy którykolwiek test bez zmian danych nie przejdzie, Playwright pomija testy `mutating` i raportuje je jako pominięte, nie jako nieudane |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
-Font Open Sans jest na licencji SIL Open Font License 1.1.
+Trasy (jedna linia na trasę, obszarami). Strony oznaczone „zaślepka” pokazują „Ta część aplikacji jest w przygotowaniu”.
+
+Bez logowania i bez urzędu:
+
+- `/logowanie`: logowanie
+- `/deklaracja-dostepnosci`: deklaracja dostępności według wzoru z ustawy o dostępności cyfrowej (stan zgodności, treści niedostępne, sposób oceny, skróty klawiaturowe, kontakt, procedura żądania i skargi, dostępność architektoniczna, tłumacz języka migowego, daty rrrr-mm-dd z identyfikatorami `a11y-*`), link w stopce, po zalogowaniu w pełnej powłoce z nazwą urzędu
+- `/brak-urzedu`: konto bez urzędu i roli
+
+Pulpit i wspólne:
+
+- `/`: pulpit osoby oceniającej, dla kadr z blokiem „Zadania kadr” (liczba zadań i link do `/kadry`), administrator trafia stąd do `/ustawienia`
+- `/powiadomienia`: skrzynka powiadomień: nieprzeczytane, przeczytane i załatwione, termin z liczbą dni, link do właściwej zakładki sprawy, oznaczenie jako przeczytane pojedynczo i wszystkich naraz (licznik w nagłówku maleje), po oznaczeniu `?oznaczono=jedno|wszystkie`, administrator widzi wyjaśnienie zamiast skrzynki
+- `/pomoc`: instrukcja krok po kroku dla oceniającego i kadr (własna rola pierwsza) oraz asystent przepisów (AI, pytanie o procedurę, odpowiedź z cytatami fragmentów przepisów, ocena odpowiedzi jako decyzja w dzienniku AI), wynik pytania `?pytanie=<id przebiegu>&tresc=<pytanie>` z odpytywaniem do limitu 4 minut, stany AI wyłączone, w toku, nieudane, po limicie i usunięte. Z `?ocena=<id oceny>` (link „Zapytaj o przepisy” w bocznym pasku sprawy) asystent odpowiada według wersji przepisów przypiętej do tej oceny
+- `/komponenty`: katalog komponentów `@sarmata/ui`, tylko w trybie deweloperskim (404 w produkcji), poza menu
+
+Oceny:
+
+- `/oceny`: lista ocen z filtrami etapu i pracownika
+- `/oceny/nowa`: rozpoczęcie oceny: wyszukanie pracownika (także z literówką), propozycja arkusza według rodzaju stanowiska, powód odmowy, gdy pracownik nie podlega ocenie
+- `/oceny/[id]`: sprawa oceny, przegląd: następny krok z przyciskiem do właściwej zakładki, brakujące pola przed zatwierdzeniem, ostrzeżenia i sygnały, dane sprawy (nad nim nagłówek, etapy, zakładki i panel boczny sprawy)
+- `/oceny/[id]/czesc-1`: część I: kryteria dodatkowe z katalogu, termin tylko skracany, zatwierdzenie z datą rozmowy rozpoczynającej i miejscowością, odnotowanie podpisu części I
+- `/oceny/[id]/czesc-2`: część II, oceny cząstkowe, uzasadnienie, wnioski IPRZ, autozapis, szkic AI, odnotowanie rozmowy oceniającej
+- `/oceny/[id]/czesc-3`: część III, wniosek o stopień, usunięcie zapisanego wniosku, gdy ocena go już nie dopuszcza
+- `/oceny/[id]/sprawdz`: sprawdzenie całego arkusza, bramki i zatwierdzenie do zapoznania
+- `/oceny/[id]/zdarzenia`: zapoznanie albo odmowa podpisu, czas na sprzeciw i zamknięcie, sprzeciw i jego wynik (kadry), przerwanie (kadry), zdarzenia boczne: nieobecność, zmiana terminu z zawiadomieniem PDF, zmiana stanowiska, zmiana oceniającego (kadry), korekta arkusza (administrator)
+- `/oceny/[id]/dziennik`: dziennik zdarzeń z datą faktyczną, autorem wpisu i czasem wpisania
+
+Pracownicy i notatki:
+
+- `/pracownicy`: lista pracowników z wyszukiwaniem, u oceniającego zakres „moi” albo wszyscy w urzędzie (`?zakres=wszyscy`)
+- `/pracownicy/nowy`: nowy pracownik z kontrolą podobnych osób (oceniający i kadry)
+- `/pracownicy/[id]`: karta pracownika: przebieg ocen, zmiana w kryteriach, notatki z filtrem rodzaju i wydźwięku (`?rodzaj=`, `?znak=`), formularz notatki (`?notatka=nowa` albo id), historia zmian notatki (`?historia=`), panel HR partnera (sygnały przeciążenia i wypalenia z notatek, moment na docenienie, każdy wynik jako sugestia AI), blok „Sprawy kadrowe” dla kadr (ocena archiwalna, ustanie zatrudnienia, archiwum teczek ZIP), po dodaniu pracownika `?dodano=1`
+- `/notatki`: własne notatki oceniającego i kadr, nowa notatka ze strażnikiem danych wrażliwych (słownik od razu, AI przez odpytywanie, zapis po potwierdzeniu ostrzeżeń), lista z filtrem `?pracownik=<id>`, edycja `?notatka=<id>`, historia zmian `?historia=<id>`, po zapisie `?zapisano=1`
+
+Kadry:
+
+- `/kadry`: zadania kadr z terminów i etapów ocen (sprzeciw do rozstrzygnięcia, stopień z mocy prawa, ocena po terminie)
+- `/kadry/harmonogram`: harmonogram ocen w toku z filtrami horyzontu, sytuacji i komórki (kadry i administrator)
+- `/kadry/statystyki`: rozkład ocen na tle kraju, potrzeby rozwojowe, raport oceniających i pobranie CSV do sprawozdania DSC-OCK (kadry i administrator)
+- `/api/kadry/dsc-ock?rok=<rok>`: plik CSV do sprawozdania DSC-OCK za rok (kadry i administrator)
+- `/kadry/rejestr`: rejestr odwołań do sądu pracy i przyznanych stopni służbowych
+- `/kadry/import`: import pracowników z CSV w czterech krokach z przebiegiem próbnym przed zapisem
+- `/kadry/struktura`: drzewo przełożonych ze zmianą przełożonego pracownika
+
+Administrator:
+
+- `/ustawienia`: ustawienia urzędu: AI, okres przechowywania notatek z ostrzeżeniem o liczbie notatek i przebiegów AI do usunięcia, przypomnienia, widoczność ocen, domyślna miejscowość, adresat sprzeciwu dla arkusza A, progi flag oceniających, dni bez docenienia, SMTP i osobno hasło SMTP, po zapisie `?zapisano=1` albo `?haslo=1` (inne role widzą informację, że ustawienia zmienia administrator)
+- `/ustawienia/konta`: konta urzędu, zaproszenie z rolą i jego status `?zaproszenie=<id>` odświeżany do wysłania, hasło jednorazowe pokazywane raz, zmiana roli i zakończenie dostępu `?konto=<id>`
+- `/ustawienia/przepisy`: wersje przepisów z oznaczeniem obowiązującej, nowy szkic na podstawie opublikowanej wersji, szczegóły `?wersja=<id>`: parametry i strategie terminów, wyniki przypadków testowych, publikacja z potwierdzeniem, usunięcie szkicu, powiązania przepisów z podstawą prawną
+- `/dziennik-ai`: dziennik użycia AI: administrator widzi dziennik całego urzędu bez treści (metadane i decyzje), pozostałe role przebiegi, które mogą czytać, filtry `?pracownik=<id>` i `?rodzaj=<rodzaj>`, decyzje o fragmentach `?przebieg=<id>`
+
+Ścieżki są w `frontend/web/src/lib/routes.ts`, „trasa zarezerwowana” ma tam ścieżkę, ale jeszcze nie ma strony. Wylogowanie jest w menu konta w nagłówku. Menu zależy od roli: oceniający widzi Pulpit, Moi pracownicy, Oceny, Notatki, kadry dodatkowo Kadry, administrator Pulpit, Ustawienia i Dziennik AI.
+
+Czcionki Open Sans (treść) i Fira Sans (nagłówki, menu, przyciski, liczby, pakiet `@fontsource/fira-sans`) są na licencji SIL Open Font License 1.1.
 
 ## Zmienne środowiskowe
 

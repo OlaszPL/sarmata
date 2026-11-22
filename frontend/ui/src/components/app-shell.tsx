@@ -3,36 +3,88 @@ import { BrandMark } from '#components/brand-mark';
 
 interface AppShellProps {
   product: { readonly name: string; readonly tagline: string };
-  /** Right side of the header, e.g. the signed-in account and the sign-out button. */
-  account?: ReactNode;
+  homeHref?: string;
+  /** Main navigation. Shown in the header row from `xl`, in wrapping rows below it. */
+  nav?: ReactNode;
+  /** Header cells between the filler and the primary action: search, accessibility tools, account. */
+  tools?: ReactNode;
+  /** Full-height block at the right end of the header. */
+  primaryAction?: ReactNode;
+  /** Content of the footer band. */
+  footer?: ReactNode;
   children: ReactNode;
 }
 
-/** Page frame: skip link, header with the product name and the main landmark. */
-export function AppShell({ product, account, children }: AppShellProps) {
+/** Page frame in a grid of 1 px lines: skip link, header cells, main landmark with rails, footer. */
+export function AppShell({
+  product,
+  homeHref = '/',
+  nav,
+  tools,
+  primaryAction,
+  footer,
+  children,
+}: AppShellProps) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col bg-white">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-background focus:px-4 focus:py-2"
+        className="font-heading bg-navy sr-only font-medium text-white focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2"
       >
         Przejdź do treści
       </a>
-      <header className="border-b-4 border-primary bg-background">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <BrandMark className="size-10 shrink-0" />
-            <div>
-              <p className="text-lg leading-tight font-bold">{product.name}</p>
-              <p className="text-sm text-muted-foreground">{product.tagline}</p>
+      <header className="border-rule border-b">
+        {/*
+          From `xl` (1280px) everything sits on one line and the tools shrink (the account cell
+          truncates). With the larger text of the A+ tool (`data-text-size="large"` on the root) the
+          one-line header starts at `2xl` (1536px) instead. Below, cells wrap onto a second line when
+          they do not fit. Cells of the first
+          line draw the line between the two, the row overlaps the header border by 1px so a single
+          line stays single.
+        */}
+        <div className="-mb-px flex flex-wrap items-stretch xl:flex-nowrap xl:in-data-[text-size=large]:flex-wrap 2xl:in-data-[text-size=large]:flex-nowrap">
+          <a
+            href={homeHref}
+            className="bg-navy border-rule flex min-h-16 shrink-0 items-center gap-3 border-b px-6 text-white no-underline"
+          >
+            <span className="flex size-10 items-center justify-center bg-white">
+              <BrandMark className="size-10" />
+            </span>
+            <span className="font-heading text-2xl leading-[normal] font-bold tracking-[-0.0125em]">
+              {product.name}
+            </span>
+            <span className="sr-only">: {product.tagline}</span>
+          </a>
+          {nav ? (
+            <div className="border-rule hidden shrink-0 border-b xl:flex xl:in-data-[text-size=large]:hidden 2xl:in-data-[text-size=large]:flex">
+              {nav}
             </div>
+          ) : null}
+          <div className="border-rule flex-1 border-b" />
+          {/* -ml-px: when the filler shrinks to nothing, the first tool line lies on the last nav line. */}
+          <div className="-ml-px flex min-h-16 min-w-0 grow items-stretch justify-end">
+            {tools}
+            {primaryAction}
           </div>
-          {account}
         </div>
+        {nav ? (
+          <div className="border-rule border-t xl:hidden xl:in-data-[text-size=large]:block 2xl:in-data-[text-size=large]:hidden">
+            <div className="-mb-px">{nav}</div>
+          </div>
+        ) : null}
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-        {children}
-      </main>
+      {/* A flex column all the way down, so the rails reach the footer on a short page. */}
+      <div className="flex flex-1 flex-col px-8">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="border-rule mx-auto flex w-full max-w-[75rem] flex-1 flex-col border-x outline-none"
+        >
+          {children}
+        </main>
+      </div>
+      <div className="bg-brand-red h-1" aria-hidden />
+      <div className="bg-navy-dark text-white">{footer}</div>
     </div>
   );
 }

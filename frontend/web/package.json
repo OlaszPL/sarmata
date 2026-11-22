@@ -7,10 +7,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "next typegen && tsc -p tsconfig.json"
+    "typecheck": "next typegen && tsc -p tsconfig.json",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fontsource-variable/open-sans": "5.3.0",
+    "@fontsource/fira-sans": "5.3.0",
     "@myriaddreamin/typst-ts-node-compiler": "catalog:",
     "@sarmata/exports": "workspace:*",
     "@sarmata/services": "workspace:*",
@@ -30,6 +32,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

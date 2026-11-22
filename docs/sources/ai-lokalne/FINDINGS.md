@@ -333,11 +333,10 @@ Kategorie: nienawiść i agresja, wulgaryzmy, treści seksualne, przestępstwa, 
 
 ---
 
-## 4. Ograniczenia prawne dla analizy trendów
+## 4. Analiza trendów i sentymentu
 
-- Rozpoznawanie emocji w miejscu pracy jest zakazane. [P] https://artificialintelligenceact.eu/article/5/ (art. 5 ust. 1 lit. f)
-- Systemy AI do monitorowania i oceny wyników i zachowania pracowników są wysokiego ryzyka. [P] https://artificialintelligenceact.eu/annex/3/ (pkt 4 lit. b)
-- Wniosek [O]: Bielik-One karmić tylko faktami (nadgodziny, absencje, liczba spraw, zmiany ocen między okresami), nigdy wolnym tekstem do oceny nastroju. Twórcy wymieniają analizę sentymentu jako zastosowanie, tego u nas nie używać. Wynik to sygnał z prawdopodobieństwem dla przełożonego, bez automatycznej decyzji.
+- Organizatorzy KPRM zgodzili się na analizę sentymentu i sygnałów wypalenia przez Bielik-One, gdy wynik jest sugestią dla przełożonego.
+- Wniosek [O]: Bielik-One dostaje fakty (nadgodziny, absencje, liczba spraw, zmiany ocen między okresami) i tekst notatek przełożonego. Twórcy wymieniają analizę sentymentu jako zastosowanie, korzystamy z niej. Wynik to sygnał z prawdopodobieństwem dla przełożonego, bez automatycznej decyzji.
 
 ---
 

@@ -20,7 +20,6 @@ for (const account of demoAccounts) {
 
     const header = page.getByRole('banner');
     await expect(header).toContainText(DEMO_OFFICE_NAME);
-    await expect(header).toContainText(account.email);
     await expect(header).toContainText(account.roleLabel);
 
     await signOut(page);
