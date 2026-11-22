@@ -4,6 +4,7 @@ import {
   aiKindLabels,
   aiLogRows,
   decisionCounts,
+  failureMessageText,
   failureReasonText,
   filterUsageLog,
   runDetail,
@@ -242,9 +243,31 @@ describe('filterUsageLog', () => {
 });
 
 describe('failureReasonText', () => {
-  it('maps known codes to Polish and keeps an unknown one', () => {
+  it('maps known codes to Polish and never shows an unknown one raw', () => {
     expect(failureReasonText('timeout')).toBe('Model nie odpowiedział w wyznaczonym czasie');
-    expect(failureReasonText('weird_code')).toBe('weird_code');
+    expect(failureReasonText('weird_code')).toBe('Inny błąd przebiegu');
+  });
+});
+
+describe('failureMessageText', () => {
+  it('explains every worker failure code in Polish', () => {
+    for (const reason of [
+      'disabled',
+      'timeout',
+      'unavailable',
+      'rejected',
+      'invalid_response',
+      'expired',
+      'interrupted',
+    ]) {
+      expect(failureMessageText(reason)).not.toBe(failureMessageText('weird_code'));
+    }
+    expect(failureMessageText('disabled')).toBe(
+      'Przebieg nie ruszył, bo AI jest wyłączone w ustawieniach urzędu.',
+    );
+    expect(failureMessageText('weird_code')).toBe(
+      'Przebieg się nie udał. Uruchom go ponownie później.',
+    );
   });
 });
 
@@ -253,21 +276,21 @@ describe('run details', () => {
     const detail = runDetail(
       run({
         status: 'failed',
-        failure: { reason: 'timeout', message: 'slow' },
+        failure: { reason: 'disabled', message: 'AI is switched off in the office settings' },
         decisions: [{ ...decision('edited', 'issue.0'), finalText: 'Nowy tekst' }],
       }),
     );
     expect(detail).toMatchObject({
       id: 'run-1',
       kind: 'Sprawdzenie jakości',
-      failureReason: 'timeout',
-      failureMessage: 'slow',
+      failureReason: 'disabled',
+      failureMessage: 'Przebieg nie ruszył, bo AI jest wyłączone w ustawieniach urzędu.',
       evaluationId: 'eval-1',
     });
     expect(detail.decisions[0]?.finalText).toBe('Nowy tekst');
   });
 
-  it('maps a usage log entry without any text', () => {
+  it('maps a usage log entry without any content, the failure explained by its code', () => {
     const detail = usageLogDetail(entry({ status: 'failed', failureReason: 'rejected' }));
     expect(detail).toMatchObject({
       kind: 'Szkic arkusza',
@@ -275,7 +298,7 @@ describe('run details', () => {
       promptVersion: 'v3',
       outputTokens: 1200,
       failureReason: 'rejected',
-      failureMessage: null,
+      failureMessage: 'Model odrzucił zapytanie. Zmień treść i uruchom przebieg ponownie.',
     });
     expect(detail.decisions[0]).toMatchObject({ fragment: 'issue.0', finalText: null });
   });

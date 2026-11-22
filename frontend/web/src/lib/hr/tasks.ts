@@ -23,10 +23,18 @@ export function hrTaskHref(task: HrTask): string {
     case 'objection_decision':
       return routes.evaluationEvents(task.evaluationId);
     case 'grade_by_law':
-      return `${routes.hrRegister}?ocena=${task.evaluationId}#stopien`;
+      return routes.hrRegisterGrade(task.evaluationId);
     case 'overdue':
       return routes.evaluation(task.evaluationId);
   }
+}
+
+/**
+ * Evaluations whose views the task list reads. Closed ones stay: the backend keeps the grade by law
+ * slot after closing and the legal deadline runs on. Only an interrupted case gives no task.
+ */
+export function feedsHrTasks(evaluation: { status: string }): boolean {
+  return evaluation.status !== 'interrupted';
 }
 
 const slotDueOn = (view: EvaluationView, slot: string): CalendarDate | null | undefined =>

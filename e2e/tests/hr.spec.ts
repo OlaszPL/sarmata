@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import { demoAccount } from '../src/demo-accounts';
-import { expectNoSidewaysScroll, expectNoViolations } from '../src/page-checks';
+import { errorSummary, expectNoSidewaysScroll, expectNoViolations } from '../src/page-checks';
 import { signIn } from '../src/session';
 
 const FIXTURE = path.join(import.meta.dirname, '..', 'fixtures', 'import-small.csv');
@@ -98,6 +98,24 @@ test.describe('hr panel as hr', () => {
 
     await page.goto('/kadry/struktura');
     await expect(page.getByText('Nina Nowicka')).toHaveCount(0);
+  });
+
+  test('the import mapping keeps the chosen columns after an error', async ({ page }) => {
+    await page.goto('/kadry/import');
+    await page.getByLabel('Plik z listą pracowników').setInputFiles(FIXTURE);
+    await page.getByRole('button', { name: 'Sprawdź kolumny' }).click();
+    await expect(page.getByRole('heading', { level: 2, name: 'Dopasowanie kolumn' })).toBeVisible();
+    await page.getByLabel('Adres e-mail', { exact: true }).selectOption('');
+    await page.getByLabel('Stanowisko', { exact: true }).selectOption('Komórka organizacyjna');
+    await page.getByLabel('Nazwisko', { exact: true }).selectOption('');
+    await page.getByRole('button', { name: 'Wykonaj przebieg próbny' }).click();
+
+    await expect(errorSummary(page, 'Nie można jeszcze sprawdzić pliku')).toBeFocused();
+    await expect(page.getByLabel('Adres e-mail', { exact: true })).toHaveValue('');
+    await expect(page.getByLabel('Stanowisko', { exact: true })).toHaveValue(
+      'Komórka organizacyjna',
+    );
+    await expect(page.getByLabel('Nazwisko', { exact: true })).toHaveValue('');
   });
 
   test('the register shows the recorded appeal of Olga', async ({ page }) => {

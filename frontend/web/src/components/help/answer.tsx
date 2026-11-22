@@ -11,6 +11,8 @@ interface AnswerProps {
   canDecide: boolean;
   /** The last decision could not be saved. */
   decisionFailed: boolean;
+  /** The evaluation the question is about, kept in the link after a decision. */
+  evaluationId: string | null;
 }
 
 const TIMEOUT_MESSAGE =
@@ -26,12 +28,14 @@ function paragraphs(text: string): string[] {
 function DecisionForm({
   runId,
   question,
+  evaluationId,
   decision,
   variant,
   children,
 }: {
   runId: string;
   question: string;
+  evaluationId: string | null;
   decision: 'accepted' | 'rejected';
   variant: 'secondary' | 'link';
   children: string;
@@ -40,6 +44,7 @@ function DecisionForm({
     <form action={decideAnswer}>
       <input type="hidden" name="runId" value={runId} />
       <input type="hidden" name="question" value={question} />
+      {evaluationId ? <input type="hidden" name="evaluationId" value={evaluationId} /> : null}
       <input type="hidden" name="decision" value={decision} />
       <Button type="submit" variant={variant}>
         {children}
@@ -48,7 +53,7 @@ function DecisionForm({
   );
 }
 
-function Body({ runId, question, state, canDecide, decisionFailed }: AnswerProps) {
+function Body({ runId, question, state, canDecide, decisionFailed, evaluationId }: AnswerProps) {
   switch (state.kind) {
     case 'waiting':
       return (
@@ -131,6 +136,7 @@ function Body({ runId, question, state, canDecide, decisionFailed }: AnswerProps
                     <DecisionForm
                       runId={runId}
                       question={question}
+                      evaluationId={evaluationId}
                       decision="accepted"
                       variant="secondary"
                     >
@@ -139,6 +145,7 @@ function Body({ runId, question, state, canDecide, decisionFailed }: AnswerProps
                     <DecisionForm
                       runId={runId}
                       question={question}
+                      evaluationId={evaluationId}
                       decision="rejected"
                       variant="link"
                     >

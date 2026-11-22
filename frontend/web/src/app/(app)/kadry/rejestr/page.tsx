@@ -3,6 +3,7 @@ import { servicesFor } from '@sarmata/services';
 import { DataTable, Section, Tag } from '@sarmata/ui';
 import { requireMember } from '@/lib/account';
 import { HrPage } from '@/components/hr/hr-page';
+import { SavedNotice } from '@/components/saved-notice';
 import { formatDate } from '@/lib/format';
 import { hrAccess } from '@/lib/hr/access';
 import { appealCases } from '@/lib/hr/register';
@@ -97,6 +98,9 @@ export default async function RegisterPage({ searchParams }: { searchParams: Sea
             ]}
           />
           <div className="mt-6 grid gap-8">
+            {params.zapisano === 'odwolanie' ? (
+              <SavedNotice>Zapisano odwołanie w rejestrze.</SavedNotice>
+            ) : null}
             {openCases.length === 0 ? (
               <p className="max-w-[70ch]">
                 Nie ma spraw z nieuwzględnionym sprzeciwem bez zapisanego odwołania.

@@ -110,6 +110,12 @@ export interface AppreciationModel {
   moments: { reason: string; situation: string }[];
 }
 
+/** The newest `appreciation_moments` run failed, so the block says so instead of the intro. */
+export function appreciationFailed(runs: readonly AiRun[] | null): boolean {
+  const latest = (runs ?? []).find((run) => run.kind === 'appreciation_moments');
+  return latest?.status === 'failed';
+}
+
 /** The latest done `appreciation_moments` run, null without one. */
 export function appreciationModel(runs: readonly AiRun[] | null): AppreciationModel | null {
   const run = (runs ?? []).find(

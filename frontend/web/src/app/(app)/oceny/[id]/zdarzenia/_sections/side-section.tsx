@@ -1,7 +1,7 @@
 import { type CalendarDate, type TermChangeReason } from '@sarmata/services';
 import { DataTable, Notice, Section } from '@sarmata/ui';
 import { levelName } from '@/lib/case-regulation';
-import { formatDate } from '@/lib/format';
+import { formatDate, pluralPl } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import type { CaseData } from '../../loader';
 import {
@@ -104,9 +104,7 @@ function TermChange({ data, termChange }: Pick<SideProps, 'data' | 'termChange'>
         value,
         label: termChangeReasonLabels[value],
       }))}
-      hint={`Zawiadomienie musi mieć datę późniejszą niż ${formatDate(earliest)}, bo od początku cyklu musi minąć ${String(months)} ${
-        months === 1 ? 'miesiąc' : months < 5 ? 'miesiące' : 'miesięcy'
-      }.`}
+      hint={`Zawiadomienie musi mieć datę późniejszą niż ${formatDate(earliest)}, bo od początku cyklu musi minąć ${String(months)} ${pluralPl(months, 'miesiąc', 'miesiące', 'miesięcy')}.`}
     />
   );
 }

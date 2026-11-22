@@ -35,7 +35,7 @@ export function Hero({ data }: { data: DashboardData }) {
           className="border-rule border-t pt-[1.1875rem] sm:border-t-0 sm:border-l sm:pt-5"
         />
         <StatTile
-          label="Czeka na ocenianego"
+          label="Czeka na osobę ocenianą"
           value={String(summary.awaitingEmployee)}
           hint="Zapoznanie z oceną"
           className="border-rule border-t py-[1.1875rem]"

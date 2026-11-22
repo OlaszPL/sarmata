@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Checkbox,
@@ -17,6 +17,7 @@ import {
 import { createEmployee, type NewEmployeeState } from '@/app/(app)/pracownicy/nowy/actions';
 import { useErrorTitle } from '@/components/use-error-title';
 import { routes } from '@/lib/routes';
+import { useFormRound } from '@/lib/use-form-round';
 
 export interface NewEmployeeChoices {
   positionKind: readonly RadioOption[];
@@ -69,14 +70,8 @@ function summaryItems(state: NewEmployeeState): { fieldId: string; message: stri
 
 /** Form of a new employee record (`/pracownicy/nowy`). Typed values stay after every error. */
 export function NewEmployeeForm({ choices }: { choices: NewEmployeeChoices }) {
-  const [state, formAction] = useActionState(createEmployee, initialState);
-  // Each answer of the action remounts the form, so the default values show what was sent.
-  const [shownState, setShownState] = useState(state);
-  const [version, setVersion] = useState(0);
-  if (state !== shownState) {
-    setShownState(state);
-    setVersion((current) => current + 1);
-  }
+  // Each answer of the action remounts the form (`key={state.round}`), so the defaults show what was sent.
+  const [state, formAction] = useFormRound(createEmployee, initialState);
 
   const errors = summaryItems(state);
   const hasErrors = errors.length > 0 || Boolean(state.formError);
@@ -84,14 +79,22 @@ export function NewEmployeeForm({ choices }: { choices: NewEmployeeChoices }) {
   const { fieldErrors } = state;
   const similar = state.similar ?? [];
 
+  // The remount drops the focused submit button. Without an error summary to take the focus, the
+  // similar person warning takes it, so the question is read out and focus stays in the form.
+  const similarRef = useRef<HTMLDivElement>(null);
+  const askSimilar = similar.length > 0 && !hasErrors;
+  useEffect(() => {
+    if (askSimilar) similarRef.current?.focus();
+  }, [askSimilar, state]);
+
   return (
     <div className="grid gap-8">
       {hasErrors ? (
-        <ErrorSummary title="Popraw dane pracownika" errors={errors}>
+        <ErrorSummary title="Popraw dane pracownika" errors={errors} focusKey={state}>
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-8">
+      <form key={state.round} action={formAction} noValidate className="grid max-w-[40rem] gap-8">
         <Field id="firstName" label="Imię" error={fieldErrors.firstName}>
           <TextInput name="firstName" autoComplete="off" defaultValue={text(state, 'firstName')} />
         </Field>
@@ -199,34 +202,36 @@ export function NewEmployeeForm({ choices }: { choices: NewEmployeeChoices }) {
           </Field>
         ) : null}
         {similar.length > 0 ? (
-          <Notice tone="warning" title="Czy to ta osoba?" role="status">
-            <p className="max-w-[70ch]">
-              W aktach jest już ktoś o podobnym imieniu i nazwisku. Otwórz kartę, żeby sprawdzić,
-              czy nie dodajesz tej samej osoby drugi raz.
-            </p>
-            <ul className="mt-3 grid gap-2">
-              {similar.map((person) => (
-                <li key={person.id}>
-                  <Link
-                    href={routes.employee(person.id)}
-                    className="font-heading text-link font-semibold underline"
-                  >
-                    {person.name}
-                  </Link>
-                  {person.position ? <span>, {person.position}</span> : null}
-                </li>
-              ))}
-            </ul>
-            <Checkbox
-              id="confirmDistinct"
-              name="confirmDistinct"
-              value="1"
-              label="To inna osoba, dodaj nowy rekord"
-              defaultChecked={state.values.confirmDistinct === '1'}
-              error={fieldErrors.confirmDistinct}
-              className="mt-4"
-            />
-          </Notice>
+          <div ref={similarRef} tabIndex={-1} className="outline-none">
+            <Notice tone="warning" title="Czy to ta osoba?" role="status">
+              <p className="max-w-[70ch]">
+                W aktach jest już ktoś o podobnym imieniu i nazwisku. Otwórz kartę, żeby sprawdzić,
+                czy nie dodajesz tej samej osoby drugi raz.
+              </p>
+              <ul className="mt-3 grid gap-2">
+                {similar.map((person) => (
+                  <li key={person.id}>
+                    <Link
+                      href={routes.employee(person.id)}
+                      className="font-heading text-link font-semibold underline"
+                    >
+                      {person.name}
+                    </Link>
+                    {person.position ? <span>, {person.position}</span> : null}
+                  </li>
+                ))}
+              </ul>
+              <Checkbox
+                id="confirmDistinct"
+                name="confirmDistinct"
+                value="1"
+                label="To inna osoba, dodaj nowy rekord"
+                defaultChecked={state.values.confirmDistinct === '1'}
+                error={fieldErrors.confirmDistinct}
+                className="mt-4"
+              />
+            </Notice>
+          </div>
         ) : null}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <SubmitButton pendingLabel="Dodaję pracownika">Dodaj pracownika</SubmitButton>

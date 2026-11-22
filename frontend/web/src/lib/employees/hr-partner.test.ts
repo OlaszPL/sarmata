@@ -1,6 +1,6 @@
 import { type AiRun } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
-import { appreciationModel, hrPartnerModel } from './hr-partner';
+import { appreciationFailed, appreciationModel, hrPartnerModel } from './hr-partner';
 
 function run(overrides: Record<string, unknown>): AiRun {
   return {
@@ -107,6 +107,21 @@ describe('hrPartnerModel', () => {
         text: 'Przejrzyj zadania',
       },
     ]);
+  });
+});
+
+describe('appreciationFailed', () => {
+  it('is true only when the newest search failed', () => {
+    expect(appreciationFailed(null)).toBe(false);
+    expect(appreciationFailed([run({ kind: 'appreciation_moments', status: 'failed' })])).toBe(
+      true,
+    );
+    expect(
+      appreciationFailed([
+        run({ kind: 'appreciation_moments', status: 'queued' }),
+        run({ kind: 'appreciation_moments', status: 'failed' }),
+      ]),
+    ).toBe(false);
   });
 });
 

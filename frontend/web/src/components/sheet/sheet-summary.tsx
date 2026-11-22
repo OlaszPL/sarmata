@@ -4,6 +4,7 @@ import { type CalendarDate } from '@sarmata/services';
 import { Section, SummaryList } from '@sarmata/ui';
 import { type SummaryRow } from '@sarmata/ui';
 import { type CaseData } from '@/app/(app)/oceny/[id]/loader';
+import { evaluationDueOn } from '@/lib/evaluations/next-step';
 import { formatDate, formatScore, romanNumeral } from '@/lib/format';
 import { criterionName, levelName } from '@/lib/regulation';
 import { routes } from '@/lib/routes';
@@ -33,10 +34,11 @@ function textOrEmpty(value: string): ReactNode {
   return value.trim() === '' ? NOT_ENTERED : <Prose>{value}</Prose>;
 }
 
-function partOneRows({ view, regulation, nextStep }: CaseData): SummaryRow[] {
+function partOneRows({ view, regulation }: CaseData): SummaryRow[] {
   const { partOne } = view.sheet.content;
   const mandatory = regulation.criteria.filter((criterion) => criterion.mandatory);
-  const dueOn = partOne.dueOn ?? nextStep?.dueOn ?? null;
+  // The deadline slot, not the next step: that one is the objection or decision date later on.
+  const dueOn = evaluationDueOn(view) ?? partOne.dueOn ?? null;
   return [
     { key: 'Kryteria obowiązkowe', value: lines(mandatory.map((criterion) => criterion.name)) },
     {

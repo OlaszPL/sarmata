@@ -4,6 +4,14 @@ import { PollingRefresh } from '@/components/polling-refresh';
 
 const PREVIEW_CHARS = 160;
 
+/** The end of the text the model writes, cut at a word boundary with no mark (no ellipsis). */
+function previewTail(text: string): string {
+  if (text.length <= PREVIEW_CHARS) return text;
+  const tail = text.slice(-PREVIEW_CHARS);
+  const space = tail.indexOf(' ');
+  return space === -1 ? tail : tail.slice(space + 1);
+}
+
 /** Progress of sheet drafts the AI is writing. Shown only while at least one is queued or running. */
 export function AiDraftPanel({ drafts }: { drafts: DashboardData['runningDrafts'] }) {
   if (drafts.length === 0) return null;
@@ -29,8 +37,7 @@ export function AiDraftPanel({ drafts }: { drafts: DashboardData['runningDrafts'
             />
             {draft.partialText ? (
               <p className="text-ink-muted mt-0.5 text-[0.9375rem] leading-[normal] break-words">
-                {draft.partialText.length > PREVIEW_CHARS ? '…' : ''}
-                {draft.partialText.slice(-PREVIEW_CHARS)}
+                {previewTail(draft.partialText)}
               </p>
             ) : null}
           </li>

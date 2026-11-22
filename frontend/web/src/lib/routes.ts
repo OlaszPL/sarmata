@@ -53,6 +53,11 @@ export const routes = {
   hrSchedule: '/kadry/harmonogram',
   hrStatistics: '/kadry/statystyki',
   hrRegister: '/kadry/rejestr',
+  /** The grade grant form of the register, preset to the evaluation that grants a grade by law. */
+  hrRegisterGrade: (evaluationId: string) =>
+    `${withQuery('/kadry/rejestr', { ocena: evaluationId })}#stopien`,
+  /** The register after an appeal was saved, with the confirmation in view. */
+  hrRegisterAppealSaved: '/kadry/rejestr?zapisano=odwolanie#odwolania',
   hrImport: '/kadry/import',
   hrTree: '/kadry/struktura',
   /** CSV of the DSC-OCK statistics report for a year. */
@@ -65,6 +70,9 @@ export const routes = {
   aiLog: '/dziennik-ai',
 
   help: '/pomoc',
+  /** The procedure assistant asked about one evaluation, answering by the regulation pinned to it. */
+  helpForEvaluation: (evaluationId: string) =>
+    `${withQuery('/pomoc', { ocena: evaluationId })}#asystent`,
 
   /** Dev-only catalog of the shared components, 404 in production. */
   componentCatalog: '/komponenty',

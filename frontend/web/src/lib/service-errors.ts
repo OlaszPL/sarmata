@@ -175,7 +175,8 @@ const issueRules: Record<
     message: () => 'Wpisz uzasadnienie wniosku o stopień.',
   },
   grade_request_wrong_grade: {
-    field: () => 'requestedGrade',
+    // Part III has no control for the grade itself, the request choice is the field to fix.
+    field: () => 'gradeRequest',
     message: () => 'Wnioskowany stopień musi być o jeden wyższy od obecnego.',
   },
   interview_date_missing: {

@@ -20,7 +20,9 @@ export function AiLogFilters({
 }) {
   const active = employeeId !== undefined || kind !== undefined;
   return (
+    // The key remounts the selects when "Wyczyść filtry" changes the filters by a link.
     <form
+      key={`${employeeId ?? ''}|${kind ?? ''}`}
       method="get"
       action={routes.aiLog}
       aria-label="Filtry dziennika"

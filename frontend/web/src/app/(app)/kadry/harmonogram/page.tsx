@@ -77,6 +77,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
       ) : (
         <>
           <form
+            key={`${filters.horizon}|${filters.flag ?? ''}|${filters.orgUnit ?? ''}`}
             action={routes.hrSchedule}
             method="get"
             className="flex flex-wrap items-end gap-x-6 gap-y-4"

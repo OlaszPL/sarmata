@@ -31,6 +31,17 @@ test.describe('employee changes', () => {
     await expect(signal.getByText('Odrzucono')).toBeVisible();
   });
 
+  test('moves the focus to the similar person question', async ({ page }) => {
+    await page.goto('/pracownicy/nowy');
+    await page.getByLabel('Imię', { exact: true }).fill('Ewa');
+    await page.getByLabel('Nazwisko', { exact: true }).fill('Ewidencyjna');
+    await page.getByRole('button', { name: 'Dodaj pracownika' }).click();
+
+    const question = page.locator('div[tabindex="-1"]', { hasText: 'Czy to ta osoba?' });
+    await expect(question).toBeFocused();
+    await expect(page.getByLabel('Nazwisko', { exact: true })).toHaveValue('Ewidencyjna');
+  });
+
   test('adds an employee after fixing errors', async ({ page }) => {
     await page.goto('/pracownicy/nowy');
     await page.getByRole('button', { name: 'Dodaj pracownika' }).click();

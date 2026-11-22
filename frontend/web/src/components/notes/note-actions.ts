@@ -149,10 +149,19 @@ export async function saveNote(
 
   const parsed = parseForm(noteFormSchema, formData);
   const crossErrors = crossFieldErrors(values);
+  // Saving despite the warnings without the tick keeps the warnings, so the review block stays.
+  const keptWarnings =
+    values.acceptWarnings === '1' && _previous.warnings ? { warnings: _previous.warnings } : {};
   if ('state' in parsed) {
-    return { ...parsed.state, fieldErrors: { ...crossErrors, ...parsed.state.fieldErrors } };
+    return {
+      ...parsed.state,
+      fieldErrors: { ...crossErrors, ...parsed.state.fieldErrors },
+      ...keptWarnings,
+    };
   }
-  if (Object.keys(crossErrors).length > 0) return { values, fieldErrors: crossErrors };
+  if (Object.keys(crossErrors).length > 0) {
+    return { values, fieldErrors: crossErrors, ...keptWarnings };
+  }
   const data = parsed.data;
   const fields = {
     kind: data.kind,
@@ -188,5 +197,8 @@ export async function saveNote(
   // Tells the success message how the note was checked.
   const checked = aiNoteParam(data.aiNote);
   revalidatePath(returnTo);
-  redirect(`${returnTo}?zapisano=1${checked ? `&sprawdzono=${checked}` : ''}`);
+  // `zapis` is new on every save, so a page that keeps the form open (/notatki) remounts it empty.
+  redirect(
+    `${returnTo}?zapisano=1&zapis=${saved.value.id}${checked ? `&sprawdzono=${checked}` : ''}`,
+  );
 }

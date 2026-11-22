@@ -152,7 +152,8 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
               </p>
             ) : null}
             <NoteForm
-              key={edited?.id ?? 'nowa'}
+              // A save redirects with a new `zapis`, so the next note starts from an empty form.
+              key={edited?.id ?? `nowa-${single(params.zapis)}`}
               employees={formEmployees}
               criteria={catalog}
               {...(edited ? { note: edited } : {})}
@@ -185,7 +186,12 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
             </p>
           ) : null}
           {filterOptions.length > 1 ? (
-            <form method="get" action={routes.notes} className="flex flex-wrap items-end gap-3">
+            <form
+              key={filter}
+              method="get"
+              action={routes.notes}
+              className="flex flex-wrap items-end gap-3"
+            >
               <Field id="pracownik" label="Pokaż notatki o osobie" className="min-w-[16rem]">
                 <Select name="pracownik" defaultValue={filter}>
                   <option value="">Wszystkie osoby</option>

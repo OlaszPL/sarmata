@@ -57,6 +57,24 @@ test.describe('help page as evaluator', () => {
     ).toBeVisible();
     await expect(page.getByLabel('Twoje pytanie o przepisy')).toHaveValue('Ile dni na sprzeciw?');
   });
+
+  test('says when the case of a question is unknown', async ({ page }) => {
+    await page.goto('/pomoc?ocena=nie-uuid');
+    await expect(page.getByText('Nie znaleziono tej oceny.')).toBeVisible();
+    await page.goto(`/pomoc?ocena=${randomUUID()}`);
+    await expect(page.getByText('Nie znaleziono tej oceny.')).toBeVisible();
+    await expect(page.getByLabel('Twoje pytanie o przepisy')).toBeVisible();
+  });
+
+  test('the error summary takes the focus again on a second empty send', async ({ page }) => {
+    const send = page.getByRole('button', { name: 'Zadaj pytanie' });
+    await send.click();
+    const summary = errorSummary(page, 'Popraw pytanie');
+    await expect(summary).toBeFocused();
+    await send.focus();
+    await send.click();
+    await expect(summary).toBeFocused();
+  });
 });
 
 test.describe('help page as hr', () => {

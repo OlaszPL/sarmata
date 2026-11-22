@@ -17,8 +17,8 @@ const evaluatorItems: readonly NavItem[] = [
 
 const hrItems: readonly NavItem[] = [...evaluatorItems, { href: routes.hr, label: 'Kadry' }];
 
+// The admin has no dashboard: `/` redirects to the office settings.
 const adminItems: readonly NavItem[] = [
-  dashboard,
   { href: routes.settings, label: 'Ustawienia' },
   { href: routes.aiLog, label: 'Dziennik AI' },
 ];

@@ -20,6 +20,7 @@ import { type EmployeeHistory, type HistoryRegulation, employeeHistory } from '.
 import {
   type AiPanelState,
   type AppreciationModel,
+  appreciationFailed,
   appreciationModel,
   hrPartnerModel,
 } from './hr-partner';
@@ -51,6 +52,8 @@ export interface CardData {
     appreciation: AppreciationModel | null;
     /** The newest appreciation search is still queued or running, the panel polls for it. */
     appreciationRunning: boolean;
+    /** The newest appreciation search failed, the panel shows the failure with a retry. */
+    appreciationFailed: boolean;
   };
   settings: { visibility: 'office' | 'tree'; retentionMonths: number };
   supervisorName: string | null;
@@ -149,6 +152,7 @@ export const loadCard = cache(async (id: string): Promise<CardData> => {
       signals: hrPartnerModel(hrRuns, aiEnabled, notes),
       appreciation: appreciationModel(appreciationRuns),
       appreciationRunning: RUNNING.has(appreciationRuns?.[0]?.status ?? 'done'),
+      appreciationFailed: appreciationFailed(appreciationRuns),
     },
     settings: {
       visibility: settings?.evaluationVisibility ?? DEFAULT_SETTINGS.visibility,

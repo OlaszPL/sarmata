@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { type EvaluationView, servicesFor } from '@sarmata/services';
 import { Notice, Section, SummaryList, type SummaryRow } from '@sarmata/ui';
+import { ConversationPrepPanel } from '@/components/ai/conversation-prep-panel';
+import { loadConversationPrep } from '@/components/ai/conversation-prep-load';
 import { criterionName } from '@/lib/case-regulation';
 import { formatDate } from '@/lib/format';
 import { approvalIssueItems } from '@/lib/service-errors';
@@ -156,9 +158,32 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     );
   }
 
+  // The starting conversation is prepared before part I is approved, for the evaluator and hr.
+  const role = data.account.role;
+  const showPrep = view.status === 'criteria' && (role === 'evaluator' || role === 'hr');
+  const prep = showPrep
+    ? await loadConversationPrep(view.employeeId, {
+        evaluationId: view.id,
+        after: lastEvent(view, 'part_one_approved')?.recordedAt ?? null,
+      })
+    : null;
+
   return (
     <Section title="Część I. Kryteria i termin">
-      <div className="flex flex-col gap-8">{content}</div>
+      <div className="flex flex-col gap-8">
+        {prep ? (
+          <ConversationPrepPanel
+            employeeId={view.employeeId}
+            conversation="starting"
+            evaluationId={view.id}
+            criterionNames={Object.fromEntries(
+              data.regulation.catalog.map((criterion) => [criterion.id, criterion.name]),
+            )}
+            initial={prep}
+          />
+        ) : null}
+        {content}
+      </div>
     </Section>
   );
 }

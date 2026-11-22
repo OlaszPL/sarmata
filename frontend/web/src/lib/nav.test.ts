@@ -17,9 +17,8 @@ describe('navForRole', () => {
     expect(navForRole('hr')).toEqual([...evaluatorItems, { href: '/kadry', label: 'Kadry' }]);
   });
 
-  it('gives admin the dashboard, settings and the AI log', () => {
+  it('gives admin the settings and the AI log, no dashboard', () => {
     expect(navForRole('admin')).toEqual([
-      { href: '/', label: 'Pulpit' },
       { href: '/ustawienia', label: 'Ustawienia' },
       { href: '/dziennik-ai', label: 'Dziennik AI' },
     ]);

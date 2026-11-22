@@ -19,7 +19,7 @@ test.describe('evaluator dashboard', () => {
     await expect(todo).toContainText('Arkusz C, część II, brakuje 1 pola');
 
     const hero = page.getByRole('region', { name: /Dzień dobry/ });
-    await expect(hero).toContainText('Czeka na ocenianego');
+    await expect(hero).toContainText('Czeka na osobę ocenianą');
     await expect(hero).toContainText(`Zamknięte w ${new Date().getFullYear()} r.`);
 
     const main = page.getByRole('main');
@@ -85,8 +85,21 @@ test.describe('evaluator dashboard', () => {
   });
 });
 
-test('admin without cases sees the empty dashboard', async ({ page }) => {
+test('admin lands on the office settings instead of an empty dashboard', async ({ page }) => {
   await signIn(page, demoAccount('admin'));
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Dzień dobry.');
-  await expect(page.getByRole('main')).toContainText('Nie masz spraw do zrobienia.');
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/ustawienia$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Ustawienia urzędu' })).toBeVisible();
+  await expect(page.getByRole('navigation').getByRole('link', { name: 'Pulpit' })).toHaveCount(0);
+});
+
+test('hr sees its task count with a link to the hr panel', async ({ page }) => {
+  await signIn(page, demoAccount('hr'));
+  await page.goto('/');
+  const block = page.getByRole('region', { name: 'Zadania kadr' });
+  await expect(block).toBeVisible();
+  await expect(block.getByRole('link', { name: 'Przejdź do panelu kadr' })).toHaveAttribute(
+    'href',
+    '/kadry',
+  );
 });

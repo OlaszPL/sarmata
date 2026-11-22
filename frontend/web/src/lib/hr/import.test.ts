@@ -5,6 +5,7 @@ import {
   decisionsFromForm,
   importFieldLabels,
   mappingFromForm,
+  postedDecisions,
   FAILED_ROW_TEXT,
   failedRowText,
   rowErrorText,
@@ -38,6 +39,14 @@ describe('decisionsFromForm', () => {
     );
     expect(decisions).toEqual({ 2: { updateEmployeeId: 'abc-1' }, 3: 'skip', 5: 'create' });
     expect(decisions[4]).toBeUndefined();
+  });
+});
+
+describe('postedDecisions', () => {
+  it('keeps the raw choice of every decision row for the radios after a failed commit', () => {
+    expect(
+      postedDecisions(form({ 'decision.2': 'update:abc-1', 'decision.3': 'skip', csv: 'a;b' })),
+    ).toEqual({ '2': 'update:abc-1', '3': 'skip' });
   });
 });
 

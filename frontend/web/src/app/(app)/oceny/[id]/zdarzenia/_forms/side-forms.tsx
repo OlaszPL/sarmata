@@ -236,7 +236,7 @@ export function EvaluatorChangeForm({
   initial,
   people,
 }: BaseProps & { people: { accountId: string; name: string }[] }) {
-  const { state, formAction, hasErrors } = useCaseForm(action, initial);
+  const { state, formAction, hasErrors, round } = useCaseForm(action, initial);
   const prefix = 'evaluator';
   return (
     <SideDetails summary="Zmień osobę oceniającą" open={hasErrors}>
@@ -246,7 +246,8 @@ export function EvaluatorChangeForm({
         state={state}
         fields={['accountId', 'occurredOn', 'reason']}
       />
-      <form action={formAction} noValidate className={FORM_CLASS}>
+      {/* The key remounts the form after each answer, so the select shows the chosen person again. */}
+      <form key={round} action={formAction} noValidate className={FORM_CLASS}>
         <input type="hidden" name="form" value="evaluator" />
         <Field
           id={`${prefix}-accountId`}

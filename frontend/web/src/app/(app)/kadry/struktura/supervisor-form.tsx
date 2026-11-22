@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button, ErrorSummary, Field, Select, SubmitButton } from '@sarmata/ui';
-import { useFormRound } from '@/components/hr/use-form-round';
+import { useFormRound } from '@/lib/use-form-round';
 import { useErrorTitle } from '@/components/use-error-title';
 import { routes } from '@/lib/routes';
 import { changeSupervisor } from './actions';

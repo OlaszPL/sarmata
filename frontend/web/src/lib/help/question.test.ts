@@ -3,6 +3,7 @@ import {
   QUESTION_MAX,
   QUESTION_TIMEOUT_MS,
   type QuestionRun,
+  evaluationIdOf,
   questionFromParams,
   questionHref,
   questionSchema,
@@ -13,6 +14,7 @@ const REQUESTED = '2026-11-22T10:00:00.000Z';
 const requestedMs = Date.parse(REQUESTED);
 const at = (offsetMs: number) => new Date(requestedMs + offsetMs);
 const RUN_ID = '3f2b8a8e-6a7e-4d0e-9f53-6a1c2f1f9e11';
+const EVALUATION_ID = '9c1d2e3f-4a5b-4c6d-8e7f-0a1b2c3d4e5f';
 
 function fragment(id: number, overrides: Record<string, unknown> = {}) {
   return {
@@ -231,6 +233,7 @@ describe('questionFromParams', () => {
     expect(result.runId).toBe(RUN_ID);
     expect(result.question).toHaveLength(QUESTION_MAX);
     expect(result.state.kind).toBe('done');
+    expect(result.evaluationId).toBeNull();
   });
 });
 
@@ -243,6 +246,25 @@ describe('questionHref', () => {
     expect(questionHref(RUN_ID, 'x', { blad: '1' })).toBe(
       `/pomoc?pytanie=${RUN_ID}&tresc=x&blad=1#odpowiedz`,
     );
+  });
+
+  it('keeps the evaluation the question is about', () => {
+    expect(questionHref(RUN_ID, 'x', { ocena: EVALUATION_ID, blad: '1' })).toBe(
+      `/pomoc?pytanie=${RUN_ID}&tresc=x&ocena=${EVALUATION_ID}&blad=1#odpowiedz`,
+    );
+    expect(questionHref(RUN_ID, 'x', { ocena: null })).toBe(
+      `/pomoc?pytanie=${RUN_ID}&tresc=x#odpowiedz`,
+    );
+  });
+});
+
+describe('evaluationIdOf', () => {
+  it('accepts a uuid and nothing else', () => {
+    expect(evaluationIdOf(EVALUATION_ID)).toBe(EVALUATION_ID);
+    expect(evaluationIdOf('nie-uuid')).toBeNull();
+    expect(evaluationIdOf('')).toBeNull();
+    expect(evaluationIdOf(null)).toBeNull();
+    expect(evaluationIdOf(undefined)).toBeNull();
   });
 });
 

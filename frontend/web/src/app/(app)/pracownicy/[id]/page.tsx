@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { type NoteVersion, servicesFor } from '@sarmata/services';
 import { Notice } from '@sarmata/ui';
+import { ConversationPrepPanel } from '@/components/ai/conversation-prep-panel';
+import { loadConversationPrep } from '@/components/ai/conversation-prep-load';
 import { CardHero } from '@/components/employees/card-hero';
 import { CardNotes, cardNoteFilter } from '@/components/employees/card-notes';
 import { CriteriaChangeTable } from '@/components/employees/criteria-change-table';
@@ -47,6 +49,10 @@ export default async function EmployeeCardPage({ params, searchParams }: CardPag
   const saved = single(query.zapisano) === '1';
   const role = data.account.role;
   const canAnalyse = (role === 'evaluator' || role === 'hr') && data.notes !== null;
+  // The ongoing conversation: runs without an evaluation, for the evaluator and hr only.
+  const prep = canAnalyse
+    ? await loadConversationPrep(data.employee.id, { evaluationId: null })
+    : null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -65,6 +71,16 @@ export default async function EmployeeCardPage({ params, searchParams }: CardPag
           ) : null}
           <RatingHistory rows={data.history.rows} />
           <CriteriaChangeTable criteria={data.history.criteria} />
+          {prep ? (
+            <ConversationPrepPanel
+              employeeId={data.employee.id}
+              conversation="ongoing"
+              criterionNames={Object.fromEntries(data.criteriaNames)}
+              initial={prep}
+              headingLevel={2}
+              className="border-rule border-b"
+            />
+          ) : null}
           <CardNotes
             data={data}
             filter={cardNoteFilter(query)}

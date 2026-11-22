@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { AiMark } from '@sarmata/ui';
+import { CONVERSATION_PREP_ANCHOR } from '@/components/ai/conversation-prep';
 import { type DashboardData } from '@/lib/dashboard/compose-dashboard';
 import { routes } from '@/lib/routes';
 
@@ -55,7 +56,7 @@ export function HrSignalPanel({ signal, aiEnabled }: HrSignalPanelProps) {
           </p>
           <div className="flex flex-wrap">
             <Link
-              href={routes.employee(signal.employeeId)}
+              href={`${routes.employee(signal.employeeId)}#${CONVERSATION_PREP_ANCHOR}`}
               className="bg-navy font-heading flex h-11 items-center px-4 leading-[normal] font-semibold text-white no-underline"
             >
               Przygotuj rozmowę

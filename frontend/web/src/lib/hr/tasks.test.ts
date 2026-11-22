@@ -1,6 +1,6 @@
 import type { CalendarDate, Employee, EvaluationView, ScheduleItem } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
-import { hrTasks } from './tasks';
+import { feedsHrTasks, hrTasks } from './tasks';
 
 const TODAY = '2026-11-22' as CalendarDate;
 
@@ -108,6 +108,24 @@ describe('hrTasks', () => {
       employees: [employee('p2', 'Nowak', '2026-11-11')],
     });
     expect(tasks).toEqual([]);
+  });
+
+  it('keeps grade by law on a closed evaluation, the page loads closed views for it', () => {
+    expect(feedsHrTasks({ status: 'closed' })).toBe(true);
+    expect(feedsHrTasks({ status: 'interrupted' })).toBe(false);
+    const tasks = run({
+      views: [
+        view({
+          id: 'e2',
+          employeeId: 'p2',
+          status: 'closed',
+          slots: { gradeByLawGrant: '2026-12-10' },
+          events: [{ kind: 'acquainted', occurredOn: '2026-11-10' }],
+        }),
+      ],
+      employees: [employee('p2', 'Nowak', '2024-01-01')],
+    });
+    expect(tasks.map((t) => t.kind)).toEqual(['grade_by_law']);
   });
 
   it('ignores grade by law on an interrupted evaluation', () => {

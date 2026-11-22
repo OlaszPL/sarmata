@@ -1,5 +1,11 @@
-import { type CalendarDate, type EvaluationView, type EvaluationWarning } from '@sarmata/services';
+import {
+  type ApprovalIssue,
+  type CalendarDate,
+  type EvaluationView,
+  type EvaluationWarning,
+} from '@sarmata/services';
 import { type NextStep } from '@/lib/evaluations/next-step';
+import { gateLinks } from '@/lib/evaluations/sheet-gates';
 import { daysUntil, formatDate, relativeDays } from '@/lib/format';
 import { routes } from '@/lib/routes';
 
@@ -63,11 +69,34 @@ export function stepCard({ view, step, canWrite, isHr, today }: StepCardInput): 
   };
 }
 
-/** The tab with the fields the next approval checks, null when no approval is next. */
-export function issueTab(view: EvaluationView): string | null {
-  if (view.status === 'criteria') return routes.evaluationPart1(view.id);
-  if (view.status === 'interview') return routes.evaluationPart2(view.id);
-  return null;
+export interface IssueLink {
+  fieldId: string;
+  message: string;
+  href: string;
+}
+
+/**
+ * Gates of the next approval as links to the tab of each field: part III fields of the sheet gate go
+ * to part III, not part II. A field outside the sheet tabs goes to the page of the approval (part I,
+ * or the check page in `interview`). Empty when no approval is next.
+ */
+export function issueLinks(
+  view: EvaluationView,
+  issues: readonly ApprovalIssue[],
+  criterionName: (id: string) => string,
+): IssueLink[] {
+  const approvalPage =
+    view.status === 'criteria'
+      ? routes.evaluationPart1(view.id)
+      : view.status === 'interview'
+        ? routes.evaluationCheck(view.id)
+        : null;
+  if (approvalPage === null) return [];
+  return gateLinks(view.id, issues, criterionName, 'sprawdz').map((item) => ({
+    fieldId: item.fieldId,
+    message: item.message,
+    href: item.href ?? `${approvalPage}#${item.fieldId}`,
+  }));
 }
 
 export function warningText(warning: EvaluationWarning): string {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { type KeyboardEvent, useActionState, useRef } from 'react';
+import { useParams } from 'next/navigation';
 import {
   Checkbox,
   DateInput,
@@ -15,6 +16,7 @@ import {
 } from '@sarmata/ui';
 import { useErrorTitle } from '@/components/use-error-title';
 import { type FormState, type FormValues } from '@/lib/form-action';
+import { CriteriaProposals } from './criteria-proposals';
 
 type FormAction = (previous: FormState, formData: FormData) => Promise<FormState>;
 
@@ -67,6 +69,14 @@ interface PartOneFormProps {
   pendingIssues: readonly Item[];
 }
 
+/**
+ * Enter in a one-line field would submit the form through its first button, the approval, and lock
+ * part I. The form only submits through its buttons. Enter in a text area still adds a line.
+ */
+export function blockImplicitSubmit(event: KeyboardEvent<HTMLFormElement>) {
+  if (event.key === 'Enter' && event.target instanceof HTMLInputElement) event.preventDefault();
+}
+
 /** Part I of the sheet: additional criteria, due date and the approval with the starting interview. */
 export function PartOneForm({
   action,
@@ -81,6 +91,19 @@ export function PartOneForm({
   pendingIssues,
 }: PartOneFormProps) {
   const [state, formAction] = useActionState(action, initial);
+  const { id } = useParams<{ id: string }>();
+  const formRef = useRef<HTMLFormElement>(null);
+  const names = Object.fromEntries(
+    [...mandatory, ...options].map((criterion) => [criterion.id, criterion.name]),
+  );
+  /** An accepted AI proposal ticks its criterion. The boxes stay uncontrolled, React resets them after a save. */
+  const addCriterion = (criterionId: string) => {
+    const box = [
+      ...(formRef.current?.querySelectorAll<HTMLInputElement>('input[name="additionalCriteria"]') ??
+        []),
+    ].find((input) => input.value === criterionId);
+    if (box) box.checked = true;
+  };
   const items = errorItems(state);
   const hasErrors = items.length > 0 || state.formError !== undefined;
   useErrorTitle(hasErrors);
@@ -115,7 +138,13 @@ export function PartOneForm({
         </Notice>
       ) : null}
 
-      <form action={formAction} noValidate className="flex flex-col gap-8">
+      <form
+        ref={formRef}
+        action={formAction}
+        onKeyDown={blockImplicitSubmit}
+        noValidate
+        className="flex flex-col gap-8"
+      >
         <div className="flex flex-col gap-2">
           <h3 className="font-heading text-ink text-base leading-[normal] font-semibold">
             Kryteria obowiązkowe
@@ -131,6 +160,8 @@ export function PartOneForm({
             ))}
           </ul>
         </div>
+
+        <CriteriaProposals id={id} names={names} onAddCriterion={addCriterion} />
 
         <fieldset
           className={`grid gap-2 ${criteriaError ? 'border-error border-l-[0.3125rem] pl-4' : ''}`}

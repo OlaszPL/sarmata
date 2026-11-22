@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { ImportField, RowPreview } from '@sarmata/services';
 import {
@@ -26,6 +26,7 @@ import {
   rowErrorText,
 } from '@/lib/hr/import';
 import { routes } from '@/lib/routes';
+import { useFormRound } from '@/lib/use-form-round';
 import { commitImport, dryRunImport, proposeImportMapping, type ImportState } from './actions';
 
 const MAX_BYTES = 1024 * 1024;
@@ -68,7 +69,8 @@ function textOf(value: unknown): string {
 
 /** Four steps of the employee import. The CSV text travels in a hidden field, nothing is stored between steps. */
 export function ImportWizard() {
-  const [state, formAction] = useActionState<ImportState, FormData>(runStep, { step: 'file' });
+  // `round` remounts the step forms after each answer, so selects and radios show what was sent.
+  const [state, formAction] = useFormRound<ImportState>(runStep, { step: 'file' });
   const [fileError, setFileError] = useState<string | undefined>();
 
   const missing = state.step === 'mapping' ? state.proposal.missing : [];
@@ -105,9 +107,11 @@ export function ImportWizard() {
           formAction={formAction}
         />
       ) : null}
-      {state.step === 'mapping' ? <MappingStep state={state} formAction={formAction} /> : null}
+      {state.step === 'mapping' ? (
+        <MappingStep key={state.round} state={state} formAction={formAction} />
+      ) : null}
       {state.step === 'preview' ? (
-        <PreviewStep state={state} formAction={formAction} onRestart={restart} />
+        <PreviewStep key={state.round} state={state} formAction={formAction} onRestart={restart} />
       ) : null}
       {state.step === 'done' ? <DoneStep state={state} onRestart={restart} /> : null}
     </div>
@@ -308,6 +312,7 @@ function PreviewStep({
                 key={row.row}
                 name={`decision.${row.row}`}
                 legend={`Wiersz ${row.row}: ${fullName(row.values)}`}
+                defaultValue={state.decisions?.[String(row.row)]}
                 options={[
                   { value: 'create', label: 'Dodaj jako nowego pracownika' },
                   { value: 'skip', label: 'Pomiń' },

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { servicesFor } from '@sarmata/services';
 import { Notice, Section } from '@sarmata/ui';
+import { ConversationPrepPanel } from '@/components/ai/conversation-prep-panel';
+import { loadConversationPrep } from '@/components/ai/conversation-prep-load';
 import { ReadOnlyNotice } from '@/components/sheet/read-only-notice';
 import { SheetSummary } from '@/components/sheet/sheet-summary';
 import { AiDraftPanel } from './_sheet/ai-draft-panel';
@@ -57,11 +59,38 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     );
   }
 
+  // The evaluation conversation, prepared after part I, for the evaluator and hr while it is ahead.
+  const role = data.account.role;
+  const showPrep =
+    (view.status === 'period' || view.status === 'interview') &&
+    (role === 'evaluator' || role === 'hr');
+  const prep = showPrep
+    ? await loadConversationPrep(view.employeeId, {
+        evaluationId: view.id,
+        after:
+          view.events.filter((event) => event.kind === 'part_one_approved').at(-1)?.recordedAt ??
+          null,
+      })
+    : null;
+  const prepPanel = prep ? (
+    <ConversationPrepPanel
+      employeeId={view.employeeId}
+      conversation="evaluation"
+      evaluationId={view.id}
+      criterionNames={Object.fromEntries(
+        regulation.criteria.map((criterion) => [criterion.id, criterion.name]),
+      )}
+      initial={prep}
+      className="border-rule border-b"
+    />
+  ) : null;
+
   if (mode === 'read') {
     return (
       <Section title="Część II. Ocena okresowa">
         <div className="flex flex-col gap-6">
           <ReadOnlyNotice data={data} />
+          {prepPanel}
           <SheetSummary data={data} editable={false} parts={['two']} />
         </div>
       </Section>
@@ -111,7 +140,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       }
       noteDates={noteDates}
       negativePoints={regulation.negativePoints}
-      before={mode === 'period' ? <InterviewForm id={id} today={data.today} /> : undefined}
+      before={
+        <>
+          {prepPanel}
+          {mode === 'period' ? <InterviewForm id={id} today={data.today} /> : null}
+        </>
+      }
       aiPanel={
         <AiDraftPanel
           id={id}

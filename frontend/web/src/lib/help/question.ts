@@ -8,6 +8,8 @@ export type QuestionRun = Extract<AiRun, { kind: 'procedure_question' }>;
 export const QUESTION_TIMEOUT_MS = 240_000;
 export const QUESTION_MAX = 500;
 
+const uuid = z.uuid();
+
 const DISABLED_MESSAGE = 'AI jest wyłączone w ustawieniach urzędu.';
 const FAILED_MESSAGE =
   'Asystent nie odpowiedział. Spróbuj ponownie albo skorzystaj z instrukcji poniżej.';
@@ -100,19 +102,34 @@ export const questionSchema = z.object({
 
 /**
  * Link back to the assistant with the answer in view. The run does not carry the question text, so
- * it travels in `tresc`.
+ * it travels in `tresc`. `ocena` keeps the evaluation the question is about.
  */
-export function questionHref(runId: string, question: string, extra?: { blad?: '1' }): string {
+export function questionHref(
+  runId: string,
+  question: string,
+  extra?: { blad?: '1'; ocena?: string | null },
+): string {
+  const evaluation = extra?.ocena ? `&ocena=${extra.ocena}` : '';
   const error = extra?.blad === undefined ? '' : `&blad=${extra.blad}`;
-  return `${routes.help}?pytanie=${runId}&tresc=${encodeURIComponent(question)}${error}#odpowiedz`;
+  return `${routes.help}?pytanie=${runId}&tresc=${encodeURIComponent(question)}${evaluation}${error}#odpowiedz`;
+}
+
+/** The evaluation id of `?ocena=` or a posted field, null when it is missing or not a uuid. */
+export function evaluationIdOf(raw: unknown): string | null {
+  return typeof raw === 'string' && uuid.safeParse(raw).success ? raw : null;
 }
 
 export type AskedQuestion =
   | { kind: 'none' }
   | { kind: 'missing' }
-  | { kind: 'found'; runId: string; question: string; state: QuestionState };
-
-const uuid = z.uuid();
+  | {
+      kind: 'found';
+      runId: string;
+      question: string;
+      state: QuestionState;
+      /** The evaluation the question was asked about, null for a general question. */
+      evaluationId: string | null;
+    };
 
 /** Reads `?pytanie=` and `?tresc=` of the page. A foreign or unknown id is `missing`, never an error. */
 export async function questionFromParams(
@@ -133,5 +150,6 @@ export async function questionFromParams(
     runId: run.id,
     question: params.tresc.slice(0, QUESTION_MAX),
     state: questionState(run, now),
+    evaluationId: run.evaluationId,
   };
 }

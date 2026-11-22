@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { demoAccount } from '../src/demo-accounts';
-import { expectNoSidewaysScroll, expectNoViolations } from '../src/page-checks';
+import { errorSummary, expectNoSidewaysScroll, expectNoViolations } from '../src/page-checks';
 import { signIn } from '../src/session';
 
 /** Opens the events tab of an employee's case from the evaluations list. */
@@ -50,6 +50,19 @@ test.describe('events tab of the objection case of Stefan', () => {
     await page.setViewportSize({ width: 400, height: 900 });
     await expectNoSidewaysScroll(page);
   });
+});
+
+test('hr keeps the chosen evaluator after a missing reason', async ({ page }) => {
+  await signIn(page, demoAccount('hr'));
+  await openEvents(page, 'Marek Merytoryczny');
+  await page.locator('summary', { hasText: 'Zmień osobę oceniającą' }).click();
+  const person = page.getByLabel('Nowa osoba oceniająca');
+  await person.selectOption({ index: 1 });
+  const chosen = await person.inputValue();
+  await page.getByRole('button', { name: 'Zmień osobę oceniającą' }).click();
+
+  await expect(errorSummary(page, 'Popraw zmianę osoby oceniającej')).toBeFocused();
+  await expect(person).toHaveValue(chosen);
 });
 
 test('the evaluator sees the notice and the empty side events of Marek in the period', async ({

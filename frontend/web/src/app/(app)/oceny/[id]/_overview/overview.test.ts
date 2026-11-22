@@ -2,7 +2,7 @@ import { type EvaluationView, calendarDate } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
 import { type NextStep } from '@/lib/evaluations/next-step';
 import { routes } from '@/lib/routes';
-import { issueTab, stepCard, warningText } from './overview';
+import { issueLinks, stepCard, warningText } from './overview';
 
 const today = calendarDate('2026-11-22');
 
@@ -92,11 +92,28 @@ describe('stepCard', () => {
   });
 });
 
-describe('issueTab', () => {
-  it('points at the part the next approval checks', () => {
-    expect(issueTab(view('criteria'))).toBe(routes.evaluationPart1('e1'));
-    expect(issueTab(view('interview'))).toBe(routes.evaluationPart2('e1'));
-    expect(issueTab(view('period'))).toBeNull();
+describe('issueLinks', () => {
+  const name = (id: string) => id;
+
+  it('links each gate field to the tab that holds it', () => {
+    const links = issueLinks(
+      view('interview'),
+      [
+        { code: 'development_conclusions_missing' },
+        { code: 'grade_request_motivation_missing' },
+      ] as never,
+      name,
+    );
+    expect(links.map((link) => link.href)).toEqual([
+      `${routes.evaluationPart2('e1')}#developmentConclusions`,
+      `${routes.evaluationPart3('e1')}#gradeRequestMotivation`,
+    ]);
+  });
+
+  it('points part I gates at part I and gives nothing without a next approval', () => {
+    const [link] = issueLinks(view('criteria'), [{ code: 'due_after_deadline' }] as never, name);
+    expect(link?.href).toBe(`${routes.evaluationPart1('e1')}#dueOn`);
+    expect(issueLinks(view('period'), [{ code: 'due_after_deadline' }] as never, name)).toEqual([]);
   });
 });
 

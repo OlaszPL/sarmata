@@ -30,6 +30,14 @@ function firstDue(view: EvaluationView, slots: readonly DeadlineSlot[]): Calenda
   return null;
 }
 
+/**
+ * The deadline for drawing up the evaluation, whatever the status: a change of position first, then
+ * a re-evaluation after a negative one, then the regular deadline. Null when no slot has a date.
+ */
+export function evaluationDueOn(view: EvaluationView): CalendarDate | null {
+  return firstDue(view, EVALUATION_SLOTS);
+}
+
 function interviewStep(view: EvaluationView): Pick<NextStep, 'action' | 'missingFields'> {
   const { ratings, developmentConclusions } = view.sheet.content.partTwo;
   const missingRatings = view.criteria.filter((criterion) => ratings[criterion] === undefined);
@@ -58,7 +66,7 @@ export function nextStep(view: EvaluationView): NextStep | null {
     case 'criteria_awaiting_signature':
       return {
         stage: 'Podpis części I',
-        action: 'Odnotuj podpis części I przez ocenianego',
+        action: 'Odnotuj podpis części I przez osobę ocenianą',
         owner: 'evaluator',
         dueOn: null,
         missingFields: null,

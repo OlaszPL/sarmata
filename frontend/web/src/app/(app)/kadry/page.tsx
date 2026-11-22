@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { servicesFor } from '@sarmata/services';
 import { DataTable, EmptyState, Tag } from '@sarmata/ui';
 import { HrPage } from '@/components/hr/hr-page';
-import { officeEmployees, requireMember } from '@/lib/account';
+import { requireMember } from '@/lib/account';
 import { formatDate, todayInWarsaw } from '@/lib/format';
 import { hrAccess } from '@/lib/hr/access';
-import { hrTaskHref, hrTaskLabels, hrTasks } from '@/lib/hr/tasks';
-import { loadViews } from '@/lib/hr/views';
+import { loadHrTasks } from '@/lib/hr/load-tasks';
+import { hrTaskHref, hrTaskLabels } from '@/lib/hr/tasks';
 import { routes } from '@/lib/routes';
 import { createSupabase } from '@/lib/supabase';
 
@@ -21,14 +21,10 @@ export default async function HrTasksPage() {
 
   const services = servicesFor(await createSupabase());
   const today = todayInWarsaw();
-  const [views, report, employees, unread] = await Promise.all([
-    loadViews((e) => e.status !== 'closed' && e.status !== 'interrupted'),
-    services.statistics.schedule({ today }),
-    officeEmployees(),
+  const [tasks, unread] = await Promise.all([
+    loadHrTasks(today),
     services.notifications.unreadCount(),
   ]);
-
-  const tasks = hrTasks({ views, schedule: report.rows, employees, today });
   const overdue = tasks.filter((task) => task.overdue).length;
 
   return (

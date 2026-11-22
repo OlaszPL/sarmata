@@ -77,6 +77,7 @@ export const guides: readonly Guide[] = [
       {
         title: 'Przyznaj stopień z mocy prawa w rejestrze kadr',
         body: 'Po dwóch kolejnych ocenach na dwóch najwyższych poziomach masz 30 dni na przyznanie wyższego stopnia. Zadanie zamyka się po wpisie przyznania.',
+        link: { href: `${routes.hrRegister}#stopien`, label: 'Przejdź do rejestru kadr' },
       },
       {
         title: 'Przy ustaniu zatrudnienia pobierz archiwum teczek na karcie pracownika',

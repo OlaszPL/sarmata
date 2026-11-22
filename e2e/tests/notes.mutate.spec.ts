@@ -50,5 +50,8 @@ test.describe('saving notes', () => {
     await expect(page.getByText('Zapisano notatkę.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Twoje notatki' })).toBeVisible();
     await expect(page.getByText(body)).toBeVisible();
+    // The form starts over, so a second click cannot save the same note again.
+    await expect(page.getByLabel('Treść notatki')).toHaveValue('');
+    await expect(page.getByRole('radio', { name: 'Plus' })).not.toBeChecked();
   });
 });

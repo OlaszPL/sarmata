@@ -77,7 +77,8 @@ export function AcquaintanceForm({ action, initial }: BaseProps) {
             </Field>
             <Field
               id={`${prefix}-witnesses`}
-              label="Osoby obecne przy odmowie (opcjonalnie)"
+              label="Osoby obecne przy odmowie"
+              optional
               hint="Jedna osoba w wierszu"
               error={state.fieldErrors.witnesses}
             >
@@ -127,7 +128,7 @@ export function ClosingForm({ action, initial, dueText }: BaseProps & { dueText:
         <Field
           id={`${prefix}-closedOn`}
           label="Data zamknięcia oceny"
-          hint={dueText ? `Termin na sprzeciw mija ${dueText}` : undefined}
+          hint={dueText ? `Termin na sprzeciw minął ${dueText}` : undefined}
           error={state.fieldErrors.closedOn}
         >
           <DateInput name="closedOn" defaultValue={textValue(state.values, 'closedOn')} />

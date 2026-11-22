@@ -159,9 +159,9 @@ Bez logowania i bez urzędu:
 
 Pulpit i wspólne:
 
-- `/`: pulpit
+- `/`: pulpit osoby oceniającej, dla kadr z blokiem „Zadania kadr” (liczba zadań i link do `/kadry`), administrator trafia stąd do `/ustawienia`
 - `/powiadomienia`: skrzynka powiadomień: nieprzeczytane, przeczytane i załatwione, termin z liczbą dni, link do właściwej zakładki sprawy, oznaczenie jako przeczytane pojedynczo i wszystkich naraz (licznik w nagłówku maleje), po oznaczeniu `?oznaczono=jedno|wszystkie`, administrator widzi wyjaśnienie zamiast skrzynki
-- `/pomoc`: instrukcja krok po kroku dla oceniającego i kadr (własna rola pierwsza) oraz asystent przepisów (AI, pytanie o procedurę, odpowiedź z cytatami fragmentów przepisów, ocena odpowiedzi jako decyzja w dzienniku AI), wynik pytania `?pytanie=<id przebiegu>&tresc=<pytanie>` z odpytywaniem do limitu 4 minut, stany AI wyłączone, w toku, nieudane, po limicie i usunięte
+- `/pomoc`: instrukcja krok po kroku dla oceniającego i kadr (własna rola pierwsza) oraz asystent przepisów (AI, pytanie o procedurę, odpowiedź z cytatami fragmentów przepisów, ocena odpowiedzi jako decyzja w dzienniku AI), wynik pytania `?pytanie=<id przebiegu>&tresc=<pytanie>` z odpytywaniem do limitu 4 minut, stany AI wyłączone, w toku, nieudane, po limicie i usunięte. Z `?ocena=<id oceny>` (link „Zapytaj o przepisy” w bocznym pasku sprawy) asystent odpowiada według wersji przepisów przypiętej do tej oceny
 - `/komponenty`: katalog komponentów `@sarmata/ui`, tylko w trybie deweloperskim (404 w produkcji), poza menu
 
 Oceny:
@@ -188,6 +188,7 @@ Kadry:
 - `/kadry`: zadania kadr z terminów i etapów ocen (sprzeciw do rozstrzygnięcia, stopień z mocy prawa, ocena po terminie)
 - `/kadry/harmonogram`: harmonogram ocen w toku z filtrami horyzontu, sytuacji i komórki (kadry i administrator)
 - `/kadry/statystyki`: rozkład ocen na tle kraju, potrzeby rozwojowe, raport oceniających i pobranie CSV do sprawozdania DSC-OCK (kadry i administrator)
+- `/api/kadry/dsc-ock?rok=<rok>`: plik CSV do sprawozdania DSC-OCK za rok (kadry i administrator)
 - `/kadry/rejestr`: rejestr odwołań do sądu pracy i przyznanych stopni służbowych
 - `/kadry/import`: import pracowników z CSV w czterech krokach z przebiegiem próbnym przed zapisem
 - `/kadry/struktura`: drzewo przełożonych ze zmianą przełożonego pracownika

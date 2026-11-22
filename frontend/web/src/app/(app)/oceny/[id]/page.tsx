@@ -3,9 +3,8 @@ import Link from 'next/link';
 import { Button, Notice, Section, SummaryList } from '@sarmata/ui';
 import { criterionName } from '@/lib/case-regulation';
 import { formatDate, pluralPl } from '@/lib/format';
-import { approvalIssueItems } from '@/lib/service-errors';
 import { caseTitle, loadCase } from './loader';
-import { issueTab, stepCard, warningText } from './_overview/overview';
+import { issueLinks, stepCard, warningText } from './_overview/overview';
 
 export async function generateMetadata({
   params,
@@ -25,10 +24,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     isHr: data.isHr,
     today: data.today,
   });
-  const tab = issueTab(view);
-  const issues = tab
-    ? approvalIssueItems(approval.issues, (id) => criterionName(regulation, id))
-    : [];
+  const issues = issueLinks(view, approval.issues, (id) => criterionName(regulation, id));
   const hasLawWarning = view.warnings.some((warning) => warning.code === 'grade_due_by_law');
   const gradeByLaw = view.signals.gradeByLaw;
 
@@ -66,7 +62,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           )}
         </section>
 
-        {tab && issues.length > 0 ? (
+        {issues.length > 0 ? (
           <Notice
             tone="warning"
             title={`Przed zatwierdzeniem uzupełnij ${issues.length} ${pluralPl(issues.length, 'pole', 'pola', 'pól')}`}
@@ -74,7 +70,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             <ul className="flex list-none flex-col gap-1">
               {issues.map((item) => (
                 <li key={`${item.fieldId}|${item.message}`}>
-                  <Link href={`${tab}#${item.fieldId}`} className="text-link underline">
+                  <Link href={item.href} className="text-link underline">
                     {item.message}
                   </Link>
                 </li>

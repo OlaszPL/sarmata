@@ -44,6 +44,7 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
 
   const yearForm = (
     <form
+      key={year}
       action={routes.hrStatistics}
       method="get"
       className="mb-6 flex flex-wrap items-end gap-x-6 gap-y-4"

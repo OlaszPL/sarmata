@@ -66,4 +66,24 @@ describe('caseStages', () => {
     expect(stages[6]).toEqual({ label: 'Przerwana', date: '01.03.2025', state: 'done' });
     expect(currentStageIndex(view('interrupted'))).toBe(6);
   });
+
+  it('shows unreached stages of an interrupted case as not applicable', () => {
+    const stages = caseStages(
+      view('interrupted', [
+        ['part_one_approved', '2024-12-05'],
+        ['interrupted', '2025-03-01'],
+      ]),
+    );
+    expect(stages.map((stage) => stage.state)).toEqual([
+      'done',
+      'next',
+      'next',
+      'next',
+      'next',
+      'next',
+      'done',
+    ]);
+    expect(stages[0]).toEqual({ label: 'Kryteria', date: '05.12.2024', state: 'done' });
+    expect(stages[1]).toEqual({ label: 'Podpis części I', date: 'Nie dotyczy', state: 'next' });
+  });
 });

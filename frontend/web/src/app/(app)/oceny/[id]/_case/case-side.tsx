@@ -117,7 +117,29 @@ function Downloads({ data }: { data: CaseData }) {
   );
 }
 
-/** Side band of a case: how the score is computed, the latest journal entries and downloads. */
+/** The procedure assistant on `/pomoc`, answering by the regulation version of this evaluation. */
+function AskAboutRules({ data }: { data: CaseData }) {
+  return (
+    <Section title="Pytanie o przepisy" titleLevel={3}>
+      <div className="flex flex-col gap-3">
+        <p className="text-[0.9375rem] leading-[1.5333]">
+          Asystent odpowie według wersji przepisów, w której prowadzona jest ta ocena.
+        </p>
+        <Link
+          href={routes.helpForEvaluation(data.view.id)}
+          className="font-heading text-link self-start text-[0.9375rem] leading-[normal] font-medium underline"
+        >
+          Zapytaj o przepisy
+        </Link>
+      </div>
+    </Section>
+  );
+}
+
+/**
+ * Side band of a case: how the score is computed, the latest journal entries, downloads and the
+ * procedure assistant (not for the admin, whom the assistant does not answer).
+ */
 export function CaseSide({ data }: { data: CaseData }) {
   return (
     <aside
@@ -127,6 +149,7 @@ export function CaseSide({ data }: { data: CaseData }) {
       <ScoreExplanation data={data} />
       <RecentEvents data={data} />
       <Downloads data={data} />
+      {data.isAdmin ? null : <AskAboutRules data={data} />}
     </aside>
   );
 }

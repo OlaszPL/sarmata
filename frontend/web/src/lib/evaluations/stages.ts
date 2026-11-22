@@ -67,16 +67,28 @@ function lastDate(
 
 /**
  * The seven stages of the strip above a case: finished ones with the date that ended them, the
- * current one "w trakcie" (the hero shows its due date), the rest "Jeszcze niedostępne".
+ * current one "w trakcie" (the hero shows its due date), the rest "Jeszcze niedostępne". An
+ * interrupted case marks finished only the stages it ended, the rest "Nie dotyczy", the last tile
+ * "Przerwana".
  */
 export function caseStages(view: EvaluationView): CaseStage[] {
   const current = currentStageIndex(view);
   const finished = view.status === 'closed' || view.status === 'interrupted';
 
   return RULES.map((rule, index) => {
-    if (index === LAST && view.status === 'interrupted') {
-      const on = lastDate(view, ['interrupted']);
-      return { label: 'Przerwana', date: on ? formatDate(on) : '', state: 'done' };
+    if (view.status === 'interrupted') {
+      if (index === LAST) {
+        const on = lastDate(view, ['interrupted']);
+        return { label: 'Przerwana', date: on ? formatDate(on) : '', state: 'done' };
+      }
+      // Only a stage whose ending event happened was finished, the case never reached the rest.
+      const on = lastDate(view, rule.endedBy);
+      if (on === null) return { label: rule.label, date: 'Nie dotyczy', state: 'next' };
+      return {
+        label: rule.label,
+        date: rule.until ? `do ${formatDate(on)}` : formatDate(on),
+        state: 'done',
+      };
     }
     if (index < current || (finished && index === current)) {
       const on = lastDate(view, rule.endedBy);

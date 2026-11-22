@@ -145,9 +145,28 @@ const failureReasonTexts: Record<string, string> = {
   interrupted: 'Przebieg przerwano przed końcem',
 };
 
-/** Short Polish text of a failure code, the code itself when unknown. */
+/** Short Polish text of a failure code. An unknown code is never shown raw, it is English. */
 export function failureReasonText(reason: string): string {
-  return failureReasonTexts[reason] ?? reason;
+  return failureReasonTexts[reason] ?? 'Inny błąd przebiegu';
+}
+
+const failureMessageTexts: Record<string, string> = {
+  disabled: 'Przebieg nie ruszył, bo AI jest wyłączone w ustawieniach urzędu.',
+  timeout: 'Model nie odpowiedział w wyznaczonym czasie. Uruchom przebieg ponownie później.',
+  unavailable: 'Serwer modelu był niedostępny. Uruchom przebieg ponownie później.',
+  rejected: 'Model odrzucił zapytanie. Zmień treść i uruchom przebieg ponownie.',
+  invalid_response:
+    'Model zwrócił odpowiedź w złym formacie, więc nie da się jej pokazać. Uruchom przebieg ponownie.',
+  expired: 'Przebieg zbyt długo czekał w kolejce i wygasł. Uruchom go ponownie.',
+  interrupted: 'Usługa AI zatrzymała się w trakcie przebiegu. Uruchom go ponownie.',
+};
+
+/**
+ * Polish explanation of a failed run with what to do next. The worker stores its own message in
+ * English (`failure.message`), so the log never shows it and reads the code instead.
+ */
+export function failureMessageText(reason: string): string {
+  return failureMessageTexts[reason] ?? 'Przebieg się nie udał. Uruchom go ponownie później.';
 }
 
 export interface LogDecision {
@@ -166,6 +185,7 @@ export interface LogRunDetail {
   kind: string;
   evaluationId: string | null;
   failureReason: string | null;
+  /** Polish explanation of the failure (`failureMessageText`), null for a run that did not fail. */
   failureMessage: string | null;
   model: string | null;
   promptVersion: string | null;
@@ -180,7 +200,7 @@ export function runDetail(run: AiRun): LogRunDetail {
     kind: aiKindLabels[run.kind],
     evaluationId: run.evaluationId,
     failureReason: run.failure?.reason ?? null,
-    failureMessage: run.failure?.message ?? null,
+    failureMessage: run.failure ? failureMessageText(run.failure.reason) : null,
     model: run.model,
     promptVersion: run.promptVersion,
     outputTokens: run.outputTokens,
@@ -195,7 +215,7 @@ export function usageLogDetail(entry: AiUsageLogEntry): LogRunDetail {
     kind: aiKindLabels[entry.kind],
     evaluationId: entry.evaluationId,
     failureReason: entry.failureReason,
-    failureMessage: null,
+    failureMessage: entry.failureReason === null ? null : failureMessageText(entry.failureReason),
     model: entry.model,
     promptVersion: entry.promptVersion,
     outputTokens: entry.outputTokens,

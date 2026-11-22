@@ -1,4 +1,4 @@
-import { PixelLoader } from '@sarmata/ui';
+import { Notice, PixelLoader } from '@sarmata/ui';
 import { PollingRefresh } from '@/components/polling-refresh';
 import { pluralPl } from '@/lib/format';
 import { type AppreciationModel } from '@/lib/employees/hr-partner';
@@ -11,6 +11,8 @@ interface AppreciationBlockProps {
   /** The latest finished search, null before the first one. */
   model: AppreciationModel | null;
   running: boolean;
+  /** The newest search failed. An older finished result still shows above the failure. */
+  failed: boolean;
   /** Refreshes the page while the search runs, off when the signals analysis already polls. */
   poll: boolean;
   canAnalyse: boolean;
@@ -50,6 +52,7 @@ export function AppreciationBlock({
   employeeId,
   model,
   running,
+  failed,
   poll,
   canAnalyse,
 }: AppreciationBlockProps) {
@@ -82,7 +85,7 @@ export function AppreciationBlock({
             </p>
           )}
         </>
-      ) : running ? null : (
+      ) : running || failed ? null : (
         <p className="max-w-[70ch] text-[0.9375rem] leading-[1.4375rem]">
           Analiza wskaże w notatkach sytuacje, za które warto docenić tę osobę.
         </p>
@@ -94,6 +97,19 @@ export function AppreciationBlock({
             <PollingRefresh active intervalMs={2000} timeoutMessage={POLLING_TIMEOUT} />
           ) : null}
         </>
+      ) : failed ? (
+        <Notice tone="error" role="status">
+          <div className="grid justify-items-start gap-3">
+            <p>Szukanie momentu na docenienie się nie udało. Spróbuj ponownie.</p>
+            {canAnalyse ? (
+              <AiStartForm
+                employeeId={employeeId}
+                kind="appreciation_moments"
+                label="Szukaj ponownie"
+              />
+            ) : null}
+          </div>
+        </Notice>
       ) : canAnalyse ? (
         <AiStartForm
           employeeId={employeeId}

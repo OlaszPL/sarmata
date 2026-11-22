@@ -1,16 +1,43 @@
 import type { Metadata } from 'next';
-import { servicesFor } from '@sarmata/services';
+import Link from 'next/link';
+import { type Services, servicesFor } from '@sarmata/services';
 import { Notice, PageHero, Section } from '@sarmata/ui';
 import { AskForm } from '@/components/help/ask-form';
 import { Answer } from '@/components/help/answer';
 import { Guide } from '@/components/help/guide';
 import { requireMember } from '@/lib/account';
 import { guidesFor } from '@/lib/help/guides';
-import { QUESTION_MAX, questionFromParams } from '@/lib/help/question';
+import { QUESTION_MAX, evaluationIdOf, questionFromParams } from '@/lib/help/question';
+import { regulationForEvaluation } from '@/lib/regulation';
+import { routes } from '@/lib/routes';
 import { type SearchParams, single } from '@/lib/search-params';
 import { createSupabase } from '@/lib/supabase';
 
 export const metadata: Metadata = { title: 'Pomoc' };
+
+type CaseContext =
+  | { kind: 'none' }
+  | { kind: 'missing' }
+  | { kind: 'found'; id: string; employeeName: string; regulationName: string };
+
+/** The evaluation a question is about, with the name of the regulation version pinned to it. */
+async function caseContext(services: Services, id: string | null): Promise<CaseContext> {
+  if (id === null) return { kind: 'none' };
+  try {
+    const view = await services.evaluations.get(id);
+    if (view === null) return { kind: 'missing' };
+    const regulation = await regulationForEvaluation(view);
+    return {
+      kind: 'found',
+      id: view.id,
+      employeeName: `${view.snapshot.firstName} ${view.snapshot.lastName}`,
+      regulationName: regulation.name,
+    };
+  } catch (error) {
+    console.error('pomoc: evaluation of the question failed', error);
+    return { kind: 'missing' };
+  }
+}
 
 /** Step by step guides and the procedure assistant (`procedure_question`). */
 export default async function HelpPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -37,6 +64,13 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
         (id) => services.ai.get(id),
         new Date(),
       );
+  const rawCase = single(params.ocena);
+  const caseId = evaluationIdOf(rawCase) ?? (asked.kind === 'found' ? asked.evaluationId : null);
+  const context: CaseContext = isAdmin
+    ? { kind: 'none' }
+    : rawCase !== '' && caseId === null
+      ? { kind: 'missing' }
+      : await caseContext(services, caseId);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -45,8 +79,30 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
         <div className="grid gap-6">
           <p className="max-w-[70ch]">
             Asystent odpowiada na podstawie ustawy o służbie cywilnej, rozporządzenia i zarządzenia
-            w wersji obowiązującej w urzędzie. Odpowiedź to sugestia, decyzję podejmujesz Ty.
+            {context.kind === 'found'
+              ? ' w wersji, według której prowadzona jest ocena.'
+              : ' w wersji obowiązującej w urzędzie.'}{' '}
+            Odpowiedź to sugestia, decyzję podejmujesz Ty.
           </p>
+          {context.kind === 'found' ? (
+            <Notice tone="info" title={`Pytanie o ocenę: ${context.employeeName}`}>
+              <p>Asystent odpowie według wersji przepisów, w której prowadzona jest ta ocena.</p>
+              <p>Wersja przepisów: {context.regulationName}</p>
+              <p>
+                <Link href={routes.evaluation(context.id)} className="text-link underline">
+                  Wróć do sprawy
+                </Link>
+              </p>
+            </Notice>
+          ) : null}
+          {context.kind === 'missing' ? (
+            <Notice tone="warning" role="status">
+              <p>
+                Nie znaleziono tej oceny. Asystent odpowie według przepisów obowiązujących w
+                urzędzie.
+              </p>
+            </Notice>
+          ) : null}
           {isAdmin ? (
             <Notice tone="info">
               <p>Asystent przepisów odpowiada oceniającym i kadrom.</p>
@@ -56,7 +112,10 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
               <p>AI jest wyłączone w ustawieniach urzędu. Instrukcja poniżej działa bez AI.</p>
             </Notice>
           ) : (
-            <AskForm defaultQuestion={tresc} />
+            <AskForm
+              defaultQuestion={tresc}
+              evaluationId={context.kind === 'found' ? context.id : null}
+            />
           )}
           {asked.kind === 'missing' ? (
             <Notice tone="warning" role="status">
@@ -70,6 +129,7 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
               state={asked.state}
               canDecide={!isAdmin}
               decisionFailed={params.blad === '1'}
+              evaluationId={asked.evaluationId}
             />
           ) : null}
         </div>

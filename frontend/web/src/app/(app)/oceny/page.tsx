@@ -85,11 +85,13 @@ export default async function EvaluationsPage({ searchParams }: { searchParams: 
           <EmptyState title="Nie ma jeszcze ocen" action={startLink('primary')}>
             {canStart
               ? 'Rozpocznij ocenę wybranego pracownika. Gdy ją utworzysz, pojawi się tutaj.'
-              : 'Oceny pojawią się tutaj, gdy oceniający je rozpocznie.'}
+              : 'Oceny pojawią się tutaj, gdy osoba oceniająca je rozpocznie.'}
           </EmptyState>
         ) : (
           <>
+            {/* The key remounts the selects when the filters change by a link ("Wyczyść filtry"). */}
             <form
+              key={`${filters.status ?? ''}|${filters.employeeId ?? ''}`}
               action={routes.evaluations}
               method="get"
               className="flex flex-wrap items-end gap-x-6 gap-y-4"

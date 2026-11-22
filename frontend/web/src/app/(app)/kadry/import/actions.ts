@@ -8,7 +8,7 @@ import {
   type ImportReport,
   type MappingProposal,
 } from '@sarmata/services';
-import { decisionsFromForm, mappingFromForm } from '@/lib/hr/import';
+import { decisionsFromForm, mappingFromForm, postedDecisions } from '@/lib/hr/import';
 import { createSupabase } from '@/lib/supabase';
 import { serviceErrorMessage } from '@/lib/service-errors';
 
@@ -20,6 +20,8 @@ export type ImportState =
       csv: string;
       mapping: ColumnMapping;
       preview: ImportPreview;
+      /** Choices of the similar-name rows as posted (`decision.<row>`), kept after a failed commit. */
+      decisions?: Record<string, string>;
       error?: string;
     }
   | { step: 'done'; report: ImportReport; error?: string };
@@ -84,13 +86,27 @@ export async function dryRunImport(_prev: ImportState, formData: FormData): Prom
   return { step: 'preview', csv, mapping, preview: result.value };
 }
 
-/** Step 3: writes the rows with hr's decisions. A refusal returns to the file step with the message. */
-export async function commitImport(_prev: ImportState, formData: FormData): Promise<ImportState> {
+/**
+ * Step 3: writes the rows with hr's decisions. A refusal stays on the preview with the message, so
+ * the file, the mapping and every decision survive.
+ */
+export async function commitImport(prev: ImportState, formData: FormData): Promise<ImportState> {
   const csv = csvOf(formData);
+  const mapping = mappingFromForm(formData);
   const services = servicesFor(await createSupabase());
   const result = await attempt(() =>
-    services.employeeImport.commit(csv, mappingFromForm(formData), decisionsFromForm(formData)),
+    services.employeeImport.commit(csv, mapping, decisionsFromForm(formData)),
   );
-  if ('error' in result) return { step: 'file', error: result.error };
+  if ('error' in result) {
+    if (prev.step !== 'preview') return { step: 'file', error: result.error };
+    return {
+      step: 'preview',
+      csv,
+      mapping,
+      preview: prev.preview,
+      decisions: postedDecisions(formData),
+      error: result.error,
+    };
+  }
   return { step: 'done', report: result.value };
 }

@@ -115,7 +115,13 @@ const HELP =
  * result is a suggestion, each signal can be rejected on its own.
  */
 export function HrPartnerPanel({ data, canAnalyse }: HrPartnerPanelProps) {
-  const { signals: state, appreciation, appreciationRunning, enabled } = data.ai;
+  const {
+    signals: state,
+    appreciation,
+    appreciationRunning,
+    appreciationFailed,
+    enabled,
+  } = data.ai;
   const employeeId = data.employee.id;
   const result = shownResult(state);
 
@@ -196,6 +202,7 @@ export function HrPartnerPanel({ data, canAnalyse }: HrPartnerPanelProps) {
           employeeId={employeeId}
           model={appreciation}
           running={appreciationRunning}
+          failed={appreciationFailed && !appreciationRunning}
           // One poller refreshes the page for both analyses.
           poll={appreciationRunning && state.kind !== 'running'}
           canAnalyse={canAnalyse}

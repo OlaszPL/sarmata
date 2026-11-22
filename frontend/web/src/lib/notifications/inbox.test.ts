@@ -87,7 +87,7 @@ describe('inboxView', () => {
 
   it('links to the case tab that holds the action', () => {
     expect(first([item({ slot: 'objectionDecision' })]).href).toBe('/oceny/e1/zdarzenia');
-    expect(first([item({ slot: 'gradeByLawGrant' })]).href).toBe('/oceny/e1');
+    expect(first([item({ slot: 'gradeByLawGrant' })]).href).toBe('/kadry/rejestr?ocena=e1#stopien');
     expect(first([item({ slot: 'startingInterview' })]).href).toBe('/oceny/e1/czesc-1');
     expect(first([item({ slot: 'reevaluationAfterNegative' })]).href).toBe('/oceny/e1');
   });

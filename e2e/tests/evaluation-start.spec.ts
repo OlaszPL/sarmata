@@ -28,6 +28,11 @@ test.describe('evaluations list', () => {
     await expect(page).toHaveURL(/status=period/);
     await expect(table.getByRole('link', { name: 'Marek Merytoryczny' })).toBeVisible();
     await expect(table.getByRole('link', { name: 'Ewa Ewidencyjna' })).toHaveCount(0);
+
+    await page.getByRole('main').getByRole('link', { name: 'Wyczyść filtry' }).first().click();
+    await expect(page).toHaveURL(/\/oceny$/);
+    await expect(table.getByRole('link', { name: 'Ewa Ewidencyjna' })).toBeVisible();
+    await expect(page.getByLabel('Etap')).toHaveValue('');
   });
 
   test('shows an empty state when no evaluation matches', async ({ page }) => {
@@ -71,6 +76,29 @@ test.describe('case overview', () => {
       /\/czesc-2#developmentConclusions$/,
     );
     await expectNoViolations(page);
+  });
+
+  test('asks the regulations assistant about this case', async ({ page }) => {
+    await signIn(page, demoAccount('evaluator'));
+    await openCase(page, 'Ewa Ewidencyjna');
+    const caseId = /\/oceny\/([0-9a-f-]{36})$/.exec(page.url())?.[1] ?? '';
+    const link = page.getByRole('link', { name: 'Zapytaj o przepisy' });
+    await expect(link).toHaveAttribute('href', `/pomoc?ocena=${caseId}#asystent`);
+    await link.click();
+
+    await expect(page.getByText('Pytanie o ocenę: Ewa Ewidencyjna')).toBeVisible();
+    await expect(page.getByText(/^Wersja przepisów: /)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Wróć do sprawy' })).toHaveAttribute(
+      'href',
+      `/oceny/${caseId}`,
+    );
+    await expectNoViolations(page);
+  });
+
+  test('the admin gets no regulations assistant link in a case', async ({ page }) => {
+    await signIn(page, demoAccount('admin'));
+    await openCase(page, 'Ewa Ewidencyjna');
+    await expect(page.getByRole('link', { name: 'Zapytaj o przepisy' })).toHaveCount(0);
   });
 });
 

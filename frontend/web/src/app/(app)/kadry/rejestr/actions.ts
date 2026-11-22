@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { servicesFor } from '@sarmata/services';
 import { type FormState, formValues, parseForm } from '@/lib/form-action';
 import { appealSchema, gradeGrantSchema } from '@/lib/hr/register';
@@ -10,7 +11,10 @@ import { createSupabase } from '@/lib/supabase';
 
 const saved: FormState = { values: {}, fieldErrors: {}, ok: true };
 
-/** Records the labour court appeal of a rejected objection. Rule refusals come back as the form error. */
+/**
+ * Records the labour court appeal of a rejected objection. Rule refusals come back as the form error.
+ * A save drops the case from the open ones and unmounts its form, so the page confirms it instead.
+ */
 export async function recordAppeal(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = parseForm(appealSchema, formData);
   if ('state' in parsed) return parsed.state;
@@ -23,7 +27,7 @@ export async function recordAppeal(_prev: FormState, formData: FormData): Promis
   if (!result.ok) return result.state;
 
   revalidatePath(routes.hrRegister);
-  return saved;
+  redirect(routes.hrRegisterAppealSaved);
 }
 
 /** Records a grade grant, on request or by law. An empty evaluation means none. */

@@ -1,14 +1,15 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { ServiceError, calendarDate, servicesFor } from '@sarmata/services';
+import { type AiRun, ServiceError, calendarDate, servicesFor } from '@sarmata/services';
 import { z } from 'zod';
 import { type CaseRegulation, criterionName } from '@/lib/case-regulation';
 import { type FormState, formValues, parseForm, runService } from '@/lib/form-action';
 import { regulationForEvaluation } from '@/lib/regulation';
 import { routes } from '@/lib/routes';
-import { approvalIssueItems } from '@/lib/service-errors';
+import { approvalIssueItems, serviceErrorMessage } from '@/lib/service-errors';
 import { createSupabase } from '@/lib/supabase';
+import { type AiPollResult, type AiStartResult } from '../czesc-2/_sheet/use-ai-run';
 import { partOneContent, partOneSchema } from './part-one';
 
 /**
@@ -146,4 +147,71 @@ export async function recordSignature(
   return runWithNames(id, formData, async (services) => {
     await services.evaluations.transition(id, { type: 'record_part_one_signature', signedOn });
   });
+}
+
+export type CriteriaProposalsRun = Extract<AiRun, { kind: 'criteria_proposals' }>;
+
+const AI_FAILED = 'AI teraz nie odpowiada. Spróbuj ponownie za chwilę.';
+
+/**
+ * Starts the proposals of additional criteria and behavioural indicators from the duties of the
+ * evaluated person. The client polls `pollCriteriaProposals`.
+ */
+export async function startCriteriaProposals(id: string, duties: string): Promise<AiStartResult> {
+  try {
+    const run = await servicesFor(await createSupabase()).ai.start({
+      kind: 'criteria_proposals',
+      evaluationId: id,
+      duties,
+    });
+    return { runId: run.id };
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      return {
+        error: serviceErrorMessage(error.code, error.details),
+        ...(error.code === 'ai_disabled' ? { disabled: true } : {}),
+      };
+    }
+    if (error instanceof z.ZodError || (error instanceof Error && error.name === 'ZodError')) {
+      return { error: 'Opisz obowiązki, najwyżej 10 000 znaków.' };
+    }
+    throw error;
+  }
+}
+
+/** One poll of a criteria proposals run. */
+export async function pollCriteriaProposals(
+  runId: string,
+): Promise<AiPollResult<CriteriaProposalsRun>> {
+  try {
+    const run = await servicesFor(await createSupabase()).ai.get(runId);
+    if (run.kind !== 'criteria_proposals') return { error: AI_FAILED };
+    return { run };
+  } catch (error) {
+    if (error instanceof ServiceError) return { error: serviceErrorMessage(error.code) };
+    return { error: AI_FAILED };
+  }
+}
+
+/** Records the decision about one proposal (`criterion.<id>` or `expectations.<id>`). */
+export async function decideCriteriaProposal(
+  runId: string,
+  fragment: string,
+  decision: 'accepted' | 'edited' | 'rejected',
+  finalText?: string,
+): Promise<{ ok: boolean; formError?: string }> {
+  try {
+    await servicesFor(await createSupabase()).ai.decide(runId, [
+      { fragment, decision, ...(finalText === undefined ? {} : { finalText }) },
+    ]);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      return { ok: false, formError: serviceErrorMessage(error.code, error.details) };
+    }
+    if (error instanceof z.ZodError || (error instanceof Error && error.name === 'ZodError')) {
+      return { ok: false, formError: 'Wpisz poprawione wskaźniki, zanim je zapiszesz.' };
+    }
+    throw error;
+  }
 }

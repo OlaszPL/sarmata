@@ -53,6 +53,7 @@ import {
   SentenceSuggestion,
 } from './ai-proposals';
 import { DevelopmentHints, type DevelopmentRecommendation } from './development-hints';
+import { QualityCheck } from './quality-check';
 import { PendingSubmit, SheetSaveProvider } from './sheet-save-context';
 
 /** Pause after the last change before the sheet is saved. */
@@ -357,6 +358,16 @@ export function SheetEditor({
     ] as const
   ).filter(([name]) => mode === 'edit' || name !== 'interviewOn');
 
+  /** A fragment corrected in the quality check replaces its first occurrence, then the sheet is saved. */
+  const replaceInJustification = (fragment: string, corrected: string): boolean => {
+    if (!justification.includes(fragment)) return false;
+    flushSync(() => {
+      setJustification((current) => current.replace(fragment, corrected));
+    });
+    autosave.saveNow();
+    return true;
+  };
+
   const insertConclusions = (next: string) => {
     setConclusions(next);
     schedule();
@@ -615,6 +626,14 @@ export function SheetEditor({
                 }}
               />
             </Field>
+            <QualityCheck
+              id={id}
+              fieldId="justification"
+              text={justification}
+              criteria={criteria.map((criterion) => ({ id: criterion.id, name: criterion.name }))}
+              flush={flush}
+              onReplace={replaceInJustification}
+            />
           </div>
 
           <div className="border-rule flex flex-col gap-5 border-b px-6 py-5 sm:px-8">

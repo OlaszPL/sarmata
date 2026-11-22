@@ -9,8 +9,17 @@ import { QUESTION_MAX } from '@/lib/help/question';
 
 const initialState: FormState = { values: {}, fieldErrors: {} };
 
-/** The question to the procedure assistant. The values stay after an error. */
-export function AskForm({ defaultQuestion }: { defaultQuestion: string }) {
+/**
+ * The question to the procedure assistant. The values stay after an error. With `evaluationId` the
+ * answer uses the regulation version pinned to that evaluation.
+ */
+export function AskForm({
+  defaultQuestion,
+  evaluationId = null,
+}: {
+  defaultQuestion: string;
+  evaluationId?: string | null;
+}) {
   const [state, formAction] = useActionState(askQuestion, initialState);
   const fieldError = state.fieldErrors.question;
   const hasErrors = Boolean(fieldError) || Boolean(state.formError);
@@ -25,11 +34,13 @@ export function AskForm({ defaultQuestion }: { defaultQuestion: string }) {
         <ErrorSummary
           title="Popraw pytanie"
           errors={fieldError ? [{ fieldId: 'question', message: fieldError }] : []}
+          focusKey={state}
         >
           {state.formError}
         </ErrorSummary>
       ) : null}
       <form action={formAction} noValidate className="grid max-w-[40rem] gap-6">
+        {evaluationId ? <input type="hidden" name="evaluationId" value={evaluationId} /> : null}
         <Field
           id="question"
           label="Twoje pytanie o przepisy"

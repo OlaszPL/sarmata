@@ -60,6 +60,17 @@ export function decisionsFromForm(formData: FormData): Record<number, RowDecisio
   return decisions;
 }
 
+/** The posted choices of the similar-name rows as raw values, keyed by row, to fill the radios again. */
+export function postedDecisions(formData: FormData): Record<string, string> {
+  const decisions: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('decision.') && typeof value === 'string') {
+      decisions[key.slice('decision.'.length)] = value;
+    }
+  }
+  return decisions;
+}
+
 /** A failed row without row errors, e.g. a write rejected for a reason the backend does not name. */
 export const FAILED_ROW_TEXT = 'nie zapisano, popraw dane w pliku i zaimportuj go ponownie';
 

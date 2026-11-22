@@ -1,12 +1,15 @@
 'use client';
 
 import { useActionState } from 'react';
-import { DateInput, ErrorSummary, Field, Notice, SubmitButton } from '@sarmata/ui';
+import { DateInput, ErrorSummary, Field, SubmitButton } from '@sarmata/ui';
 import { useErrorTitle } from '@/components/use-error-title';
 import { type FormState } from '@/lib/form-action';
 import { recordAppeal } from './actions';
 
-/** Appeal forms of several cases share a page, so the date control id carries the evaluation. */
+/**
+ * Appeal forms of several cases share a page, so the date control id carries the evaluation. A save
+ * redirects, the page confirms it above the forms.
+ */
 export function AppealForm({
   evaluationId,
   employeeName,
@@ -28,22 +31,13 @@ export function AppealForm({
   const failed = errors.length > 0 || formErrors.length > 0;
   useErrorTitle(failed);
 
-  const filedOn = state.ok
-    ? ''
-    : typeof state.values.filedOn === 'string'
-      ? state.values.filedOn
-      : '';
+  const filedOn = typeof state.values.filedOn === 'string' ? state.values.filedOn : '';
 
   return (
     <form action={formAction} noValidate className="grid max-w-[46rem] gap-5">
       <h3 className="font-heading text-xl font-semibold">Zapisz odwołanie: {employeeName}</h3>
-      {state.ok ? (
-        <Notice tone="success" role="status">
-          Zapisano wpis w rejestrze.
-        </Notice>
-      ) : null}
       {failed ? (
-        <ErrorSummary title="Nie udało się zapisać odwołania" errors={errors}>
+        <ErrorSummary title="Nie udało się zapisać odwołania" errors={errors} focusKey={state}>
           {formErrors.length > 0 ? (
             <div className="grid max-w-[70ch] gap-1">
               {formErrors.map((message) => (

@@ -128,6 +128,7 @@ export function CardNotes({ data, filter, formParam, history, historyFailed }: C
 
           {notes.length > 0 ? (
             <form
+              key={`${filter.kind ?? ''}|${filter.sign ?? ''}`}
               method="get"
               action={routes.employee(employee.id)}
               className="flex flex-wrap items-end gap-3"

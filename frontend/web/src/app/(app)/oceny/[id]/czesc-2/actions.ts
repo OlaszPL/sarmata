@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { notFound, redirect } from 'next/navigation';
-import { ServiceError, calendarDate, servicesFor } from '@sarmata/services';
+import { type AiRun, ServiceError, calendarDate, servicesFor } from '@sarmata/services';
 import { z } from 'zod';
 import { type FormState, formValues, parseForm, runService } from '@/lib/form-action';
 import { warsawTime } from '@/lib/evaluations/sheet-autosave';
@@ -13,6 +13,7 @@ import { routes } from '@/lib/routes';
 import { serviceErrorMessage } from '@/lib/service-errors';
 import { createSupabase } from '@/lib/supabase';
 import { loadCase } from '../loader';
+import { type AiPollResult, type AiStartResult } from './_sheet/use-ai-run';
 
 export interface SaveResult {
   ok: boolean;
@@ -182,4 +183,82 @@ export async function decideFragment(
   }
   revalidatePath(routes.evaluationPart2(id));
   return { ok: true };
+}
+
+export type QualityCheckRun = Extract<AiRun, { kind: 'quality_check' }>;
+
+const AI_FAILED = 'AI teraz nie odpowiada. Spróbuj ponownie za chwilę.';
+
+/** An expected failure of an AI call as a message, `disabled` when the office switched AI off. */
+function aiStartError(error: unknown): AiStartResult {
+  if (error instanceof ServiceError) {
+    return {
+      error: serviceErrorMessage(error.code, error.details),
+      ...(error.code === 'ai_disabled' ? { disabled: true } : {}),
+    };
+  }
+  if (error instanceof z.ZodError || (error instanceof Error && error.name === 'ZodError')) {
+    return { error: 'Wpisz tekst do sprawdzenia, najwyżej 10 000 znaków.' };
+  }
+  throw error;
+}
+
+/**
+ * Starts the text quality check of part II: an example with a date, no personality or private
+ * life, fit with the criterion when one is given. The client polls `pollQualityCheck`.
+ */
+export async function startQualityCheck(
+  id: string,
+  criterionId: string | null,
+  text: string,
+): Promise<AiStartResult> {
+  try {
+    const run = await servicesFor(await createSupabase()).ai.start({
+      kind: 'quality_check',
+      evaluationId: id,
+      criterionId,
+      text,
+    });
+    return { runId: run.id };
+  } catch (error) {
+    return aiStartError(error);
+  }
+}
+
+/** One poll of a quality check run. */
+export async function pollQualityCheck(runId: string): Promise<AiPollResult<QualityCheckRun>> {
+  try {
+    const run = await servicesFor(await createSupabase()).ai.get(runId);
+    if (run.kind !== 'quality_check') return { error: AI_FAILED };
+    return { run };
+  } catch (error) {
+    if (error instanceof ServiceError) return { error: serviceErrorMessage(error.code) };
+    return { error: AI_FAILED };
+  }
+}
+
+/**
+ * Records the decision about one remark of the quality check (`issue.N`). The sheet itself is saved
+ * by the editor, so nothing is revalidated here.
+ */
+export async function decideQualityIssue(
+  runId: string,
+  fragment: string,
+  decision: 'accepted' | 'edited' | 'rejected',
+  finalText?: string,
+): Promise<{ ok: boolean; formError?: string }> {
+  try {
+    await servicesFor(await createSupabase()).ai.decide(runId, [
+      { fragment, decision, ...(finalText === undefined ? {} : { finalText }) },
+    ]);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      return { ok: false, formError: serviceErrorMessage(error.code, error.details) };
+    }
+    if (error instanceof z.ZodError || (error instanceof Error && error.name === 'ZodError')) {
+      return { ok: false, formError: 'Wpisz poprawiony fragment, zanim go zapiszesz.' };
+    }
+    throw error;
+  }
 }

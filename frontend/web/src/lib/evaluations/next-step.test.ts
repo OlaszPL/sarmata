@@ -1,6 +1,6 @@
 import { type DeadlineSlot, type EvaluationView, calendarDate } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
-import { nextStep } from './next-step';
+import { evaluationDueOn, nextStep } from './next-step';
 
 interface ViewOptions {
   status: string;
@@ -70,7 +70,7 @@ describe('nextStep', () => {
   it('asks for the part one signature', () => {
     expect(nextStep(view({ status: 'criteria_awaiting_signature' }))).toMatchObject({
       stage: 'Podpis części I',
-      action: 'Odnotuj podpis części I przez ocenianego',
+      action: 'Odnotuj podpis części I przez osobę ocenianą',
       owner: 'evaluator',
     });
   });
@@ -209,5 +209,36 @@ describe('nextStep', () => {
 
   it.each(['closed', 'interrupted'])('has no step for %s', (status) => {
     expect(nextStep(view({ status }))).toBeNull();
+  });
+});
+
+describe('evaluationDueOn', () => {
+  it('reads the evaluation deadline whatever step comes next', () => {
+    for (const status of ['criteria', 'drafted', 'delivered', 'objection', 'closed']) {
+      expect(
+        evaluationDueOn(
+          view({
+            status,
+            deadlines: {
+              evaluationDeadline: '2026-12-04',
+              objection: '2026-12-11',
+              objectionDecision: '2026-12-20',
+            },
+          }),
+        ),
+      ).toBe('2026-12-04');
+    }
+  });
+
+  it('prefers a change of position over the regular deadline', () => {
+    expect(
+      evaluationDueOn(
+        view({
+          status: 'period',
+          deadlines: { evaluationDeadline: '2026-12-04', evaluationOnPositionChange: '2026-11-30' },
+        }),
+      ),
+    ).toBe('2026-11-30');
+    expect(evaluationDueOn(view({ status: 'period' }))).toBeNull();
   });
 });

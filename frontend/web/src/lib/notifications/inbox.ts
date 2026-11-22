@@ -57,9 +57,8 @@ function hrefFor(slot: DeadlineSlot, evaluationId: string): string {
     case 'objectionDecision':
     case 'labourCourtAppeal':
       return routes.evaluationEvents(evaluationId);
-    // No screen records the grant yet, the case overview explains where hr does it.
     case 'gradeByLawGrant':
-      return routes.evaluation(evaluationId);
+      return routes.hrRegisterGrade(evaluationId);
     default:
       return routes.evaluation(evaluationId);
   }

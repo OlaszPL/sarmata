@@ -19,6 +19,11 @@ interface ErrorSummaryProps {
   className?: string | undefined;
   /** Take the focus when shown (default). Off for a banner that is present on page load. */
   autoFocus?: boolean | undefined;
+  /**
+   * Changes on every submit (the action state object or its round number), so a summary that stays
+   * mounted takes the focus again when the same errors come back.
+   */
+  focusKey?: unknown;
 }
 
 /** Moves to the control and scrolls its label (or legend) into view, as GOV.UK does. */
@@ -43,6 +48,7 @@ export function ErrorSummary({
   children,
   className,
   autoFocus = true,
+  focusKey,
 }: ErrorSummaryProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -50,7 +56,7 @@ export function ErrorSummary({
 
   useEffect(() => {
     if (autoFocus) ref.current?.focus();
-  }, [signature, autoFocus]);
+  }, [signature, autoFocus, focusKey]);
 
   return (
     <div
