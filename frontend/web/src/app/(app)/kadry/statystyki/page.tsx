@@ -7,7 +7,6 @@ import { RoleNotice } from '@/components/hr/role-notice';
 import { requireMember } from '@/lib/account';
 import { todayInWarsaw, formatScore } from '@/lib/format';
 import { hrAccess } from '@/lib/hr/access';
-import { hrPaths } from '@/lib/hr/paths';
 import {
   evaluatorFlagLabels,
   formatPoints,
@@ -256,7 +255,7 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
         />
         <p className="mt-6">
           <a
-            href={hrPaths.dscOckCsv(year)}
+            href={routes.hrDscOckCsv(year)}
             download
             className="font-heading text-link font-medium underline"
           >
