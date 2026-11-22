@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { servicesFor } from '@sarmata/services';
 import { Notice, Section } from '@sarmata/ui';
 import { SheetSummary } from '@/components/sheet/sheet-summary';
+import { AiDraftPanel } from './_sheet/ai-draft-panel';
+import { draftProposals, sheetDraftState } from '@/lib/evaluations/sheet-draft';
 import { partTwoMode } from '@/lib/evaluations/sheet-access';
 import { partTwoDefaults } from '@/lib/evaluations/sheet-form';
 import { gateLinks } from '@/lib/evaluations/sheet-gates';
@@ -71,10 +73,20 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
 
   const services = servicesFor(await createSupabase());
-  const [hints, notes] = await Promise.all([
+  const [hints, notes, runs, aiEnabled] = await Promise.all([
     orNull(() => services.development.recommend(id)),
     orNull(() => services.notes.listForEmployee(view.employeeId)),
+    orNull(() => services.ai.list({ employeeId: view.employeeId, kind: 'sheet_draft' })),
+    // The office settings may be closed to the evaluator: treat AI as enabled, `start` then says why not.
+    orNull(async () => (await services.officeSettings.get()).aiEnabled),
   ]);
+  const draftState = sheetDraftState({
+    aiEnabled: aiEnabled ?? true,
+    runs: runs ?? [],
+    view,
+    now: new Date(),
+  });
+  const proposals = draftState.kind === 'done' ? draftProposals(draftState.run) : null;
   const noteDates = Object.fromEntries(
     (notes ?? []).map((note) => [note.id, formatDate(note.occurredOn)]),
   );
@@ -91,11 +103,23 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       mode={mode}
       issues={issues}
       hints={hints}
-      draft={null}
+      draft={
+        proposals && draftState.kind === 'done'
+          ? { ratings: proposals.ratings, sentences: proposals.sentences, runId: draftState.run.id }
+          : null
+      }
       noteDates={noteDates}
       negativePoints={regulation.negativePoints}
       before={mode === 'period' ? <InterviewForm id={id} today={data.today} /> : undefined}
-      aiPanel={null}
+      aiPanel={
+        <AiDraftPanel
+          id={id}
+          state={draftState}
+          criterionNames={Object.fromEntries(
+            regulation.criteria.map((criterion) => [criterion.id, criterion.name]),
+          )}
+        />
+      }
     />
   );
 }

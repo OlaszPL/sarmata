@@ -17,12 +17,21 @@ import {
 } from '@sarmata/ui';
 import { LinkedErrorSummary } from '@/components/sheet/linked-error-summary';
 import { useErrorTitle } from '@/components/use-error-title';
+import { appendSentence } from '@/lib/evaluations/sheet-draft';
 import { type PartTwoPatch } from '@/lib/evaluations/sheet-form';
 import { type RatingProposal, type SentenceProposal } from '@/lib/evaluations/sheet-draft';
 import { type GateLink, gateTitle } from '@/lib/evaluations/sheet-gates';
 import { type FormState } from '@/lib/form-action';
 import { routes } from '@/lib/routes';
-import { type SaveResult, saveSheet, saveSheetAndCheck } from '../actions';
+import { type SaveResult, decideFragment, saveSheet, saveSheetAndCheck } from '../actions';
+import { AI_PANEL_TITLE_ID } from './ai-draft-panel';
+import {
+  DecidedLine,
+  type DecideFn,
+  type Decision,
+  RatingSuggestion,
+  SentenceSuggestion,
+} from './ai-proposals';
 import { DevelopmentHints, type DevelopmentRecommendation } from './development-hints';
 
 /** Pause after the last change before the sheet is saved. */
@@ -46,7 +55,7 @@ export interface SheetEditorProps {
   /** Gates still open on the saved sheet, shown in the banner above the section. */
   issues: GateLink[];
   hints: DevelopmentRecommendation | null;
-  /** AI proposals of the newest draft run. Not rendered yet, the AI panel fills the slots later. */
+  /** AI proposals of the newest done draft run, shown in the criterion blocks and before the text fields. */
   draft?:
     { ratings: RatingProposal[]; sentences: SentenceProposal[]; runId: string } | null | undefined;
   /** Note id to the date of the note, for the sources of AI proposals. */
@@ -110,6 +119,8 @@ export function SheetEditor({
   issues: initialIssues,
   hints,
   negativePoints,
+  draft,
+  noteDates,
   before,
   aiPanel,
 }: SheetEditorProps) {
@@ -218,6 +229,85 @@ export function SheetEditor({
     schedule();
   };
 
+  // Decisions recorded in this session, until the refreshed page brings them with the run.
+  const [decisions, setDecisions] = useState<Record<string, Decision>>({});
+  const needsFocus = useRef(false);
+  const decidedOf = (fragment: string, fromRun: Decision | null): Decision | null =>
+    decisions[fragment] ?? fromRun;
+  const aiRatings = (draft?.ratings ?? []).flatMap((proposal) =>
+    proposal.points === null ? [] : [{ ...proposal, points: proposal.points }],
+  );
+  const aiSentences = draft?.sentences ?? [];
+
+  const onDecide: DecideFn = async (fragment, decision, finalText) => {
+    if (draft === null || draft === undefined) return null;
+    const result = await decideFragment(id, draft.runId, fragment, decision, finalText);
+    if (!result.ok) return result.formError ?? 'Nie udało się zapisać decyzji. Spróbuj ponownie.';
+    if (decision !== 'rejected') {
+      const rating = aiRatings.find((proposal) => proposal.fragment === fragment);
+      const sentence = aiSentences.find((proposal) => proposal.fragment === fragment);
+      if (rating) {
+        setRatings((current) => ({ ...current, [rating.criterionId]: rating.points }));
+      } else if (sentence) {
+        const added = finalText ?? sentence.text;
+        if (sentence.target === 'justification') {
+          setJustification((current) => appendSentence(current, added));
+        } else {
+          setConclusions((current) => appendSentence(current, added));
+        }
+      }
+      schedule();
+    }
+    needsFocus.current = true;
+    setDecisions((current) => ({ ...current, [fragment]: decision }));
+    router.refresh();
+    return null;
+  };
+
+  // After a decision the focus goes to the next open suggestion, otherwise to the panel heading.
+  useEffect(() => {
+    if (!needsFocus.current) return;
+    needsFocus.current = false;
+    const next = formRef.current?.querySelector<HTMLElement>('[data-ai-suggestion][data-open]');
+    (next ?? document.getElementById(AI_PANEL_TITLE_ID))?.focus();
+  }, [decisions]);
+
+  const firstOpenRating = aiRatings.find(
+    (proposal) => decidedOf(proposal.fragment, proposal.decided) === null,
+  );
+  const anchorId = 'ai-proposals';
+  const sentenceBlock = (target: 'justification' | 'developmentConclusions') => {
+    const list = aiSentences.filter((proposal) => proposal.target === target);
+    if (list.length === 0) return null;
+    const hasOpen = list.some(
+      (proposal) => decidedOf(proposal.fragment, proposal.decided) === null,
+    );
+    const firstSentenceBlock =
+      firstOpenRating === undefined &&
+      aiSentences.find((proposal) => decidedOf(proposal.fragment, proposal.decided) === null)
+        ?.target === target;
+    return (
+      <div
+        id={firstSentenceBlock && hasOpen ? anchorId : undefined}
+        className="flex scroll-mt-4 flex-col gap-3"
+      >
+        {list.map((proposal) => {
+          const decided = decidedOf(proposal.fragment, proposal.decided);
+          return decided === null ? (
+            <SentenceSuggestion
+              key={proposal.fragment}
+              proposal={proposal}
+              noteDates={noteDates}
+              onDecide={onDecide}
+            />
+          ) : (
+            <DecidedLine key={proposal.fragment} decided={decided} />
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <>
       {mode === 'edit' && issues.length > 0 ? (
@@ -270,11 +360,14 @@ export function SheetEditor({
             const titleId = `criterion-${criterion.id}-title`;
             const fieldId = `rating-${criterion.id}`;
             const error = submitError(fieldId);
+            const proposal = aiRatings.find((entry) => entry.criterionId === criterion.id);
+            const decided = proposal ? decidedOf(proposal.fragment, proposal.decided) : null;
             return (
               <section
                 key={criterion.id}
+                id={proposal && proposal === firstOpenRating ? anchorId : undefined}
                 aria-labelledby={titleId}
-                className="border-rule flex flex-col gap-3 border-b px-6 py-5 sm:px-8"
+                className="border-rule flex scroll-mt-4 flex-col gap-3 border-b px-6 py-5 sm:px-8"
               >
                 <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
                   <div className="flex min-w-[12rem] flex-col">
@@ -308,17 +401,29 @@ export function SheetEditor({
                   options={scale}
                   value={ratings[criterion.id] ?? null}
                   labelledBy={titleId}
+                  suggested={proposal && decided === null ? proposal.points : null}
                   invalid={error !== undefined}
                   describedBy={error ? `${fieldId}-error` : undefined}
                   onChange={(value) => {
                     setRatings((current) => ({ ...current, [criterion.id]: value }));
                   }}
                 />
+                {proposal && decided === null ? (
+                  <RatingSuggestion
+                    proposal={proposal}
+                    current={ratings[criterion.id] ?? null}
+                    scale={scale}
+                    noteDates={noteDates}
+                    onDecide={onDecide}
+                  />
+                ) : null}
+                {proposal && decided !== null ? <DecidedLine decided={decided} /> : null}
               </section>
             );
           })}
 
-          <div className="border-rule border-b px-6 py-5 sm:px-8">
+          <div className="border-rule flex flex-col gap-4 border-b px-6 py-5 sm:px-8">
+            {sentenceBlock('justification')}
             <Field
               id="justification"
               label="Uzasadnienie oceny"
@@ -338,6 +443,7 @@ export function SheetEditor({
           </div>
 
           <div className="border-rule flex flex-col gap-5 border-b px-6 py-5 sm:px-8">
+            {sentenceBlock('developmentConclusions')}
             <Field
               id="developmentConclusions"
               label="Wnioski do indywidualnego programu rozwoju zawodowego (IPRZ)"

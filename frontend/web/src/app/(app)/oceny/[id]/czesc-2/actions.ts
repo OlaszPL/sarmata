@@ -127,3 +127,49 @@ export async function recordInterview(
   revalidatePath(routes.evaluation(id), 'layout');
   return { values, fieldErrors: {}, ok: true };
 }
+
+/** Starts a sheet draft run of the AI. Failures such as `ai_disabled` come back as the form error. */
+export async function startSheetDraft(
+  id: string,
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = formValues(formData);
+  const started = await runService(
+    async () =>
+      servicesFor(await createSupabase()).ai.start({ kind: 'sheet_draft', evaluationId: id }),
+    undefined,
+    values,
+  );
+  if (!started.ok) return started.state;
+  revalidatePath(routes.evaluationPart2(id));
+  return { values, fieldErrors: {}, ok: true };
+}
+
+/**
+ * Records the decision about one fragment of the draft. Called from client code, so expected
+ * failures come back as `formError` and nothing else changes.
+ */
+export async function decideFragment(
+  id: string,
+  runId: string,
+  fragment: string,
+  decision: 'accepted' | 'edited' | 'rejected',
+  finalText?: string,
+): Promise<{ ok: boolean; formError?: string }> {
+  try {
+    await servicesFor(await createSupabase()).ai.decide(runId, [
+      { fragment, decision, ...(finalText === undefined ? {} : { finalText }) },
+    ]);
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      return { ok: false, formError: serviceErrorMessage(error.code, error.details) };
+    }
+    if (error instanceof z.ZodError) {
+      return { ok: false, formError: 'Wpisz tekst zdania, zanim je wstawisz.' };
+    }
+    throw error;
+  }
+  revalidatePath(routes.evaluationPart2(id));
+  return { ok: true };
+}
