@@ -145,7 +145,7 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy, lista i karta pracownika, nowy pracownik z błędami, notatki ze strażnikiem danych wrażliwych, panel HR partnera, część II, III i sprawdzenie arkusza (bramka IPRZ, szkic AI z seeda, odczyt dla kadr, odnotowanie rozmowy, zapis szkicu, zatwierdzenie do zapoznania). Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`). Gdy którykolwiek test bez zmian danych nie przejdzie, Playwright pomija testy `mutating` i raportuje je jako pominięte, nie jako nieudane |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy, lista i karta pracownika, nowy pracownik z błędami, notatki ze strażnikiem danych wrażliwych, panel HR partnera, część II, III i sprawdzenie arkusza (bramka IPRZ, szkic AI z seeda, odczyt dla kadr, odnotowanie rozmowy, zapis szkicu, zatwierdzenie do zapoznania), skrzynka powiadomień (oznaczenie jako przeczytane zmniejsza licznik w nagłówku, pusta skrzynka kadr, widok administratora), pomoc (instrukcje według roli, podsumowanie błędów pustego pytania, zadanie pytania asystentowi, nieznane pytanie), pełna struktura deklaracji dostępności. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`). Gdy którykolwiek test bez zmian danych nie przejdzie, Playwright pomija testy `mutating` i raportuje je jako pominięte, nie jako nieudane |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
@@ -154,14 +154,14 @@ Trasy (jedna linia na trasę, obszarami). Strony oznaczone „zaślepka” pokaz
 Bez logowania i bez urzędu:
 
 - `/logowanie`: logowanie
-- `/deklaracja-dostepnosci`: deklaracja dostępności (link w stopce, po zalogowaniu w pełnej powłoce)
+- `/deklaracja-dostepnosci`: deklaracja dostępności według wzoru z ustawy o dostępności cyfrowej (stan zgodności, treści niedostępne, sposób oceny, skróty klawiaturowe, kontakt, procedura żądania i skargi, dostępność architektoniczna, tłumacz języka migowego, daty rrrr-mm-dd z identyfikatorami `a11y-*`), link w stopce, po zalogowaniu w pełnej powłoce z nazwą urzędu
 - `/brak-urzedu`: konto bez urzędu i roli
 
 Pulpit i wspólne:
 
 - `/`: pulpit
-- `/powiadomienia`: powiadomienia (zaślepka)
-- `/pomoc`: pomoc (zaślepka)
+- `/powiadomienia`: skrzynka powiadomień: nieprzeczytane, przeczytane i załatwione, termin z liczbą dni, link do właściwej zakładki sprawy, oznaczenie jako przeczytane pojedynczo i wszystkich naraz (licznik w nagłówku maleje), po oznaczeniu `?oznaczono=jedno|wszystkie`, administrator widzi wyjaśnienie zamiast skrzynki
+- `/pomoc`: instrukcja krok po kroku dla oceniającego i kadr (własna rola pierwsza) oraz asystent przepisów (AI, pytanie o procedurę, odpowiedź z cytatami fragmentów przepisów, ocena odpowiedzi jako decyzja w dzienniku AI), wynik pytania `?pytanie=<id przebiegu>&tresc=<pytanie>` z odpytywaniem do limitu 4 minut, stany AI wyłączone, w toku, nieudane, po limicie i usunięte
 - `/komponenty`: katalog komponentów `@sarmata/ui`, tylko w trybie deweloperskim (404 w produkcji), poza menu
 
 Oceny:
