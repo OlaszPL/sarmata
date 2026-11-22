@@ -185,12 +185,12 @@ Pracownicy i notatki:
 
 Kadry:
 
-- `/kadry`: panel kadr (zaślepka)
-- `/kadry/harmonogram`: harmonogram ocen (trasa zarezerwowana)
-- `/kadry/statystyki`: statystyki i DSC-OCK (trasa zarezerwowana)
-- `/kadry/rejestr`: rejestr kadr (trasa zarezerwowana)
-- `/kadry/import`: import pracowników z CSV (trasa zarezerwowana)
-- `/kadry/struktura`: struktura przełożonych (trasa zarezerwowana)
+- `/kadry`: zadania kadr z terminów i etapów ocen (sprzeciw do rozstrzygnięcia, stopień z mocy prawa, ocena po terminie)
+- `/kadry/harmonogram`: harmonogram ocen w toku z filtrami horyzontu, sytuacji i komórki (kadry i administrator)
+- `/kadry/statystyki`: rozkład ocen na tle kraju, potrzeby rozwojowe, raport oceniających i pobranie CSV do sprawozdania DSC-OCK (kadry i administrator)
+- `/kadry/rejestr`: rejestr odwołań do sądu pracy i przyznanych stopni służbowych
+- `/kadry/import`: import pracowników z CSV w czterech krokach z przebiegiem próbnym przed zapisem
+- `/kadry/struktura`: drzewo przełożonych ze zmianą przełożonego pracownika
 
 Administrator:
 
