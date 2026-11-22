@@ -1,6 +1,6 @@
 import { type EvaluationStatus, type EvaluationView } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
-import { checkMode, gradeRequestMode, partTwoMode } from './sheet-access';
+import { canRemoveGradeRequest, checkMode, gradeRequestMode, partTwoMode } from './sheet-access';
 
 const statuses: EvaluationStatus[] = [
   'criteria',
@@ -88,6 +88,69 @@ describe('sheet access', () => {
         'read',
       );
       expect(gradeRequestMode(input('drafted', 'civil_servant', 4, 'positive'), true)).toBe('read');
+    });
+
+    it('needs a grade in the data of a civil servant', () => {
+      expect(gradeRequestMode(input('interview', 'civil_servant', null, 'positive'), true)).toBe(
+        'no_grade',
+      );
+      expect(gradeRequestMode(input('interview', 'employee', null, 'positive'), true)).toBe(
+        'not_civil_servant',
+      );
+    });
+  });
+
+  describe('canRemoveGradeRequest', () => {
+    function withRequest(
+      status: EvaluationStatus,
+      serviceStatus: string,
+      grade: number | null,
+      outcome: 'positive' | 'negative' | null,
+      requested: boolean,
+    ) {
+      return {
+        status,
+        snapshot: { serviceStatus, grade },
+        score: { outcome },
+        sheet: {
+          content: {
+            partTwo: { gradeRequest: requested ? { requestedGrade: 5, motivation: 'M' } : null },
+          },
+        },
+      } as unknown as Parameters<typeof canRemoveGradeRequest>[0];
+    }
+
+    it('offers the removal when a saved request is no longer allowed', () => {
+      expect(
+        canRemoveGradeRequest(withRequest('interview', 'civil_servant', 4, 'negative', true), true),
+      ).toBe(true);
+      expect(
+        canRemoveGradeRequest(withRequest('period', 'employee', 4, 'positive', true), true),
+      ).toBe(true);
+      expect(
+        canRemoveGradeRequest(withRequest('interview', 'civil_servant', 9, 'positive', true), true),
+      ).toBe(true);
+    });
+
+    it('does not offer it without a request, in the form, read only or after approval', () => {
+      expect(
+        canRemoveGradeRequest(
+          withRequest('interview', 'civil_servant', 4, 'negative', false),
+          true,
+        ),
+      ).toBe(false);
+      expect(
+        canRemoveGradeRequest(withRequest('interview', 'civil_servant', 4, 'positive', true), true),
+      ).toBe(false);
+      expect(
+        canRemoveGradeRequest(
+          withRequest('interview', 'civil_servant', 4, 'negative', true),
+          false,
+        ),
+      ).toBe(false);
+      expect(
+        canRemoveGradeRequest(withRequest('drafted', 'civil_servant', 4, 'negative', true), true),
+      ).toBe(false);
     });
   });
 });

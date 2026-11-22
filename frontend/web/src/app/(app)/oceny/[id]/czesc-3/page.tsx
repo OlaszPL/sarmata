@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Notice, Section } from '@sarmata/ui';
+import { ReadOnlyNotice } from '@/components/sheet/read-only-notice';
 import { SheetSummary } from '@/components/sheet/sheet-summary';
-import { gradeRequestMode } from '@/lib/evaluations/sheet-access';
+import { canRemoveGradeRequest, gradeRequestMode } from '@/lib/evaluations/sheet-access';
+import { NO_GRADE_MESSAGE } from '@/lib/evaluations/sheet-form';
 import { formatDate, romanNumeral } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { caseTitle, loadCase } from '../loader';
 import { GradeRequestForm } from './_grade/grade-request-form';
+import { RemoveGradeRequestForm } from './_grade/remove-grade-request-form';
 
 export async function generateMetadata({
   params,
@@ -23,6 +26,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const mode = gradeRequestMode(view, data.canWrite);
   const dueByLaw = view.warnings.find((warning) => warning.code === 'grade_due_by_law');
   const request = view.sheet.content.partTwo.gradeRequest;
+  const sheetOpen = view.status === 'period' || view.status === 'interview';
+  const readOnly = !data.canWrite || !sheetOpen;
 
   return (
     <Section title="Część III. Wniosek o stopień">
@@ -31,6 +36,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           Wniosek o przyznanie wyższego stopnia składasz tylko dla urzędnika służby cywilnej z oceną
           pozytywną (art. 81 ust. 3 ustawy).
         </p>
+        {readOnly ? <ReadOnlyNotice data={data} /> : null}
         {dueByLaw ? (
           <Notice tone="warning">
             <p>
@@ -45,6 +51,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               Osoba oceniana nie jest urzędnikiem służby cywilnej, więc ta część nie dotyczy tej
               oceny.
             </p>
+          </Notice>
+        ) : null}
+        {mode === 'no_grade' ? (
+          <Notice tone="info">
+            <p>{NO_GRADE_MESSAGE}</p>
           </Notice>
         ) : null}
         {mode === 'max_grade' ? (
@@ -78,7 +89,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             }}
           />
         ) : (
-          <SheetSummary data={data} editable={false} parts={['three']} />
+          <>
+            {canRemoveGradeRequest(view, data.canWrite) ? <RemoveGradeRequestForm id={id} /> : null}
+            <SheetSummary data={data} editable={false} parts={['three']} />
+          </>
         )}
       </div>
     </Section>

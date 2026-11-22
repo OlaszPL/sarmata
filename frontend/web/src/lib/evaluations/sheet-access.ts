@@ -11,19 +11,46 @@ export function partTwoMode(status: EvaluationStatus, canWrite: boolean): PartTw
 }
 
 export type GradeRequestMode =
-  'form' | 'not_civil_servant' | 'max_grade' | 'negative' | 'incomplete' | 'read';
+  'form' | 'not_civil_servant' | 'no_grade' | 'max_grade' | 'negative' | 'incomplete' | 'read';
 
-/** In this order: not a civil servant, grade 9, negative outcome, no outcome yet, then the form or read only. */
+/** The status in which the evaluator still changes the sheet. */
+function sheetOpen(status: EvaluationStatus): boolean {
+  return status === 'period' || status === 'interview';
+}
+
+/**
+ * In this order: not a civil servant, no grade in the data, grade 9, negative outcome, no outcome
+ * yet, then the form or read only.
+ */
 export function gradeRequestMode(
   view: Pick<EvaluationView, 'status' | 'snapshot' | 'score'>,
   canWrite: boolean,
 ): GradeRequestMode {
   if (view.snapshot.serviceStatus !== 'civil_servant') return 'not_civil_servant';
+  if (view.snapshot.grade === null) return 'no_grade';
   if (view.snapshot.grade === 9) return 'max_grade';
   if (view.score.outcome === 'negative') return 'negative';
   if (view.score.outcome === null) return 'incomplete';
-  if (canWrite && (view.status === 'period' || view.status === 'interview')) return 'form';
+  if (canWrite && sheetOpen(view.status)) return 'form';
   return 'read';
+}
+
+/**
+ * A saved grade request that the mode no longer allows (e.g. the outcome turned negative) would block
+ * the approval, so the evaluator gets a button that removes it while the sheet is open.
+ */
+export function canRemoveGradeRequest(
+  view: Pick<EvaluationView, 'status' | 'snapshot' | 'score' | 'sheet'>,
+  canWrite: boolean,
+): boolean {
+  const mode = gradeRequestMode(view, canWrite);
+  return (
+    canWrite &&
+    sheetOpen(view.status) &&
+    mode !== 'form' &&
+    mode !== 'read' &&
+    view.sheet.content.partTwo.gradeRequest !== null
+  );
 }
 
 export type CheckMode = 'approve' | 'blocked' | 'period' | 'approved' | 'read';

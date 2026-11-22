@@ -42,14 +42,19 @@ export function sheetFromPartTwoForm(
   };
 }
 
+/** Part III when the data of a civil servant have no grade, so no request can name the next one. */
+export const NO_GRADE_MESSAGE =
+  'W danych osoby ocenianej brakuje stopnia służbowego. Kadry uzupełniają go w karcie pracownika.';
+
 /**
  * Saved content with the part III form: `request` 'yes' | 'no', `gradeRequestMotivation`.
- * 'yes' sets { requestedGrade: grade + 1, motivation }, 'no' sets null. Errors keyed by control id:
- * missing choice -> gradeRequest, 'yes' with empty motivation -> gradeRequestMotivation.
+ * 'yes' sets { requestedGrade: grade + 1, motivation }, 'no' sets null (also without a grade, so a
+ * request can always be removed). Errors keyed by control id: missing choice or 'yes' without a
+ * grade -> gradeRequest, 'yes' with empty motivation -> gradeRequestMotivation.
  */
 export function sheetFromGradeRequestForm(
   content: SheetContent,
-  grade: number,
+  grade: number | null,
   formData: FormData,
 ): { content: SheetContent } | { fieldErrors: Record<string, string> } {
   const request = text(formData, 'request');
@@ -59,6 +64,7 @@ export function sheetFromGradeRequestForm(
   if (request === 'no') {
     return { content: { ...content, partTwo: { ...content.partTwo, gradeRequest: null } } };
   }
+  if (grade === null) return { fieldErrors: { gradeRequest: NO_GRADE_MESSAGE } };
   const motivation = text(formData, 'gradeRequestMotivation');
   if (motivation === '') {
     return { fieldErrors: { gradeRequestMotivation: 'Napisz umotywowanie wniosku' } };

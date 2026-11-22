@@ -52,7 +52,7 @@ export function GradeRequestForm({ id, requestedGradeLabel, saved }: GradeReques
         id="gradeRequest"
         name="request"
         legend="Czy składasz wniosek o stopień?"
-        hint={`Wniosek dotyczy stopnia ${requestedGradeLabel}.`}
+        hint={`Wniosek dotyczy stopnia ${requestedGradeLabel}. Gdy zapiszesz Nie, wniosek nie trafi do arkusza.`}
         defaultValue={request}
         error={state.fieldErrors.gradeRequest}
         options={[

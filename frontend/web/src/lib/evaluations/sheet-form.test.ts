@@ -1,6 +1,11 @@
 import { type EvaluationView, type SheetContent } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
-import { partTwoDefaults, sheetFromGradeRequestForm, sheetFromPartTwoForm } from './sheet-form';
+import {
+  NO_GRADE_MESSAGE,
+  partTwoDefaults,
+  sheetFromGradeRequestForm,
+  sheetFromPartTwoForm,
+} from './sheet-form';
 
 function content(partTwo: Partial<SheetContent['partTwo']> = {}): SheetContent {
   return {
@@ -108,6 +113,20 @@ describe('sheet form', () => {
       expect(result).toEqual({
         fieldErrors: { gradeRequest: 'Wybierz, czy składasz wniosek o stopień' },
       });
+    });
+
+    it('removes a request without a grade but refuses a new one', () => {
+      const saved = content({ gradeRequest: { requestedGrade: 5, motivation: 'Powód' } });
+      expect(sheetFromGradeRequestForm(saved, null, form({ request: 'no' }))).toMatchObject({
+        content: { partTwo: { gradeRequest: null } },
+      });
+      expect(
+        sheetFromGradeRequestForm(
+          saved,
+          null,
+          form({ request: 'yes', gradeRequestMotivation: 'Powód' }),
+        ),
+      ).toEqual({ fieldErrors: { gradeRequest: NO_GRADE_MESSAGE } });
     });
   });
 
