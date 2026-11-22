@@ -1,0 +1,239 @@
+import { type EvaluationView, type SheetContent } from '@sarmata/services';
+import { describe, expect, it } from 'vitest';
+import {
+  NO_GRADE_MESSAGE,
+  partTwoDefaults,
+  partTwoDrift,
+  sheetFromGradeRequestForm,
+  sheetFromPartTwoForm,
+} from './sheet-form';
+
+function content(partTwo: Partial<SheetContent['partTwo']> = {}): SheetContent {
+  return {
+    partOne: { additionalCriteria: ['focus'], dueOn: '2026-12-04' },
+    partTwo: {
+      interviewOn: null,
+      periodFrom: null,
+      periodTo: null,
+      ratings: { cooperation: 5 },
+      justification: 'saved',
+      developmentConclusions: '',
+      gradeRequest: { requestedGrade: 5, motivation: 'old' },
+      ...partTwo,
+    },
+  } as unknown as SheetContent;
+}
+
+function form(entries: Record<string, string>): FormData {
+  const data = new FormData();
+  for (const [key, value] of Object.entries(entries)) data.set(key, value);
+  return data;
+}
+
+function view(partTwo: Partial<SheetContent['partTwo']>, heldOn?: string): EvaluationView {
+  return {
+    cycleStart: '2025-12-01',
+    sheet: { content: content(partTwo) },
+    events: heldOn
+      ? [{ kind: 'evaluation_interview_held', occurredOn: heldOn }]
+      : [{ kind: 'created', occurredOn: '2025-12-01' }],
+  } as unknown as EvaluationView;
+}
+
+describe('sheet form', () => {
+  describe('sheetFromPartTwoForm', () => {
+    const criteria = ['reliability', 'cooperation'];
+
+    it('keeps a saved date the form does not post, and clears one posted empty', () => {
+      const saved = content({ interviewOn: '2026-11-20', periodFrom: '2025-12-01' } as never);
+      const period = sheetFromPartTwoForm(saved, criteria, form({ periodFrom: '2025-12-02' }));
+      expect(period.partTwo).toMatchObject({
+        interviewOn: '2026-11-20',
+        periodFrom: '2025-12-02',
+        periodTo: null,
+      });
+      const cleared = sheetFromPartTwoForm(saved, criteria, form({ interviewOn: '' }));
+      expect(cleared.partTwo.interviewOn).toBeNull();
+    });
+
+    it('sees no date drift for a field the form does not have', () => {
+      const expected = {
+        interviewOn: '2026-11-20',
+        periodFrom: null,
+        periodTo: null,
+        ratings: {},
+        justification: '',
+        developmentConclusions: '',
+      } as unknown as Parameters<typeof partTwoDrift>[2];
+      expect(
+        partTwoDrift(form({ justification: '', developmentConclusions: '' }), [], expected),
+      ).toBeNull();
+    });
+
+    it('keeps known ratings and drops unknown or empty ones', () => {
+      const result = sheetFromPartTwoForm(
+        content(),
+        criteria,
+        form({ 'rating-reliability': '7', 'rating-x': '7', 'rating-cooperation': '' }),
+      );
+      expect(result.partTwo.ratings).toEqual({ reliability: 7 });
+    });
+
+    it('turns an empty date into null and keeps a filled one', () => {
+      const result = sheetFromPartTwoForm(
+        content(),
+        criteria,
+        form({ interviewOn: '', periodFrom: '2026-01-02' }),
+      );
+      expect(result.partTwo.interviewOn).toBeNull();
+      expect(result.partTwo.periodFrom).toBe('2026-01-02');
+    });
+
+    it('trims the texts at the ends', () => {
+      const result = sheetFromPartTwoForm(
+        content(),
+        criteria,
+        form({ developmentConclusions: '  tekst \n', justification: ' a ' }),
+      );
+      expect(result.partTwo.developmentConclusions).toBe('tekst');
+      expect(result.partTwo.justification).toBe('a');
+    });
+
+    it('leaves part one and the grade request as saved', () => {
+      const saved = content();
+      const result = sheetFromPartTwoForm(saved, criteria, form({ justification: 'new' }));
+      expect(result.partOne).toEqual(saved.partOne);
+      expect(result.partTwo.gradeRequest).toEqual(saved.partTwo.gradeRequest);
+    });
+  });
+
+  describe('sheetFromGradeRequestForm', () => {
+    it('sets the next grade for yes', () => {
+      const result = sheetFromGradeRequestForm(
+        content({ gradeRequest: null }),
+        4,
+        form({ request: 'yes', gradeRequestMotivation: ' Powód ' }),
+      );
+      expect(result).toMatchObject({
+        content: { partTwo: { gradeRequest: { requestedGrade: 5, motivation: 'Powód' } } },
+      });
+    });
+
+    it('clears the request for no', () => {
+      const result = sheetFromGradeRequestForm(content(), 4, form({ request: 'no' }));
+      expect(result).toMatchObject({ content: { partTwo: { gradeRequest: null } } });
+    });
+
+    it('asks for a motivation with yes', () => {
+      const result = sheetFromGradeRequestForm(
+        content(),
+        4,
+        form({ request: 'yes', gradeRequestMotivation: '  ' }),
+      );
+      expect(result).toEqual({
+        fieldErrors: { gradeRequestMotivation: 'Napisz umotywowanie wniosku' },
+      });
+    });
+
+    it('asks for a choice', () => {
+      const result = sheetFromGradeRequestForm(content(), 4, form({}));
+      expect(result).toEqual({
+        fieldErrors: { gradeRequest: 'Wybierz, czy składasz wniosek o stopień' },
+      });
+    });
+
+    it('removes a request without a grade but refuses a new one', () => {
+      const saved = content({ gradeRequest: { requestedGrade: 5, motivation: 'Powód' } });
+      expect(sheetFromGradeRequestForm(saved, null, form({ request: 'no' }))).toMatchObject({
+        content: { partTwo: { gradeRequest: null } },
+      });
+      expect(
+        sheetFromGradeRequestForm(
+          saved,
+          null,
+          form({ request: 'yes', gradeRequestMotivation: 'Powód' }),
+        ),
+      ).toEqual({ fieldErrors: { gradeRequest: NO_GRADE_MESSAGE } });
+    });
+  });
+
+  describe('partTwoDefaults', () => {
+    it('fills null dates from the cycle start and the interview event', () => {
+      const defaults = partTwoDefaults(view({}, '2026-11-18'));
+      expect(defaults.periodFrom).toBe('2025-12-01');
+      expect(defaults.interviewOn).toBe('2026-11-18');
+      expect(defaults.periodTo).toBe('2026-11-18');
+    });
+
+    it('leaves dates null without an interview event', () => {
+      const defaults = partTwoDefaults(view({}));
+      expect(defaults.interviewOn).toBeNull();
+      expect(defaults.periodTo).toBeNull();
+    });
+
+    it('prefers saved dates', () => {
+      const defaults = partTwoDefaults(
+        view(
+          { periodFrom: '2026-01-01', interviewOn: '2026-11-01', periodTo: '2026-11-02' } as never,
+          '2026-11-18',
+        ),
+      );
+      expect(defaults).toMatchObject({
+        periodFrom: '2026-01-01',
+        interviewOn: '2026-11-01',
+        periodTo: '2026-11-02',
+        justification: 'saved',
+      });
+      expect('gradeRequest' in defaults).toBe(false);
+    });
+  });
+
+  describe('partTwoDrift', () => {
+    const expected = {
+      interviewOn: '2026-11-20',
+      periodFrom: '2025-12-01',
+      periodTo: null,
+      ratings: { reliability: 5 },
+      justification: 'Uzasadnienie',
+      developmentConclusions: '',
+    } as unknown as Parameters<typeof partTwoDrift>[2];
+    const matching = {
+      interviewOn: '2026-11-20',
+      periodFrom: '2025-12-01',
+      periodTo: '',
+      'rating-reliability': '5',
+      justification: 'Uzasadnienie',
+      developmentConclusions: '',
+    };
+
+    it('is null when every control matches the state', () => {
+      expect(partTwoDrift(form(matching), ['reliability', 'focus'], expected)).toBeNull();
+    });
+
+    it('takes over texts typed before hydration as they are', () => {
+      expect(
+        partTwoDrift(
+          form({ ...matching, developmentConclusions: 'Rozwijać rejestry ' }),
+          ['reliability'],
+          expected,
+        ),
+      ).toEqual({ dates: false, developmentConclusions: 'Rozwijać rejestry ' });
+    });
+
+    it('takes over a tile chosen before hydration and keeps the other ratings', () => {
+      expect(
+        partTwoDrift(
+          form({ ...matching, 'rating-focus': '9' }),
+          ['reliability', 'focus'],
+          expected,
+        ),
+      ).toEqual({ dates: false, ratings: { reliability: 5, focus: 9 } });
+    });
+
+    it('marks a changed date for a save', () => {
+      expect(
+        partTwoDrift(form({ ...matching, periodTo: '2026-11-21' }), ['reliability'], expected),
+      ).toEqual({ dates: true });
+    });
+  });
+});
