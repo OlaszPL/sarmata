@@ -14,6 +14,7 @@ export {
   servicesFor,
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
+export { type InvalidSupervisorReason } from './employees/supervisor-error';
 export {
   type DevelopmentService,
   type DevelopmentServiceDependencies,

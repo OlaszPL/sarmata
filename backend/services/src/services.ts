@@ -37,6 +37,7 @@ import {
   createEmployeeImportService,
 } from './employee-import/employee-import-service';
 import { ServiceError } from './errors';
+import { supervisorError } from './employees/supervisor-error';
 import { type EmploymentService, createEmploymentService } from './employment/employment-service';
 import { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
 import { type StatisticsService, createStatisticsService } from './statistics/statistics-service';
@@ -82,8 +83,9 @@ export interface Services {
   readonly employees: {
     list(): Promise<Employee[]>;
     get(id: string): Promise<Employee | null>;
-    /** Throws `ZodError` for invalid input. */
+    /** `invalid_supervisor` with `details.reason` (`cycle`, `self`, `other_office`, `not_allowed`) when the supervisor breaks a rule. Throws `ZodError` for invalid input. */
     create(input: NewEmployeeInput): Promise<Employee>;
+    /** `invalid_supervisor` with `details.reason` (`cycle`, `self`, `other_office`, `not_allowed`) when the supervisor breaks a rule. Throws `ZodError` for invalid input. */
     update(id: string, patch: Partial<NewEmployeeInput>): Promise<Employee>;
     findSimilar(search: string): Promise<SimilarEmployee[]>;
   };
@@ -137,9 +139,22 @@ export function createServices(dependencies: ServiceDependencies): Services {
     employees: {
       list: () => repositories.employees.list(),
       get: (id) => repositories.employees.get(id),
-      create: async (input) => repositories.employees.create(newEmployeeSchema.parse(input)),
-      update: async (id, patch) =>
-        repositories.employees.update(id, employeePatchSchema.parse(patch)),
+      create: async (input) => {
+        const parsed = newEmployeeSchema.parse(input);
+        try {
+          return await repositories.employees.create(parsed);
+        } catch (error) {
+          throw supervisorError(error);
+        }
+      },
+      update: async (id, patch) => {
+        const parsed = employeePatchSchema.parse(patch);
+        try {
+          return await repositories.employees.update(id, parsed);
+        } catch (error) {
+          throw supervisorError(error);
+        }
+      },
       findSimilar: (search) => repositories.employees.findSimilar(search),
     },
     regulations,
