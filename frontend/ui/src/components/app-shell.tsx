@@ -4,7 +4,7 @@ import { BrandMark } from '#components/brand-mark';
 interface AppShellProps {
   product: { readonly name: string; readonly tagline: string };
   homeHref?: string;
-  /** Main navigation. Shown in the header row from `xl`, in its own scrolling row below. */
+  /** Main navigation. Shown in the header row from `xl`, in wrapping rows below it. */
   nav?: ReactNode;
   /** Header cells between the filler and the primary action: search, accessibility tools, account. */
   tools?: ReactNode;
@@ -62,8 +62,8 @@ export function AppShell({
           </div>
         </div>
         {nav ? (
-          <div className="border-rule focus-inset overflow-x-auto border-t xl:hidden">
-            <div className="flex min-w-max">{nav}</div>
+          <div className="border-rule border-t xl:hidden">
+            <div className="-mb-px">{nav}</div>
           </div>
         ) : null}
       </header>

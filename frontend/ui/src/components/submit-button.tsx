@@ -30,9 +30,11 @@ export function SubmitButton({
   value,
   className,
 }: SubmitButtonProps) {
-  const { pending } = useFormStatus();
+  const { pending: formPending, data } = useFormStatus();
+  // Several submit buttons share one form: only the one that sent it shows the pending label.
+  const pending = formPending && (name === undefined || data.get(name) === value);
   const ignoreWhilePending = (event: MouseEvent<HTMLButtonElement>) => {
-    if (pending) event.preventDefault();
+    if (formPending) event.preventDefault();
   };
 
   return (
@@ -42,7 +44,7 @@ export function SubmitButton({
       size={size}
       name={name}
       value={value}
-      aria-disabled={pending}
+      aria-disabled={formPending}
       onClick={ignoreWhilePending}
       className={className}
     >
