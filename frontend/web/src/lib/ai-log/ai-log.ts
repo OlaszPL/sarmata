@@ -1,5 +1,5 @@
 // Type only: client components import these helpers, a value import would bundle `@sarmata/services`.
-import type { AiRun, AiRunKind, AiRunStatus } from '@sarmata/services';
+import type { AiRun, AiRunKind, AiRunStatus, AiUsageLogEntry } from '@sarmata/services';
 import { pluralPl } from '@/lib/format';
 import type { SearchParams } from '@/lib/search-params';
 import { single } from '@/lib/search-params';
@@ -50,13 +50,15 @@ export function formatDateTime(iso: string): string {
   return `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
 }
 
-export function decisionCounts(run: Pick<AiRun, 'decisions'>): {
+type DecisionKind = 'accepted' | 'edited' | 'rejected';
+
+export function decisionCounts(run: { decisions: readonly { decision: DecisionKind }[] }): {
   accepted: number;
   edited: number;
   rejected: number;
   pending: boolean;
 } {
-  const count = (kind: 'accepted' | 'edited' | 'rejected') =>
+  const count = (kind: DecisionKind) =>
     run.decisions.filter((entry) => entry.decision === kind).length;
   return {
     accepted: count('accepted'),
@@ -78,7 +80,7 @@ export interface AiLogRow {
   contentDeleted: boolean;
 }
 
-function decisionsText(run: AiRun): string {
+function decisionsText(run: { decisions: readonly { decision: DecisionKind }[] }): string {
   const { accepted, edited, rejected, pending } = decisionCounts(run);
   if (pending) return 'Bez decyzji';
   return [
@@ -101,6 +103,109 @@ export function aiLogRows(runs: readonly AiRun[], people: ReadonlyMap<string, st
     evaluationId: run.evaluationId,
     contentDeleted: run.contentDeletedAt !== null,
   }));
+}
+
+/** Rows of the admin usage log: same shape as `aiLogRows`, the requester name comes with the entry. */
+export function usageLogRows(
+  entries: readonly AiUsageLogEntry[],
+  people: ReadonlyMap<string, string>,
+): AiLogRow[] {
+  return entries.map((entry) => ({
+    id: entry.id,
+    requestedAt: formatDateTime(entry.requestedAt),
+    kind: aiKindLabels[entry.kind],
+    employee: entry.employeeId === null ? null : (people.get(entry.employeeId) ?? null),
+    requestedBy: entry.requesterName ?? people.get(entry.requestedBy) ?? 'Konto spoza akt',
+    status: runStatusTag(entry.status),
+    decisions: decisionsText(entry),
+    evaluationId: entry.evaluationId,
+    contentDeleted: entry.contentDeletedAt !== null,
+  }));
+}
+
+/** The usage log narrowed by the page filter, in memory. */
+export function filterUsageLog(
+  entries: readonly AiUsageLogEntry[],
+  filter: { employeeId?: string; kind?: AiRunKind },
+): AiUsageLogEntry[] {
+  return entries.filter(
+    (entry) =>
+      (filter.employeeId === undefined || entry.employeeId === filter.employeeId) &&
+      (filter.kind === undefined || entry.kind === filter.kind),
+  );
+}
+
+const failureReasonTexts: Record<string, string> = {
+  disabled: 'AI jest wyłączone w ustawieniach urzędu',
+  timeout: 'Model nie odpowiedział w wyznaczonym czasie',
+  unavailable: 'Serwer modelu był niedostępny',
+  rejected: 'Model odrzucił zapytanie',
+  invalid_response: 'Model zwrócił odpowiedź w złym formacie',
+  expired: 'Przebieg zbyt długo czekał w kolejce',
+  interrupted: 'Przebieg przerwano przed końcem',
+};
+
+/** Short Polish text of a failure code, the code itself when unknown. */
+export function failureReasonText(reason: string): string {
+  return failureReasonTexts[reason] ?? reason;
+}
+
+export interface LogDecision {
+  fragment: string;
+  decision: DecisionKind;
+  decidedBy: string;
+  decidedAt: string;
+  /** Text after an edit. Null for the admin log, which has no content. */
+  finalText: string | null;
+  contentDeletedAt: string | null;
+}
+
+/** One run as the details show it, whichever source it comes from. */
+export interface LogRunDetail {
+  id: string;
+  kind: string;
+  evaluationId: string | null;
+  failureReason: string | null;
+  failureMessage: string | null;
+  model: string | null;
+  promptVersion: string | null;
+  outputTokens: number | null;
+  contentDeletedAt: string | null;
+  decisions: LogDecision[];
+}
+
+export function runDetail(run: AiRun): LogRunDetail {
+  return {
+    id: run.id,
+    kind: aiKindLabels[run.kind],
+    evaluationId: run.evaluationId,
+    failureReason: run.failure?.reason ?? null,
+    failureMessage: run.failure?.message ?? null,
+    model: run.model,
+    promptVersion: run.promptVersion,
+    outputTokens: run.outputTokens,
+    contentDeletedAt: run.contentDeletedAt,
+    decisions: run.decisions.map((entry) => ({ ...entry })),
+  };
+}
+
+export function usageLogDetail(entry: AiUsageLogEntry): LogRunDetail {
+  return {
+    id: entry.id,
+    kind: aiKindLabels[entry.kind],
+    evaluationId: entry.evaluationId,
+    failureReason: entry.failureReason,
+    failureMessage: null,
+    model: entry.model,
+    promptVersion: entry.promptVersion,
+    outputTokens: entry.outputTokens,
+    contentDeletedAt: entry.contentDeletedAt,
+    decisions: entry.decisions.map((item) => ({
+      ...item,
+      finalText: null,
+      contentDeletedAt: null,
+    })),
+  };
 }
 
 const signalLabels: Record<string, string> = {

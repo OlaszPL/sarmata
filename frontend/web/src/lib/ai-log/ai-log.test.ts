@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import type { AiRun } from '@sarmata/services';
+import type { AiRun, AiUsageLogEntry } from '@sarmata/services';
 import {
   aiKindLabels,
   aiLogRows,
   decisionCounts,
+  failureReasonText,
+  filterUsageLog,
+  runDetail,
+  usageLogDetail,
+  usageLogRows,
   formatDateTime,
   fragmentLabel,
   parseAiLogFilter,
@@ -148,5 +153,130 @@ describe('labels', () => {
     expect(runStatusTag('failed').label).toBe('Nieudane');
     expect(runStatusTag('queued')).toEqual({ tone: 'waiting', label: 'W kolejce' });
     expect(Object.keys(aiKindLabels)).toHaveLength(8);
+  });
+});
+
+function entry(overrides: Partial<AiUsageLogEntry> = {}): AiUsageLogEntry {
+  return {
+    id: 'entry-1',
+    kind: 'sheet_draft',
+    status: 'done',
+    requestedBy: USER_ID,
+    requesterName: null,
+    employeeId: EMPLOYEE_ID,
+    evaluationId: null,
+    model: 'bielik',
+    promptVersion: 'v3',
+    outputTokens: 1200,
+    failureReason: null,
+    requestedAt: '2026-11-20T10:05:00Z',
+    startedAt: null,
+    finishedAt: null,
+    contentDeletedAt: null,
+    decisions: [
+      {
+        fragment: 'issue.0',
+        decision: 'edited',
+        decidedBy: USER_ID,
+        decidedAt: '2026-11-20T11:00:00Z',
+      },
+    ],
+    ...overrides,
+  };
+}
+
+describe('usageLogRows', () => {
+  const people = new Map([
+    [EMPLOYEE_ID, 'Ewa Ewidencyjna'],
+    [USER_ID, 'Jan Kowalski'],
+  ]);
+
+  it('prefers the requester name of the entry, then the people map, then a fallback', () => {
+    const rows = usageLogRows(
+      [
+        entry({ id: 'a', requesterName: 'Olga Oceniająca' }),
+        entry({ id: 'b' }),
+        entry({ id: 'c', requestedBy: 'unknown' }),
+      ],
+      people,
+    );
+    expect(rows.map((row) => row.requestedBy)).toEqual([
+      'Olga Oceniająca',
+      'Jan Kowalski',
+      'Konto spoza akt',
+    ]);
+  });
+
+  it('builds the same row shape as aiLogRows', () => {
+    const [row] = usageLogRows([entry({ contentDeletedAt: '2026-11-21T00:00:00Z' })], people);
+    expect(row).toEqual({
+      id: 'entry-1',
+      requestedAt: '20.11.2026 11:05',
+      kind: 'Szkic arkusza',
+      employee: 'Ewa Ewidencyjna',
+      requestedBy: 'Jan Kowalski',
+      status: { tone: 'done', label: 'Gotowe' },
+      decisions: '0 przyjętych, 1 poprawiona, 0 odrzuconych',
+      evaluationId: null,
+      contentDeleted: true,
+    });
+  });
+});
+
+describe('filterUsageLog', () => {
+  const entries = [
+    entry({ id: 'a' }),
+    entry({ id: 'b', kind: 'hr_signals', employeeId: null }),
+    entry({ id: 'c', employeeId: 'other' }),
+  ];
+
+  it('keeps everything without a filter', () => {
+    expect(filterUsageLog(entries, {}).map((e) => e.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('filters by employee and kind together', () => {
+    expect(filterUsageLog(entries, { employeeId: EMPLOYEE_ID }).map((e) => e.id)).toEqual(['a']);
+    expect(filterUsageLog(entries, { kind: 'hr_signals' }).map((e) => e.id)).toEqual(['b']);
+    expect(filterUsageLog(entries, { employeeId: EMPLOYEE_ID, kind: 'hr_signals' })).toEqual([]);
+  });
+});
+
+describe('failureReasonText', () => {
+  it('maps known codes to Polish and keeps an unknown one', () => {
+    expect(failureReasonText('timeout')).toBe('Model nie odpowiedział w wyznaczonym czasie');
+    expect(failureReasonText('weird_code')).toBe('weird_code');
+  });
+});
+
+describe('run details', () => {
+  it('maps an AiRun with final texts and the failure message', () => {
+    const detail = runDetail(
+      run({
+        status: 'failed',
+        failure: { reason: 'timeout', message: 'slow' },
+        decisions: [{ ...decision('edited', 'issue.0'), finalText: 'Nowy tekst' }],
+      }),
+    );
+    expect(detail).toMatchObject({
+      id: 'run-1',
+      kind: 'Sprawdzenie jakości',
+      failureReason: 'timeout',
+      failureMessage: 'slow',
+      evaluationId: 'eval-1',
+    });
+    expect(detail.decisions[0]?.finalText).toBe('Nowy tekst');
+  });
+
+  it('maps a usage log entry without any text', () => {
+    const detail = usageLogDetail(entry({ status: 'failed', failureReason: 'rejected' }));
+    expect(detail).toMatchObject({
+      kind: 'Szkic arkusza',
+      model: 'bielik',
+      promptVersion: 'v3',
+      outputTokens: 1200,
+      failureReason: 'rejected',
+      failureMessage: null,
+    });
+    expect(detail.decisions[0]).toMatchObject({ fragment: 'issue.0', finalText: null });
   });
 });

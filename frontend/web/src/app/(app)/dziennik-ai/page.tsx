@@ -5,7 +5,16 @@ import { DataTable, type DataTableColumn, EmptyState, PageHero, Tag } from '@sar
 import { AiLogFilters } from '@/components/ai-log/ai-log-filters';
 import { RunDecisions } from '@/components/ai-log/run-decisions';
 import { officeEmployees, requireMember } from '@/lib/account';
-import { type AiLogRow, aiLogRows, parseAiLogFilter } from '@/lib/ai-log/ai-log';
+import {
+  type AiLogRow,
+  aiLogRows,
+  filterUsageLog,
+  type LogRunDetail,
+  parseAiLogFilter,
+  runDetail,
+  usageLogDetail,
+  usageLogRows,
+} from '@/lib/ai-log/ai-log';
 import { todayInWarsaw } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { type SearchParams, single } from '@/lib/search-params';
@@ -15,11 +24,9 @@ export const metadata: Metadata = { title: 'Dziennik użycia AI' };
 
 const RUN_ANCHOR = 'przebieg';
 
-function emptyText(role: string, filtered: boolean): string {
+function emptyText(isAdmin: boolean, filtered: boolean): string {
   if (filtered) return 'Żaden przebieg nie pasuje do filtrów.';
-  if (role === 'admin') {
-    return 'Administrator widzi dziś tylko przebiegi, które sam zlecił. Przebiegi oceniających i kadr pokażą się tu po rozszerzeniu uprawnień do dziennika.';
-  }
+  if (isAdmin) return 'Nie ma jeszcze przebiegów AI w urzędzie.';
   return 'Nie ma jeszcze przebiegów AI. Pojawią się po pierwszym użyciu sugestii AI w ocenie, notatce albo karcie pracownika.';
 }
 
@@ -31,7 +38,11 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
   const selectedId = single(params[RUN_ANCHOR]);
 
   const services = servicesFor(await createSupabase());
-  const [runs, employees] = await Promise.all([services.ai.list(filter), officeEmployees()]);
+  const isAdmin = account.role === 'admin';
+  const [source, employees] = await Promise.all([
+    isAdmin ? services.ai.usageLog() : services.ai.list(filter),
+    officeEmployees(),
+  ]);
 
   const people = new Map<string, string>();
   for (const employee of employees) {
@@ -58,8 +69,22 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
   }
   const criterionName = (id: string) => criterionNames.get(id) ?? id;
 
-  const rows = aiLogRows(runs, people);
-  const selected = runs.find((run) => run.id === selectedId) ?? null;
+  let rows: AiLogRow[];
+  let selected: LogRunDetail | null;
+  if (isAdmin) {
+    const entries = filterUsageLog(
+      source as Awaited<ReturnType<typeof services.ai.usageLog>>,
+      filter,
+    );
+    rows = usageLogRows(entries, people);
+    const entry = entries.find((item) => item.id === selectedId);
+    selected = entry ? usageLogDetail(entry) : null;
+  } else {
+    const runs = source as Awaited<ReturnType<typeof services.ai.list>>;
+    rows = aiLogRows(runs, people);
+    const run = runs.find((item) => item.id === selectedId);
+    selected = run ? runDetail(run) : null;
+  }
   const filtered = filter.employeeId !== undefined || filter.kind !== undefined;
 
   const columns: DataTableColumn<AiLogRow>[] = [
@@ -100,7 +125,11 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
     <div className="flex flex-1 flex-col">
       <PageHero
         title="Dziennik użycia AI"
-        meta="Każde użycie AI i decyzja człowieka o każdym fragmencie. Najnowsze 50 przebiegów."
+        meta={
+          isAdmin
+            ? 'Każde użycie AI w urzędzie i decyzja człowieka o każdym fragmencie, bez treści. Najnowsze 100 przebiegów.'
+            : 'Każde użycie AI i decyzja człowieka o każdym fragmencie. Najnowsze 50 przebiegów.'
+        }
       />
       <div className="flex flex-col gap-6 px-6 py-8 sm:px-10">
         <AiLogFilters employees={options} employeeId={filter.employeeId} kind={filter.kind} />
@@ -113,7 +142,7 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
           />
         ) : (
           <EmptyState title="Brak przebiegów do pokazania" className="px-0 sm:px-0">
-            <p className="max-w-[70ch]">{emptyText(account.role, filtered)}</p>
+            <p className="max-w-[70ch]">{emptyText(isAdmin, filtered)}</p>
           </EmptyState>
         )}
         {selected ? (
@@ -124,7 +153,12 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
             >
               Decyzje o fragmentach
             </h2>
-            <RunDecisions run={selected} people={people} criterionName={criterionName} />
+            <RunDecisions
+              run={selected}
+              people={people}
+              criterionName={criterionName}
+              withContent={!isAdmin}
+            />
           </section>
         ) : null}
       </div>

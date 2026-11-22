@@ -197,7 +197,7 @@ Administrator:
 - `/ustawienia`: ustawienia urzędu: AI, okres przechowywania notatek z ostrzeżeniem o liczbie notatek i przebiegów AI do usunięcia, przypomnienia, widoczność ocen, domyślna miejscowość, adresat sprzeciwu dla arkusza A, progi flag oceniających, dni bez docenienia, SMTP i osobno hasło SMTP, po zapisie `?zapisano=1` albo `?haslo=1` (inne role widzą informację, że ustawienia zmienia administrator)
 - `/ustawienia/konta`: konta urzędu, zaproszenie z rolą i jego status `?zaproszenie=<id>` odświeżany do wysłania, hasło jednorazowe pokazywane raz, zmiana roli i zakończenie dostępu `?konto=<id>`
 - `/ustawienia/przepisy`: wersje przepisów z oznaczeniem obowiązującej, nowy szkic na podstawie opublikowanej wersji, szczegóły `?wersja=<id>`: parametry i strategie terminów, wyniki przypadków testowych, publikacja z potwierdzeniem, usunięcie szkicu, powiązania przepisów z podstawą prawną
-- `/dziennik-ai`: dziennik użycia AI dla każdej roli według uprawnień do przebiegów (administrator na razie widzi pustą listę), filtry `?pracownik=<id>` i `?rodzaj=<rodzaj>`, decyzje o fragmentach `?przebieg=<id>`
+- `/dziennik-ai`: dziennik użycia AI: administrator widzi dziennik całego urzędu bez treści (metadane i decyzje), pozostałe role przebiegi, które mogą czytać, filtry `?pracownik=<id>` i `?rodzaj=<rodzaj>`, decyzje o fragmentach `?przebieg=<id>`
 
 Ścieżki są w `frontend/web/src/lib/routes.ts`, „trasa zarezerwowana” ma tam ścieżkę, ale jeszcze nie ma strony. Wylogowanie jest w menu konta w nagłówku. Menu zależy od roli: oceniający widzi Pulpit, Moi pracownicy, Oceny, Notatki, kadry dodatkowo Kadry, administrator Pulpit, Ustawienia i Dziennik AI.
 

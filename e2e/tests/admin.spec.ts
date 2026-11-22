@@ -112,9 +112,17 @@ test.describe('admin screens as the admin', () => {
     await expectNoViolations(page);
   });
 
-  test('the AI log is honestly empty for the admin', async ({ page }) => {
+  test('the AI log shows the office usage log without content to the admin', async ({ page }) => {
     await page.goto('/dziennik-ai');
-    await expect(page.getByText('Brak przebiegów do pokazania', { exact: true })).toBeVisible();
+    const table = page.getByRole('table', { name: 'Przebiegi AI' });
+    await expect(table.getByRole('row', { name: /Szkic arkusza/ })).toBeVisible();
+    await page.goto('/dziennik-ai?przebieg=44444444-4444-4444-8444-000000000001');
+    await expect(page.getByRole('heading', { name: 'Decyzje o fragmentach' })).toBeVisible();
+    await expect(
+      page.getByText('Dziennik administratora pokazuje decyzje bez treści sugestii i poprawek.'),
+    ).toBeVisible();
+    await expect(page.getByText('przejął dwie dodatkowe sprawy')).toHaveCount(0);
+    await expectNoViolations(page);
   });
 });
 
