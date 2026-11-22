@@ -22,7 +22,7 @@ export function SummaryList({ rows, linkAs: LinkTag = 'a', className }: SummaryL
       {rows.map((row) => (
         <div
           key={row.key}
-          className="border-rule grid gap-x-6 gap-y-1 border-b py-3.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]"
+          className="border-rule grid gap-x-6 gap-y-1 border-b py-3.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_5rem]"
         >
           <dt className="font-heading leading-[1.4] font-semibold">{row.key}</dt>
           <dd className="leading-[1.5] break-words">{row.value}</dd>
