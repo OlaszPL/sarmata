@@ -14,7 +14,7 @@ test.describe('saving notes', () => {
     await page.goto('/pracownicy');
     await page
       .getByRole('table', { name: 'Lista pracowników' })
-      .getByRole('link', { name: 'Marek Merytoryczny' })
+      .getByRole('link', { name: 'Marek Merytoryczny', exact: true })
       .click();
     await page.getByRole('link', { name: 'Dodaj notatkę' }).click();
 
@@ -25,7 +25,7 @@ test.describe('saving notes', () => {
     await page.getByRole('button', { name: 'Zapisz bez czekania na AI' }).click();
 
     await expect(
-      page.getByRole('heading', { name: 'Notatka może zawierać dane wrażliwe' }),
+      page.getByText('Notatka może zawierać dane wrażliwe', { exact: true }),
     ).toBeVisible();
     // Nothing is saved until the warning is confirmed, and the typed text stays.
     await expect(page.getByLabel('Treść notatki')).toHaveValue(body);

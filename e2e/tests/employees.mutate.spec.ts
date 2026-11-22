@@ -13,7 +13,7 @@ test.describe('employee changes', () => {
     await page.goto('/pracownicy');
     await page
       .getByRole('table', { name: 'Lista pracowników' })
-      .getByRole('link', { name: 'Marek Merytoryczny' })
+      .getByRole('link', { name: 'Marek Merytoryczny', exact: true })
       .click();
     const signal = page.getByRole('region', { name: 'Możliwe przeciążenie' });
     await signal.getByRole('button', { name: 'Nie zgadzam się z sygnałem' }).click();
@@ -40,6 +40,6 @@ test.describe('employee changes', () => {
     await expect(page).toHaveURL(/\/pracownicy\/[0-9a-f-]{36}/);
     await expect(page.getByRole('heading', { level: 1, name: `Piotr ${lastName}` })).toBeVisible();
     await expect(page.getByText('Dodano pracownika.')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Brak ocen' })).toBeVisible();
+    await expect(page.getByText('Brak ocen', { exact: true })).toBeVisible();
   });
 });

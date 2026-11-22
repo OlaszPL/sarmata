@@ -6,7 +6,10 @@ import { signIn } from '../src/session';
 /** Opens the card of a person by clicking the name on the employee list. */
 async function openCard(page: Page, name: string): Promise<void> {
   await page.goto('/pracownicy');
-  await page.getByRole('table', { name: 'Lista pracowników' }).getByRole('link', { name }).click();
+  await page
+    .getByRole('table', { name: 'Lista pracowników' })
+    .getByRole('link', { name, exact: true })
+    .click();
   await expect(page).toHaveURL(/\/pracownicy\/[0-9a-f-]{36}$/);
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
 }

@@ -55,8 +55,12 @@ function CurrentEvaluation({ row }: { row: EmployeeRow }) {
       {row.current ? (
         <>
           <Tag tone="progress">{evaluationStatusLabels[row.current.status]}</Tag>
-          <Link href={routes.evaluation(row.current.evaluationId)} className={linkClasses}>
-            Otwórz ocenę<span className="sr-only">, {row.name}</span>
+          <Link
+            href={routes.evaluation(row.current.evaluationId)}
+            aria-label={`Otwórz ocenę, ${row.name}`}
+            className={linkClasses}
+          >
+            Otwórz ocenę
           </Link>
         </>
       ) : null}
