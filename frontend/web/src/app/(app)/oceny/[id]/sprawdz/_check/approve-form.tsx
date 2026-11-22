@@ -1,8 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { DateInput, Field, Notice, SubmitButton, TextInput } from '@sarmata/ui';
-import { LinkedErrorSummary } from '@/components/sheet/linked-error-summary';
+import { DateInput, ErrorSummary, Field, Notice, SubmitButton, TextInput } from '@sarmata/ui';
 import { useErrorTitle } from '@/components/use-error-title';
 import { fieldErrorLinks } from '@/lib/evaluations/sheet-gates';
 import { type FormState } from '@/lib/form-action';
@@ -18,7 +17,7 @@ interface ApproveFormProps {
 export function ApproveForm({ id, today, defaultPlace }: ApproveFormProps) {
   const initial: FormState = { values: {}, fieldErrors: {} };
   const [state, action] = useActionState(approveSheet.bind(null, id), initial);
-  const links = fieldErrorLinks(id, state.fieldErrors);
+  const links = fieldErrorLinks(id, state.fieldErrors, 'sprawdz');
   const hasErrors = links.length > 0 || state.formError !== undefined;
   useErrorTitle(hasErrors);
   const typedDate = state.values.draftedOn;
@@ -27,9 +26,9 @@ export function ApproveForm({ id, today, defaultPlace }: ApproveFormProps) {
   return (
     <form action={action} noValidate className="flex flex-col gap-6">
       {hasErrors ? (
-        <LinkedErrorSummary title="Nie udało się zatwierdzić arkusza" items={links} autoFocus>
+        <ErrorSummary title="Nie udało się zatwierdzić arkusza" errors={links}>
           {state.formError}
-        </LinkedErrorSummary>
+        </ErrorSummary>
       ) : null}
       <Notice tone="warning">
         <p>

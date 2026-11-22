@@ -1,9 +1,13 @@
 import { type ApprovalIssue } from '@sarmata/services';
+import type { ErrorSummaryItem } from '@sarmata/ui';
 import { pluralPl } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { approvalIssueItems } from '@/lib/service-errors';
 
 export type SheetTab = 'czesc-1' | 'czesc-2' | 'czesc-3';
+
+/** The page that shows an error summary: a sheet tab or the check page. */
+export type SheetPage = SheetTab | 'sprawdz';
 
 const part2Fields = new Set([
   'interviewOn',
@@ -38,31 +42,39 @@ export function gateTitle(count: number): string {
   return `Zanim zatwierdzisz ocenę, uzupełnij ${count} ${pluralPl(count, 'pole', 'pola', 'pól')}`;
 }
 
-export interface GateLink {
-  href: string;
-  message: string;
+/** An item of `ErrorSummary`: a field on another tab gets `href`, a field on this page only its id. */
+export type GateLink = ErrorSummaryItem;
+
+function gateLink(
+  evaluationId: string,
+  fieldId: string,
+  message: string,
+  currentPage: SheetPage,
+): GateLink {
+  const tab = gateTab(fieldId);
+  if (tab === null || tab === currentPage) return { fieldId, message };
+  return { fieldId, message, href: `${tabRoutes[tab](evaluationId)}#${fieldId}` };
 }
 
-/** approvalIssueItems + gateHref, items without a tab keep `#fieldId`. */
+/** Gate issues as summary items. Fields of `currentPage` and fields outside the sheet keep no href. */
 export function gateLinks(
   evaluationId: string,
   issues: readonly ApprovalIssue[],
   criterionName: (id: string) => string,
+  currentPage: SheetPage,
 ): GateLink[] {
-  return approvalIssueItems(issues, criterionName).map(({ fieldId, message }) => ({
-    href: gateHref(evaluationId, fieldId) ?? `#${fieldId}`,
-    message,
-  }));
+  return approvalIssueItems(issues, criterionName).map(({ fieldId, message }) =>
+    gateLink(evaluationId, fieldId, message, currentPage),
+  );
 }
 
-/** Field errors of a FormState (approve action) as links, fieldId -> gateHref ?? `#fieldId`. */
+/** Field errors of a FormState (e.g. the approve action) as summary items, empty ones skipped. */
 export function fieldErrorLinks(
   evaluationId: string,
   fieldErrors: Partial<Record<string, string>>,
+  currentPage: SheetPage,
 ): GateLink[] {
   return Object.entries(fieldErrors).flatMap(([fieldId, message]) =>
-    message === undefined
-      ? []
-      : [{ href: gateHref(evaluationId, fieldId) ?? `#${fieldId}`, message }],
+    message === undefined ? [] : [gateLink(evaluationId, fieldId, message, currentPage)],
   );
 }

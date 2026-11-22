@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { servicesFor } from '@sarmata/services';
-import { Notice, Section } from '@sarmata/ui';
-import { LinkedErrorSummary } from '@/components/sheet/linked-error-summary';
+import { ErrorSummary, Notice, Section } from '@sarmata/ui';
+import { ReadOnlyNotice } from '@/components/sheet/read-only-notice';
 import { SheetSummary } from '@/components/sheet/sheet-summary';
 import { criterionName } from '@/lib/case-regulation';
-import { checkMode } from '@/lib/evaluations/sheet-access';
+import { type CheckMode, checkMode } from '@/lib/evaluations/sheet-access';
 import { gateLinks, gateTitle } from '@/lib/evaluations/sheet-gates';
 import { routes } from '@/lib/routes';
 import { createSupabase } from '@/lib/supabase';
@@ -19,6 +19,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   return { title: await caseTitle((await params).id, 'Sprawdzenie arkusza') };
 }
+
+/** The heading names what the page is for this viewer and status. */
+const headings: Record<CheckMode, string> = {
+  approve: 'Sprawdź arkusz przed zatwierdzeniem',
+  blocked: 'Sprawdź arkusz przed zatwierdzeniem',
+  period: 'Sprawdź arkusz przed zatwierdzeniem',
+  approved: 'Zatwierdzony arkusz',
+  read: 'Arkusz oceny',
+};
 
 /** The office default place. The settings may be closed to the evaluator, then there is no default. */
 async function defaultPlaceOf(): Promise<string> {
@@ -41,14 +50,17 @@ export default async function Page({
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const data = await loadCase(id);
   const { view, regulation } = data;
-  const issues = gateLinks(id, data.approval.issues, (criterionId) =>
-    criterionName(regulation, criterionId),
+  const issues = gateLinks(
+    id,
+    data.approval.issues,
+    (criterionId) => criterionName(regulation, criterionId),
+    'sprawdz',
   );
   const mode = checkMode(view.status, data.canWrite, issues.length);
   const justApproved = query.zatwierdzono === '1' && view.status === 'drafted';
 
   return (
-    <Section title="Sprawdź arkusz przed zatwierdzeniem">
+    <Section title={headings[mode]}>
       <div className="flex flex-col gap-6">
         {justApproved ? (
           <Notice tone="success" role="status">
@@ -59,6 +71,9 @@ export default async function Page({
               </Link>
             </p>
           </Notice>
+        ) : null}
+        {(mode === 'read' || mode === 'approved') && !justApproved ? (
+          <ReadOnlyNotice data={data} />
         ) : null}
         {mode === 'period' ? (
           <Notice tone="info">
@@ -72,7 +87,7 @@ export default async function Page({
           </Notice>
         ) : null}
         {mode === 'blocked' ? (
-          <LinkedErrorSummary title={gateTitle(issues.length)} items={issues} />
+          <ErrorSummary title={gateTitle(issues.length)} errors={issues} autoFocus={false} />
         ) : null}
         <SheetSummary data={data} editable={view.status === 'interview' && data.canWrite} />
         {mode === 'approve' ? (

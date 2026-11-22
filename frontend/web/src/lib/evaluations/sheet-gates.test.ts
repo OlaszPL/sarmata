@@ -25,33 +25,56 @@ describe('sheet gates', () => {
     expect(gateTitle(5)).toBe('Zanim zatwierdzisz ocenę, uzupełnij 5 pól');
   });
 
-  it('turns issues into links with the criterion name', () => {
-    const issues = [
-      { code: 'development_conclusions_missing' },
-      { code: 'rating_missing', criterionId: 'reliability' },
-    ] as ApprovalIssue[];
-    const links = gateLinks('e1', issues, () => 'Rzetelność');
-    expect(links).toHaveLength(2);
-    expect(links[0]?.href).toBe('/oceny/e1/czesc-2#developmentConclusions');
-    expect(links[1]).toMatchObject({ href: '/oceny/e1/czesc-2#rating-reliability' });
-    expect(links[1]?.message).toContain('Rzetelność');
+  const issues = [
+    { code: 'development_conclusions_missing' },
+    { code: 'rating_missing', criterionId: 'reliability' },
+    { code: 'grade_request_not_allowed' },
+  ] as ApprovalIssue[];
+
+  it('links fields of other tabs and keeps fields of the current tab as ids', () => {
+    const onPartTwo = gateLinks('e1', issues, () => 'Rzetelność', 'czesc-2');
+    expect(onPartTwo).toHaveLength(3);
+    expect(onPartTwo[0]).toEqual({
+      fieldId: 'developmentConclusions',
+      message: expect.any(String) as string,
+    });
+    expect(onPartTwo[1]).toMatchObject({ fieldId: 'rating-reliability' });
+    expect(onPartTwo[1]).not.toHaveProperty('href');
+    expect(onPartTwo[1]?.message).toContain('Rzetelność');
+    expect(onPartTwo[2]).toMatchObject({
+      fieldId: 'gradeRequest',
+      href: '/oceny/e1/czesc-3#gradeRequest',
+    });
   });
 
-  it('keeps the field anchor for fields without a tab', () => {
+  it('links every sheet field from the check page', () => {
+    const onCheck = gateLinks('e1', issues, () => 'Rzetelność', 'sprawdz');
+    expect(onCheck.map((item) => item.href)).toEqual([
+      '/oceny/e1/czesc-2#developmentConclusions',
+      '/oceny/e1/czesc-2#rating-reliability',
+      '/oceny/e1/czesc-3#gradeRequest',
+    ]);
+  });
+
+  it('keeps only the field id for fields without a tab', () => {
     const links = gateLinks(
       'e1',
       [{ code: 'objection_window_open' }] as ApprovalIssue[],
       (id) => id,
+      'sprawdz',
     );
-    expect(links[0]?.href).toBe('#closedOn');
-    expect(fieldErrorLinks('e1', { draftedOn: 'x' })).toEqual([
-      { href: '#draftedOn', message: 'x' },
+    expect(links[0]).toEqual({ fieldId: 'closedOn', message: expect.any(String) as string });
+    expect(fieldErrorLinks('e1', { draftedOn: 'x' }, 'sprawdz')).toEqual([
+      { fieldId: 'draftedOn', message: 'x' },
     ]);
   });
 
   it('links field errors to their tab and skips empty ones', () => {
-    expect(fieldErrorLinks('e1', { justification: 'Wpisz', other: undefined })).toEqual([
-      { href: '/oceny/e1/czesc-2#justification', message: 'Wpisz' },
+    expect(fieldErrorLinks('e1', { justification: 'Wpisz', other: undefined }, 'sprawdz')).toEqual([
+      { fieldId: 'justification', message: 'Wpisz', href: '/oceny/e1/czesc-2#justification' },
+    ]);
+    expect(fieldErrorLinks('e1', { justification: 'Wpisz' }, 'czesc-2')).toEqual([
+      { fieldId: 'justification', message: 'Wpisz' },
     ]);
   });
 });
