@@ -33,8 +33,9 @@ function TreeList({ nodes }: { nodes: readonly OrgNode[] }) {
             <Link
               href={`${routes.hrTree}?pracownik=${employee.id}#zmiana`}
               className="text-link w-fit underline"
+              aria-label={`Zmień przełożonego: ${fullName(employee)}`}
             >
-              Zmień przełożonego<span className="sr-only">: {fullName(employee)}</span>
+              Zmień przełożonego
             </Link>
           </div>
           {reports.length > 0 ? (
