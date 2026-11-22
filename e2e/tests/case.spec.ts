@@ -50,6 +50,7 @@ test.describe('evaluation case frame', () => {
 
   test('meets WCAG 2.1 AA', async ({ page }) => {
     await expect(page.getByRole('heading', { level: 1, name: 'Ewa Ewidencyjna' })).toBeVisible();
+    await expect(page).toHaveTitle(/\S/);
     const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA).analyze();
     expect(results.violations).toEqual([]);
   });

@@ -7,6 +7,7 @@ import { accountMenuButton, signIn } from '../src/session';
 const WCAG_21_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 async function expectNoViolations(page: Page): Promise<void> {
+  await expect(page).toHaveTitle(/\S/);
   const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA).analyze();
   expect(results.violations).toEqual([]);
 }
