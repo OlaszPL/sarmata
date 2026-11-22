@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { demoAccount } from '../src/demo-accounts';
-import { expectNoViolations } from '../src/page-checks';
+import { errorSummary, expectNoViolations } from '../src/page-checks';
 import { signIn } from '../src/session';
 
 test.describe('notes page', () => {
@@ -8,6 +8,16 @@ test.describe('notes page', () => {
     await signIn(page, demoAccount('evaluator'));
     await page.goto('/notatki');
     await expect(page.getByRole('heading', { level: 1, name: 'Notatki' })).toBeVisible();
+  });
+
+  test('lists every missing field of an empty note at once', async ({ page }) => {
+    await page.getByRole('button', { name: 'Zapisz notatkę' }).click();
+    const summary = errorSummary(page, 'Popraw notatkę');
+    await expect(summary).toBeFocused();
+    await expect(summary.getByRole('link', { name: 'Wybierz pracownika' })).toBeVisible();
+    await expect(summary.getByRole('link', { name: 'Wybierz rodzaj notatki' })).toBeVisible();
+    await expect(summary.getByRole('link', { name: 'Wpisz treść notatki' })).toBeVisible();
+    await expect(page).toHaveTitle(/^Błąd: /);
   });
 
   test('shows the version history of an edited note', async ({ page }) => {

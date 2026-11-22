@@ -113,7 +113,7 @@ export function RatingHistory({ rows }: { rows: readonly HistoryRow[] }) {
                 key={row.key}
                 className="border-rule flex flex-col border-b sm:min-h-24 sm:flex-row"
               >
-                <div className="border-rule flex flex-col justify-center gap-0.5 px-6 pt-4 pb-3 sm:w-[13.25rem] sm:shrink-0 sm:border-r sm:px-8 sm:py-4">
+                <div className="border-rule flex flex-col justify-center gap-0.5 px-6 pt-4 pb-3 sm:w-[11.9375rem] sm:shrink-0 sm:border-r sm:px-8 sm:py-4">
                   <h3 className="font-heading text-ink text-lg leading-[normal] font-semibold">
                     {row.period}
                   </h3>

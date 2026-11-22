@@ -12,7 +12,13 @@ import {
 } from '@sarmata/services';
 import { requireMember } from '@/lib/account';
 import { NOTE_BODY_MAX, aiNoteParam } from '@/lib/employees/notes';
-import { type FormState, formValues, parseForm, runService } from '@/lib/form-action';
+import {
+  type FormState,
+  type FormValues,
+  formValues,
+  parseForm,
+  runService,
+} from '@/lib/form-action';
 import { routes } from '@/lib/routes';
 import { serviceErrorMessage } from '@/lib/service-errors';
 import { createSupabase } from '@/lib/supabase';
@@ -80,42 +86,51 @@ const optionalText = z
   .trim()
   .transform((value) => (value === '' ? null : value));
 
-const noteFormSchema = z
-  .object({
-    noteId: optionalText.pipe(z.uuid().nullable()),
-    employeeId: z.string().trim(),
-    kind: z.enum(['observation', 'ongoing_conversation', 'appreciation', 'workload_fact'], {
-      error: 'Wybierz rodzaj notatki',
-    }),
-    occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Podaj datę zdarzenia'),
-    criterionId: optionalText,
-    sign: optionalText,
-    communicated: z.string().transform((value) => value !== ''),
-    body: z
-      .string()
-      .trim()
-      .min(1, 'Wpisz treść notatki')
-      .max(NOTE_BODY_MAX, `Skróć treść notatki do ${NOTE_BODY_MAX} znaków`),
-    acceptWarnings: z.string(),
-    confirmRisk: z.string(),
-    returnTo: z.string(),
-    aiNote: z.string(),
-  })
-  .superRefine((value, context) => {
-    if (value.noteId === null && !z.uuid().safeParse(value.employeeId).success) {
-      context.addIssue({ code: 'custom', path: ['employeeId'], message: 'Wybierz pracownika' });
-    }
-    if (value.kind !== 'workload_fact' && value.sign !== 'plus' && value.sign !== 'minus') {
-      context.addIssue({ code: 'custom', path: ['sign'], message: 'Wybierz wydźwięk notatki' });
-    }
-    if (value.acceptWarnings === '1' && value.confirmRisk !== '1') {
-      context.addIssue({
-        code: 'custom',
-        path: ['confirmRisk'],
-        message: 'Zaznacz, że rozumiesz ryzyko, albo popraw treść notatki',
-      });
-    }
-  });
+const noteFormSchema = z.object({
+  noteId: optionalText.pipe(z.uuid().nullable()),
+  employeeId: z.string().trim(),
+  kind: z.enum(['observation', 'ongoing_conversation', 'appreciation', 'workload_fact'], {
+    error: 'Wybierz rodzaj notatki',
+  }),
+  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Podaj datę zdarzenia'),
+  criterionId: optionalText,
+  sign: optionalText,
+  communicated: z.string().transform((value) => value !== ''),
+  body: z
+    .string()
+    .trim()
+    .min(1, 'Wpisz treść notatki')
+    .max(NOTE_BODY_MAX, `Skróć treść notatki do ${NOTE_BODY_MAX} znaków`),
+  acceptWarnings: z.string(),
+  confirmRisk: z.string(),
+  returnTo: z.string(),
+  aiNote: z.string(),
+});
+
+const text = (values: FormValues, name: string): string => {
+  const value = values[name];
+  return (Array.isArray(value) ? (value[0] ?? '') : (value ?? '')).trim();
+};
+
+/**
+ * Rules across fields. They run on the raw values next to the schema, so their messages show up
+ * together with the field errors on the first submit (a zod refinement would wait for them).
+ */
+function crossFieldErrors(values: FormValues): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (text(values, 'noteId') === '' && !z.uuid().safeParse(text(values, 'employeeId')).success) {
+    errors.employeeId = 'Wybierz pracownika';
+  }
+  const kind = text(values, 'kind');
+  const sign = text(values, 'sign');
+  if (kind !== '' && kind !== 'workload_fact' && sign !== 'plus' && sign !== 'minus') {
+    errors.sign = 'Wybierz wydźwięk notatki';
+  }
+  if (text(values, 'acceptWarnings') === '1' && text(values, 'confirmRisk') !== '1') {
+    errors.confirmRisk = 'Zaznacz, że rozumiesz ryzyko, albo popraw treść notatki';
+  }
+  return errors;
+}
 
 /**
  * Saves a new note or a change of the author's own note. The sensitive data guard of the service
@@ -133,7 +148,11 @@ export async function saveNote(
   }
 
   const parsed = parseForm(noteFormSchema, formData);
-  if ('state' in parsed) return parsed.state;
+  const crossErrors = crossFieldErrors(values);
+  if ('state' in parsed) {
+    return { ...parsed.state, fieldErrors: { ...crossErrors, ...parsed.state.fieldErrors } };
+  }
+  if (Object.keys(crossErrors).length > 0) return { values, fieldErrors: crossErrors };
   const data = parsed.data;
   const fields = {
     kind: data.kind,
