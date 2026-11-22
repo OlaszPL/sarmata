@@ -6,7 +6,7 @@ import {
 } from '@sarmata/services';
 import { type HeroStat } from '@sarmata/ui';
 import { statusTag } from '@/lib/evaluations/status-labels';
-import { formatDate, formatScore } from '@/lib/format';
+import { daysUntil, formatDate, formatScore, relativeDays } from '@/lib/format';
 
 export interface HistoryRow {
   key: string;
@@ -54,7 +54,8 @@ interface HistoryInput {
   /** The regulation version in force today, or an empty stand-in when it did not load. */
   document: HistoryRegulation;
   /** From the next step of the open evaluation. */
-  current: { dueOn: CalendarDate | null; stage: string } | null;
+  /** The open evaluation: its next due date and stage, with today for the relative hint. */
+  current: { dueOn: CalendarDate | null; stage: string; today: CalendarDate } | null;
 }
 
 const MINUS = '−';
@@ -73,7 +74,7 @@ function archivedRow(item: ArchivedEvaluation, levelName: (code: string | null) 
     item.ratings !== null && Object.keys(item.ratings).length > 0 ? item.ratings : null;
   const row: HistoryRow = {
     key: `archived-${item.id}`,
-    period: `Ocena ${item.draftedOn.slice(0, 4)}`,
+    period: item.draftedOn.slice(0, 4),
     source: 'Archiwalna, wpisana ręcznie',
     mean: ratings ? mean(Object.values(ratings)) : null,
     levelName: levelName(item.levelCode),
@@ -90,7 +91,7 @@ function cyclePeriod(view: EvaluationView): string {
   const from = view.cycleStart.slice(0, 4);
   const due = view.deadlines.find((deadline) => deadline.slot === 'evaluationDeadline')?.dueOn;
   const to = due?.slice(0, 4);
-  return !to || to === from ? `Ocena ${from}` : `Ocena ${from} do ${to}`;
+  return !to || to === from ? from : `${from} do ${to}`;
 }
 
 function viewRow(view: EvaluationView, levelName: (code: string | null) => string | null) {
@@ -196,7 +197,11 @@ function statsOf(
     stats.push({
       label: 'Termin oceny',
       value: formatDate(current.dueOn).slice(0, 5),
-      hint: `${current.dueOn.slice(0, 4)} r., ${current.stage}`,
+      // Like the case hero: the cell fits `dd.mm`, another year goes into the hint.
+      hint:
+        current.dueOn.slice(0, 4) === current.today.slice(0, 4)
+          ? relativeDays(daysUntil(current.today, current.dueOn))
+          : `${current.dueOn.slice(0, 4)} r., ${relativeDays(daysUntil(current.today, current.dueOn))}`,
     });
   }
   return stats;

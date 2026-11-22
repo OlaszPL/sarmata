@@ -66,7 +66,7 @@ describe('employeeHistory rows', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       key: 'archived-arch-1',
-      period: 'Ocena 2023',
+      period: '2023',
       source: 'Archiwalna, wpisana ręcznie',
       mean: null,
       levelName: 'powyżej oczekiwań',
@@ -103,7 +103,7 @@ describe('employeeHistory rows', () => {
     });
     expect(rows[0]).toMatchObject({
       key: 'evaluation-ev1',
-      period: 'Ocena 2024 do 2026',
+      period: '2024 do 2026',
       source: 'Sporządzona w Sarmacie 12.12.2024',
       mean: 5.6,
       levelName: 'powyżej oczekiwań',
@@ -125,7 +125,7 @@ describe('employeeHistory rows', () => {
       open: true,
       source: 'W toku, Okres oceny',
       mean: null,
-      period: 'Ocena 2025',
+      period: '2025',
     });
   });
 
@@ -150,7 +150,7 @@ describe('employeeHistory criteria', () => {
 
   it('reports a drop', () => {
     const criteria = two(7, 5);
-    expect(criteria.columns.map((column) => column.period)).toEqual(['Ocena 2022', 'Ocena 2024']);
+    expect(criteria.columns.map((column) => column.period)).toEqual(['2022', '2024']);
     expect(criteria.rows[0]).toMatchObject({
       criterionId: 'a',
       name: 'Rzetelność',
@@ -214,15 +214,23 @@ describe('employeeHistory stats', () => {
     });
   });
 
-  it('adds the due date of the open evaluation', () => {
+  it('adds the due date of the open evaluation, relative within the year', () => {
     const { stats } = employeeHistory({
       ...base,
-      current: { dueOn: '2026-03-31' as never, stage: 'Okres oceny' },
+      current: { dueOn: '2026-03-31' as never, stage: 'Okres oceny', today: '2026-03-16' as never },
+    });
+    expect(stats.at(-1)).toEqual({ label: 'Termin oceny', value: '31.03', hint: 'za 15 dni' });
+  });
+
+  it('puts the year of a due date in another year into the hint', () => {
+    const { stats } = employeeHistory({
+      ...base,
+      current: { dueOn: '2028-11-22' as never, stage: 'Okres oceny', today: '2026-11-22' as never },
     });
     expect(stats.at(-1)).toEqual({
       label: 'Termin oceny',
-      value: '31.03',
-      hint: '2026 r., Okres oceny',
+      value: '22.11',
+      hint: '2028 r., za 731 dni',
     });
   });
 });

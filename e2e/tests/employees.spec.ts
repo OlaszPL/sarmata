@@ -46,7 +46,7 @@ test.describe('employee list and card', () => {
   test('shows the archived evaluation of Stefan', async ({ page }) => {
     await signIn(page, demoAccount('evaluator'));
     await openCard(page, 'Stefan Sprzeciwny');
-    await expect(page.getByRole('heading', { level: 3, name: 'Ocena 2023' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: '2023' })).toBeVisible();
     await expect(page.getByText('Archiwalna, wpisana ręcznie').first()).toBeVisible();
   });
 

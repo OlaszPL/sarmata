@@ -139,7 +139,7 @@ export const loadCard = cache(async (id: string): Promise<CardData> => {
       archived: archived ?? [],
       views,
       document: regulation ?? NO_REGULATION,
-      current: step ? { dueOn: step.dueOn, stage: step.stage } : null,
+      current: step ? { dueOn: step.dueOn, stage: step.stage, today } : null,
     }),
     currentEvaluationId: current?.id ?? null,
     notes,
