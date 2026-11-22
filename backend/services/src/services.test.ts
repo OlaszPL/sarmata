@@ -1,6 +1,7 @@
 import { type RegulationDocument, calendarDate } from '@sarmata/domain';
 import { officialRegulations } from '@sarmata/regulations';
 import {
+  RepositoryError,
   type Employee,
   type NewEmployee,
   type OfficialRegulationWriter,
@@ -142,6 +143,44 @@ describe('employees.create', () => {
   });
 });
 
+describe('employees supervisor errors', () => {
+  const cycle = new RepositoryError('employees.update', {
+    code: 'P0001',
+    message: 'supervisor cycle',
+  });
+  const rejecting = (error: Error) => {
+    const { repositories } = inMemoryRepositories({});
+    return createServices({
+      repositories: {
+        ...repositories,
+        employees: {
+          ...repositories.employees,
+          create: () => Promise.reject(error),
+          update: () => Promise.reject(error),
+        },
+      },
+    });
+  };
+
+  it('update maps a supervisor cycle to invalid_supervisor', async () => {
+    await expect(rejecting(cycle).employees.update('e1', { lastName: 'X' })).rejects.toMatchObject({
+      code: 'invalid_supervisor',
+      details: { reason: 'cycle' },
+    });
+  });
+
+  it('create maps a supervisor cycle to invalid_supervisor', async () => {
+    await expect(
+      rejecting(cycle).employees.create({ firstName: 'Ewa', lastName: 'Ewidencyjna' }),
+    ).rejects.toMatchObject({ code: 'invalid_supervisor', details: { reason: 'cycle' } });
+  });
+
+  it('passes unrelated repository errors through', async () => {
+    const other = new Error('boom');
+    await expect(rejecting(other).employees.update('e1', { lastName: 'X' })).rejects.toBe(other);
+  });
+});
+
 describe('employees.list', () => {
   it('returns the employees from the repository', async () => {
     const employee: Employee = {
@@ -183,6 +222,23 @@ describe('regulations.inForceOn', () => {
       services.regulations.inForceOn(calendarDate('2016-04-22')),
       'no_regulation_in_force',
     );
+  });
+});
+
+describe('regulations.forReportYear', () => {
+  const { repositories } = inMemoryRepositories({ official: [regulation2016] });
+  const services = createServices({ repositories });
+
+  it('falls back to the earliest version for a year before it', async () => {
+    expect((await services.regulations.forReportYear(2010)).id).toBe('regulation-2016');
+    expect((await services.regulations.forReportYear(2026)).id).toBe('regulation-2016');
+  });
+
+  it('fails only when no version exists', async () => {
+    const empty = createServices({
+      repositories: inMemoryRepositories({ official: [] }).repositories,
+    });
+    await expectServiceError(empty.regulations.forReportYear(2026), 'no_regulation_in_force');
   });
 });
 

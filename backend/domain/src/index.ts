@@ -20,7 +20,11 @@ export {
   parseRegulationDocument,
   regulationDocumentSchema,
 } from './regulations/regulation-document';
-export { officeVersionInForce, versionInForce } from './regulations/version-in-force';
+export {
+  officeVersionInForce,
+  versionForReportDay,
+  versionInForce,
+} from './regulations/version-in-force';
 export {
   type RegulationCase,
   type RegulationCaseResult,

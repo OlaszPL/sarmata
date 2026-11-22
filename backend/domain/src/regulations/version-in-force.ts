@@ -40,3 +40,20 @@ export function officeVersionInForce<
   }
   return best;
 }
+
+/**
+ * The version a report of a past day is built on: the one in force on `on`, or the earliest version
+ * when `on` is before all of them (such a report is empty but keeps the level names).
+ * `null` only for an empty list.
+ */
+export function versionForReportDay<
+  T extends { readonly effectiveFrom: CalendarDate; readonly isOfficial: boolean },
+>(versions: readonly T[], on: CalendarDate): T | null {
+  const inForce = officeVersionInForce(versions, on);
+  if (inForce !== null) return inForce;
+  let earliest: T | null = null;
+  for (const version of versions) {
+    if (earliest === null || version.effectiveFrom < earliest.effectiveFrom) earliest = version;
+  }
+  return earliest;
+}

@@ -237,6 +237,36 @@ async function seedClosedEvaluations(
   });
 }
 
+// Jan Odwoławczy: a negative evaluation whose objection hr rejected today, without an appeal to the labour
+// court. The 14 day appeal window from today stays open, so the appeal form in the UI and its e2e have a
+// case to work on. A new employee of Olga, so the existing demo employees stay untouched.
+async function seedOpenAppeal(
+  evaluator: Services,
+  hr: AppServices,
+  supervisorEmployeeId: string,
+): Promise<void> {
+  const employee = await hr.employees.create({
+    firstName: 'Jan',
+    lastName: 'Odwoławczy',
+    email: 'jan.odwolawczy@kropka.test',
+    positionTitle: 'Referent',
+    orgUnit: 'Wydział Kontroli',
+    serviceStatus: 'employee',
+    employmentBasis: 'indefinite',
+    employmentStart: calendarDate('2020-02-03'),
+    positionKind: 'other',
+    supervisorEmployeeId,
+  });
+  await seedClosed(evaluator, {
+    employeeId: employee.id,
+    points: 3,
+    justification:
+      'Opóźnienia w sprawach kontrolnych w całym okresie oceny, przykłady w notatkach.',
+    conclusions: 'Szkolenie z organizacji pracy i terminowości.',
+    rejectedObjectionBy: hr,
+  });
+}
+
 // Roman Dawny left in December 2016. His evaluation of that year is closed and his retention period
 // (10 years from the end of the year, art. 94 pkt 9b KP) ends on 2026-12-31, so the retention overview
 // shows him and `pnpm retention:run -- --day 2027-01-01` anonymizes him while the reports of 2016 stay.
@@ -296,12 +326,13 @@ async function main(): Promise<void> {
     karol: await employeeIdByEmail(db, 'kadry@kropka.test'),
     olga: await employeeIdByEmail(db, 'oceniajacy@kropka.test'),
   });
+  await seedOpenAppeal(services, hr, await employeeIdByEmail(db, 'oceniajacy@kropka.test'));
   await seedLeaver(services, hr);
   await seedRegulationDraft(
     await signedInServices(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, ADMIN_EMAIL),
   );
   console.log(
-    'demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview), Stefan Sprzeciwny (objection), four closed evaluations for the statistics, a former employee with a retention period ending in 2026, a regulation draft of the office',
+    'demo evaluations seeded: Marek Merytoryczny (period), Ewa Ewidencyjna (interview), Stefan Sprzeciwny (objection), four closed evaluations for the statistics, Jan Odwoławczy (objection rejected, appeal window open), a former employee with a retention period ending in 2026, a regulation draft of the office',
   );
 }
 

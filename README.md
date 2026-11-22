@@ -29,7 +29,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm db:start
        pnpm db:reset
 
-   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy otwarte oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa), cztery zamknięte oceny do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu oraz przyznanie stopnia), byłego pracownika Romana Dawnego z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu. Notatki Marka, dwa przebiegi AI (szkic arkusza z edytowanym fragmentem i sygnały HR) oraz ustawienia SMTP wskazujące na Mailpit pochodzą z `database/supabase/seed.sql`.
+   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy otwarte oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa), pięć zamkniętych ocen tego roku, wszystkie liczone do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu, przyznanie stopnia oraz Jan Odwoławczy z oceną negatywną i sprzeciwem nieuwzględnionym przez kadry, bez odwołania do sądu pracy, z otwartym terminem odwołania), byłego pracownika Romana Dawnego z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu, a potem kolektor powiadomień na dziś, więc skrzynka kadr ma od razu zadania (stopień z mocy prawa i rozpatrzenie sprzeciwu Stefana). Notatki Marka, dwa przebiegi AI (szkic arkusza z edytowanym fragmentem i sygnały HR) oraz ustawienia SMTP wskazujące na Mailpit pochodzą z `database/supabase/seed.sql`.
 
 6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp z Metal (17 MB) i model zalecany dla tego komputera z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai`. Na Macu z 16 GB (np. M2) to Bielik-4.5B-v3.0 Q4_K_M (2,9 GB):
 
@@ -102,7 +102,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
     Prawdziwą instalację (`install` bez `--dry-run`) uruchamiaj tylko na maszynie wirtualnej albo osobnym komputerze: zakłada `~/Sarmata` (macOS) albo `/opt/sarmata` (Linux), kontenery projektu `sarmata` i porty 3000 i 8000.
 
-Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej”): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test` (Olga Oceniająca, przełożona Marka, Ewy i Stefana). Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`. Pracownicy demo (Marek, Ewa, Stefan, Roman) nie mają kont, bo oceniany nie używa aplikacji.
+Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej”): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test` (Olga Oceniająca, przełożona Marka, Ewy, Stefana i Jana). Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`. Pracownicy demo (Marek, Ewa, Stefan, Roman, Jan) nie mają kont, bo oceniany nie używa aplikacji.
 
 ## Skrypty
 
@@ -117,8 +117,8 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 | `pnpm format`, `pnpm format:check` | Prettier, z zapisem i tylko sprawdzenie |
 | `pnpm secrets:decrypt` | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
 | `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 (SMTP 55425) |
-| `pnpm db:reset` | migracje od zera, dane demo, synchronizacja oficjalnych wersji przepisów i oceny demo |
-| `pnpm db:seed:demo` | zakłada trzy oceny demo przez prawdziwy serwis jako `oceniajacy@kropka.test` (sprzeciw jako `kadry@kropka.test`), pomija, gdy oceny już istnieją (wymaga `pnpm regulations:sync`) |
+| `pnpm db:reset` | migracje od zera, dane demo, synchronizacja oficjalnych wersji przepisów, oceny demo oraz powiadomienia demo z kolektorem na dziś (zadania kadr w skrzynce) |
+| `pnpm db:seed:demo` | zakłada oceny demo przez prawdziwy serwis jako `oceniajacy@kropka.test` (sprzeciw jako `kadry@kropka.test`), pomija, gdy oceny już istnieją (wymaga `pnpm regulations:sync`) |
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
 | `pnpm test:integration` | testy repozytoriów i workera na lokalnym Supabase, wymagają `pnpm db:reset` |

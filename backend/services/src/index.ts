@@ -14,6 +14,7 @@ export {
   servicesFor,
 } from './services';
 export { ServiceError, type ServiceErrorCode } from './errors';
+export { type InvalidSupervisorReason } from './employees/supervisor-error';
 export {
   type DevelopmentService,
   type DevelopmentServiceDependencies,
@@ -159,7 +160,7 @@ export {
   type AiServiceDependencies,
   createAiService,
 } from './ai/ai-service';
-export type { AiFragmentDecision, AiRun } from '@sarmata/repositories';
+export type { AiFragmentDecision, AiRun, AiUsageLogEntry } from '@sarmata/repositories';
 export type {
   AiInputRefs,
   AiOutput,
@@ -183,6 +184,7 @@ export {
   createAccountAdministration,
 } from './accounts/account-administration';
 export {
+  type AccountDirectoryEntry,
   type AccountsService,
   type AccountsServiceDependencies,
   type EndMembershipResult,
@@ -196,9 +198,11 @@ export {
   type EmployeeImportService,
   type ImportField,
   type ImportPreview,
+  type ImportRowErrorCode,
   type ImportReport,
   type MappingProposal,
   type RowDecision,
+  type RowError,
   type RowPreview,
   createEmployeeImportService,
   importFields,

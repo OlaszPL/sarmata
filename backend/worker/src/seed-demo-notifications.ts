@@ -6,6 +6,9 @@ import { workerConfigFromEnv } from './config';
 // evaluations). due_on and slot come from the stored deadline (evaluation_deadlines), lead_days is one
 // the configured lead 14 and created_on is the day the seed runs. The unique key of
 // notifications (account, kind, evaluation, slot, due_on, lead_days) makes a later collector run skip them.
+// After that the collector runs once for the same day, which creates the hr tasks (grade by law and
+// objection decision of Stefan) right after the reset. It runs from this script, the last step of
+// pnpm db:reset, and not from seed.sql, because the demo evaluations exist only after db:seed:demo.
 
 const OFFICE_ID = '11111111-1111-4111-8111-111111111111';
 const EVALUATOR_ACCOUNT_ID = '22222222-2222-4222-8222-000000000003';
@@ -45,7 +48,7 @@ async function deadlineOf(email: string): Promise<{ evaluationId: string; dueOn:
   return { evaluationId: evaluation.id, dueOn: data.due_on };
 }
 
-async function main(): Promise<void> {
+async function seedReminders(): Promise<void> {
   const existing = await db
     .from('notifications')
     .select('id', { count: 'exact', head: true })
@@ -72,6 +75,17 @@ async function main(): Promise<void> {
   const { error } = await db.from('notifications').insert([reminder(ewa, 14), reminder(marek, 14)]);
   if (error) throw new Error(error.message);
   console.log('demo notifications seeded: two unread reminders for Olga Oceniająca');
+}
+
+async function main(): Promise<void> {
+  await seedReminders();
+  const { data, error } = await db.rpc('collect_notifications', { p_today: CREATED_ON });
+  if (error) throw new Error(`collect_notifications failed: ${error.message}`);
+  const counts = data[0];
+  if (counts === undefined) throw new Error('collect_notifications returned no counts');
+  console.log(
+    `collected notifications for ${CREATED_ON}: created ${counts.created}, queued ${counts.queued}, resolved ${counts.resolved}`,
+  );
 }
 
 try {

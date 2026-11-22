@@ -122,7 +122,7 @@ describe('sheet draft', () => {
       },
     });
     const value = await executeOk(runner, 'sheet_draft', draftInput);
-    expect(value.promptVersion).toBe('sheet-draft.v3');
+    expect(value.promptVersion).toBe('sheet-draft.v4');
     expect(fake.requests.map((request) => schemaOf(request))).toEqual([
       'sheet_draft_criterion',
       'sheet_draft_criterion',
@@ -525,5 +525,50 @@ describe('runner', () => {
     const result = await runner.execute({ kind: 'sheet_draft', input: draftInput });
     expect(result).toMatchObject({ ok: false, reason: 'disabled' });
     expect(fake.requests).toEqual([]);
+  });
+
+  it('execute returns the text model name', async () => {
+    const { runner } = await runnerWith({ objects: { quality_check: { issues: [] } } });
+    const result = await executeOk(runner, 'quality_check', {
+      text: '12.03.2026 terminowo pracuje.',
+      criterion: null,
+    });
+    expect(result.model).toBe('bielik-test');
+  });
+
+  // Low probabilities everywhere: Bielik-One answers and the text model is not asked.
+  const lowNoul = {
+    type: 'noul',
+    noul: 0.1,
+    probabilities: { true: 0.1, false: 0.9 },
+    confidence: 0.9,
+  };
+  const lowSignals = {
+    answers: {
+      sentiment: {
+        type: 'choice',
+        choice: 'neutral',
+        probabilities: { negative: 0.1, neutral: 0.8, positive: 0.1 },
+        confidence: 0.8,
+      },
+      overload: lowNoul,
+      engagement_drop: lowNoul,
+      burnout_risk: lowNoul,
+    },
+  };
+  const signalsInput = { notes: [note('n1', 'Przekazał ustalenia zespołowi.')], pastRatings: [] };
+
+  it('hr_signals names both models when Bielik-One is configured', async () => {
+    server = await startFakeServer(modelReplies({ decision: lowSignals }));
+    const runner = createAiRunner({
+      ai: createAi(
+        config(server.baseUrl, {
+          decision: { baseUrl: server.baseUrl, model: 'decision-test', apiKey: null },
+        }),
+      ),
+      legalSearch: unavailableLegalSearch,
+    });
+    const result = await executeOk(runner, 'hr_signals', signalsInput);
+    expect(result.model).toBe('bielik-test + decision-test');
   });
 });

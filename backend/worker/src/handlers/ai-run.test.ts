@@ -132,9 +132,18 @@ describe('ai.run handler', () => {
     expect(await handler.run({ runId: RUN }, context())).toEqual({ status: 'done' });
     expect(store.state).toBe('done');
     expect(store.outcome).toMatchObject({
-      promptVersion: 'sheet-draft.v3',
+      promptVersion: 'sheet-draft.v4',
       output: { status: 'draft', ratings: [{ criterionId: 'communication', points: 7 }] },
     });
+  });
+
+  it('stores the model that produced the result', async () => {
+    const store = new InMemoryStore('sheet_draft', draftInput);
+    const finish = vi.spyOn(store, 'finish');
+    const runner = await fakeRunner({ objects: draftReply });
+    const handler = createAiRunHandler(() => ({ store, runner }));
+    expect(await handler.run({ runId: RUN }, context())).toEqual({ status: 'done' });
+    expect(finish).toHaveBeenCalledWith(RUN, expect.objectContaining({ model: 'bielik-test' }));
   });
 
   it('writes throttled progress while the model streams and keeps the token count', async () => {

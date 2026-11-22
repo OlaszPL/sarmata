@@ -57,7 +57,7 @@ describe('sheet PDF', () => {
         events: [
           approval('signature_refused', 1, '2026-06-20', {
             place: 'Kraków',
-            refusalNote: 'Oceniany odmówił podpisu.',
+            refusalNote: 'Osoba oceniana odmówiła podpisu.',
             witnesses: ['Anna Świadek'],
           }),
         ],
