@@ -183,6 +183,7 @@ export {
   createAccountAdministration,
 } from './accounts/account-administration';
 export {
+  type AccountDirectoryEntry,
   type AccountsService,
   type AccountsServiceDependencies,
   type EndMembershipResult,

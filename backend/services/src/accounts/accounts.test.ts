@@ -186,4 +186,61 @@ describe('accounts service', () => {
     );
     await expect(service.changeRole('a', 'hr')).rejects.toMatchObject({ code: 'last_admin' });
   });
+
+  describe('directory', () => {
+    const member = (
+      accountId: string,
+      role: 'evaluator' | 'hr' | 'admin',
+      endedOn: string | null,
+      lastName: string,
+      firstName: string,
+    ) => ({
+      accountId,
+      role,
+      endedOn,
+      email: `${accountId}@urzad.test`,
+      firstName,
+      lastName,
+    });
+    const serviceFor = (
+      role: 'evaluator' | 'hr' | 'admin',
+      endedOn: string | null = '2026-11-01',
+    ) =>
+      createAccountsService({
+        repository: {
+          ...repository(),
+          list: () =>
+            Promise.resolve([
+              member('a-hr', 'hr', null, 'Zawisza', 'Hanna'),
+              member('a-admin', 'admin', null, 'Adamska', 'Anna'),
+              member('a-ev', 'evaluator', endedOn, 'Kowalski', 'Jan'),
+            ]),
+        },
+        invitations: invitations(),
+        current: () => Promise.resolve({ officeId: 'o1', role }),
+        today: () => '2026-11-22',
+      });
+
+    it('directory lists active accounts with role and name only for hr', async () => {
+      await expect(serviceFor('hr').directory()).resolves.toStrictEqual([
+        { accountId: 'a-admin', role: 'admin', firstName: 'Anna', lastName: 'Adamska' },
+        { accountId: 'a-hr', role: 'hr', firstName: 'Hanna', lastName: 'Zawisza' },
+      ]);
+    });
+
+    it('directory is allowed for admin', async () => {
+      await expect(serviceFor('admin').directory()).resolves.toHaveLength(2);
+    });
+
+    it('directory is forbidden for an evaluator', async () => {
+      await expect(serviceFor('evaluator').directory()).rejects.toMatchObject({
+        code: 'forbidden',
+      });
+    });
+
+    it('directory keeps an account whose membership ends in the future', async () => {
+      const entries = await serviceFor('hr', '2026-12-01').directory();
+      expect(entries.map((entry) => entry.accountId)).toEqual(['a-admin', 'a-ev', 'a-hr']);
+    });
+  });
 });
