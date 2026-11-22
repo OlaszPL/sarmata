@@ -34,7 +34,8 @@ export function InboxTable({
           cell: (entry) => (
             <Link
               href={entry.href}
-              className="font-heading text-link leading-[normal] font-semibold underline"
+              // relative: the sr-only text is absolute and would escape the scrolling table otherwise.
+              className="font-heading text-link relative leading-[normal] font-semibold underline"
             >
               {entry.employeeName}
               <span className="sr-only">, otwórz sprawę</span>
@@ -73,7 +74,7 @@ export function InboxTable({
                 cell: (entry: InboxEntry) => (
                   <form action={markNotificationRead}>
                     <input type="hidden" name="id" value={entry.id} />
-                    <Button type="submit" variant="link">
+                    <Button type="submit" variant="link" className="relative">
                       Oznacz jako przeczytane
                       <span className="sr-only">
                         : {entry.employeeName}, {entry.title}

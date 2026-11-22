@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AppShell } from '@sarmata/ui';
 import { Statement } from '@/components/accessibility/statement';
+import { A11yTools } from '@/components/shell/a11y-tools';
 import { MemberShell } from '@/components/shell/member-shell';
 import { SiteFooter } from '@/components/shell/site-footer';
 import { currentAccount } from '@/lib/account';
@@ -22,7 +23,7 @@ export default async function AccessibilityStatementPage() {
     );
   }
   return (
-    <AppShell product={product} footer={<SiteFooter publicOnly />}>
+    <AppShell product={product} tools={<A11yTools />} footer={<SiteFooter publicOnly />}>
       <Statement officeName={null} />
     </AppShell>
   );

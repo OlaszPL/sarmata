@@ -44,6 +44,16 @@ describe('inboxView', () => {
     });
   });
 
+  it('uses the singular for a one day lead time', () => {
+    expect(first([item({ leadDays: 1 })]).summary).toBe(
+      'Termin mija 21.11.2028. Przypomnienie 1 dzień przed terminem.',
+    );
+  });
+
+  it('names an employee hidden by RLS', () => {
+    expect(first([item({ employeeName: '' })]).employeeName).toBe('Pracownik bez dostępu');
+  });
+
   it('drops the lead sentence when there is no lead time', () => {
     expect(first([item({ leadDays: null })]).summary).toBe('Termin mija 21.11.2028.');
   });
@@ -69,15 +79,15 @@ describe('inboxView', () => {
     expect(
       first([item({ kind: 'objection_decision', category: 'task', slot: 'objectionDecision' })])
         .summary,
-    ).toBe('Rozpatrz sprzeciw do 21.11.2028.');
+    ).toBe('Wpisz rozstrzygnięcie sprzeciwu do 21.11.2028.');
     expect(
       first([item({ kind: 'grade_by_law', category: 'task', slot: 'gradeByLawGrant' })]).summary,
-    ).toBe('Przyznaj stopień z mocy prawa do 21.11.2028.');
+    ).toBe('Przyznaj stopień z mocy prawa w rejestrze kadr do 21.11.2028.');
   });
 
   it('links to the case tab that holds the action', () => {
     expect(first([item({ slot: 'objectionDecision' })]).href).toBe('/oceny/e1/zdarzenia');
-    expect(first([item({ slot: 'gradeByLawGrant' })]).href).toBe('/oceny/e1/zdarzenia');
+    expect(first([item({ slot: 'gradeByLawGrant' })]).href).toBe('/oceny/e1');
     expect(first([item({ slot: 'startingInterview' })]).href).toBe('/oceny/e1/czesc-1');
     expect(first([item({ slot: 'reevaluationAfterNegative' })]).href).toBe('/oceny/e1');
   });

@@ -48,7 +48,7 @@ export function Statement({ officeName }: { officeName: string | null }) {
       <div className="space-y-0 [&_p+p]:mt-4">
         <Section title="Wstęp">
           <Prose id="a11y-wstep">
-            <span id="a11y-podmiot">{officeName ?? 'Urząd, który korzysta z aplikacji'}</span>{' '}
+            <span id="a11y-podmiot">{officeName ?? 'Urząd korzystający z aplikacji'}</span>{' '}
             zobowiązuje się zapewnić dostępność cyfrową aplikacji Sarmata zgodnie z ustawą z dnia 4
             kwietnia 2019 r. o dostępności cyfrowej stron internetowych i aplikacji mobilnych
             podmiotów publicznych.
@@ -123,10 +123,13 @@ export function Statement({ officeName }: { officeName: string | null }) {
           </BulletList>
         </Section>
 
-        <Section title="Informacje zwrotne i dane kontaktowe" id="a11y-kontakt">
+        <Section
+          title={<span id="a11y-kontakt">Informacje zwrotne i dane kontaktowe</span>}
+          id="kontakt"
+        >
           <Prose>
-            Jeśli napotkasz barierę, napisz do koordynatora do spraw dostępności w swoim urzędzie.
-            Dane kontaktowe koordynatora są w deklaracji dostępności urzędu, opublikowanej w jego
+            Jeśli napotkasz barierę, napisz do osoby, która koordynuje sprawy dostępności w twoim
+            urzędzie. Jej dane kontaktowe są w deklaracji dostępności urzędu, opublikowanej w jego
             BIP.
           </Prose>
           <Prose>
@@ -135,7 +138,10 @@ export function Statement({ officeName }: { officeName: string | null }) {
           </Prose>
         </Section>
 
-        <Section title="Procedura wnioskowo-skargowa" id="a11y-procedura">
+        <Section
+          title={<span id="a11y-procedura">Procedura wnioskowo-skargowa</span>}
+          id="procedura"
+        >
           <Prose>
             Możesz zażądać zapewnienia dostępności cyfrowej aplikacji Sarmata lub jej elementu.
             Jeśli urząd nie może zapewnić dostępności elementu, możesz zażądać udostępnienia go w
@@ -177,14 +183,20 @@ export function Statement({ officeName }: { officeName: string | null }) {
           </Prose>
         </Section>
 
-        <Section title="Dostępność architektoniczna" id="a11y-architektura">
+        <Section
+          title={<span id="a11y-architektura">Dostępność architektoniczna</span>}
+          id="architektura"
+        >
           <Prose>
             Aplikacja działa w sieci urzędu. Opis dostępności architektonicznej budynków jest w
             deklaracji dostępności urzędu.
           </Prose>
         </Section>
 
-        <Section title="Tłumacz języka migowego" id="a11y-komunikacja">
+        <Section
+          title={<span id="a11y-komunikacja">Tłumacz języka migowego</span>}
+          id="komunikacja"
+        >
           <Prose>
             Aplikacja nie ma tłumacza języka migowego online. Informację o tłumaczu przy kontakcie z
             urzędem podaje deklaracja urzędu.

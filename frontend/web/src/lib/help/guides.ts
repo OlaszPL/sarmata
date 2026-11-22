@@ -71,11 +71,11 @@ export const guides: readonly Guide[] = [
         body: 'Zmianę osoby oceniającej i długotrwałą nieobecność wpisz w zakładce Zdarzenia sprawy. Nieobecność wstrzymuje albo przesuwa termin.',
       },
       {
-        title: 'Rozpatrz sprzeciw w 14 dni',
-        body: 'Wpisz sprzeciw z datą, wniesiony w 7 dni od zapoznania. Dyrektor generalny ma 14 dni, wynik to nieuwzględnienie, zmiana oceny albo ponowne sporządzenie.',
+        title: 'Wpisz sprzeciw i rozstrzygnięcie dyrektora generalnego',
+        body: 'Wpisz datę wniesienia sprzeciwu. Osoba oceniana ma na niego 7 dni od zapoznania. Dyrektor generalny rozstrzyga w 14 dni, wynik to nieuwzględnienie, zmiana oceny albo ponowne sporządzenie.',
       },
       {
-        title: 'Przyznaj stopień z mocy prawa',
+        title: 'Przyznaj stopień z mocy prawa w rejestrze kadr',
         body: 'Po dwóch kolejnych ocenach na dwóch najwyższych poziomach masz 30 dni na przyznanie wyższego stopnia. Zadanie zamyka się po wpisie przyznania.',
       },
       {

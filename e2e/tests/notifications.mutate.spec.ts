@@ -17,17 +17,29 @@ test('marks notifications as read and updates the bell', async ({ page }) => {
     .getByRole('button', { name: /^Oznacz jako przeczytane/ })
     .first()
     .click();
-  await expect(page.getByRole('status')).toContainText('Oznaczono jako przeczytane.');
+  await expect(page.getByRole('main').getByRole('status')).toContainText(
+    'Oznaczono jako przeczytane.',
+  );
   await expect(
-    page.getByRole('link', { name: `Powiadomienia, nieprzeczytane: ${before - 1}` }),
+    page.getByRole('link', { name: `Powiadomienia, nieprzeczytane: ${before - 1}`, exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole('heading', { level: 2, name: 'Przeczytane' })).toBeVisible();
-  await expect(page.getByRole('table', { name: 'Przeczytane powiadomienia' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Przeczytane', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('table', { name: 'Przeczytane powiadomienia', exact: true }),
+  ).toBeVisible();
 
   if (before > 1) {
-    await page.getByRole('button', { name: 'Oznacz wszystkie jako przeczytane' }).click();
-    await expect(page.getByRole('status')).toContainText('Oznaczono wszystkie jako przeczytane.');
+    await page
+      .getByRole('button', { name: 'Oznacz wszystkie jako przeczytane', exact: true })
+      .click();
+    await expect(page.getByRole('main').getByRole('status')).toContainText(
+      'Oznaczono wszystkie jako przeczytane.',
+    );
   }
-  await expect(page.getByRole('link', { name: 'Powiadomienia, nieprzeczytane: 0' })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Powiadomienia, nieprzeczytane: 0', exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('banner').getByText(/^\d+$/)).toHaveCount(0);
 });

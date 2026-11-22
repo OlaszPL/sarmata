@@ -32,7 +32,7 @@ test('statement is complete, with iso dates and the RPO link, for a visitor', as
   await expect(page.locator('main h2')).toHaveText(SECTIONS);
   for (const id of DATE_IDS) await expect(page.locator(`#${id}`)).toHaveText(/^\d{4}-\d{2}-\d{2}$/);
   await expect(page.locator('#a11y-status')).toContainText('częściowo zgodna');
-  await expect(page.locator('#a11y-podmiot')).toHaveText('Urząd, który korzysta z aplikacji');
+  await expect(page.locator('#a11y-podmiot')).toHaveText('Urząd korzystający z aplikacji');
   await expect(page.locator('#a11y-rpo')).toHaveAttribute('href', 'https://bip.brpo.gov.pl/');
   await expectNoViolations(page);
 });

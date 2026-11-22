@@ -31,6 +31,9 @@ export interface InboxView {
   resolved: number;
 }
 
+/** Shown when RLS hides the employee, for example after a change of evaluator. */
+const NO_ACCESS_NAME = 'Pracownik bez dostępu';
+
 const slotLabels: Record<DeadlineSlot, string> = {
   startingInterview: 'Rozmowa rozpoczynająca',
   startingInterviewAfterNegative: 'Rozmowa rozpoczynająca po ocenie negatywnej',
@@ -53,8 +56,10 @@ function hrefFor(slot: DeadlineSlot, evaluationId: string): string {
     case 'objection':
     case 'objectionDecision':
     case 'labourCourtAppeal':
-    case 'gradeByLawGrant':
       return routes.evaluationEvents(evaluationId);
+    // No screen records the grant yet, the case overview explains where hr does it.
+    case 'gradeByLawGrant':
+      return routes.evaluation(evaluationId);
     default:
       return routes.evaluation(evaluationId);
   }
@@ -65,13 +70,13 @@ function summaryFor(item: InboxItem, due: string): string {
     case 'deadline_reminder':
       return item.leadDays === null
         ? `Termin mija ${due}.`
-        : `Termin mija ${due}. Przypomnienie ${item.leadDays} dni przed terminem.`;
+        : `Termin mija ${due}. Przypomnienie ${item.leadDays} ${item.leadDays === 1 ? 'dzień' : 'dni'} przed terminem.`;
     case 'deadline_overdue':
       return `Termin minął ${due}.`;
     case 'objection_decision':
-      return `Rozpatrz sprzeciw do ${due}.`;
+      return `Wpisz rozstrzygnięcie sprzeciwu do ${due}.`;
     case 'grade_by_law':
-      return `Przyznaj stopień z mocy prawa do ${due}.`;
+      return `Przyznaj stopień z mocy prawa w rejestrze kadr do ${due}.`;
   }
 }
 
@@ -87,7 +92,7 @@ function entryOf(item: InboxItem, today: CalendarDate): InboxEntry {
   return {
     id: item.id,
     group,
-    employeeName: item.employeeName,
+    employeeName: item.employeeName.trim() === '' ? NO_ACCESS_NAME : item.employeeName,
     title: slotLabels[item.slot],
     summary: summaryFor(item, due),
     kindLabel: item.kind === 'deadline_reminder' ? 'Przypomnienie' : 'Zadanie',

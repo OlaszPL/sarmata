@@ -30,7 +30,7 @@ test.describe('notifications inbox', () => {
   test('hr sees an empty inbox', async ({ page }) => {
     await signIn(page, demoAccount('hr'));
     await page.goto('/powiadomienia');
-    await expect(page.getByRole('heading', { name: 'Nie masz powiadomień' })).toBeVisible();
+    await expect(page.getByText('Nie masz powiadomień', { exact: true })).toBeVisible();
   });
 
   test('admin sees a notice and no table', async ({ page }) => {

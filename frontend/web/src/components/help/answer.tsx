@@ -9,6 +9,8 @@ interface AnswerProps {
   state: QuestionState;
   /** Evaluator and hr decide about the answer, the admin only reads. */
   canDecide: boolean;
+  /** The last decision could not be saved. */
+  decisionFailed: boolean;
 }
 
 const TIMEOUT_MESSAGE =
@@ -46,7 +48,7 @@ function DecisionForm({
   );
 }
 
-function Body({ runId, question, state, canDecide }: AnswerProps) {
+function Body({ runId, question, state, canDecide, decisionFailed }: AnswerProps) {
   switch (state.kind) {
     case 'waiting':
       return (
@@ -81,8 +83,12 @@ function Body({ runId, question, state, canDecide }: AnswerProps) {
     case 'done':
       return (
         <div className="grid gap-4">
+          {decisionFailed ? (
+            <Notice tone="error" role="alert">
+              <p>Nie udało się zapisać oceny odpowiedzi. Spróbuj ponownie.</p>
+            </Notice>
+          ) : null}
           <AiSuggestion
-            title="Odpowiedź asystenta"
             sources={
               state.sources.length > 0 ? (
                 <section aria-labelledby="zrodla" className="grid gap-2">
@@ -100,10 +106,10 @@ function Body({ runId, question, state, canDecide }: AnswerProps) {
                           {source.title}, {source.citation}
                         </p>
                         <details>
-                          <summary className="text-link cursor-pointer underline">
+                          <summary className="font-heading text-link cursor-pointer font-medium underline">
                             Pokaż fragment przepisu
                           </summary>
-                          <blockquote className="border-ink mt-2 max-w-[70ch] border-l-[3px] pl-3">
+                          <blockquote className="border-rule mt-2 max-w-[70ch] border-l pl-3">
                             {source.heading ? (
                               <p className="font-heading text-ink font-semibold">
                                 {source.heading}

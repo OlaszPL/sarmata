@@ -91,14 +91,12 @@ export default async function NotificationsPage({
       ) : null}
 
       {items.length === 0 ? (
-        <div className="px-6 py-8 sm:px-10">
-          <EmptyState title="Nie masz powiadomień">
-            <p className="max-w-[70ch]">
-              Tu pojawią się przypomnienia o zbliżających się terminach ocen i zadania po terminie.
-              Sarmata dodaje je raz dziennie.
-            </p>
-          </EmptyState>
-        </div>
+        <EmptyState title="Nie masz powiadomień">
+          <p className="max-w-[70ch]">
+            Tu pojawią się przypomnienia o zbliżających się terminach ocen i zadania po terminie.
+            Sarmata dodaje je raz dziennie.
+          </p>
+        </EmptyState>
       ) : (
         <>
           <Section

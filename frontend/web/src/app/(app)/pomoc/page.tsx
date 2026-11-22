@@ -18,7 +18,15 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
   const params = await searchParams;
   const services = servicesFor(await createSupabase());
   const isAdmin = account.role === 'admin';
-  const settings = isAdmin ? null : await services.officeSettings.get();
+  let settings: Awaited<ReturnType<typeof services.officeSettings.get>> | null = null;
+  if (!isAdmin) {
+    try {
+      settings = await services.officeSettings.get();
+    } catch (error) {
+      // The guides stay usable, the AI state is unknown and `ai.start` answers `ai_disabled` if needed.
+      console.error('pomoc: office settings failed', error);
+    }
+  }
   const aiOff = settings?.aiEnabled === false;
   const tresc = single(params.tresc).slice(0, QUESTION_MAX);
 
@@ -50,11 +58,6 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
           ) : (
             <AskForm defaultQuestion={tresc} />
           )}
-          {params.blad === '1' ? (
-            <Notice tone="error" role="status">
-              <p>Nie udało się zapisać oceny odpowiedzi. Spróbuj ponownie.</p>
-            </Notice>
-          ) : null}
           {asked.kind === 'missing' ? (
             <Notice tone="warning" role="status">
               <p>Nie znaleziono tego pytania. Zadaj je jeszcze raz.</p>
@@ -66,6 +69,7 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
               question={asked.question}
               state={asked.state}
               canDecide={!isAdmin}
+              decisionFailed={params.blad === '1'}
             />
           ) : null}
         </div>
