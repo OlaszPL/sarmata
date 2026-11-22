@@ -36,7 +36,7 @@ test.describe('hr panel as hr', () => {
     });
   }
 
-  for (const route of ['/kadry/harmonogram', '/kadry/statystyki']) {
+  for (const route of ['/kadry/harmonogram', '/kadry/statystyki', '/kadry/rejestr']) {
     test(`${route} fits a narrow screen`, async ({ page }) => {
       await page.goto(route);
       await page.setViewportSize({ width: 400, height: 900 });
@@ -90,6 +90,9 @@ test.describe('hr panel as hr', () => {
     await expect(table.getByText('Nowy pracownik')).toBeVisible();
     await expect(table.getByText('Błąd', { exact: true })).toBeVisible();
     await expect(table.getByText('Wymaga decyzji')).toBeVisible();
+    await expect(
+      table.getByText('Data nawiązania stosunku pracy: nieprawidłowa wartość'),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Zaimportuj pracowników' })).toBeVisible();
     await expectNoViolations(page);
 

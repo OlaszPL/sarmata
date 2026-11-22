@@ -34,6 +34,9 @@ test.describe('grade grant', () => {
     const summary = errorSummary(page, 'Nie udało się przyznać stopnia');
     await expect(summary).toBeVisible();
     await expect(summary).toContainText('Nowy stopień musi być wyższy');
+    // What was typed stays in the form, the selects included.
+    await expect(page.getByLabel('Pracownik')).not.toHaveValue('');
+    await expect(page.getByLabel('Nowy stopień')).toHaveValue('4');
     await expect(page).toHaveTitle(/^Błąd: /);
     await expectNoViolations(page);
   });
@@ -52,6 +55,7 @@ test.describe('supervisor', () => {
     const summary = errorSummary(page, 'Nie udało się zmienić przełożonego');
     await expect(summary).toBeVisible();
     await expect(summary).toContainText('Ta osoba podlega już temu pracownikowi');
+    await expect(page.getByLabel('Przełożony')).toHaveValue(/.+/);
     await expect(page).toHaveTitle(/^Błąd: /);
   });
 

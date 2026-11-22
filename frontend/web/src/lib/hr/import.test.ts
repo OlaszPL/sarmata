@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { importFields } from '@sarmata/services';
-import { actionLabels, decisionsFromForm, importFieldLabels, mappingFromForm } from './import';
+import {
+  actionLabels,
+  decisionsFromForm,
+  importFieldLabels,
+  mappingFromForm,
+  rowErrorText,
+} from './import';
 
 function form(entries: Record<string, string>): FormData {
   const data = new FormData();
@@ -41,5 +47,23 @@ describe('labels', () => {
   it('cover every proposed action with text', () => {
     for (const { label } of Object.values(actionLabels)) expect(label).not.toBe('');
     expect(Object.keys(actionLabels)).toHaveLength(4);
+  });
+});
+
+describe('rowErrorText', () => {
+  it('names the field in Polish instead of the English backend message', () => {
+    expect(rowErrorText({ field: 'employmentStart', message: 'invalid date nie wiem' })).toBe(
+      'Data nawiązania stosunku pracy: nieprawidłowa wartość',
+    );
+  });
+
+  it('explains a repeated e-mail', () => {
+    expect(
+      rowErrorText({ field: 'email', message: 'The e-mail repeats earlier in the file' }),
+    ).toBe('Adres e-mail powtarza się wcześniej w pliku');
+  });
+
+  it('falls back to the row when no field is known', () => {
+    expect(rowErrorText({ field: null, message: 'whatever' })).toBe('Nieprawidłowe dane w wierszu');
   });
 });

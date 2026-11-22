@@ -52,3 +52,18 @@ export function decisionsFromForm(formData: FormData): Record<number, RowDecisio
   }
   return decisions;
 }
+
+/** Failed rows carry only English backend messages, so the result list says what to do instead. */
+export const FAILED_ROW_TEXT = 'nie zapisano, popraw dane w pliku i zaimportuj go ponownie';
+
+/**
+ * A row error for the user. The backend message is English and meant for developers, so only its
+ * field is shown, plus the one case hr can act on without the field (a repeated e-mail).
+ */
+export function rowErrorText(error: RowPreview['errors'][number]): string {
+  if (error.field === null) return 'Nieprawidłowe dane w wierszu';
+  if (error.field === 'email' && error.message.includes('repeats')) {
+    return 'Adres e-mail powtarza się wcześniej w pliku';
+  }
+  return `${importFieldLabels[error.field]}: nieprawidłowa wartość`;
+}

@@ -63,7 +63,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Sea
       title="Rejestr kadr"
       meta="Odwołania do sądu pracy po nieuwzględnionym sprzeciwie i stopnie służbowe urzędników."
     >
-      <div className="grid gap-8">
+      <div className="grid min-w-0 grid-cols-1 gap-8">
         <Section title="Odwołania do sądu pracy" id="odwolania">
           <DataTable
             caption="Sprawy z nieuwzględnionym sprzeciwem"
@@ -114,7 +114,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Sea
         </Section>
 
         <Section title="Stopnie służbowe" id="stopien">
-          <div className="grid gap-8">
+          <div className="grid min-w-0 grid-cols-1 gap-8">
             <GradeGrantForm
               employees={servants.map((e) => ({
                 value: e.id,

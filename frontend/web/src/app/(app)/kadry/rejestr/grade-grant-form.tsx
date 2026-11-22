@@ -1,6 +1,5 @@
 'use client';
 
-import { useActionState } from 'react';
 import {
   DateInput,
   ErrorSummary,
@@ -10,6 +9,7 @@ import {
   Select,
   SubmitButton,
 } from '@sarmata/ui';
+import { useFormRound } from '@/components/hr/use-form-round';
 import { useErrorTitle } from '@/components/use-error-title';
 import { type FormState } from '@/lib/form-action';
 import { recordGradeGrant } from './actions';
@@ -43,10 +43,7 @@ export function GradeGrantForm({
   evaluations: readonly GradeGrantOption[];
   defaults: GradeGrantDefaults;
 }) {
-  const [state, formAction] = useActionState<FormState, FormData>(recordGradeGrant, {
-    values: {},
-    fieldErrors: {},
-  });
+  const [state, formAction] = useFormRound(recordGradeGrant);
 
   const errors = FIELDS.flatMap((fieldId) => {
     const message = state.fieldErrors[fieldId];
@@ -65,7 +62,7 @@ export function GradeGrantForm({
     state.ok ? '' : pristine ? initial : text(state.values, key, '');
 
   return (
-    <form action={formAction} noValidate className="grid max-w-[46rem] gap-6">
+    <form key={state.round} action={formAction} noValidate className="grid max-w-[46rem] gap-6">
       {state.ok ? (
         <Notice tone="success" role="status">
           Zapisano wpis w rejestrze.

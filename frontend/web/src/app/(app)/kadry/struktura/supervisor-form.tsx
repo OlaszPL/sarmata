@@ -1,10 +1,9 @@
 'use client';
 
-import { useActionState } from 'react';
 import Link from 'next/link';
 import { Button, ErrorSummary, Field, Select, SubmitButton } from '@sarmata/ui';
+import { useFormRound } from '@/components/hr/use-form-round';
 import { useErrorTitle } from '@/components/use-error-title';
-import { type FormState } from '@/lib/form-action';
 import { routes } from '@/lib/routes';
 import { changeSupervisor } from './actions';
 
@@ -23,10 +22,7 @@ export function SupervisorForm({
   currentSupervisorId: string | null;
   options: readonly SupervisorOption[];
 }) {
-  const [state, formAction] = useActionState<FormState, FormData>(changeSupervisor, {
-    values: {},
-    fieldErrors: {},
-  });
+  const [state, formAction] = useFormRound(changeSupervisor);
 
   const fieldError = state.fieldErrors.supervisorId;
   const errors = fieldError ? [{ fieldId: 'supervisorId', message: fieldError }] : [];
@@ -39,7 +35,7 @@ export function SupervisorForm({
       : (currentSupervisorId ?? '');
 
   return (
-    <form action={formAction} noValidate className="grid max-w-[46rem] gap-6">
+    <form key={state.round} action={formAction} noValidate className="grid max-w-[46rem] gap-6">
       {failed ? (
         <ErrorSummary title="Nie udało się zmienić przełożonego" errors={errors}>
           {state.formError ? <p className="max-w-[70ch]">{state.formError}</p> : null}

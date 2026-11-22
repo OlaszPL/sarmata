@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { ImportField, RowPreview } from '@sarmata/services';
 import {
@@ -18,7 +18,13 @@ import {
   type DataTableColumn,
 } from '@sarmata/ui';
 import { useErrorTitle } from '@/components/use-error-title';
-import { actionLabels, importFieldKeys, importFieldLabels } from '@/lib/hr/import';
+import {
+  FAILED_ROW_TEXT,
+  actionLabels,
+  importFieldKeys,
+  importFieldLabels,
+  rowErrorText,
+} from '@/lib/hr/import';
 import { routes } from '@/lib/routes';
 import { commitImport, dryRunImport, proposeImportMapping, type ImportState } from './actions';
 
@@ -84,7 +90,9 @@ export function ImportWizard() {
     setFileError(undefined);
     const data = new FormData();
     data.set('step', 'restart');
-    formAction(data);
+    startTransition(() => {
+      formAction(data);
+    });
   };
 
   return (
@@ -137,7 +145,9 @@ function FileStep({
           setFileError(undefined);
           formData.set('csv', await file.text());
           formData.set('step', 'file');
-          formAction(formData);
+          startTransition(() => {
+            formAction(formData);
+          });
         }}
       >
         {error !== undefined || items.length > 0 ? (
@@ -246,10 +256,7 @@ function PreviewStep({
         ) : (
           <ul className="grid gap-1">
             {row.errors.map((error) => (
-              <li key={`${error.field ?? ''}:${error.message}`}>
-                {error.field ? `${importFieldLabels[error.field]}: ` : ''}
-                {error.message}
-              </li>
+              <li key={`${error.field ?? ''}:${error.message}`}>{rowErrorText(error)}</li>
             ))}
           </ul>
         ),
@@ -356,7 +363,7 @@ function DoneStep({
                 <ul className="mt-1 grid gap-1 pl-5">
                   {report.failed.map((failure) => (
                     <li key={failure.row}>
-                      Wiersz {failure.row}: {failure.message}
+                      Wiersz {failure.row}: {FAILED_ROW_TEXT}
                     </li>
                   ))}
                 </ul>
