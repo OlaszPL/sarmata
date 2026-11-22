@@ -180,7 +180,7 @@ Pracownicy i notatki:
 
 - `/pracownicy`: lista pracowników z wyszukiwaniem, u oceniającego zakres „moi” albo wszyscy w urzędzie (`?zakres=wszyscy`)
 - `/pracownicy/nowy`: nowy pracownik z kontrolą podobnych osób (oceniający i kadry)
-- `/pracownicy/[id]`: karta pracownika: przebieg ocen, zmiana w kryteriach, notatki z filtrem rodzaju i wydźwięku (`?rodzaj=`, `?znak=`), formularz notatki (`?notatka=nowa` albo id), historia zmian notatki (`?historia=`)
+- `/pracownicy/[id]`: karta pracownika: przebieg ocen, zmiana w kryteriach, notatki z filtrem rodzaju i wydźwięku (`?rodzaj=`, `?znak=`), formularz notatki (`?notatka=nowa` albo id), historia zmian notatki (`?historia=`), panel HR partnera (sygnały przeciążenia i wypalenia z notatek, moment na docenienie, każdy wynik jako sugestia AI), blok „Sprawy kadrowe” dla kadr (ocena archiwalna, ustanie zatrudnienia, archiwum teczek ZIP), po dodaniu pracownika `?dodano=1`
 - `/notatki`: własne notatki oceniającego i kadr, nowa notatka ze strażnikiem danych wrażliwych (słownik od razu, AI przez odpytywanie, zapis po potwierdzeniu ostrzeżeń), lista z filtrem `?pracownik=<id>`, edycja `?notatka=<id>`, historia zmian `?historia=<id>`, po zapisie `?zapisano=1`
 
 Kadry:

@@ -4,6 +4,7 @@ import { signIn } from '../src/session';
 
 // These tests save notes, so they run after the read-only ones (project `mutating`).
 // The AI worker does not run during e2e, so every check waits for "Zapisz bez czekania na AI".
+// A worker on the shared database could finish the check before that click, run them without one.
 test.describe('saving notes', () => {
   test.beforeEach(async ({ page }) => {
     await signIn(page, demoAccount('evaluator'));
