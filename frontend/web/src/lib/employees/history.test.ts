@@ -175,7 +175,7 @@ describe('employeeHistory criteria', () => {
 describe('employeeHistory stats', () => {
   it('shows an empty state without evaluations', () => {
     expect(employeeHistory(base).stats).toEqual([
-      { label: 'Ostatnia ocena', value: 'Brak', hint: 'Pracownik nie ma jeszcze ocen' },
+      { label: 'Ostatnia ocena', value: 'Brak', hint: 'Ta osoba nie ma jeszcze ocen' },
     ]);
   });
 

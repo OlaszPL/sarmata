@@ -2,9 +2,14 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { PageHero } from '@sarmata/ui';
 import { type CardData } from '@/lib/employees/load-card';
-import { employmentBasisLabels, serviceStatusLabels } from '@/lib/employees/labels';
+import {
+  employeeListTitle,
+  employmentBasisLabels,
+  serviceStatusLabels,
+} from '@/lib/employees/labels';
 import { formatDate, romanNumeral } from '@/lib/format';
 import { routes } from '@/lib/routes';
+import { NOTE_FORM_ANCHOR } from './card-notes';
 
 /** The white block on navy from the mockup: the one main action of the card. */
 const mainActionClasses =
@@ -45,8 +50,12 @@ function metaLine({ employee, supervisorName }: CardData): string {
 export function CardHero({ data }: { data: CardData }) {
   const { employee, account, notes, currentEvaluationId, history } = data;
   const name = `${employee.firstName} ${employee.lastName}`;
+  // A fixed term contract has no periodic evaluation, and nobody evaluates their own record.
   const canStart =
-    (account.role === 'evaluator' || account.role === 'hr') && employee.employmentEndedOn === null;
+    (account.role === 'evaluator' || account.role === 'hr') &&
+    employee.employmentEndedOn === null &&
+    employee.employmentBasis !== 'fixed_term' &&
+    employee.userId !== account.userId;
   const canAddNote = notes !== null && account.role !== 'admin';
 
   const mainAction = currentEvaluationId ? (
@@ -70,7 +79,7 @@ export function CardHero({ data }: { data: CardData }) {
         {mainAction}
         {canAddNote ? (
           <Link
-            href={`${routes.employee(employee.id)}?notatka=nowa#notatka-formularz`}
+            href={`${routes.employee(employee.id)}?notatka=nowa#${NOTE_FORM_ANCHOR}`}
             className={secondaryActionClasses}
           >
             Dodaj notatkę
@@ -82,7 +91,7 @@ export function CardHero({ data }: { data: CardData }) {
   return (
     <PageHero
       linkAs={Link}
-      crumbs={[{ href: routes.employees, label: 'Moi pracownicy' }]}
+      crumbs={[{ href: routes.employees, label: employeeListTitle(account.role) }]}
       title={name}
       meta={metaLine(data)}
       actions={actions}

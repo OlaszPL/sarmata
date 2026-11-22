@@ -24,18 +24,20 @@ interface AiStartFormProps {
   employeeId: string;
   kind: AiAnalysisKind;
   label: string;
-  variant?: 'primary' | 'secondary' | undefined;
 }
 
-/** One button that starts an AI analysis of this person. A refusal shows as a message below it. */
-export function AiStartForm({ employeeId, kind, label, variant = 'secondary' }: AiStartFormProps) {
+/**
+ * One button that starts an AI analysis of this person. A refusal shows as a message below it. It is
+ * secondary, the card keeps one main button.
+ */
+export function AiStartForm({ employeeId, kind, label }: AiStartFormProps) {
   const [state, formAction] = useActionState(
     startAiAnalysis.bind(null, employeeId, kind),
     initialState,
   );
   return (
     <form action={formAction} className="grid justify-items-start gap-3">
-      <SubmitButton pendingLabel="Uruchamiam analizę" variant={variant}>
+      <SubmitButton pendingLabel="Uruchamiam analizę" variant="secondary">
         {label}
       </SubmitButton>
       <ActionError state={state} />
@@ -49,9 +51,19 @@ interface RejectSignalFormProps {
   signal: string;
 }
 
-/** "Nie zgadzam się z sygnałem": the decision about one signal, logged for the AI usage log. */
+/**
+ * "Nie zgadzam się z sygnałem": the decision about one signal, logged for the AI usage log. The
+ * button turns into the tag "Odrzucono", so the focus moves to the heading of the signal.
+ */
 export function RejectSignalForm({ employeeId, runId, signal }: RejectSignalFormProps) {
-  const [state, formAction] = useActionState(rejectSignal, initialState);
+  const [state, formAction] = useActionState(
+    async (previous: PanelActionState, formData: FormData) => {
+      const result = await rejectSignal(previous, formData);
+      if (!result.error) document.getElementById(`signal-${signal}`)?.focus();
+      return result;
+    },
+    initialState,
+  );
   return (
     <form action={formAction} className="grid justify-items-start gap-2">
       <input type="hidden" name="employeeId" value={employeeId} />

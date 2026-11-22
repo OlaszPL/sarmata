@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { type MemberAccount, servicesFor } from '@sarmata/services';
+import { type MemberAccount, type SimilarEmployee, servicesFor } from '@sarmata/services';
 import {
   Button,
   DataTable,
@@ -14,26 +14,19 @@ import {
 } from '@sarmata/ui';
 import { officeEmployees, requireMember } from '@/lib/account';
 import { type EmployeeRow, employeeRows } from '@/lib/employees/employee-list';
-import { evaluationStatusLabels } from '@/lib/employees/labels';
+import { employeeListTitle } from '@/lib/employees/labels';
+import { statusTag } from '@/lib/evaluations/status-labels';
 import { pluralPl } from '@/lib/format';
 import { routes } from '@/lib/routes';
+import { type SearchParams, single } from '@/lib/search-params';
 import { createSupabase } from '@/lib/supabase';
 
 type Scope = 'mine' | 'all';
-type SearchParams = Record<string, string | string[] | undefined>;
 
 const ALL_PARAM = 'wszyscy';
 
-function listTitle(account: MemberAccount): string {
-  return account.role === 'evaluator' ? 'Moi pracownicy' : 'Pracownicy urzędu';
-}
-
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: listTitle(await requireMember()) };
-}
-
-function single(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value)?.trim() ?? '';
+  return { title: employeeListTitle((await requireMember()).role) };
 }
 
 /** Link to the list with the given scope and search, the scope param only for "all" of an evaluator. */
@@ -49,12 +42,13 @@ const linkClasses = 'font-heading text-link font-medium underline';
 
 function CurrentEvaluation({ row }: { row: EmployeeRow }) {
   if (!row.ended && !row.current) return <span className="text-ink-muted">Brak oceny w toku</span>;
+  const tag = row.current ? statusTag(row.current.status) : null;
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
       {row.ended ? <Tag tone="neutral">Zatrudnienie ustało</Tag> : null}
-      {row.current ? (
+      {row.current && tag ? (
         <>
-          <Tag tone="progress">{evaluationStatusLabels[row.current.status]}</Tag>
+          <Tag tone={tag.tone}>{tag.label}</Tag>
           <Link
             href={routes.evaluation(row.current.evaluationId)}
             aria-label={`Otwórz ocenę, ${row.name}`}
@@ -128,7 +122,7 @@ export default async function EmployeesPage({
   );
   const similar =
     rows.length === 0 && query
-      ? (await services.employees.findSimilar(query)).filter((person) => visible.has(person.id))
+      ? (await similarPeople(services, query)).filter((person) => visible.has(person.id))
       : [];
   const canAdd = account.role === 'evaluator' || account.role === 'hr';
 
@@ -163,7 +157,7 @@ export default async function EmployeesPage({
   return (
     <div className="flex flex-1 flex-col">
       <PageHero
-        title={listTitle(account)}
+        title={employeeListTitle(account.role)}
         meta={`${rows.length} ${pluralPl(rows.length, 'osoba', 'osoby', 'osób')}`}
         actions={
           canAdd ? (
@@ -262,6 +256,19 @@ export default async function EmployeesPage({
       </div>
     </div>
   );
+}
+
+/** "Czy chodzi o" suggestions, none when the lookup fails: the list must still show. */
+async function similarPeople(
+  services: ReturnType<typeof servicesFor>,
+  query: string,
+): Promise<SimilarEmployee[]> {
+  try {
+    return await services.employees.findSimilar(query);
+  } catch (error) {
+    console.warn('employee list: similar people failed to load', error);
+    return [];
+  }
 }
 
 function emptyHint(account: MemberAccount, scope: Scope): string {

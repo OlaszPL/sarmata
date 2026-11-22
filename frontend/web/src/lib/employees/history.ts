@@ -5,8 +5,8 @@ import {
   type RegulationDocument,
 } from '@sarmata/services';
 import { type HeroStat } from '@sarmata/ui';
+import { statusTag } from '@/lib/evaluations/status-labels';
 import { formatDate, formatScore } from '@/lib/format';
-import { evaluationStatusLabels } from './labels';
 
 export interface HistoryRow {
   key: string;
@@ -103,7 +103,7 @@ function viewRow(view: EvaluationView, levelName: (code: string | null) => strin
     key: `evaluation-${view.id}`,
     period: cyclePeriod(view),
     source: open
-      ? `W toku, ${evaluationStatusLabels[view.status]}`
+      ? `W toku, ${statusTag(view.status).label}`
       : approvedOn
         ? `Sporządzona w Sarmacie ${formatDate(approvedOn)}`
         : 'Sporządzona w Sarmacie',
@@ -175,7 +175,7 @@ function statsOf(
     stats.push({
       label: 'Ostatnia ocena',
       value: 'Brak',
-      hint: rows.length === 0 ? 'Pracownik nie ma jeszcze ocen' : 'Pierwsza ocena jest w toku',
+      hint: rows.length === 0 ? 'Ta osoba nie ma jeszcze ocen' : 'Pierwsza ocena jest w toku',
     });
   }
 

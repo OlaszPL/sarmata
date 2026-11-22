@@ -1,11 +1,17 @@
-import {
-  type EmploymentBasis,
-  type EvaluationStatus,
-  type NoteKind,
-  type NoteSign,
-  type PositionKind,
-  type ServiceStatus,
+// Type only: the note form (a client component) reads these labels.
+import type {
+  EmploymentBasis,
+  MemberAccount,
+  NoteKind,
+  NoteSign,
+  PositionKind,
+  ServiceStatus,
 } from '@sarmata/services';
+
+/** Title of the employee list and the crumb back to it. */
+export function employeeListTitle(role: MemberAccount['role']): string {
+  return role === 'evaluator' ? 'Moi pracownicy' : 'Pracownicy urzędu';
+}
 
 export const positionKindLabels: Record<PositionKind, string> = {
   office_head: 'Kierownik urzędu (arkusz A)',
@@ -44,19 +50,6 @@ export const hrSignalLabels: Record<
   overload: 'Możliwe przeciążenie',
   engagement_drop: 'Spadek zaangażowania',
   burnout_risk: 'Ryzyko wypalenia',
-};
-
-/** Short stage names, the same as the strip of the case screens (`caseStages`). */
-export const evaluationStatusLabels: Record<EvaluationStatus, string> = {
-  criteria: 'Kryteria',
-  criteria_awaiting_signature: 'Podpis części I',
-  period: 'Okres oceny',
-  interview: 'Część II',
-  drafted: 'Zapoznanie',
-  delivered: 'Czas na sprzeciw',
-  objection: 'Sprzeciw',
-  closed: 'Zamknięta',
-  interrupted: 'Przerwana',
 };
 
 export const actionFrameworkLabels: Record<'jd_r' | 'hse', string> = {

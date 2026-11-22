@@ -44,7 +44,8 @@ function Signals({
           className={`${block} gap-2`}
         >
           <div className="flex items-end justify-between gap-4">
-            <h3 id={`signal-${signal.name}`} className={subheading}>
+            {/* Takes the focus after "Nie zgadzam się z sygnałem", whose button then goes away. */}
+            <h3 id={`signal-${signal.name}`} tabIndex={-1} className={`${subheading} outline-none`}>
               {signal.label}
             </h3>
             <p className="font-heading text-navy text-[1.875rem] leading-[1.875rem] font-semibold tracking-[-0.0167em]">
@@ -121,6 +122,12 @@ export function HrPartnerPanel({ data, canAnalyse }: HrPartnerPanelProps) {
   let status: ReactNode = null;
   if (state.kind === 'disabled') {
     status = <p className="leading-6">AI jest wyłączone w ustawieniach urzędu.</p>;
+  } else if (state.kind === 'no_access') {
+    status = (
+      <p className="max-w-[70ch] leading-6">
+        Analizy HR partnera czytają autor, kadry i osoba prowadząca otwartą ocenę tej osoby.
+      </p>
+    );
   } else if (state.kind === 'none') {
     status = (
       <>
@@ -129,12 +136,7 @@ export function HrPartnerPanel({ data, canAnalyse }: HrPartnerPanelProps) {
           zaangażowania z pytaniami do rozmowy.
         </p>
         {canAnalyse ? (
-          <AiStartForm
-            employeeId={employeeId}
-            kind="hr_signals"
-            label="Przeanalizuj notatki"
-            variant="primary"
-          />
+          <AiStartForm employeeId={employeeId} kind="hr_signals" label="Przeanalizuj notatki" />
         ) : null}
       </>
     );
@@ -188,7 +190,8 @@ export function HrPartnerPanel({ data, canAnalyse }: HrPartnerPanelProps) {
           <p className="text-ink-muted text-sm leading-5">{HELP}</p>
         </div>
       ) : null}
-      {enabled ? (
+      {/* Without access to the analyses the sentence above covers the appreciation search too. */}
+      {enabled && state.kind !== 'no_access' ? (
         <AppreciationBlock
           employeeId={employeeId}
           model={appreciation}

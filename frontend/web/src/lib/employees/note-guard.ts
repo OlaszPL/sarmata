@@ -1,16 +1,10 @@
-import {
-  NOTE_CHECK_TIMEOUT_MS,
-  type NoteCheck,
-  type NoteCheckAi,
-  type SensitiveDataWarning,
-} from '@sarmata/services';
+import type { NoteCheck, NoteCheckAi, SensitiveDataWarning } from '@sarmata/services';
+import type { AiNote } from './notes';
 
 export const NOTE_GUARD_POLL_MS = 1000;
 
 /** The server marks a run unavailable after the check timeout, the client waits a little longer. */
-const CLIENT_TIMEOUT_MS = NOTE_CHECK_TIMEOUT_MS + 5000;
-
-type AiNote = 'done' | 'dictionary_only' | 'ai_disabled';
+const CLIENT_MARGIN_MS = 5000;
 
 export type NoteGuardState =
   | { phase: 'idle' }
@@ -19,6 +13,8 @@ export type NoteGuardState =
       keywordWarnings: readonly SensitiveDataWarning[];
       runId: string | null;
       startedAt: number;
+      /** Past this time a `tick` ends the check like `unavailable`. */
+      deadline: number;
     }
   | {
       phase: 'review';
@@ -29,11 +25,12 @@ export type NoteGuardState =
   | { phase: 'clear'; aiNote: AiNote };
 
 export type NoteGuardEvent =
-  | { type: 'checked'; check: NoteCheck; now: number }
+  /** `timeoutMs` is `NOTE_CHECK_TIMEOUT_MS` of the server, passed down by the page. */
+  | { type: 'checked'; check: NoteCheck; now: number; timeoutMs: number }
   | { type: 'polled'; ai: NoteCheckAi; now: number }
   /** Every second, past the timeout it ends like `unavailable`. */
   | { type: 'tick'; now: number }
-  /** "Zapisz bez czekania na AI": from `checking` it ends like `unavailable`. */
+  /** "Zapisz bez czekania na AI": from `checking` it ends with the dictionary warnings only. */
   | { type: 'skip_ai' }
   /** After the proposal was accepted, edited or rejected. */
   | { type: 'rewrite_settled' }
@@ -74,13 +71,14 @@ export function noteGuardReducer(state: NoteGuardState, event: NoteGuardEvent): 
     case 'body_changed':
       return { phase: 'idle' };
     case 'checked': {
-      const { check, now } = event;
+      const { check, now, timeoutMs } = event;
       if (check.ai.status === 'pending') {
         return {
           phase: 'checking',
           keywordWarnings: check.keywordWarnings,
           runId: check.ai.runId,
           startedAt: now,
+          deadline: now + timeoutMs + CLIENT_MARGIN_MS,
         };
       }
       return fromAi(check.ai, check.keywordWarnings) ?? state;
@@ -90,11 +88,11 @@ export function noteGuardReducer(state: NoteGuardState, event: NoteGuardEvent): 
         ? (fromAi(event.ai, state.keywordWarnings) ?? state)
         : state;
     case 'tick':
-      return state.phase === 'checking' && event.now - state.startedAt > CLIENT_TIMEOUT_MS
+      return state.phase === 'checking' && event.now > state.deadline
         ? settle(state.keywordWarnings, 'dictionary_only')
         : state;
     case 'skip_ai':
-      return state.phase === 'checking' ? settle(state.keywordWarnings, 'dictionary_only') : state;
+      return state.phase === 'checking' ? settle(state.keywordWarnings, 'skipped') : state;
     case 'rewrite_settled':
       return state.phase === 'review' ? { ...state, rewrite: null } : state;
   }

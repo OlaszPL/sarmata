@@ -44,6 +44,14 @@ describe('hrPartnerModel', () => {
     expect(hrPartnerModel([run({ output })], false, [])).toEqual({ kind: 'disabled' });
   });
 
+  it('has no access when the account does not read the notes', () => {
+    expect(hrPartnerModel(null, true, null)).toEqual({ kind: 'no_access' });
+  });
+
+  it('says AI is off before it talks about access', () => {
+    expect(hrPartnerModel(null, false, null)).toEqual({ kind: 'disabled' });
+  });
+
   it('is running with the previous result', () => {
     const state = hrPartnerModel(
       [run({ id: 'new', status: 'running', finishedAt: null }), run({ id: 'old', output })],
@@ -96,7 +104,6 @@ describe('hrPartnerModel', () => {
       {
         fragment: 'action.0',
         framework: 'Model JD-R',
-        signal: 'Możliwe przeciążenie',
         text: 'Przejrzyj zadania',
       },
     ]);

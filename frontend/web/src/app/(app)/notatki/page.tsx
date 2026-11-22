@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { type Note, type NoteVersion, servicesFor } from '@sarmata/services';
+import { NOTE_CHECK_TIMEOUT_MS, type Note, type NoteVersion, servicesFor } from '@sarmata/services';
 import { Button, EmptyState, Field, Notice, PageHero, Section, Select } from '@sarmata/ui';
 import { NoteForm } from '@/components/notes/note-form';
 import { NoteHistory } from '@/components/notes/note-history';
@@ -10,18 +10,13 @@ import { officeEmployees, requireMember } from '@/lib/account';
 import { employeeRows } from '@/lib/employees/employee-list';
 import { todayInWarsaw } from '@/lib/format';
 import { routes } from '@/lib/routes';
+import { type SearchParams, single } from '@/lib/search-params';
 import { createSupabase } from '@/lib/supabase';
 
 export const metadata: Metadata = { title: 'Notatki' };
 
-type SearchParams = Record<string, string | string[] | undefined>;
-
 const linkClasses = 'font-heading text-link leading-[normal] font-medium underline';
 const FORM_ANCHOR = 'formularz-notatki';
-
-function single(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value)?.trim() ?? '';
-}
 
 /** Notes page link that keeps the employee filter. */
 function notesHref(filter: string, extra: Record<string, string> = {}, hash = ''): string {
@@ -166,6 +161,8 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
               aiEnabled={settings.aiEnabled}
               visibility={settings.evaluationVisibility}
               retentionMonths={settings.notesRetentionMonths}
+              checkTimeoutMs={NOTE_CHECK_TIMEOUT_MS}
+              whoSeesHeadingLevel={3}
             />
           </>
         )}

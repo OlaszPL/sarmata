@@ -1,5 +1,11 @@
 import Link from 'next/link';
-import { type Note, type NoteKind, type NoteSign, type NoteVersion } from '@sarmata/services';
+import {
+  NOTE_CHECK_TIMEOUT_MS,
+  type Note,
+  type NoteKind,
+  type NoteSign,
+  type NoteVersion,
+} from '@sarmata/services';
 import { Button, EmptyState, Field, Notice, Section, Select } from '@sarmata/ui';
 import { NoteForm } from '@/components/notes/note-form';
 import { NoteHistory } from '@/components/notes/note-history';
@@ -7,6 +13,7 @@ import { NoteList } from '@/components/notes/note-list';
 import { type CardData } from '@/lib/employees/load-card';
 import { noteKindLabels, noteSignLabels } from '@/lib/employees/labels';
 import { routes } from '@/lib/routes';
+import { type SearchParams, single } from '@/lib/search-params';
 
 const linkClasses = 'font-heading text-link leading-[normal] font-medium underline';
 export const NOTE_FORM_ANCHOR = 'notatka-formularz';
@@ -15,12 +22,6 @@ const ALL = 'wszystkie';
 export interface CardNoteFilter {
   kind: NoteKind | null;
   sign: NoteSign | null;
-}
-
-type SearchParams = Record<string, string | string[] | undefined>;
-
-function single(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value)?.trim() ?? '';
 }
 
 /** `rodzaj` and `znak` of the card URL, unknown values read as "all". */
@@ -34,7 +35,7 @@ export function cardNoteFilter(params: SearchParams): CardNoteFilter {
 }
 
 /** Card link that keeps the note filter. */
-export function cardHref(
+function cardHref(
   employeeId: string,
   filter: CardNoteFilter,
   extra: Record<string, string> = {},
@@ -119,6 +120,8 @@ export function CardNotes({ data, filter, formParam, history, historyFailed }: C
                 aiEnabled={data.ai.enabled}
                 visibility={data.settings.visibility}
                 retentionMonths={data.settings.retentionMonths}
+                checkTimeoutMs={NOTE_CHECK_TIMEOUT_MS}
+                whoSeesHeadingLevel={4}
               />
             </div>
           ) : null}

@@ -1,4 +1,5 @@
-import { type CalendarDate, calendarDate } from '@sarmata/services';
+// Type only: client components use these helpers, a value import would bundle `@sarmata/services`.
+import type { CalendarDate } from '@sarmata/services';
 
 const TIME_ZONE = 'Europe/Warsaw';
 const MS_PER_DAY = 86_400_000;
@@ -19,7 +20,8 @@ const longParts = new Intl.DateTimeFormat('pl-PL', {
 });
 
 export function todayInWarsaw(now: Date = new Date()): CalendarDate {
-  return calendarDate(isoParts.format(now));
+  // `sv-SE` formats as `rrrr-mm-dd`, always a valid calendar date.
+  return isoParts.format(now) as CalendarDate;
 }
 
 function toUtcMs(d: CalendarDate): number {

@@ -26,9 +26,11 @@ export interface NoteGuard {
 
 /**
  * The sensitive data guard of a note form: the check, the polling of the AI run with its timer and
- * the decisions about the proposal. The form only renders `state`.
+ * the decisions about the proposal. The form only renders `state`. `checkTimeoutMs` is
+ * `NOTE_CHECK_TIMEOUT_MS` of the server, the page passes it so the client bundle stays free of
+ * `@sarmata/services`.
  */
-export function useNoteGuard(employeeId: string): NoteGuard {
+export function useNoteGuard(employeeId: string, checkTimeoutMs: number): NoteGuard {
   const [state, dispatch] = useReducer(noteGuardReducer, { phase: 'idle' });
   const [starting, setStarting] = useState(false);
   /** Bumped by every new check, body change and unmount, so late answers are dropped. */
@@ -92,10 +94,11 @@ export function useNoteGuard(employeeId: string): NoteGuard {
             type: 'checked',
             check: 'error' in result ? { keywordWarnings: [], ai: UNAVAILABLE } : result,
             now: Date.now(),
+            timeoutMs: checkTimeoutMs,
           });
         });
     },
-    [employeeId],
+    [employeeId, checkTimeoutMs],
   );
 
   const skipAi = useCallback(() => {

@@ -1,12 +1,18 @@
-import { type NoteCheck, type SensitiveDataWarning } from '@sarmata/services';
+import type { NoteCheck, SensitiveDataWarning } from '@sarmata/services';
 import { describe, expect, it } from 'vitest';
 import { type NoteGuardState, noteGuardReducer } from './note-guard';
 
 const health: SensitiveDataWarning = { category: 'health', fragment: 'zwolnienie lekarskie' };
 const family: SensitiveDataWarning = { category: 'family', fragment: 'ciąża' };
 
+/** `NOTE_CHECK_TIMEOUT_MS` of the server as the page passes it. */
+const TIMEOUT_MS = 45_000;
+
 function checked(check: NoteCheck, now = 0) {
-  return noteGuardReducer({ phase: 'idle' }, { type: 'checked', check, now });
+  return noteGuardReducer(
+    { phase: 'idle' },
+    { type: 'checked', check, now, timeoutMs: TIMEOUT_MS },
+  );
 }
 
 const pending: NoteCheck = {
@@ -21,6 +27,7 @@ describe('noteGuardReducer', () => {
       keywordWarnings: [health],
       runId: 'run-1',
       startedAt: 1000,
+      deadline: 51_000,
     });
   });
 
@@ -55,7 +62,15 @@ describe('noteGuardReducer', () => {
       phase: 'review',
       warnings: [health],
       rewrite: null,
-      aiNote: 'dictionary_only',
+      aiNote: 'skipped',
+    });
+  });
+
+  it('is clear when the user skips the AI and the dictionary finds nothing', () => {
+    const checking = checked({ keywordWarnings: [], ai: { status: 'pending', runId: 'r' } });
+    expect(noteGuardReducer(checking, { type: 'skip_ai' })).toEqual({
+      phase: 'clear',
+      aiNote: 'skipped',
     });
   });
 
@@ -68,7 +83,7 @@ describe('noteGuardReducer', () => {
     expect(next).toMatchObject({ phase: 'review', aiNote: 'dictionary_only' });
   });
 
-  it('times out after the check limit plus a margin', () => {
+  it('times out after the check limit of the server plus a margin', () => {
     const checking = checked(pending, 0);
     expect(noteGuardReducer(checking, { type: 'tick', now: 50_000 })).toBe(checking);
     const next = noteGuardReducer(checking, { type: 'tick', now: 50_001 });
@@ -76,6 +91,18 @@ describe('noteGuardReducer', () => {
       phase: 'review',
       warnings: [health],
       rewrite: null,
+      aiNote: 'dictionary_only',
+    });
+  });
+
+  it('takes the check limit from the checked event', () => {
+    const checking = noteGuardReducer(
+      { phase: 'idle' },
+      { type: 'checked', check: pending, now: 0, timeoutMs: 1000 },
+    );
+    expect(noteGuardReducer(checking, { type: 'tick', now: 6000 })).toBe(checking);
+    expect(noteGuardReducer(checking, { type: 'tick', now: 6001 })).toMatchObject({
+      phase: 'review',
       aiNote: 'dictionary_only',
     });
   });

@@ -20,24 +20,17 @@ import {
 import { useErrorTitle } from '@/components/use-error-title';
 import { noteKindLabels, noteSignLabels } from '@/lib/employees/labels';
 import type { NoteGuardState } from '@/lib/employees/note-guard';
+import { NOTE_BODY_MAX, aiNoteText } from '@/lib/employees/notes';
 import { pluralPl } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { type NoteFormState, saveNote } from './note-actions';
 import { useNoteGuard } from './use-note-guard';
 
-const BODY_MAX = 5000;
-
-export const sensitiveCategoryLabels: Record<SensitiveDataWarning['category'], string> = {
+const sensitiveCategoryLabels: Record<SensitiveDataWarning['category'], string> = {
   health: 'zdrowie',
   family: 'rodzina',
   religion: 'wyznanie',
   diagnosis: 'diagnoza',
-};
-
-/** What the save tells about a check without the AI model. */
-const aiNoteTexts: Partial<Record<string, string>> = {
-  dictionary_only: 'Sprawdzono tylko słownikiem, bo model AI nie odpowiedział.',
-  ai_disabled: 'AI jest wyłączone w ustawieniach urzędu. Sprawdzono tylko słownikiem.',
 };
 
 const kindOptions = Object.entries<string>(noteKindLabels).map(([value, label]) => ({
@@ -84,8 +77,9 @@ function aiNoteOf(state: NoteGuardState): string {
 function WarningList({ warnings }: { warnings: readonly SensitiveDataWarning[] }) {
   return (
     <ul className="mt-2 grid gap-1">
-      {warnings.map((warning) => (
-        <li key={`${warning.category}-${warning.fragment}`}>
+      {warnings.map((warning, index) => (
+        // The AI result also carries the dictionary hits, so a fragment can repeat.
+        <li key={`${index}-${warning.category}-${warning.fragment}`}>
           <span className="font-heading font-semibold">
             {sensitiveCategoryLabels[warning.category]}
           </span>
@@ -100,16 +94,19 @@ function WarningList({ warnings }: { warnings: readonly SensitiveDataWarning[] }
 function WhoSees({
   visibility,
   retentionMonths,
+  headingLevel,
 }: {
   visibility: 'office' | 'tree';
   retentionMonths: number;
+  headingLevel: 3 | 4;
 }) {
   const headingId = useId();
+  const Heading = headingLevel === 3 ? 'h3' : 'h4';
   return (
     <section aria-labelledby={headingId} className="border-rule grid gap-2 border-t pt-6">
-      <h3 id={headingId} className="text-ink text-xl leading-[normal] font-semibold">
+      <Heading id={headingId} className="text-ink text-xl leading-[normal] font-semibold">
         Kto to zobaczy
-      </h3>
+      </Heading>
       <p className="max-w-[70ch]">
         Ty, kadry i osoba, która prowadzi otwartą ocenę tej osoby.
         {visibility === 'tree' ? ' Także przełożeni w strukturze urzędu.' : null}
@@ -135,7 +132,14 @@ export interface NoteFormProps {
   aiEnabled: boolean;
   visibility: 'office' | 'tree';
   retentionMonths: number;
+  /** `NOTE_CHECK_TIMEOUT_MS` of the server, so the client bundle does not load `@sarmata/services`. */
+  checkTimeoutMs: number;
+  /** Level of the "Kto to zobaczy" heading, one below the heading of the form. */
+  whoSeesHeadingLevel: 3 | 4;
 }
+
+/** Focus for a block that replaces the control the user just pressed. */
+const focusTarget = 'outline-none';
 
 /**
  * Form of a note with the sensitive data guard: "Zapisz notatkę" checks the text first (dictionary
@@ -151,6 +155,8 @@ export function NoteForm({
   aiEnabled,
   visibility,
   retentionMonths,
+  checkTimeoutMs,
+  whoSeesHeadingLevel,
 }: NoteFormProps) {
   const [state, formAction, isPending] = useActionState(saveNote, initialState);
   // Each answer of the action remounts the form, so the default values show what was sent.
@@ -171,14 +177,33 @@ export function NoteForm({
   const [deciding, setDeciding] = useState(false);
   const [inserted, setInserted] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const checkingRef = useRef<HTMLDivElement>(null);
+  const reviewRef = useRef<HTMLDivElement>(null);
+  /** Set by `submitForm`, so `onSubmit` lets a submit of the form itself through. */
+  const directSubmit = useRef(false);
 
-  const guard = useNoteGuard(employeeId);
+  const guard = useNoteGuard(employeeId, checkTimeoutMs);
   const guardState = guard.state;
+  const checking = guard.starting || guardState.phase === 'checking';
+  const phase = guardState.phase;
+
+  function submitForm() {
+    directSubmit.current = true;
+    formRef.current?.requestSubmit();
+  }
 
   // Nothing found: the form saves on its own.
   useEffect(() => {
-    if (guardState.phase === 'clear') formRef.current?.requestSubmit();
+    if (guardState.phase === 'clear') submitForm();
   }, [guardState]);
+
+  // The pressed button is gone once the check starts or ends, so the focus follows the new block.
+  useEffect(() => {
+    if (checking) checkingRef.current?.focus();
+  }, [checking]);
+  useEffect(() => {
+    if (phase === 'review') reviewRef.current?.focus();
+  }, [phase]);
 
   useEffect(() => {
     if (bodyVersion > 0) document.getElementById('body')?.focus();
@@ -198,7 +223,7 @@ export function NoteForm({
         : null;
   const rewrite = guardState.phase === 'review' ? guardState.rewrite : null;
   const aiNote = aiNoteOf(guardState);
-  const checking = guard.starting || guardState.phase === 'checking';
+  const aiNoteSentence = aiNoteText(aiNote);
 
   function changeBody(value: string) {
     setBody(value);
@@ -220,9 +245,9 @@ export function NoteForm({
       guardState.phase === 'clear' ||
       employeeId === '' ||
       trimmed === '' ||
-      trimmed.length > BODY_MAX
+      trimmed.length > NOTE_BODY_MAX
     ) {
-      formRef.current?.requestSubmit();
+      submitForm();
       return;
     }
     guard.start(body);
@@ -251,6 +276,17 @@ export function NoteForm({
         action={formAction}
         noValidate
         className="grid max-w-[40rem] gap-8"
+        onSubmit={(event) => {
+          if (directSubmit.current) {
+            directSubmit.current = false;
+            return;
+          }
+          // Enter in a field submits the form without a button. Before the check it starts the
+          // check like "Zapisz notatkę", during the check it waits for it.
+          if (phase === 'review' || phase === 'clear') return;
+          event.preventDefault();
+          if (phase === 'idle' && !guard.starting && !isPending) save();
+        }}
       >
         {note ? <input type="hidden" name="noteId" value={note.id} /> : null}
         <input type="hidden" name="returnTo" value={returnTo} />
@@ -337,7 +373,7 @@ export function NoteForm({
             key={bodyVersion}
             name="body"
             rows={6}
-            maxLength={BODY_MAX}
+            maxLength={NOTE_BODY_MAX}
             showCount
             value={body}
             onChange={(event) => {
@@ -351,10 +387,14 @@ export function NoteForm({
           </p>
         ) : null}
 
-        <WhoSees visibility={visibility} retentionMonths={retentionMonths} />
+        <WhoSees
+          visibility={visibility}
+          retentionMonths={retentionMonths}
+          headingLevel={whoSeesHeadingLevel}
+        />
 
         {checking ? (
-          <div className="grid gap-4">
+          <div ref={checkingRef} tabIndex={-1} className={`grid gap-4 ${focusTarget}`}>
             <PixelLoader label="Sprawdzam treść pod kątem danych wrażliwych" />
             {guardState.phase === 'checking' && guardState.keywordWarnings.length > 0 ? (
               <Notice tone="warning" title="Notatka może zawierać dane wrażliwe">
@@ -372,16 +412,14 @@ export function NoteForm({
         ) : null}
 
         {!checking && reviewWarnings ? (
-          <div className="grid gap-6">
+          <div ref={reviewRef} tabIndex={-1} className={`grid gap-6 ${focusTarget}`}>
             <Notice tone="warning" title="Notatka może zawierać dane wrażliwe" role="status">
               <p className="max-w-[70ch]">
                 Usuń z treści dane o zdrowiu, rodzinie albo wyznaniu. Jeśli fragment nie jest daną
                 wrażliwą, potwierdź zapis bez zmian.
               </p>
               <WarningList warnings={reviewWarnings} />
-              {aiNoteTexts[aiNote] ? (
-                <p className="text-ink-muted mt-2">{aiNoteTexts[aiNote]}</p>
-              ) : null}
+              {aiNoteSentence ? <p className="text-ink-muted mt-2">{aiNoteSentence}</p> : null}
             </Notice>
             {rewrite ? (
               <AiSuggestion
@@ -443,7 +481,7 @@ export function NoteForm({
                   <Field id="editedProposal" label="Poprawiona propozycja">
                     <Textarea
                       rows={6}
-                      maxLength={BODY_MAX}
+                      maxLength={NOTE_BODY_MAX}
                       showCount
                       value={editedProposal}
                       onChange={(event) => {
@@ -459,6 +497,7 @@ export function NoteForm({
               name="confirmRisk"
               value="1"
               label="Rozumiem ryzyko, zapisz notatkę bez zmian"
+              defaultChecked={state.values.confirmRisk === '1'}
               error={fieldErrors.confirmRisk}
             />
           </div>

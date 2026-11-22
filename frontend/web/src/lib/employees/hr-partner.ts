@@ -1,4 +1,4 @@
-import { type AiRun, type Note } from '@sarmata/services';
+import type { AiRun, Note } from '@sarmata/services';
 import { formatDate, todayInWarsaw } from '@/lib/format';
 import { actionFrameworkLabels, hrSignalLabels } from './labels';
 
@@ -21,13 +21,15 @@ export interface HrSignalsResult {
   /** Labels of the signals the analysis found absent. */
   absent: string[];
   questions: { fragment: string; text: string }[];
-  actions: { fragment: string; framework: string; signal: string; text: string }[];
+  actions: { fragment: string; framework: string; text: string }[];
 }
 
 export type AiPanelState =
   | { kind: 'disabled' }
+  /** The account does not read the notes of this person, so it does not read their analyses. */
+  | { kind: 'no_access' }
   | { kind: 'none' }
-  | { kind: 'running'; since: string; previous: HrSignalsResult | null }
+  | { kind: 'running'; previous: HrSignalsResult | null }
   | { kind: 'failed'; previous: HrSignalsResult | null }
   | { kind: 'done'; result: HrSignalsResult };
 
@@ -68,19 +70,22 @@ function resultOf(
     actions: output.actions.map((action, index) => ({
       fragment: `action.${index}`,
       framework: actionFrameworkLabels[action.framework],
-      signal: hrSignalLabels[action.signal],
       text: action.text,
     })),
   };
 }
 
-/** `runs` come newest first (`ai.list`), `null` means the list did not load. */
+/**
+ * `runs` come newest first (`ai.list`), `null` means the list did not load. `notes` is `null` when
+ * the account does not read the notes of this person.
+ */
 export function hrPartnerModel(
   runs: readonly AiRun[] | null,
   aiEnabled: boolean,
-  notes: readonly Pick<Note, 'id' | 'occurredOn'>[],
+  notes: readonly Pick<Note, 'id' | 'occurredOn'>[] | null,
 ): AiPanelState {
   if (!aiEnabled) return { kind: 'disabled' };
+  if (notes === null) return { kind: 'no_access' };
   const hrRuns = (runs ?? []).filter((run): run is HrRun => run.kind === 'hr_signals');
   const latest = hrRuns[0];
   if (!latest) return { kind: 'none' };
@@ -89,7 +94,7 @@ export function hrPartnerModel(
   const previous = previousDone ? resultOf(previousDone, notes) : null;
 
   if (latest.status === 'queued' || latest.status === 'running') {
-    return { kind: 'running', since: latest.startedAt ?? latest.requestedAt, previous };
+    return { kind: 'running', previous };
   }
   if (latest.status === 'failed') return { kind: 'failed', previous };
 

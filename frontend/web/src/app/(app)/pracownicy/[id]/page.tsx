@@ -10,17 +10,12 @@ import { RatingHistory } from '@/components/employees/rating-history';
 import { NoteSavedNotice } from '@/components/notes/note-saved-notice';
 import { loadCard } from '@/lib/employees/load-card';
 import { formatDate } from '@/lib/format';
+import { type SearchParams, single } from '@/lib/search-params';
 import { createSupabase } from '@/lib/supabase';
-
-type SearchParams = Record<string, string | string[] | undefined>;
 
 interface CardPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;
-}
-
-function single(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value)?.trim() ?? '';
 }
 
 export async function generateMetadata({ params }: CardPageProps): Promise<Metadata> {
@@ -75,7 +70,7 @@ export default async function EmployeeCardPage({ params, searchParams }: CardPag
             filter={cardNoteFilter(query)}
             formParam={single(query.notatka)}
             history={history}
-            historyFailed={Boolean(historyId) && history === null}
+            historyFailed={historyVisible && history === null}
           />
           {role === 'hr' ? (
             <HrActions

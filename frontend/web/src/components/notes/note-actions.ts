@@ -11,6 +11,7 @@ import {
   servicesFor,
 } from '@sarmata/services';
 import { requireMember } from '@/lib/account';
+import { NOTE_BODY_MAX, aiNoteParam } from '@/lib/employees/notes';
 import { type FormState, formValues, parseForm, runService } from '@/lib/form-action';
 import { routes } from '@/lib/routes';
 import { serviceErrorMessage } from '@/lib/service-errors';
@@ -19,7 +20,6 @@ import { createSupabase } from '@/lib/supabase';
 export type NoteFormState = FormState & { warnings?: readonly SensitiveDataWarning[] };
 
 const FALLBACK_ERROR = 'Coś poszło nie tak. Spróbuj ponownie.';
-const BODY_MAX = 5000;
 
 function errorOf(error: unknown): { error: string } {
   if (error instanceof ServiceError)
@@ -75,12 +75,6 @@ function safeReturnTo(value: string): string {
   return /^\/pracownicy\/[A-Za-z0-9-]+$/.test(value) ? value : routes.notes;
 }
 
-/** Query value that tells the success message how the note was checked. */
-const checkedParam: Record<string, string> = {
-  dictionary_only: 'slownik',
-  ai_disabled: 'ai-wylaczone',
-};
-
 const optionalText = z
   .string()
   .trim()
@@ -101,7 +95,7 @@ const noteFormSchema = z
       .string()
       .trim()
       .min(1, 'Wpisz treść notatki')
-      .max(BODY_MAX, `Skróć treść notatki do ${BODY_MAX} znaków`),
+      .max(NOTE_BODY_MAX, `Skróć treść notatki do ${NOTE_BODY_MAX} znaków`),
     acceptWarnings: z.string(),
     confirmRisk: z.string(),
     returnTo: z.string(),
@@ -172,7 +166,8 @@ export async function saveNote(
   if (!saved.ok) return warnings ? { ...saved.state, warnings } : saved.state;
 
   const returnTo = safeReturnTo(data.returnTo);
-  const checked = checkedParam[data.aiNote];
+  // Tells the success message how the note was checked.
+  const checked = aiNoteParam(data.aiNote);
   revalidatePath(returnTo);
   redirect(`${returnTo}?zapisano=1${checked ? `&sprawdzono=${checked}` : ''}`);
 }

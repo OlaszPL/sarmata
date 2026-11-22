@@ -32,7 +32,10 @@ export interface CardData {
   history: EmployeeHistory;
   /** The newest evaluation that is neither closed nor interrupted. */
   currentEvaluationId: string | null;
-  /** Null when the account may not read the notes of this person (admin) or they did not load. */
+  /**
+   * Null when the account may not read the notes of this person (admin) or they did not load. The
+   * AI panel then shows who reads the analyses instead of an empty state.
+   */
   notes: Note[] | null;
   /** Criteria catalog of the regulation in force, for the note form. */
   criteria: { id: string; name: string }[];
@@ -61,8 +64,11 @@ const NO_REGULATION: HistoryRegulation = {
   partialScale: { levels: [] },
 };
 
-/** Defaults of the office settings table, used when the settings did not load. */
-const DEFAULT_SETTINGS = { aiEnabled: false, visibility: 'office', retentionMonths: 36 } as const;
+/**
+ * Defaults of the office settings table, used when the settings did not load. AI counts as on, so
+ * the panel does not claim it is off: a refused analysis still answers with its own message.
+ */
+const DEFAULT_SETTINGS = { aiEnabled: true, visibility: 'office', retentionMonths: 36 } as const;
 
 const FINISHED = new Set(['closed', 'interrupted']);
 const RUNNING = new Set(['queued', 'running']);
@@ -97,20 +103,23 @@ export const loadCard = cache(async (id: string): Promise<CardData> => {
     orNull('archived evaluations', () => services.archivedEvaluations.listForEmployee(id)),
     orNull('evaluations', () => services.evaluations.list({ employeeId: id })),
     orNull('regulation', () => services.regulations.inForceOn(today)),
-    orNull('notes', () => services.notes.listForEmployee(id)),
+    // RLS filters the notes of admin to none instead of refusing, so admin gets no list at all.
+    account.role === 'admin' ? null : orNull('notes', () => services.notes.listForEmployee(id)),
     orNull('office settings', () => services.officeSettings.get()),
     orNull('office employees', () => officeEmployees()),
   ]);
 
   const aiEnabled = settings?.aiEnabled ?? DEFAULT_SETTINGS.aiEnabled;
+  // The analyses come from the notes, without access to the notes there is nothing to read.
+  const readsAnalyses = aiEnabled && notes !== null;
   const [settled, hrRuns, appreciationRuns] = await Promise.all([
     Promise.allSettled(
       (summaries ?? [])
         .filter((evaluation) => evaluation.status !== 'interrupted')
         .map((evaluation) => services.evaluations.get(evaluation.id)),
     ),
-    aiEnabled ? aiRuns('hr_signals') : null,
-    aiEnabled ? aiRuns('appreciation_moments') : null,
+    readsAnalyses ? aiRuns('hr_signals') : null,
+    readsAnalyses ? aiRuns('appreciation_moments') : null,
   ]);
 
   // One broken case (unknown regulation, bad event payload) must not blank the card.
@@ -137,7 +146,7 @@ export const loadCard = cache(async (id: string): Promise<CardData> => {
     ...regulationParts(regulation, employee),
     ai: {
       enabled: aiEnabled,
-      signals: hrPartnerModel(hrRuns, aiEnabled, notes ?? []),
+      signals: hrPartnerModel(hrRuns, aiEnabled, notes),
       appreciation: appreciationModel(appreciationRuns),
       appreciationRunning: RUNNING.has(appreciationRuns?.[0]?.status ?? 'done'),
     },

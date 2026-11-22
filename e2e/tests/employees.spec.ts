@@ -55,6 +55,19 @@ test.describe('employee list and card', () => {
     await openCard(page, 'Marek Merytoryczny');
     await expect(page.getByRole('link', { name: 'Dodaj notatkę' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Przeanalizuj notatki' })).toHaveCount(0);
+    // Admin does not read notes, so the card says who does instead of an empty list.
+    await expect(
+      page.getByText(
+        'Notatki o tej osobie czytają autor, kadry i osoba prowadząca jej otwartą ocenę.',
+      ),
+    ).toBeVisible();
+    await expect(page.getByText('Brak notatek', { exact: true })).toHaveCount(0);
+    const panel = page.getByRole('complementary', { name: 'HR partner' });
+    await expect(
+      panel.getByText(
+        'Analizy HR partnera czytają autor, kadry i osoba prowadząca otwartą ocenę tej osoby.',
+      ),
+    ).toBeVisible();
   });
 
   test('shows hr actions to hr only', async ({ page }) => {
