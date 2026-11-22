@@ -42,7 +42,13 @@ export interface CardData {
   levels: { code: string; name: string }[];
   /** Mandatory criteria of the sheet for the position kind of the employee. */
   sheetMandatory: string[];
-  ai: { enabled: boolean; signals: AiPanelState; appreciation: AppreciationModel | null };
+  ai: {
+    enabled: boolean;
+    signals: AiPanelState;
+    appreciation: AppreciationModel | null;
+    /** The newest appreciation search is still queued or running, the panel polls for it. */
+    appreciationRunning: boolean;
+  };
   settings: { visibility: 'office' | 'tree'; retentionMonths: number };
   supervisorName: string | null;
 }
@@ -59,6 +65,7 @@ const NO_REGULATION: HistoryRegulation = {
 const DEFAULT_SETTINGS = { aiEnabled: false, visibility: 'office', retentionMonths: 36 } as const;
 
 const FINISHED = new Set(['closed', 'interrupted']);
+const RUNNING = new Set(['queued', 'running']);
 
 /** Resolves to null instead of throwing, for sources the card can live without. */
 async function orNull<T>(label: string, read: () => Promise<T>): Promise<T | null> {
@@ -132,6 +139,7 @@ export const loadCard = cache(async (id: string): Promise<CardData> => {
       enabled: aiEnabled,
       signals: hrPartnerModel(hrRuns, aiEnabled, notes ?? []),
       appreciation: appreciationModel(appreciationRuns),
+      appreciationRunning: RUNNING.has(appreciationRuns?.[0]?.status ?? 'done'),
     },
     settings: {
       visibility: settings?.evaluationVisibility ?? DEFAULT_SETTINGS.visibility,

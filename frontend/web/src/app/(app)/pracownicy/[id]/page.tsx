@@ -4,9 +4,12 @@ import { Notice } from '@sarmata/ui';
 import { CardHero } from '@/components/employees/card-hero';
 import { CardNotes, cardNoteFilter } from '@/components/employees/card-notes';
 import { CriteriaChangeTable } from '@/components/employees/criteria-change-table';
+import { HrActions } from '@/components/employees/hr-actions';
+import { HrPartnerPanel } from '@/components/employees/hr-partner-panel';
 import { RatingHistory } from '@/components/employees/rating-history';
 import { NoteSavedNotice } from '@/components/notes/note-saved-notice';
 import { loadCard } from '@/lib/employees/load-card';
+import { formatDate } from '@/lib/format';
 import { createSupabase } from '@/lib/supabase';
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -36,7 +39,7 @@ async function noteHistory(id: string): Promise<NoteVersion[] | null> {
 
 /**
  * Employee card (mockup 2026-11-22-karta-pencil.html): hero, the evaluation record, the change in
- * criteria and the notes, with the HR partner panel on the side.
+ * criteria, the notes and the hr-only block, with the HR partner panel on the side.
  */
 export default async function EmployeeCardPage({ params, searchParams }: CardPageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
@@ -47,6 +50,8 @@ export default async function EmployeeCardPage({ params, searchParams }: CardPag
   const history = historyVisible ? await noteHistory(historyId) : null;
   const added = single(query.dodano) === '1';
   const saved = single(query.zapisano) === '1';
+  const role = data.account.role;
+  const canAnalyse = (role === 'evaluator' || role === 'hr') && data.notes !== null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -72,19 +77,23 @@ export default async function EmployeeCardPage({ params, searchParams }: CardPag
             history={history}
             historyFailed={Boolean(historyId) && history === null}
           />
+          {role === 'hr' ? (
+            <HrActions
+              employeeId={data.employee.id}
+              today={data.today}
+              levels={data.levels}
+              scale={data.scale}
+              criteria={data.sheetMandatory.map((criterionId) => ({
+                id: criterionId,
+                name: data.criteriaNames.get(criterionId) ?? criterionId,
+              }))}
+              employmentEndedOn={
+                data.employee.employmentEndedOn ? formatDate(data.employee.employmentEndedOn) : null
+              }
+            />
+          ) : null}
         </div>
-        {/* Task 5 fills the panel: HR partner signals, appreciation and the hr-only block. */}
-        <aside
-          aria-label="HR partner"
-          className="bg-band border-rule border-t lg:w-[18.5rem] lg:shrink-0 lg:border-t-0 lg:border-l"
-        >
-          <div className="bg-navy flex flex-col gap-2 px-6 py-6 text-white">
-            <h2 className="text-[1.375rem] leading-[normal] font-semibold">HR partner</h2>
-            <p className="text-[0.9375rem] leading-[1.5333]">
-              Podpowiedzi AI do rozmowy z tą osobą pojawią się w tym miejscu.
-            </p>
-          </div>
-        </aside>
+        <HrPartnerPanel data={data} canAnalyse={canAnalyse} />
       </div>
     </div>
   );
