@@ -32,9 +32,9 @@ test.describe('evaluation case frame', () => {
     );
     await expect(main.getByRole('heading', { level: 2, name: 'Przegląd sprawy' })).toBeVisible();
 
-    await tabs.getByRole('link', { name: /Część II/ }).click();
+    await tabs.getByRole('link', { name: /^Część II Ocena/ }).click();
     await expect(page).toHaveURL(/\/czesc-2$/);
-    await expect(tabs.getByRole('link', { name: /Część II/ })).toHaveAttribute(
+    await expect(tabs.getByRole('link', { name: /^Część II Ocena/ })).toHaveAttribute(
       'aria-current',
       'page',
     );

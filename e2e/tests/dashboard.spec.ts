@@ -65,8 +65,11 @@ test.describe('evaluator dashboard', () => {
   });
 
   test('shows the year for a deadline in another year', async ({ page }) => {
+    // The demo cycle starts on the day of the seed, so its deadline falls two years later.
     const todo = page.getByRole('region', { name: 'Zrób teraz' });
-    await expect(todo).toContainText('21.11.2028');
+    await expect(todo).toContainText(
+      new RegExp(`\\d{2}\\.\\d{2}\\.${new Date().getFullYear() + 2}`),
+    );
   });
 });
 
