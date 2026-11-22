@@ -6,7 +6,7 @@ Każda usługa AI (szkic arkusza, kontrola jakości, strażnik danych wrażliwyc
 
 1. Lokalny Bielik na CPU pisze szkic arkusza minutami. Kolejka nie trzyma żądania HTTP i przeżywa przeładowanie strony.
 2. Migawka wejścia powstaje w kontekście użytkownika, więc worker z kluczem serwisowym nie czyta notatek i nie omija RLS. Worker widzi tylko to, co użytkownik mógł zobaczyć.
-3. Tylko kontener workera potrzebuje `uv` i semble, tekstów prawnych (`backend/regulations/<wersja>/sources/`) i plików promptów (`backend/ai/prompts/`, czytane przez `readFileSync` bez bundlera Next.js). Web nie importuje `@sarmata/ai`, kontrakty są w `@sarmata/domain`.
+3. Tylko kontener workera potrzebuje semble (wbudowanego w obraz razem z modelem embeddingów, więc działa bez sieci), tekstów prawnych (`backend/regulations/<wersja>/sources/`) i plików promptów (`backend/ai/prompts/`, czytane przez `readFileSync` bez bundlera Next.js). Web nie importuje `@sarmata/ai`, kontrakty są w `@sarmata/domain`.
 4. Jedna ścieżka zamiast dwóch: jeden dziennik, jeden zestaw kodów błędów.
 
 ## Konsekwencje
