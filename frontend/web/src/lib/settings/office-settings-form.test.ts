@@ -44,6 +44,14 @@ const demo: OfficeSettings = {
   objectionAddresseeSheetA: 'Dyrektor Generalny',
   evaluatorFlags: { minEvaluations: 6, centralShare: 0.75, leniencyPoints: 1.5 },
   appreciationGapDays: 120,
+  accessibility: {
+    officeAddress: 'ul. Testowa 1, 62-000 Kropka',
+    contactName: 'Jan Dostępny',
+    contactEmail: 'dostepnosc@example.gov.pl',
+    contactPhone: '+48 61 123 45 67',
+    architecture: 'https://example.gov.pl/architektura',
+    signLanguage: null,
+  },
   smtp: {
     host: 'smtp.example.gov.pl',
     port: 587,
@@ -106,6 +114,34 @@ describe('officeSettingsFormSchema', () => {
   });
 });
 
+describe('accessibility fields', () => {
+  it('turns empty fields into null and checks the e-mail and phone', () => {
+    const empty = parseForm(officeSettingsFormSchema, fd(valid));
+    expect('data' in empty && empty.data.accessibility).toEqual({
+      officeAddress: null,
+      contactName: null,
+      contactEmail: null,
+      contactPhone: null,
+      architecture: null,
+      signLanguage: null,
+    });
+    const wrong = parseForm(
+      officeSettingsFormSchema,
+      fd({ ...valid, accessibilityContactEmail: 'nope', accessibilityContactPhone: 'zadzwoń' }),
+    );
+    expect('state' in wrong).toBe(true);
+    if (!('state' in wrong)) return;
+    expect(wrong.state.fieldErrors.accessibilityContactEmail).toBe('Wpisz poprawny adres e-mail');
+    expect(wrong.state.fieldErrors.accessibilityContactPhone).toMatch(/numer telefonu/);
+  });
+
+  it('maps the domain paths of the accessibility block to the control ids', () => {
+    expect(remapFieldErrors({ 'accessibility.contactPhone': 'x' }, officeSettingsFieldMap)).toEqual(
+      { accessibilityContactPhone: 'x' },
+    );
+  });
+});
+
 describe('settingsFormValues', () => {
   it('round-trips through the form schema', () => {
     const values = settingsFormValues(demo);
@@ -126,6 +162,14 @@ describe('settingsFormValues', () => {
         port: 587,
         user: 'sarmata',
         from: 'sarmata@example.gov.pl',
+      },
+      accessibility: {
+        officeAddress: 'ul. Testowa 1, 62-000 Kropka',
+        contactName: 'Jan Dostępny',
+        contactEmail: 'dostepnosc@example.gov.pl',
+        contactPhone: '+48 61 123 45 67',
+        architecture: 'https://example.gov.pl/architektura',
+        signLanguage: null,
       },
     });
   });

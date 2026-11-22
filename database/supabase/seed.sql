@@ -73,6 +73,16 @@ update public.office_settings
    set smtp_host = '127.0.0.1', smtp_port = 55425, smtp_from = 'oceny@kropka.test'
  where office_id = '11111111-1111-4111-8111-111111111111';
 
+-- Office data of the accessibility statement (art. 10 ust. 4 pkt 4, 6 and 7 of the digital accessibility act).
+update public.office_settings
+   set accessibility_office_address = 'ul. Testowa 1, 62-000 Kropka Wielkopolska',
+       accessibility_contact_name = 'Wydział Kadr i Rozwoju, koordynator do spraw dostępności',
+       accessibility_contact_email = 'dostepnosc@kropka.test',
+       accessibility_contact_phone = '+48 61 000 00 00',
+       accessibility_architecture = 'Do budynku prowadzi wejście bez progów od strony parkingu, z miejscem dla osoby z niepełnosprawnością. Winda obsługuje wszystkie piętra, toaleta dostosowana jest na parterze. Do budynku można wejść z psem asystującym.',
+       accessibility_sign_language = 'Tłumacza polskiego języka migowego zapewniamy po zgłoszeniu co najmniej 3 dni robocze przed wizytą, mailem albo telefonicznie. Można też skorzystać z tłumacza online przez stronę urzędu.'
+ where office_id = '11111111-1111-4111-8111-111111111111';
+
 -- Statistics demo (B5): organisational units for the per unit distribution and Karol Kadrowy as a civil servant
 -- (grade II since 2022), so a grade request and a grade decision exist among the closed evaluations.
 update public.employees set org_unit = 'Biuro Dyrektora Generalnego' where email = 'admin@kropka.test';
@@ -133,6 +143,20 @@ insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, inpu
              "behaviour":"Pracownica wdrożyła rejestr bez przestojów w pracy wydziału.",
              "impact":"Wydział pracował bez przerwy, a pisma były rejestrowane na bieżąco."}}]}',
    'appreciation-moments.v2', 'bielik-4.5b-v3.0-instruct', '2026-11-22 08:30:00+01', '2026-11-22 08:30:02+01', '2026-11-22 08:30:20+01');
+
+-- A finished question of Olga Oceniająca to the procedure assistant, so the help page shows an answer with
+-- citations without the worker (/pomoc?pytanie=44444444-4444-4444-8444-000000000004). General question,
+-- no evaluation: the regulation version in force answers it. The fragments are the text of the act and the
+-- regulation of regulation-2016 at the cited lines.
+insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, input, input_refs, status, output,
+                            prompt_version, model, requested_at, started_at, finished_at) values
+  ('44444444-4444-4444-8444-000000000004', '11111111-1111-4111-8111-111111111111', 'procedure_question',
+   '22222222-2222-4222-8222-000000000003', null,
+   '{"question": "Ile dni ma pracownik na sprzeciw od oceny okresowej i od kiedy liczy się ten termin?", "today": "2026-11-21", "regulationId": "regulation-2016", "corpus": [{"sourceId": "civil-service-act", "title": "Ustawa z dnia 21 listopada 2008 r. o służbie cywilnej", "citation": "Dz.U. 2026 poz. 590 t.j.", "path": "backend/regulations/regulation-2016/sources/ustawa-o-sluzbie-cywilnej-tj-2026.md"}, {"sourceId": "periodic-evaluation-regulation", "title": "Rozporządzenie Prezesa Rady Ministrów z dnia 4 kwietnia 2016 r. w sprawie warunków i sposobu przeprowadzania ocen okresowych urzędników służby cywilnej i pracowników służby cywilnej", "citation": "Dz.U. 2016 poz. 470", "path": "backend/regulations/regulation-2016/sources/rozporzadzenie-oceny-okresowe-2016.md"}, {"sourceId": "hr-standards-order-6", "title": "Zarządzenie nr 6 Szefa Służby Cywilnej z dnia 12 marca 2020 r. w sprawie standardów zarządzania zasobami ludzkimi w służbie cywilnej", "citation": "publikacja na gov.pl/web/sluzbacywilna, zmienione zarządzeniem nr 7 z 16.12.2020 r.", "path": "backend/regulations/regulation-2016/sources/zarzadzenie-6-szefa-sc-2020-standardy-zzl.md"}]}',
+   '{"noteIds":[],"droppedNoteIds":[],"regulationId":"regulation-2016"}',
+   'done',
+   '{"answer": "Pracownik może wnieść sprzeciw od oceny okresowej w terminie 7 dni od dnia zapoznania się z oceną. Sprzeciw kieruje do dyrektora generalnego urzędu [1].\n\nTermin liczy się od dnia, w którym oceniający zapoznał pracownika z oceną sporządzoną na piśmie. Oceniający robi to niezwłocznie po sporządzeniu oceny, a potem doręcza ocenianemu kopię arkusza [2].\n\nDyrektor generalny rozpatruje sprzeciw w terminie 14 dni od dnia wniesienia. Gdy sprzeciwu nie uwzględni albo nie rozpatrzy go w terminie, pracownik może w ciągu 14 dni odwołać się do sądu pracy [1].", "grounded": true, "citations": [{"fragmentId": 1, "reference": "art. 83 ust. 1, 3 i 5 ustawy o służbie cywilnej"}, {"fragmentId": 2, "reference": "§ 12 ust. 1 i 2 rozporządzenia w sprawie ocen okresowych"}], "fragments": [{"id": 1, "sourceId": "civil-service-act", "title": "Ustawa z dnia 21 listopada 2008 r. o służbie cywilnej", "citation": "Dz.U. 2026 poz. 590 t.j.", "heading": "Art. 83", "text": "### Art. 83\n\n1. Od oceny okresowej służy, w terminie 7 dni od dnia zapoznania się z oceną, sprzeciw do dyrektora generalnego urzędu.\n\n2. (uchylony)\n\n3. Sprzeciw rozpatruje się w terminie 14 dni od dnia wniesienia.\n\n4. W razie uwzględnienia sprzeciwu ocenę okresową zmienia się albo sporządza po raz drugi. Od oceny okresowej sporządzonej po raz drugi przysługuje sprzeciw na zasadach określonych w ust. 1 i 3.\n\n5. W razie nierozpatrzenia sprzeciwu w terminie albo nieuwzględnienia sprzeciwu od oceny okresowej, oceniany może, w terminie 14 dni od dnia doręczenia decyzji albo od dnia upływu terminu, o którym mowa w ust. 3, odwołać się do sądu pracy.", "path": "backend/regulations/regulation-2016/sources/ustawa-o-sluzbie-cywilnej-tj-2026.md", "startLine": 1438, "endLine": 1448}, {"id": 2, "sourceId": "periodic-evaluation-regulation", "title": "Rozporządzenie Prezesa Rady Ministrów z dnia 4 kwietnia 2016 r. w sprawie warunków i sposobu przeprowadzania ocen okresowych urzędników służby cywilnej i pracowników służby cywilnej", "citation": "Dz.U. 2016 poz. 470", "heading": "§ 12", "text": "### § 12\n\n1. Oceniający niezwłocznie zapoznaje ocenianego z oceną sporządzoną na piśmie.\n\n2. Po dokonaniu czynności, o której mowa w ust. 1, oryginał arkusza włącza się do akt osobowych ocenianego, a kopię arkusza oceniający doręcza ocenianemu.", "path": "backend/regulations/regulation-2016/sources/rozporzadzenie-oceny-okresowe-2016.md", "startLine": 169, "endLine": 173}]}',
+   'procedure-question.v2', 'bielik-4.5b-v3.0-instruct', '2026-11-21 14:05:00+01', '2026-11-21 14:05:01+01', '2026-11-21 14:05:38+01');
 
 insert into public.ai_fragment_decisions (run_id, office_id, fragment, decision, final_text, decided_by, decided_at) values
   ('44444444-4444-4444-8444-000000000001', '11111111-1111-4111-8111-111111111111', 'rating.communication',

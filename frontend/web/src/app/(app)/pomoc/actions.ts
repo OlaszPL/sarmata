@@ -6,7 +6,7 @@ import { servicesFor } from '@sarmata/services';
 import { requireMember } from '@/lib/account';
 import { todayInWarsaw } from '@/lib/format';
 import { type FormState, formValues, parseForm, runService } from '@/lib/form-action';
-import { QUESTION_MAX, evaluationIdOf, questionHref, questionSchema } from '@/lib/help/question';
+import { evaluationIdOf, questionHref, questionSchema } from '@/lib/help/question';
 import { routes } from '@/lib/routes';
 import { serviceErrorMessage } from '@/lib/service-errors';
 import { createSupabase } from '@/lib/supabase';
@@ -48,7 +48,7 @@ export async function askQuestion(_previous: FormState, formData: FormData): Pro
     values,
   );
   if (!result.ok) return result.state;
-  redirect(questionHref(result.value.id, question, { ocena: evaluationId }));
+  redirect(questionHref(result.value.id, { ocena: evaluationId }));
 }
 
 /** "Odpowiedź pomogła" or "Nie pomogła": logs the decision about the fragment `answer` of the run. */
@@ -56,18 +56,16 @@ export async function decideAnswer(formData: FormData): Promise<void> {
   await requireMember();
   const runId = uuid.safeParse(formData.get('runId'));
   const decision = decisionSchema.safeParse(formData.get('decision'));
-  const rawQuestion = formData.get('question');
-  const question = typeof rawQuestion === 'string' ? rawQuestion.slice(0, QUESTION_MAX) : '';
   const ocena = evaluationIdOf(formData.get('evaluationId'));
   if (!runId.success) redirect(routes.help);
-  if (!decision.success) redirect(questionHref(runId.data, question, { blad: '1', ocena }));
+  if (!decision.success) redirect(questionHref(runId.data, { blad: '1', ocena }));
 
   try {
     const ai = servicesFor(await createSupabase()).ai;
     await ai.decide(runId.data, [{ fragment: 'answer', decision: decision.data }]);
   } catch (error) {
     console.error('help: deciding about the answer failed', error);
-    redirect(questionHref(runId.data, question, { blad: '1', ocena }));
+    redirect(questionHref(runId.data, { blad: '1', ocena }));
   }
-  redirect(questionHref(runId.data, question, { ocena }));
+  redirect(questionHref(runId.data, { ocena }));
 }

@@ -62,4 +62,42 @@ describe('officeSettingsPatchSchema', () => {
   it('rejects an invalid sender address', () => {
     expect(officeSettingsPatchSchema.safeParse({ smtp: { from: 'nope' } }).success).toBe(false);
   });
+
+  it('accepts the accessibility data of the statement and clears it with null', () => {
+    expect(
+      officeSettingsPatchSchema.parse({
+        accessibility: {
+          officeAddress: ' ul. Testowa 1, 62-000 Kropka ',
+          contactName: 'Jan Dostępny',
+          contactEmail: 'dostepnosc@kropka.test',
+          contactPhone: '+48 61 123 45 67',
+          architecture: 'https://kropka.test/architektura',
+          signLanguage: null,
+        },
+      }),
+    ).toEqual({
+      accessibility: {
+        officeAddress: 'ul. Testowa 1, 62-000 Kropka',
+        contactName: 'Jan Dostępny',
+        contactEmail: 'dostepnosc@kropka.test',
+        contactPhone: '+48 61 123 45 67',
+        architecture: 'https://kropka.test/architektura',
+        signLanguage: null,
+      },
+    });
+  });
+
+  it('rejects an invalid accessibility e-mail, phone or empty text', () => {
+    const invalid = [
+      { contactEmail: 'nope' },
+      { contactPhone: 'zadzwoń' },
+      { contactPhone: '12' },
+      { contactName: '   ' },
+      { officeAddress: 'a'.repeat(501) },
+      { unknown: 'x' },
+    ];
+    for (const accessibility of invalid) {
+      expect(officeSettingsPatchSchema.safeParse({ accessibility }).success).toBe(false);
+    }
+  });
 });

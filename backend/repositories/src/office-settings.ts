@@ -1,6 +1,7 @@
 import {
   type EvaluationVisibility,
   type EvaluatorFlagThresholds,
+  type OfficeAccessibility,
   type OfficeSettingsPatch,
 } from '@sarmata/domain';
 import { readAccountClaims } from './auth';
@@ -22,6 +23,8 @@ export interface OfficeSettings {
   readonly evaluatorFlags: EvaluatorFlagThresholds;
   /** Days without an appreciation after which the evaluator gets the overdue signal. */
   readonly appreciationGapDays: number;
+  /** Office data of the accessibility statement (address, contact, architecture, sign language). */
+  readonly accessibility: Readonly<OfficeAccessibility>;
   readonly smtp: {
     readonly host: string | null;
     readonly port: number | null;
@@ -41,7 +44,7 @@ export interface OfficeSettingsRepository {
 }
 
 const COLUMNS =
-  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, default_place, objection_addressee_sheet_a, evaluator_flag_min_evaluations, evaluator_flag_central_share, evaluator_flag_leniency_points, appreciation_gap_days, offices(evaluation_visibility)' as const;
+  'office_id, ai_enabled, notes_retention_months, reminder_lead_days, smtp_host, smtp_port, smtp_user, smtp_from, smtp_password_set, default_place, objection_addressee_sheet_a, evaluator_flag_min_evaluations, evaluator_flag_central_share, evaluator_flag_leniency_points, appreciation_gap_days, accessibility_office_address, accessibility_contact_name, accessibility_contact_email, accessibility_contact_phone, accessibility_architecture, accessibility_sign_language, offices(evaluation_visibility)' as const;
 
 const asVisibility = (value: string | undefined): EvaluationVisibility =>
   value === 'tree' ? 'tree' : 'office';
@@ -62,6 +65,12 @@ interface SettingsRow {
   evaluator_flag_central_share: number;
   evaluator_flag_leniency_points: number;
   appreciation_gap_days: number;
+  accessibility_office_address: string | null;
+  accessibility_contact_name: string | null;
+  accessibility_contact_email: string | null;
+  accessibility_contact_phone: string | null;
+  accessibility_architecture: string | null;
+  accessibility_sign_language: string | null;
   offices: { evaluation_visibility: string } | null;
 }
 
@@ -79,6 +88,14 @@ const toSettings = (row: SettingsRow): OfficeSettings => ({
     leniencyPoints: row.evaluator_flag_leniency_points,
   },
   appreciationGapDays: row.appreciation_gap_days,
+  accessibility: {
+    officeAddress: row.accessibility_office_address,
+    contactName: row.accessibility_contact_name,
+    contactEmail: row.accessibility_contact_email,
+    contactPhone: row.accessibility_contact_phone,
+    architecture: row.accessibility_architecture,
+    signLanguage: row.accessibility_sign_language,
+  },
   smtp: {
     host: row.smtp_host,
     port: row.smtp_port,
@@ -102,6 +119,12 @@ interface SettingsColumns {
   evaluator_flag_central_share?: number;
   evaluator_flag_leniency_points?: number;
   appreciation_gap_days?: number;
+  accessibility_office_address?: string | null;
+  accessibility_contact_name?: string | null;
+  accessibility_contact_email?: string | null;
+  accessibility_contact_phone?: string | null;
+  accessibility_architecture?: string | null;
+  accessibility_sign_language?: string | null;
 }
 
 function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
@@ -130,6 +153,13 @@ function toColumns(patch: OfficeSettingsPatch): SettingsColumns {
   if (patch.appreciationGapDays !== undefined) {
     columns.appreciation_gap_days = patch.appreciationGapDays;
   }
+  const a11y = patch.accessibility;
+  if (a11y?.officeAddress !== undefined) columns.accessibility_office_address = a11y.officeAddress;
+  if (a11y?.contactName !== undefined) columns.accessibility_contact_name = a11y.contactName;
+  if (a11y?.contactEmail !== undefined) columns.accessibility_contact_email = a11y.contactEmail;
+  if (a11y?.contactPhone !== undefined) columns.accessibility_contact_phone = a11y.contactPhone;
+  if (a11y?.architecture !== undefined) columns.accessibility_architecture = a11y.architecture;
+  if (a11y?.signLanguage !== undefined) columns.accessibility_sign_language = a11y.signLanguage;
   return columns;
 }
 

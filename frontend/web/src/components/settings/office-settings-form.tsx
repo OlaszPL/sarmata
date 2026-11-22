@@ -30,6 +30,12 @@ const FIELD_ORDER = [
   'centralSharePercent',
   'leniencyPoints',
   'appreciationGapDays',
+  'accessibilityOfficeAddress',
+  'accessibilityContactName',
+  'accessibilityContactEmail',
+  'accessibilityContactPhone',
+  'accessibilityArchitecture',
+  'accessibilitySignLanguage',
   'smtpHost',
   'smtpPort',
   'smtpUser',
@@ -264,6 +270,95 @@ export function OfficeSettingsForm({
                 autoComplete="off"
                 className="max-w-[8rem]"
                 defaultValue={text('appreciationGapDays')}
+              />
+            </Field>
+          </div>
+        </FormGroup>
+
+        <FormGroup title="Deklaracja dostępności">
+          <div className="grid grid-cols-1 gap-6">
+            <p className="max-w-[70ch]">
+              Te dane trafiają do deklaracji dostępności aplikacji. Puste pole oznacza ogólny tekst
+              deklaracji.
+            </p>
+            <Field
+              id="accessibilityOfficeAddress"
+              label="Adres urzędu"
+              optional
+              error={fieldErrors.accessibilityOfficeAddress}
+            >
+              <Textarea
+                name="accessibilityOfficeAddress"
+                rows={2}
+                autoComplete="street-address"
+                defaultValue={text('accessibilityOfficeAddress')}
+              />
+            </Field>
+            <Field
+              id="accessibilityContactName"
+              label="Osoba lub komórka do kontaktu w sprawie dostępności"
+              optional
+              error={fieldErrors.accessibilityContactName}
+            >
+              <TextInput
+                name="accessibilityContactName"
+                autoComplete="off"
+                defaultValue={text('accessibilityContactName')}
+              />
+            </Field>
+            <Field
+              id="accessibilityContactEmail"
+              label="E-mail w sprawie dostępności"
+              optional
+              error={fieldErrors.accessibilityContactEmail}
+            >
+              <TextInput
+                name="accessibilityContactEmail"
+                type="email"
+                autoComplete="off"
+                spellCheck={false}
+                defaultValue={text('accessibilityContactEmail')}
+              />
+            </Field>
+            <Field
+              id="accessibilityContactPhone"
+              label="Telefon w sprawie dostępności"
+              hint="Na przykład +48 61 123 45 67."
+              optional
+              error={fieldErrors.accessibilityContactPhone}
+            >
+              <TextInput
+                name="accessibilityContactPhone"
+                type="tel"
+                autoComplete="off"
+                className="max-w-[16rem]"
+                defaultValue={text('accessibilityContactPhone')}
+              />
+            </Field>
+            <Field
+              id="accessibilityArchitecture"
+              label="Dostępność architektoniczna budynków"
+              hint="Link do opisu na stronie urzędu albo krótki opis wejść, wind i toalet."
+              optional
+              error={fieldErrors.accessibilityArchitecture}
+            >
+              <Textarea
+                name="accessibilityArchitecture"
+                rows={4}
+                defaultValue={text('accessibilityArchitecture')}
+              />
+            </Field>
+            <Field
+              id="accessibilitySignLanguage"
+              label="Tłumacz języka migowego"
+              hint="Jak umówić tłumacza przy kontakcie z urzędem."
+              optional
+              error={fieldErrors.accessibilitySignLanguage}
+            >
+              <Textarea
+                name="accessibilitySignLanguage"
+                rows={3}
+                defaultValue={text('accessibilitySignLanguage')}
               />
             </Field>
           </div>

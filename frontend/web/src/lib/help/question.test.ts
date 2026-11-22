@@ -41,6 +41,7 @@ function run(overrides: Record<string, unknown> = {}): QuestionRun {
     employeeId: null,
     evaluationId: null,
     inputRefs: {},
+    question: 'Ile dni ma pracownik na sprzeciw?',
     promptVersion: null,
     failure: null,
     requestedAt: REQUESTED,
@@ -200,10 +201,10 @@ describe('questionState', () => {
 describe('questionFromParams', () => {
   it('gives none for an empty or non-uuid id without calling get', async () => {
     const get = vi.fn();
-    expect(await questionFromParams({ pytanie: '', tresc: 'x' }, get, at(0))).toEqual({
+    expect(await questionFromParams({ pytanie: '' }, get, at(0))).toEqual({
       kind: 'none',
     });
-    expect(await questionFromParams({ pytanie: 'nie-uuid', tresc: 'x' }, get, at(0))).toEqual({
+    expect(await questionFromParams({ pytanie: 'nie-uuid' }, get, at(0))).toEqual({
       kind: 'none',
     });
     expect(get).not.toHaveBeenCalled();
@@ -211,50 +212,52 @@ describe('questionFromParams', () => {
 
   it('gives missing when get rejects or the run is another kind', async () => {
     const rejecting = vi.fn().mockRejectedValue(new Error('not_found'));
-    expect(await questionFromParams({ pytanie: RUN_ID, tresc: 'x' }, rejecting, at(0))).toEqual({
+    expect(await questionFromParams({ pytanie: RUN_ID }, rejecting, at(0))).toEqual({
       kind: 'missing',
     });
     const other = vi.fn().mockResolvedValue({ ...run(), kind: 'hr_signals' });
-    expect(await questionFromParams({ pytanie: RUN_ID, tresc: 'x' }, other, at(0))).toEqual({
+    expect(await questionFromParams({ pytanie: RUN_ID }, other, at(0))).toEqual({
       kind: 'missing',
     });
   });
 
-  it('gives found with the question cut to 500 characters', async () => {
+  it('gives found with the question of the run', async () => {
     const get = vi.fn().mockResolvedValue(run());
-    const result = await questionFromParams(
-      { pytanie: RUN_ID, tresc: 'a'.repeat(QUESTION_MAX + 20) },
-      get,
-      at(1000),
-    );
+    const result = await questionFromParams({ pytanie: RUN_ID }, get, at(1000));
     expect(get).toHaveBeenCalledWith(RUN_ID);
     expect(result.kind).toBe('found');
     if (result.kind !== 'found') return;
     expect(result.runId).toBe(RUN_ID);
-    expect(result.question).toHaveLength(QUESTION_MAX);
+    expect(result.question).toBe('Ile dni ma pracownik na sprzeciw?');
     expect(result.state.kind).toBe('done');
     expect(result.evaluationId).toBeNull();
+  });
+
+  it('cuts a long question to 500 characters and gives an empty one after retention', async () => {
+    const long = vi.fn().mockResolvedValue(run({ question: 'a'.repeat(QUESTION_MAX + 20) }));
+    const cut = await questionFromParams({ pytanie: RUN_ID }, long, at(0));
+    expect(cut.kind === 'found' && cut.question).toHaveLength(QUESTION_MAX);
+    const deleted = vi
+      .fn()
+      .mockResolvedValue(
+        run({ question: null, output: null, contentDeletedAt: '2027-01-01T00:00:00Z' }),
+      );
+    const gone = await questionFromParams({ pytanie: RUN_ID }, deleted, at(0));
+    expect(gone).toMatchObject({ kind: 'found', question: '', state: { kind: 'deleted' } });
   });
 });
 
 describe('questionHref', () => {
-  it('encodes Polish letters and adds the error flag', () => {
-    expect(questionHref(RUN_ID, 'Ile dni na sprzeciw?')).toBe(
-      `/pomoc?pytanie=${RUN_ID}&tresc=Ile%20dni%20na%20sprzeciw%3F#odpowiedz`,
-    );
-    expect(questionHref(RUN_ID, 'zażółć')).toContain(`tresc=${encodeURIComponent('zażółć')}`);
-    expect(questionHref(RUN_ID, 'x', { blad: '1' })).toBe(
-      `/pomoc?pytanie=${RUN_ID}&tresc=x&blad=1#odpowiedz`,
-    );
+  it('links to the answer without the question text and adds the error flag', () => {
+    expect(questionHref(RUN_ID)).toBe(`/pomoc?pytanie=${RUN_ID}#odpowiedz`);
+    expect(questionHref(RUN_ID, { blad: '1' })).toBe(`/pomoc?pytanie=${RUN_ID}&blad=1#odpowiedz`);
   });
 
   it('keeps the evaluation the question is about', () => {
-    expect(questionHref(RUN_ID, 'x', { ocena: EVALUATION_ID, blad: '1' })).toBe(
-      `/pomoc?pytanie=${RUN_ID}&tresc=x&ocena=${EVALUATION_ID}&blad=1#odpowiedz`,
+    expect(questionHref(RUN_ID, { ocena: EVALUATION_ID, blad: '1' })).toBe(
+      `/pomoc?pytanie=${RUN_ID}&ocena=${EVALUATION_ID}&blad=1#odpowiedz`,
     );
-    expect(questionHref(RUN_ID, 'x', { ocena: null })).toBe(
-      `/pomoc?pytanie=${RUN_ID}&tresc=x#odpowiedz`,
-    );
+    expect(questionHref(RUN_ID, { ocena: null })).toBe(`/pomoc?pytanie=${RUN_ID}#odpowiedz`);
   });
 });
 

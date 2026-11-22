@@ -286,6 +286,34 @@ describe('demo seed', () => {
     const settings = await createOfficeSettingsRepository(evaluator).get();
     expect(settings?.appreciationGapDays).toBe(DEFAULT_APPRECIATION_GAP_DAYS);
   });
+
+  it('demo seed has an answered procedure question that carries its question text', async () => {
+    const evaluator = await signedIn('oceniajacy@kropka.test');
+    const runs = createAiRunRepository(evaluator);
+    const run = await runs.get('44444444-4444-4444-8444-000000000004');
+    expect(run).toMatchObject({
+      kind: 'procedure_question',
+      status: 'done',
+      question:
+        'Ile dni ma pracownik na sprzeciw od oceny okresowej i od kiedy liczy się ten termin?',
+    });
+    if (run?.kind !== 'procedure_question' || run.output === null) throw new Error('No question');
+    expect(run.output.grounded).toBe(true);
+    const fragmentIds = new Set(run.output.fragments.map((fragment) => fragment.id));
+    expect(run.output.citations.length).toBeGreaterThan(0);
+    expect(run.output.citations.every((citation) => fragmentIds.has(citation.fragmentId))).toBe(
+      true,
+    );
+
+    const draft = await runs.get('44444444-4444-4444-8444-000000000001');
+    expect(draft?.question).toBeNull();
+
+    const settings = await createOfficeSettingsRepository(evaluator).get();
+    expect(settings?.accessibility).toMatchObject({
+      contactEmail: 'dostepnosc@kropka.test',
+      contactPhone: '+48 61 000 00 00',
+    });
+  });
 });
 
 describe('ai usage log', () => {

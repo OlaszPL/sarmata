@@ -87,6 +87,38 @@ const smtpFrom = z
     return text;
   });
 
+/** Same rule as the domain `PHONE_PATTERN` (client components may not import its value). */
+const PHONE_PATTERN = /^\+?[0-9][0-9 ()-]{4,28}[0-9]$/;
+
+const accessibilityEmail = z
+  .string()
+  .default('')
+  .transform((raw, context) => {
+    const text = raw.trim();
+    if (text === '') return null;
+    if (!z.email().safeParse(text).success) {
+      context.addIssue({ code: 'custom', message: 'Wpisz poprawny adres e-mail' });
+      return z.NEVER;
+    }
+    return text;
+  });
+
+const accessibilityPhone = z
+  .string()
+  .default('')
+  .transform((raw, context) => {
+    const text = raw.trim();
+    if (text === '') return null;
+    if (!PHONE_PATTERN.test(text)) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Wpisz numer telefonu z cyframi, na przykład +48 61 123 45 67',
+      });
+      return z.NEVER;
+    }
+    return text;
+  });
+
 /** Posted office settings form, parsed into the patch the service takes (`OfficeSettingsPatchInput`). */
 export const officeSettingsFormSchema = z
   .object({
@@ -104,6 +136,12 @@ export const officeSettingsFormSchema = z
     smtpPort: optionalNumberField(1, 65535),
     smtpUser: optionalText,
     smtpFrom,
+    accessibilityOfficeAddress: optionalText,
+    accessibilityContactName: optionalText,
+    accessibilityContactEmail: accessibilityEmail,
+    accessibilityContactPhone: accessibilityPhone,
+    accessibilityArchitecture: optionalText,
+    accessibilitySignLanguage: optionalText,
   })
   .transform((form): OfficeSettingsPatchInput => ({
     aiEnabled: form.aiEnabled === '1',
@@ -123,6 +161,14 @@ export const officeSettingsFormSchema = z
       port: form.smtpPort,
       user: form.smtpUser,
       from: form.smtpFrom,
+    },
+    accessibility: {
+      officeAddress: form.accessibilityOfficeAddress,
+      contactName: form.accessibilityContactName,
+      contactEmail: form.accessibilityContactEmail,
+      contactPhone: form.accessibilityContactPhone,
+      architecture: form.accessibilityArchitecture,
+      signLanguage: form.accessibilitySignLanguage,
     },
   }));
 
@@ -145,6 +191,12 @@ export function settingsFormValues(settings: OfficeSettings): FormValues {
     smtpPort: settings.smtp.port === null ? '' : String(settings.smtp.port),
     smtpUser: settings.smtp.user ?? '',
     smtpFrom: settings.smtp.from ?? '',
+    accessibilityOfficeAddress: settings.accessibility.officeAddress ?? '',
+    accessibilityContactName: settings.accessibility.contactName ?? '',
+    accessibilityContactEmail: settings.accessibility.contactEmail ?? '',
+    accessibilityContactPhone: settings.accessibility.contactPhone ?? '',
+    accessibilityArchitecture: settings.accessibility.architecture ?? '',
+    accessibilitySignLanguage: settings.accessibility.signLanguage ?? '',
   };
 }
 
@@ -164,6 +216,12 @@ export const officeSettingsFieldMap: Record<string, string> = {
   'smtp.port': 'smtpPort',
   'smtp.user': 'smtpUser',
   'smtp.from': 'smtpFrom',
+  'accessibility.officeAddress': 'accessibilityOfficeAddress',
+  'accessibility.contactName': 'accessibilityContactName',
+  'accessibility.contactEmail': 'accessibilityContactEmail',
+  'accessibility.contactPhone': 'accessibilityContactPhone',
+  'accessibility.architecture': 'accessibilityArchitecture',
+  'accessibility.signLanguage': 'accessibilitySignLanguage',
 };
 
 /** Renames the keys of field errors by `fieldMap`, dropping a numeric list index. Unknown keys stay. */
