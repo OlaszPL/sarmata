@@ -89,6 +89,8 @@ export interface Services {
   };
   readonly regulations: {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
+    /** The regulation version the evaluation is pinned to. `not_found` for an evaluation the account cannot see, `unknown_regulation` for a missing version. */
+    forEvaluation(evaluationId: string): Promise<RegulationDocument>;
   };
   readonly evaluations: EvaluationService;
   readonly archivedEvaluations: {
@@ -101,6 +103,13 @@ export interface Services {
 
 export function createServices(dependencies: ServiceDependencies): Services {
   const { repositories, currentAccountId, officeSettings } = dependencies;
+
+  const evaluations = createEvaluationService({
+    repositories,
+    regulationInForceOn: (on) => regulations.inForceOn(on),
+    ...(currentAccountId === undefined ? {} : { currentAccountId }),
+    ...(officeSettings === undefined ? {} : { officeSettings }),
+  });
 
   const regulations: Services['regulations'] = {
     async inForceOn(on) {
@@ -120,6 +129,8 @@ export function createServices(dependencies: ServiceDependencies): Services {
       }
       return version.document;
     },
+
+    forEvaluation: (evaluationId) => evaluations.pinnedRegulation(evaluationId),
   };
 
   return {
@@ -132,12 +143,7 @@ export function createServices(dependencies: ServiceDependencies): Services {
       findSimilar: (search) => repositories.employees.findSimilar(search),
     },
     regulations,
-    evaluations: createEvaluationService({
-      repositories,
-      regulationInForceOn: (on) => regulations.inForceOn(on),
-      ...(currentAccountId === undefined ? {} : { currentAccountId }),
-      ...(officeSettings === undefined ? {} : { officeSettings }),
-    }),
+    evaluations,
     archivedEvaluations: {
       create: (input) => repositories.archivedEvaluations.create(input),
       listForEmployee: (employeeId) => repositories.archivedEvaluations.listForEmployee(employeeId),

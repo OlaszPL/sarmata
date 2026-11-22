@@ -36,6 +36,8 @@ export {
   type SheetCorrectionInput,
   type TermChangeInput,
   type EvaluationFilter,
+  type ApprovalPreview,
+  type ApprovalStage,
   type EvaluationService,
   type EvaluationView,
   type EvaluationWarning,
