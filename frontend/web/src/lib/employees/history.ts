@@ -37,12 +37,22 @@ export interface EmployeeHistory {
   stats: HeroStat[];
 }
 
+/** The parts of the regulation the history reads: level names and the criteria catalog. */
+export interface HistoryRegulation {
+  criteria: {
+    catalog: readonly Pick<RegulationDocument['criteria']['catalog'][number], 'id' | 'name'>[];
+  };
+  partialScale: {
+    levels: readonly Pick<RegulationDocument['partialScale']['levels'][number], 'code' | 'name'>[];
+  };
+}
+
 interface HistoryInput {
   archived: readonly ArchivedEvaluation[];
   /** All evaluations of the employee, the interrupted ones are skipped. */
   views: readonly EvaluationView[];
-  /** The regulation version in force today. */
-  document: RegulationDocument;
+  /** The regulation version in force today, or an empty stand-in when it did not load. */
+  document: HistoryRegulation;
   /** From the next step of the open evaluation. */
   current: { dueOn: CalendarDate | null; stage: string } | null;
 }
@@ -107,7 +117,7 @@ function viewRow(view: EvaluationView, levelName: (code: string | null) => strin
   return row;
 }
 
-function criteriaChange(finished: readonly HistoryRow[], document: RegulationDocument) {
+function criteriaChange(finished: readonly HistoryRow[], document: HistoryRegulation) {
   const withRatings = finished.filter((row) => row.ratings !== null);
   const catalog = document.criteria.catalog;
   const ids: string[] = catalog.map((criterion) => criterion.id);
