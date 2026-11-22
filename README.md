@@ -145,7 +145,7 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`) |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
@@ -166,15 +166,15 @@ Pulpit i wspólne:
 
 Oceny:
 
-- `/oceny`: lista ocen (zaślepka)
-- `/oceny/nowa`: nowa ocena (zaślepka)
-- `/oceny/[id]`: sprawa oceny, przegląd (szkielet: nagłówek, etapy, zakładki, panel boczny)
-- `/oceny/[id]/czesc-1`: część I, kryteria i termin (zaślepka zakładki)
+- `/oceny`: lista ocen z filtrami etapu i pracownika
+- `/oceny/nowa`: rozpoczęcie oceny: wyszukanie pracownika (także z literówką), propozycja arkusza według rodzaju stanowiska, powód odmowy, gdy pracownik nie podlega ocenie
+- `/oceny/[id]`: sprawa oceny, przegląd: następny krok z przyciskiem do właściwej zakładki, brakujące pola przed zatwierdzeniem, ostrzeżenia i sygnały, dane sprawy (nad nim nagłówek, etapy, zakładki i panel boczny sprawy)
+- `/oceny/[id]/czesc-1`: część I: kryteria dodatkowe z katalogu, termin tylko skracany, zatwierdzenie z datą rozmowy rozpoczynającej i miejscowością, odnotowanie podpisu części I
 - `/oceny/[id]/czesc-2`: część II, ocena (zaślepka zakładki)
 - `/oceny/[id]/czesc-3`: część III, wniosek o stopień (zaślepka zakładki)
 - `/oceny/[id]/sprawdz`: sprawdzenie i zatwierdzenie arkusza (zaślepka zakładki)
 - `/oceny/[id]/zdarzenia`: zapoznanie, sprzeciw, zdarzenia boczne (zaślepka zakładki)
-- `/oceny/[id]/dziennik`: dziennik zdarzeń (zaślepka zakładki)
+- `/oceny/[id]/dziennik`: dziennik zdarzeń z datą faktyczną, autorem wpisu i czasem wpisania
 
 Pracownicy i notatki:
 
