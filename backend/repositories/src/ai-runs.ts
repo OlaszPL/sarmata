@@ -35,6 +35,8 @@ interface AiRunBase {
   readonly evaluationId: string | null;
   readonly inputRefs: AiInputRefs;
   readonly promptVersion: string | null;
+  /** Model(s) that produced the result, e.g. `bielik-4.5b-v3.0-instruct`. Null before the result. */
+  readonly model: string | null;
   readonly failure: { readonly reason: string; readonly message: string | null } | null;
   readonly requestedAt: string;
   readonly startedAt: string | null;
@@ -86,6 +88,36 @@ export interface NewAiFragmentDecision {
   readonly finalText?: string;
 }
 
+/**
+ * One entry of the AI usage log for the admin: metadata of a run and the decisions about its fragments,
+ * never the content (input, output, progress, failure message, final text of an edited fragment).
+ */
+export interface AiUsageLogEntry {
+  readonly id: string;
+  readonly kind: AiRunKind;
+  readonly status: AiRunStatus;
+  readonly requestedBy: string;
+  /** "Imię Nazwisko" of the requester's employee record, null when the account has none. */
+  readonly requesterName: string | null;
+  readonly employeeId: string | null;
+  readonly evaluationId: string | null;
+  readonly model: string | null;
+  readonly promptVersion: string | null;
+  readonly outputTokens: number | null;
+  readonly failureReason: string | null;
+  readonly requestedAt: string;
+  readonly startedAt: string | null;
+  readonly finishedAt: string | null;
+  readonly contentDeletedAt: string | null;
+  /** The latest decision per fragment, ordered by fragment. */
+  readonly decisions: readonly {
+    fragment: string;
+    decision: AiFragmentDecisionKind;
+    decidedBy: string;
+    decidedAt: string;
+  }[];
+}
+
 export interface AiRunRepository {
   /** A queued run of the signed-in account. The trigger sends `ai.run` to the worker. */
   create<K extends AiRunKind>(run: {
@@ -101,6 +133,11 @@ export interface AiRunRepository {
   list(filter: AiRunFilter): Promise<AiRun[]>;
   /** `false` when access rules do not allow it (not a done run, or not a reader with a writing role). */
   addDecisions(runId: string, decisions: readonly NewAiFragmentDecision[]): Promise<boolean>;
+  /**
+   * The office AI usage log (`ai_usage_log`), newest first. The database clamps `limit` to 1..500 and
+   * rejects anybody but the admin with 42501 (`RepositoryError`).
+   */
+  usageLog(limit: number): Promise<AiUsageLogEntry[]>;
 }
 
 /** The worker side of a run. Needs the service client. */
@@ -130,7 +167,12 @@ export interface AiRunQueueStore {
   finish(
     id: string,
     outcome: (
-      | { readonly output: unknown; readonly promptVersion: string }
+      | {
+          readonly output: unknown;
+          readonly promptVersion: string;
+          /** Model(s) that produced the result (`AiRunResult.model`). */
+          readonly model?: string | null;
+        }
       | { readonly failure: { readonly reason: string; readonly message: string } }
     ) & { readonly outputTokens?: number | null },
   ): Promise<void>;
@@ -140,7 +182,7 @@ const DECISION_COLUMNS =
   'fragment, decision, final_text, content_deleted_at, decided_by, decided_at';
 
 const COLUMNS =
-  `id, office_id, kind, status, requested_by, employee_id, evaluation_id, input_refs, output, prompt_version, failure_reason, failure_message, requested_at, started_at, finished_at, content_deleted_at, partial_text, partial_output, output_tokens, progress_updated_at, ai_fragment_decisions(${DECISION_COLUMNS})` as const;
+  `id, office_id, kind, status, requested_by, employee_id, evaluation_id, input_refs, output, prompt_version, model, failure_reason, failure_message, requested_at, started_at, finished_at, content_deleted_at, partial_text, partial_output, output_tokens, progress_updated_at, ai_fragment_decisions(${DECISION_COLUMNS})` as const;
 
 interface DecisionRow {
   fragment: string;
@@ -162,6 +204,7 @@ interface RunRow {
   input_refs: unknown;
   output: unknown;
   prompt_version: string | null;
+  model: string | null;
   failure_reason: string | null;
   failure_message: string | null;
   requested_at: string;
@@ -194,6 +237,56 @@ function latestDecisions(rows: readonly DecisionRow[]): AiFragmentDecision[] {
   return [...latest.values()];
 }
 
+/** A row of `ai_usage_log`: the generated types mark every column of a table function as not null. */
+interface UsageLogRow {
+  id: string;
+  kind: AiRunKind;
+  status: AiRunStatus;
+  requested_by: string;
+  requester_first_name: string | null;
+  requester_last_name: string | null;
+  employee_id: string | null;
+  evaluation_id: string | null;
+  model: string | null;
+  prompt_version: string | null;
+  output_tokens: number | null;
+  failure_reason: string | null;
+  requested_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  content_deleted_at: string | null;
+  decisions: { fragment: string; decision: string; decidedBy: string; decidedAt: string }[] | null;
+}
+
+function toUsageLogEntry(row: UsageLogRow): AiUsageLogEntry {
+  const name = [row.requester_first_name, row.requester_last_name]
+    .filter((part) => part !== null)
+    .join(' ');
+  return {
+    id: row.id,
+    kind: row.kind,
+    status: row.status,
+    requestedBy: row.requested_by,
+    requesterName: name === '' ? null : name,
+    employeeId: row.employee_id,
+    evaluationId: row.evaluation_id,
+    model: row.model,
+    promptVersion: row.prompt_version,
+    outputTokens: row.output_tokens,
+    failureReason: row.failure_reason,
+    requestedAt: row.requested_at,
+    startedAt: row.started_at,
+    finishedAt: row.finished_at,
+    contentDeletedAt: row.content_deleted_at,
+    decisions: (row.decisions ?? []).map((entry) => ({
+      fragment: entry.fragment,
+      decision: asDecision(entry.decision),
+      decidedBy: entry.decidedBy,
+      decidedAt: entry.decidedAt,
+    })),
+  };
+}
+
 function toRun(row: RunRow): AiRun {
   let output: unknown = null;
   if (row.output !== null && row.content_deleted_at === null) {
@@ -221,6 +314,7 @@ function toRun(row: RunRow): AiRun {
     inputRefs: aiInputRefsSchema.parse(row.input_refs) as AiInputRefs,
     output,
     promptVersion: row.prompt_version,
+    model: row.model,
     failure:
       row.failure_reason === null
         ? null
@@ -285,6 +379,12 @@ export function createAiRunRepository(db: Db): AiRunRepository {
       if (error?.code === '42501') return false;
       if (error) throw new RepositoryError('aiRuns.addDecisions', error);
       return true;
+    },
+
+    async usageLog(limit) {
+      const { data, error } = await db.rpc('ai_usage_log', { p_limit: limit });
+      if (error) throw new RepositoryError('aiRuns.usageLog', error);
+      return (data as unknown as UsageLogRow[]).map(toUsageLogEntry);
     },
   };
 }
@@ -355,6 +455,7 @@ export function createAiRunQueueStore(db: ServiceDb): AiRunQueueStore {
               status: 'done' as const,
               output: toJson(outcome.output),
               prompt_version: outcome.promptVersion,
+              model: outcome.model ?? null,
               failure_reason: null,
               failure_message: null,
             }

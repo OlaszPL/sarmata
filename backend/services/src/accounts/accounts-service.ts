@@ -23,9 +23,19 @@ export interface EndMembershipResult {
   readonly openAsEvaluator: number;
 }
 
-/** Accounts of the own office. Admin only: any other role gets `forbidden`. */
+/** An active account of the own office as hr sees it when choosing an evaluator. */
+export interface AccountDirectoryEntry {
+  readonly accountId: string;
+  readonly role: OfficeRoleName;
+  readonly firstName: string | null;
+  readonly lastName: string | null;
+}
+
+/** Accounts of the own office. Admin only except `directory` (hr and admin): any other role gets `forbidden`. */
 export interface AccountsService {
   list(): Promise<Member[]>;
+  /** Active accounts of the own office (membership not ended today), with role and name only. hr and admin, others get `forbidden`. Sorted by last name, then first name. */
+  directory(): Promise<AccountDirectoryEntry[]>;
   /**
    * Requests the invitation of an account with a role and returns the id of the request. The worker invites the
    * account, creates the membership and links the employee record by e-mail (or creates one), then writes the
@@ -50,6 +60,8 @@ export interface AccountsServiceDependencies {
   /** Office and role of the signed-in account, `null` without an office. */
   readonly current: () => Promise<{ officeId: string; role: OfficeRoleName } | null>;
   readonly invitations: AccountInvitationRepository;
+  /** Today as an ISO date, default the current date in UTC. */
+  readonly today?: () => string;
 }
 
 function mapped(error: unknown): unknown {
@@ -75,7 +87,29 @@ export function createAccountsService(deps: AccountsServiceDependencies): Accoun
     }
   }
 
+  const today = deps.today ?? (() => new Date().toISOString().slice(0, 10));
+  const byName = (a: AccountDirectoryEntry, b: AccountDirectoryEntry) =>
+    (a.lastName ?? '').localeCompare(b.lastName ?? '', 'pl') ||
+    (a.firstName ?? '').localeCompare(b.firstName ?? '', 'pl');
+
   return {
+    async directory() {
+      const current = await deps.current();
+      if (current?.role !== 'admin' && current?.role !== 'hr') {
+        throw new ServiceError('forbidden', 'Only hr or an admin can list accounts');
+      }
+      const now = today();
+      return (await deps.repository.list())
+        .filter((member) => member.endedOn === null || member.endedOn > now)
+        .map(({ accountId, role, firstName, lastName }) => ({
+          accountId,
+          role,
+          firstName,
+          lastName,
+        }))
+        .sort(byName);
+    },
+
     async list() {
       await admin();
       return deps.repository.list();

@@ -50,8 +50,11 @@ export function Section({
         <Heading
           id={headingId}
           className={cn(
-            'text-ink leading-[normal] font-semibold',
+            'text-ink font-semibold',
             compact ? 'text-xl' : 'text-[1.875rem] tracking-[-0.0133em]',
+            // After the size: a Tailwind v4 font size sets its own line height, and cn drops an
+            // earlier leading class in favour of it.
+            'leading-[normal]',
           )}
         >
           {title}

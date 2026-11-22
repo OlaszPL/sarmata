@@ -47,14 +47,14 @@ isOneToOne: false
                   ]
                 },"ai_runs": {
                   Row: {
-                    "content_deleted_at": string | null,"employee_id": string | null,"evaluation_id": string | null,"failure_message": string | null,"failure_reason": string | null,"finished_at": string | null,"id": string,"input": Json | null,"input_refs": NonNullable<Json>,"kind": Database["public"]['Enums']["ai_run_kind"],"office_id": string,"output": Json | null,"output_tokens": number | null,"partial_output": Json | null,"partial_text": string | null,"progress_updated_at": string | null,"prompt_version": string | null,"requested_at": string,"requested_by": string,"started_at": string | null,"status": Database["public"]['Enums']["ai_run_status"]
+                    "content_deleted_at": string | null,"employee_id": string | null,"evaluation_id": string | null,"failure_message": string | null,"failure_reason": string | null,"finished_at": string | null,"id": string,"input": Json | null,"input_refs": NonNullable<Json>,"kind": Database["public"]['Enums']["ai_run_kind"],"model": string | null,"office_id": string,"output": Json | null,"output_tokens": number | null,"partial_output": Json | null,"partial_text": string | null,"progress_updated_at": string | null,"prompt_version": string | null,"requested_at": string,"requested_by": string,"started_at": string | null,"status": Database["public"]['Enums']["ai_run_status"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "content_deleted_at"?: string | null,"employee_id"?: string | null,"evaluation_id"?: string | null,"failure_message"?: string | null,"failure_reason"?: string | null,"finished_at"?: string | null,"id"?: string,"input"?: Json | null,"input_refs"?: NonNullable<Json>,"kind": Database["public"]['Enums']["ai_run_kind"],"office_id"?: string,"output"?: Json | null,"output_tokens"?: number | null,"partial_output"?: Json | null,"partial_text"?: string | null,"progress_updated_at"?: string | null,"prompt_version"?: string | null,"requested_at"?: string,"requested_by"?: string,"started_at"?: string | null,"status"?: Database["public"]['Enums']["ai_run_status"]
+                    "content_deleted_at"?: string | null,"employee_id"?: string | null,"evaluation_id"?: string | null,"failure_message"?: string | null,"failure_reason"?: string | null,"finished_at"?: string | null,"id"?: string,"input"?: Json | null,"input_refs"?: NonNullable<Json>,"kind": Database["public"]['Enums']["ai_run_kind"],"model"?: string | null,"office_id"?: string,"output"?: Json | null,"output_tokens"?: number | null,"partial_output"?: Json | null,"partial_text"?: string | null,"progress_updated_at"?: string | null,"prompt_version"?: string | null,"requested_at"?: string,"requested_by"?: string,"started_at"?: string | null,"status"?: Database["public"]['Enums']["ai_run_status"]
                   }
                   Update: {
-                    "content_deleted_at"?: string | null,"employee_id"?: string | null,"evaluation_id"?: string | null,"failure_message"?: string | null,"failure_reason"?: string | null,"finished_at"?: string | null,"id"?: string,"input"?: Json | null,"input_refs"?: NonNullable<Json>,"kind"?: Database["public"]['Enums']["ai_run_kind"],"office_id"?: string,"output"?: Json | null,"output_tokens"?: number | null,"partial_output"?: Json | null,"partial_text"?: string | null,"progress_updated_at"?: string | null,"prompt_version"?: string | null,"requested_at"?: string,"requested_by"?: string,"started_at"?: string | null,"status"?: Database["public"]['Enums']["ai_run_status"]
+                    "content_deleted_at"?: string | null,"employee_id"?: string | null,"evaluation_id"?: string | null,"failure_message"?: string | null,"failure_reason"?: string | null,"finished_at"?: string | null,"id"?: string,"input"?: Json | null,"input_refs"?: NonNullable<Json>,"kind"?: Database["public"]['Enums']["ai_run_kind"],"model"?: string | null,"office_id"?: string,"output"?: Json | null,"output_tokens"?: number | null,"partial_output"?: Json | null,"partial_text"?: string | null,"progress_updated_at"?: string | null,"prompt_version"?: string | null,"requested_at"?: string,"requested_by"?: string,"started_at"?: string | null,"status"?: Database["public"]['Enums']["ai_run_status"]
                   }
                   Relationships: [
                     {
@@ -625,6 +625,11 @@ isOneToOne: false
           Functions: {
             "admit_account":
 { Args: { "p_account_id": string,"p_first_name": string,"p_last_name": string,"p_office_id": string,"p_role": Database["public"]['Enums']["office_role"] }; Returns: string
+                           },
+"ai_usage_log":
+{ Args: { "p_limit"?: number }; Returns: {
+              "content_deleted_at": string,"decisions": Json,"employee_id": string,"evaluation_id": string,"failure_reason": string,"finished_at": string,"id": string,"kind": Database["public"]['Enums']["ai_run_kind"],"model": string,"output_tokens": number,"prompt_version": string,"requested_at": string,"requested_by": string,"requester_first_name": string,"requester_last_name": string,"started_at": string,"status": Database["public"]['Enums']["ai_run_status"]
+            }[]
                            },
 "anonymize_employee":
 { Args: { "p_employee_id": string,"p_facts": Json,"p_today": string }; Returns: undefined

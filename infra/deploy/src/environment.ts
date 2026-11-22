@@ -53,6 +53,8 @@ export interface Environment {
   readonly conflictingPackages: readonly string[];
   /** Commands on the engine host that zip and git updates need. */
   readonly engineTools: { readonly unzip: boolean; readonly git: boolean };
+  /** SARMATA_BUILD_CA_FILE: PEM of a TLS-inspecting proxy, passed to image builds as the ca secret. */
+  readonly buildCaFile: string | null;
 }
 
 export interface ProcessFacts {
@@ -75,7 +77,7 @@ const NO_TOOLS = { unzip: false, git: false } as const;
 const posixJoin = (...parts: string[]): string => posix.join(...parts);
 const win32Join = (...parts: string[]): string => win32.join(...parts);
 
-type Common = Pick<Environment, 'arch' | 'execPath' | 'releaseDir' | 'userHome'>;
+type Common = Pick<Environment, 'arch' | 'execPath' | 'releaseDir' | 'userHome' | 'buildCaFile'>;
 type InstallationFacts = Pick<Environment, 'installed' | 'sourcePresent' | 'installedVersion'>;
 
 interface Probe {
@@ -333,6 +335,11 @@ async function detectWindows(
   return { ...withFacts, engine: { state: 'missing', wsl: 'distro' } };
 }
 
+const nonEmpty = (value: string | undefined): string | null => {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === '' ? null : trimmed;
+};
+
 /** Reads the facts the plans need: system, engine state, directories, an existing installation. */
 export async function detectEnvironment(system: Host, facts: ProcessFacts): Promise<Environment> {
   const common: Common = {
@@ -340,6 +347,7 @@ export async function detectEnvironment(system: Host, facts: ProcessFacts): Prom
     execPath: facts.execPath,
     releaseDir: releaseDirOf(facts.execPath),
     userHome: facts.userHome,
+    buildCaFile: nonEmpty(facts.env.SARMATA_BUILD_CA_FILE),
   };
   const probe = probes(system);
   switch (operatingSystemOf(facts.platform)) {

@@ -9,8 +9,10 @@ import {
   type OfficeSettings,
   type OfficeSettingsRepository,
   type RegulationVersionRepository,
+  RepositoryError,
 } from '@sarmata/repositories';
 import { describe, expect, it, vi } from 'vitest';
+import { ZodError } from 'zod';
 import { ServiceError } from '../errors';
 import { type EvaluationService, type EvaluationView } from '../evaluations/evaluation-service';
 import { createAiService } from './ai-service';
@@ -71,6 +73,7 @@ const baseRun = {
   evaluationId: null,
   inputRefs: { noteIds: [] as { id: string; version: number }[], droppedNoteIds: [] as string[] },
   promptVersion: 'hr-signals.v1',
+  model: 'bielik-test',
   failure: null,
   requestedAt: '2026-11-21T10:00:00Z',
   startedAt: null,
@@ -108,6 +111,7 @@ function setup(
     get: vi.fn(() => Promise.resolve(signalsRun)),
     list: vi.fn(() => Promise.resolve([signalsRun])),
     addDecisions: vi.fn(() => Promise.resolve(true)),
+    usageLog: vi.fn(() => Promise.resolve([])),
     ...options.runs,
   };
   const notes = {
@@ -322,5 +326,41 @@ describe('ai service decide', () => {
     expect(runs.addDecisions).toHaveBeenCalledWith(RUN, [
       { fragment: 'question.0', decision: 'edited', finalText: 'Co możemy przesunąć?' },
     ]);
+  });
+});
+
+describe('ai service usage log', () => {
+  it('usageLog passes the default limit 100', async () => {
+    const { service, runs } = setup();
+    await service.usageLog();
+    expect(runs.usageLog).toHaveBeenCalledWith(100);
+  });
+
+  it('usageLog passes a given limit through', async () => {
+    const { service, runs } = setup();
+    await service.usageLog({ limit: 1000 });
+    expect(runs.usageLog).toHaveBeenCalledWith(1000);
+  });
+
+  it('usageLog rejects a non-integer limit before the repository call', async () => {
+    const { service, runs } = setup();
+    await expect(service.usageLog({ limit: 1.5 })).rejects.toBeInstanceOf(ZodError);
+    expect(runs.usageLog).not.toHaveBeenCalled();
+  });
+
+  it('usageLog maps 42501 to forbidden', async () => {
+    const { service } = setup({
+      runs: {
+        usageLog: () =>
+          Promise.reject(
+            new RepositoryError('aiRuns.usageLog', {
+              code: '42501',
+              message: 'insufficient_privilege',
+            }),
+          ),
+      },
+    });
+    const error = await failureOf(service.usageLog());
+    expect(error.code).toBe('forbidden');
   });
 });

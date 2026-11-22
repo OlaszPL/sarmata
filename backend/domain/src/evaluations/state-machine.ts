@@ -149,7 +149,7 @@ export function planTransition(
   };
 }
 
-export const DEFAULT_REFUSAL_NOTE = 'oceniany odmówił podpisania zapoznania się z oceną';
+export const DEFAULT_REFUSAL_NOTE = 'osoba oceniana odmówiła podpisania zapoznania się z oceną';
 
 /**
  * The event payload of a command: interrupt reason, place and, for a refused signature, the note and

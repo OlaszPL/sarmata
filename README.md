@@ -29,7 +29,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
        pnpm db:start
        pnpm db:reset
 
-   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy otwarte oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa), cztery zamknięte oceny do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu oraz przyznanie stopnia), byłego pracownika Romana Dawnego z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu. Notatki Marka, dwa przebiegi AI (szkic arkusza z edytowanym fragmentem i sygnały HR) oraz ustawienia SMTP wskazujące na Mailpit pochodzą z `database/supabase/seed.sql`.
+   `pnpm db:reset` czyści dane wszystkich worktree na wspólnej instancji, więc służy pierwszemu uruchomieniu albo świadomemu wyczyszczeniu. Nowy worktree potrzebuje tylko `pnpm regulations:sync`. `pnpm db:reset` kończy się synchronizacją oficjalnych wersji przepisów z `backend/regulations` do tabeli `regulation_versions`. To samo robi worker przy każdym starcie, a `pnpm regulations:sync` uruchamia ją osobno. Na końcu `pnpm db:reset` uruchamia też `pnpm db:seed:demo`, które zakłada trzy otwarte oceny demo (Marek Merytoryczny w stanie `okres`, Ewa Ewidencyjna w stanie `rozmowa` bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia, Stefan Sprzeciwny w stanie `sprzeciw` z oceną archiwalną i sygnałem stopnia z mocy prawa), pięć zamkniętych ocen tego roku, wszystkie liczone do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu, przyznanie stopnia oraz Jan Odwoławczy z oceną negatywną i sprzeciwem nieuwzględnionym przez kadry, bez odwołania do sądu pracy, z otwartym terminem odwołania), byłego pracownika Romana Dawnego z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu, a potem kolektor powiadomień na dziś, więc skrzynka kadr ma od razu zadania (stopień z mocy prawa i rozpatrzenie sprzeciwu Stefana). Notatki Marka, dwa przebiegi AI (szkic arkusza z edytowanym fragmentem i sygnały HR) oraz ustawienia SMTP wskazujące na Mailpit pochodzą z `database/supabase/seed.sql`.
 
 6. **AI lokalnie (opcjonalne, Mac z Apple Silicon).** Runtime LLM działa natywnie, bez Dockera (ADR 0005). Pierwsze `ai:setup` pobiera przypięty llama.cpp z Metal (17 MB) i model zalecany dla tego komputera z kontrolą SHA-256 do `~/Library/Application Support/sarmata/ai`. Na Macu z 16 GB (np. M2) to Bielik-4.5B-v3.0 Q4_K_M (2,9 GB):
 
@@ -102,7 +102,7 @@ Krok po kroku, od czystej maszyny do działającego środowiska.
 
     Prawdziwą instalację (`install` bez `--dry-run`) uruchamiaj tylko na maszynie wirtualnej albo osobnym komputerze: zakłada `~/Sarmata` (macOS) albo `/opt/sarmata` (Linux), kontenery projektu `sarmata` i porty 3000 i 8000.
 
-Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej”): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test` (Olga Oceniająca, przełożona Marka, Ewy i Stefana). Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`. Pracownicy demo (Marek, Ewa, Stefan, Roman) nie mają kont, bo oceniany nie używa aplikacji.
+Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej”): `admin@kropka.test`, `kadry@kropka.test`, `oceniajacy@kropka.test` (Olga Oceniająca, przełożona Marka, Ewy, Stefana i Jana). Czwarte konto, `bezurzedu@kropka.test`, nie ma urzędu i trafia na stronę `/brak-urzedu`. Pracownicy demo (Marek, Ewa, Stefan, Roman, Jan) nie mają kont, bo oceniany nie używa aplikacji.
 
 ## Skrypty
 
@@ -117,8 +117,8 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 | `pnpm format`, `pnpm format:check` | Prettier, z zapisem i tylko sprawdzenie |
 | `pnpm secrets:decrypt` | odszyfrowuje `secrets/dev.enc.env` do `.env.local` |
 | `pnpm db:start` / `db:stop` / `db:status` | instancja `sarmata`: API 55421, DB 55422, Studio 55423, Mailpit 55424 (SMTP 55425) |
-| `pnpm db:reset` | migracje od zera, dane demo, synchronizacja oficjalnych wersji przepisów i oceny demo |
-| `pnpm db:seed:demo` | zakłada trzy oceny demo przez prawdziwy serwis jako `oceniajacy@kropka.test` (sprzeciw jako `kadry@kropka.test`), pomija, gdy oceny już istnieją (wymaga `pnpm regulations:sync`) |
+| `pnpm db:reset` | migracje od zera, dane demo, synchronizacja oficjalnych wersji przepisów, oceny demo oraz powiadomienia demo z kolektorem na dziś (zadania kadr w skrzynce) |
+| `pnpm db:seed:demo` | zakłada oceny demo przez prawdziwy serwis jako `oceniajacy@kropka.test` (sprzeciw jako `kadry@kropka.test`), pomija, gdy oceny już istnieją (wymaga `pnpm regulations:sync`) |
 | `pnpm db:test` | testy pgTAP |
 | `pnpm db:types` | typy do `database/src/types.ts`, po każdej migracji |
 | `pnpm test:integration` | testy repozytoriów i workera na lokalnym Supabase, wymagają `pnpm db:reset` |
@@ -145,7 +145,7 @@ Konta demo (hasło `Haslo-Demo-2026`, urząd „Urząd Ministerstwa Testowego w 
 |---|---|
 | `pnpm web:env` | zapisuje `frontend/web/.env.local` z adresem i kluczem publicznym lokalnego Supabase, a ustawione w powłoce `SUPABASE_URL` i `SUPABASE_PUBLISHABLE_KEY` mają pierwszeństwo |
 | `pnpm dev` | Next.js w trybie deweloperskim (port ze zmiennej `PORT`, domyślnie 3000) |
-| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy, lista i karta pracownika, nowy pracownik z błędami, notatki ze strażnikiem danych wrażliwych, panel HR partnera. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`) |
+| `pnpm e2e` | testy Playwright: zgodność kont demo z seedem, logowanie i wylogowanie każdym kontem demo, dostępność (axe, WCAG 2.1 AA), pobieranie eksportów (arkusz PDF i DOCX, teczka ZIP, nazwa pliku z polskimi literami, kody 400, 401, 404 i 409), pulpit oceniającego na danych demo (także 400 px z powiększonym tekstem i nagłówek w jednej linii przy 1280 px, a z A+ menu w drugim wierszu i czytelna nazwa konta), szkielet sprawy oceny (nagłówek, etapy, zakładki z `aria-current`, panel boczny, 404 dla nieznanej sprawy), nawigacja, skip link, fokus na granatowych komórkach, menu konta, narzędzia A+ i wysoki kontrast, lista ocen z filtrem, rozpoczęcie oceny (odmowa przy ocenie w toku, wyszukiwanie z literówką, propozycja arkusza), część I (podsumowanie błędów przy zbyt wielu kryteriach, zatwierdzenie, podpis), dziennik, widok administratora bez formularzy, lista i karta pracownika, nowy pracownik z błędami, notatki ze strażnikiem danych wrażliwych, panel HR partnera, część II, III i sprawdzenie arkusza (bramka IPRZ, szkic AI z seeda, odczyt dla kadr, odnotowanie rozmowy, zapis szkicu, zatwierdzenie do zapoznania), skrzynka powiadomień (oznaczenie jako przeczytane zmniejsza licznik w nagłówku, pusta skrzynka kadr, widok administratora), pomoc (instrukcje według roli, podsumowanie błędów pustego pytania, zadanie pytania asystentowi, nieznane pytanie), pełna struktura deklaracji dostępności. Testy zmieniające dane demo mają nazwę `*.mutate.spec.ts` i idą po pozostałych, jeden plik naraz (projekt `mutating`). Gdy którykolwiek test bez zmian danych nie przejdzie, Playwright pomija testy `mutating` i raportuje je jako pominięte, nie jako nieudane |
 | `pnpm e2e:ui` | te same testy w trybie UI Playwright |
 | `pnpm e2e:walk` | zrzuty ekranów dla wybranych kont i ścieżek (`WALK_ACCOUNTS`, `WALK_PATHS`), opis w `.claude/skills/app-walkthrough/SKILL.md` |
 
@@ -154,14 +154,14 @@ Trasy (jedna linia na trasę, obszarami). Strony oznaczone „zaślepka” pokaz
 Bez logowania i bez urzędu:
 
 - `/logowanie`: logowanie
-- `/deklaracja-dostepnosci`: deklaracja dostępności (link w stopce, po zalogowaniu w pełnej powłoce)
+- `/deklaracja-dostepnosci`: deklaracja dostępności według wzoru z ustawy o dostępności cyfrowej (stan zgodności, treści niedostępne, sposób oceny, skróty klawiaturowe, kontakt, procedura żądania i skargi, dostępność architektoniczna, tłumacz języka migowego, daty rrrr-mm-dd z identyfikatorami `a11y-*`), link w stopce, po zalogowaniu w pełnej powłoce z nazwą urzędu
 - `/brak-urzedu`: konto bez urzędu i roli
 
 Pulpit i wspólne:
 
 - `/`: pulpit
-- `/powiadomienia`: powiadomienia (zaślepka)
-- `/pomoc`: pomoc (zaślepka)
+- `/powiadomienia`: skrzynka powiadomień: nieprzeczytane, przeczytane i załatwione, termin z liczbą dni, link do właściwej zakładki sprawy, oznaczenie jako przeczytane pojedynczo i wszystkich naraz (licznik w nagłówku maleje), po oznaczeniu `?oznaczono=jedno|wszystkie`, administrator widzi wyjaśnienie zamiast skrzynki
+- `/pomoc`: instrukcja krok po kroku dla oceniającego i kadr (własna rola pierwsza) oraz asystent przepisów (AI, pytanie o procedurę, odpowiedź z cytatami fragmentów przepisów, ocena odpowiedzi jako decyzja w dzienniku AI), wynik pytania `?pytanie=<id przebiegu>&tresc=<pytanie>` z odpytywaniem do limitu 4 minut, stany AI wyłączone, w toku, nieudane, po limicie i usunięte
 - `/komponenty`: katalog komponentów `@sarmata/ui`, tylko w trybie deweloperskim (404 w produkcji), poza menu
 
 Oceny:
@@ -170,9 +170,9 @@ Oceny:
 - `/oceny/nowa`: rozpoczęcie oceny: wyszukanie pracownika (także z literówką), propozycja arkusza według rodzaju stanowiska, powód odmowy, gdy pracownik nie podlega ocenie
 - `/oceny/[id]`: sprawa oceny, przegląd: następny krok z przyciskiem do właściwej zakładki, brakujące pola przed zatwierdzeniem, ostrzeżenia i sygnały, dane sprawy (nad nim nagłówek, etapy, zakładki i panel boczny sprawy)
 - `/oceny/[id]/czesc-1`: część I: kryteria dodatkowe z katalogu, termin tylko skracany, zatwierdzenie z datą rozmowy rozpoczynającej i miejscowością, odnotowanie podpisu części I
-- `/oceny/[id]/czesc-2`: część II, ocena (zaślepka zakładki)
-- `/oceny/[id]/czesc-3`: część III, wniosek o stopień (zaślepka zakładki)
-- `/oceny/[id]/sprawdz`: sprawdzenie i zatwierdzenie arkusza (zaślepka zakładki)
+- `/oceny/[id]/czesc-2`: część II, oceny cząstkowe, uzasadnienie, wnioski IPRZ, autozapis, szkic AI, odnotowanie rozmowy oceniającej
+- `/oceny/[id]/czesc-3`: część III, wniosek o stopień, usunięcie zapisanego wniosku, gdy ocena go już nie dopuszcza
+- `/oceny/[id]/sprawdz`: sprawdzenie całego arkusza, bramki i zatwierdzenie do zapoznania
 - `/oceny/[id]/zdarzenia`: zapoznanie albo odmowa podpisu, czas na sprzeciw i zamknięcie, sprzeciw i jego wynik (kadry), przerwanie (kadry), zdarzenia boczne: nieobecność, zmiana terminu z zawiadomieniem PDF, zmiana stanowiska, zmiana oceniającego (kadry), korekta arkusza (administrator)
 - `/oceny/[id]/dziennik`: dziennik zdarzeń z datą faktyczną, autorem wpisu i czasem wpisania
 
@@ -185,12 +185,12 @@ Pracownicy i notatki:
 
 Kadry:
 
-- `/kadry`: panel kadr (zaślepka)
-- `/kadry/harmonogram`: harmonogram ocen (trasa zarezerwowana)
-- `/kadry/statystyki`: statystyki i DSC-OCK (trasa zarezerwowana)
-- `/kadry/rejestr`: rejestr kadr (trasa zarezerwowana)
-- `/kadry/import`: import pracowników z CSV (trasa zarezerwowana)
-- `/kadry/struktura`: struktura przełożonych (trasa zarezerwowana)
+- `/kadry`: zadania kadr z terminów i etapów ocen (sprzeciw do rozstrzygnięcia, stopień z mocy prawa, ocena po terminie)
+- `/kadry/harmonogram`: harmonogram ocen w toku z filtrami horyzontu, sytuacji i komórki (kadry i administrator)
+- `/kadry/statystyki`: rozkład ocen na tle kraju, potrzeby rozwojowe, raport oceniających i pobranie CSV do sprawozdania DSC-OCK (kadry i administrator)
+- `/kadry/rejestr`: rejestr odwołań do sądu pracy i przyznanych stopni służbowych
+- `/kadry/import`: import pracowników z CSV w czterech krokach z przebiegiem próbnym przed zapisem
+- `/kadry/struktura`: drzewo przełożonych ze zmianą przełożonego pracownika
 
 Administrator:
 
@@ -242,6 +242,8 @@ Skrypt setup po starcie wspólnej bazy synchronizuje oficjalne wersje przepisów
 ## Instalacja w urzędzie
 
 Instrukcja dla działu IT urzędu. Instalacja nie używa SOPS ani kont w usługach zewnętrznych: kreator generuje hasła i klucze lokalnie i zapisuje je tylko w pliku `.env` katalogu instalacji. Katalog instalacji jest dostępny tylko dla konta, które instalowało (Linux `0750`, macOS `0700`, Windows z Docker Desktop: lista ACL tylko dla tego konta, SYSTEM i Administratorów). Potrzebny jest dostęp do internetu w czasie instalacji (obrazy Dockera, pakiety npm do budowy aplikacji, opcjonalnie modele AI).
+
+Obrazy aplikacji budują się na Debianie, a worker ma wbudowane wyszukiwanie przepisów (semble) razem z modelem embeddingów, który pobiera przy budowaniu z Hugging Face. W sieci z proxy podmieniającym certyfikaty TLS ustaw przed instalacją `SARMATA_BUILD_CA_FILE` na ścieżkę do pliku PEM z certyfikatem proxy (np. `export SARMATA_BUILD_CA_FILE=/etc/ssl/proxy.pem`). Instalator przekazuje go budowaniu jako sekret BuildKit `ca`. W zwykłej sieci zmienna nie jest potrzebna.
 
 ### Wybór profilu
 

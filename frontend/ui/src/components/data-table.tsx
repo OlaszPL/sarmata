@@ -37,8 +37,9 @@ export function DataTable<Row>({
   if (rows.length === 0 && empty !== undefined) return <>{empty}</>;
 
   return (
-    // Side padding keeps the focus ring of the first column inside the scrolling box.
-    <div className={cn('focus-inset -mx-2 overflow-x-auto px-2', className)}>
+    // Side padding keeps the focus ring of the first column inside the scrolling box. relative keeps
+    // absolutely placed sr-only text of the cells inside it too, so it cannot widen a narrow page.
+    <div className={cn('focus-inset relative -mx-2 overflow-x-auto px-2', className)}>
       <table className="w-full border-collapse text-left text-[0.9375rem] leading-[normal]">
         <caption
           className={

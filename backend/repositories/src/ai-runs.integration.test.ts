@@ -11,6 +11,7 @@ import {
   createOfficeSettingsRepository,
   createRepositories,
   createServiceClient,
+  RepositoryError,
 } from './index';
 
 function env(name: string): string {
@@ -284,5 +285,43 @@ describe('demo seed', () => {
 
     const settings = await createOfficeSettingsRepository(evaluator).get();
     expect(settings?.appreciationGapDays).toBe(DEFAULT_APPRECIATION_GAP_DAYS);
+  });
+});
+
+describe('ai usage log', () => {
+  const seedRunIds = [
+    '44444444-4444-4444-8444-000000000001',
+    '44444444-4444-4444-8444-000000000002',
+    '44444444-4444-4444-8444-000000000003',
+  ];
+
+  it('admin reads the seeded runs as metadata without any content', async () => {
+    const log = await createAiRunRepository(await signedIn('admin@kropka.test')).usageLog(500);
+    const seeded = log.filter((entry) => seedRunIds.includes(entry.id));
+    expect(seeded.map((entry) => entry.id).sort()).toEqual(seedRunIds);
+    for (const entry of seeded) {
+      expect(entry).toMatchObject({
+        status: 'done',
+        model: 'bielik-4.5b-v3.0-instruct',
+        requesterName: 'Olga Oceniająca',
+      });
+      expect(entry).not.toHaveProperty('input');
+      expect(entry).not.toHaveProperty('output');
+    }
+    const draft = seeded.find((entry) => entry.id === seedRunIds[0]);
+    expect(draft?.decisions.map(({ fragment, decision }) => ({ fragment, decision }))).toEqual([
+      { fragment: 'justification.0', decision: 'edited' },
+      { fragment: 'rating.communication', decision: 'accepted' },
+    ]);
+    for (const decision of draft?.decisions ?? []) {
+      expect(decision).not.toHaveProperty('finalText');
+    }
+  });
+
+  it('hr is refused with 42501', async () => {
+    const hr = createAiRunRepository(await signedIn('kadry@kropka.test'));
+    await expect(hr.usageLog(10)).rejects.toSatisfy(
+      (error: unknown) => error instanceof RepositoryError && error.code === '42501',
+    );
   });
 });

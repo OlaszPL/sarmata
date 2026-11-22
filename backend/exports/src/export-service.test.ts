@@ -218,7 +218,7 @@ describe('event log csv', () => {
         events: [
           approval('signature_refused', 1, '2026-06-20', {
             place: 'Kraków',
-            refusalNote: 'Oceniany odmówił podpisu',
+            refusalNote: 'Osoba oceniana odmówiła podpisu',
             witnesses: ['Anna Świadek'],
           }),
           event({
@@ -255,7 +255,7 @@ describe('event log csv', () => {
     );
     const details = log.rows.map((row) => row.details);
     expect(details[0]).toBe(
-      'Notatka o odmowie podpisu: Oceniany odmówił podpisu. Świadkowie: Anna Świadek. Miejscowość: Kraków.',
+      'Notatka o odmowie podpisu: Osoba oceniana odmówiła podpisu. Świadkowie: Anna Świadek. Miejscowość: Kraków.',
     );
     expect(details[1]).toContain('sprzeciw uwzględniony, ocena zmieniona');
     expect(details[2]).toBe(

@@ -36,11 +36,13 @@ export function AppShell({
       <header className="border-rule border-b">
         {/*
           From `xl` (1280px) everything sits on one line and the tools shrink (the account cell
-          truncates). Below, cells wrap onto a second line when they do not fit. Cells of the first
+          truncates). With the larger text of the A+ tool (`data-text-size="large"` on the root) the
+          one-line header starts at `2xl` (1536px) instead. Below, cells wrap onto a second line when
+          they do not fit. Cells of the first
           line draw the line between the two, the row overlaps the header border by 1px so a single
           line stays single.
         */}
-        <div className="-mb-px flex flex-wrap items-stretch xl:flex-nowrap">
+        <div className="-mb-px flex flex-wrap items-stretch xl:flex-nowrap xl:in-data-[text-size=large]:flex-wrap 2xl:in-data-[text-size=large]:flex-nowrap">
           <a
             href={homeHref}
             className="bg-navy border-rule flex min-h-16 shrink-0 items-center gap-3 border-b px-6 text-white no-underline"
@@ -53,7 +55,11 @@ export function AppShell({
             </span>
             <span className="sr-only">: {product.tagline}</span>
           </a>
-          {nav ? <div className="border-rule hidden shrink-0 border-b xl:flex">{nav}</div> : null}
+          {nav ? (
+            <div className="border-rule hidden shrink-0 border-b xl:flex xl:in-data-[text-size=large]:hidden 2xl:in-data-[text-size=large]:flex">
+              {nav}
+            </div>
+          ) : null}
           <div className="border-rule flex-1 border-b" />
           {/* -ml-px: when the filler shrinks to nothing, the first tool line lies on the last nav line. */}
           <div className="-ml-px flex min-h-16 min-w-0 grow items-stretch justify-end">
@@ -62,7 +68,7 @@ export function AppShell({
           </div>
         </div>
         {nav ? (
-          <div className="border-rule border-t xl:hidden">
+          <div className="border-rule border-t xl:hidden xl:in-data-[text-size=large]:block 2xl:in-data-[text-size=large]:hidden">
             <div className="-mb-px">{nav}</div>
           </div>
         ) : null}

@@ -158,7 +158,7 @@ describe('buildSheetDocument', () => {
       events: [
         approval('signature_refused', 1, '2026-06-20', {
           place: 'Kraków',
-          refusalNote: 'Oceniany odmówił podpisu.',
+          refusalNote: 'Osoba oceniana odmówiła podpisu.',
           witnesses: ['Anna Świadek', 'Piotr Drugi'],
         }),
       ],
@@ -166,7 +166,7 @@ describe('buildSheetDocument', () => {
     expect(document.approvals[0]).toMatchObject({
       kind: 'signature_refused',
       place: 'Kraków',
-      refusalNote: 'Oceniany odmówił podpisu.',
+      refusalNote: 'Osoba oceniana odmówiła podpisu.',
       witnesses: ['Anna Świadek', 'Piotr Drugi'],
     });
     expect(document.placeAndDate.partTwoEvaluated?.place).toBe('Kraków');
@@ -178,7 +178,7 @@ describe('buildSheetDocument', () => {
         approval('sheet_approved', 1, '2026-06-15'),
         approval('signature_refused', 1, '2026-06-20', {
           place: 'Kraków',
-          refusalNote: 'Oceniany odmówił podpisu',
+          refusalNote: 'Osoba oceniana odmówiła podpisu',
           witnesses: ['Anna Świadek', 'Piotr Drugi'],
         }),
       ],
@@ -188,7 +188,7 @@ describe('buildSheetDocument', () => {
       place: 'Kraków',
       date: '20.06.2026',
       status:
-        'odmowa podpisu. Notatka o odmowie podpisu: Oceniany odmówił podpisu. Świadkowie: Anna Świadek, Piotr Drugi.',
+        'odmowa podpisu. Notatka o odmowie podpisu: Osoba oceniana odmówiła podpisu. Świadkowie: Anna Świadek, Piotr Drugi.',
     });
     expect(line.status).not.toContain('zatwierdzono');
   });

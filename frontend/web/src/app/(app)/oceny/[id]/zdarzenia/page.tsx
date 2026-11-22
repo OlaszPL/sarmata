@@ -61,10 +61,20 @@ export default async function Page({
         : reason,
     account: nameOf,
   });
-  const people = accounts.flatMap((employee) =>
-    employee.userId === null || employee.userId === view.evaluatorAccountId
-      ? []
-      : [{ accountId: employee.userId, name: `${employee.firstName} ${employee.lastName}` }],
+  // Only evaluator and hr accounts may lead an evaluation, the directory says who has which role.
+  const directory = panels.has('evaluatorChange') ? await services.accounts.directory() : [];
+  const people = directory.flatMap((entry) =>
+    (entry.role === 'evaluator' || entry.role === 'hr') &&
+    entry.accountId !== view.evaluatorAccountId
+      ? [
+          {
+            accountId: entry.accountId,
+            name:
+              [entry.firstName, entry.lastName].filter(Boolean).join(' ') ||
+              nameOf(entry.accountId),
+          },
+        ]
+      : [],
   );
 
   return (

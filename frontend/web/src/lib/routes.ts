@@ -55,6 +55,8 @@ export const routes = {
   hrRegister: '/kadry/rejestr',
   hrImport: '/kadry/import',
   hrTree: '/kadry/struktura',
+  /** CSV of the DSC-OCK statistics report for a year. */
+  hrDscOckCsv: (year: number) => withQuery('/api/kadry/dsc-ock', { rok: String(year) }),
 
   // Administrator.
   settings: '/ustawienia',
