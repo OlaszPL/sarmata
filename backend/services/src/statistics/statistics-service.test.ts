@@ -126,6 +126,14 @@ const baseSettings: OfficeSettings = {
   objectionAddresseeSheetA: null,
   appreciationGapDays: 30,
   evaluatorFlags: { minEvaluations: 5, centralShare: 0.8, leniencyPoints: 1 },
+  accessibility: {
+    officeAddress: null,
+    contactName: null,
+    contactEmail: null,
+    contactPhone: null,
+    architecture: null,
+    signLanguage: null,
+  },
   smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
 };
 

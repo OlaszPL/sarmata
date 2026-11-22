@@ -34,6 +34,14 @@ const settings: OfficeSettings = {
   objectionAddresseeSheetA: null,
   appreciationGapDays: 30,
   evaluatorFlags: { minEvaluations: 5, centralShare: 0.8, leniencyPoints: 1 },
+  accessibility: {
+    officeAddress: null,
+    contactName: null,
+    contactEmail: null,
+    contactPhone: null,
+    architecture: null,
+    signLanguage: null,
+  },
   smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
 };
 
@@ -72,6 +80,7 @@ const baseRun = {
   employeeId: EMPLOYEE,
   evaluationId: null,
   inputRefs: { noteIds: [] as { id: string; version: number }[], droppedNoteIds: [] as string[] },
+  question: null,
   promptVersion: 'hr-signals.v1',
   model: 'bielik-test',
   failure: null,

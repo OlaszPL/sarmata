@@ -27,14 +27,12 @@ function paragraphs(text: string): string[] {
 
 function DecisionForm({
   runId,
-  question,
   evaluationId,
   decision,
   variant,
   children,
 }: {
   runId: string;
-  question: string;
   evaluationId: string | null;
   decision: 'accepted' | 'rejected';
   variant: 'secondary' | 'link';
@@ -43,7 +41,6 @@ function DecisionForm({
   return (
     <form action={decideAnswer}>
       <input type="hidden" name="runId" value={runId} />
-      <input type="hidden" name="question" value={question} />
       {evaluationId ? <input type="hidden" name="evaluationId" value={evaluationId} /> : null}
       <input type="hidden" name="decision" value={decision} />
       <Button type="submit" variant={variant}>
@@ -53,7 +50,7 @@ function DecisionForm({
   );
 }
 
-function Body({ runId, question, state, canDecide, decisionFailed, evaluationId }: AnswerProps) {
+function Body({ runId, state, canDecide, decisionFailed, evaluationId }: AnswerProps) {
   switch (state.kind) {
     case 'waiting':
       return (
@@ -135,7 +132,6 @@ function Body({ runId, question, state, canDecide, decisionFailed, evaluationId 
                   <>
                     <DecisionForm
                       runId={runId}
-                      question={question}
                       evaluationId={evaluationId}
                       decision="accepted"
                       variant="secondary"
@@ -144,7 +140,6 @@ function Body({ runId, question, state, canDecide, decisionFailed, evaluationId 
                     </DecisionForm>
                     <DecisionForm
                       runId={runId}
-                      question={question}
                       evaluationId={evaluationId}
                       decision="rejected"
                       variant="link"

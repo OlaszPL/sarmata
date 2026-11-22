@@ -11,7 +11,7 @@ Backend jest zaimplementowany w zakresie planów B1 do B10: dostęp i role (RLS,
 - **Import CSV pracowników.** Backend jest (`services.employeeImport`), nie ma ekranu. Tylko CSV, bez XLSX.
 - **Strażnik danych wrażliwych oparty o AI przy zapisie notatki**: podpięty jako kontrola przed zapisem (`services.notes.check` i `checkResult`). Zapis nadal blokuje tylko słownik słów kluczowych, ostrzeżenia AI niczego nie blokują. Brak ekranu notatki z kontrolą i propozycją.
 - **Ostrzeżenia z przepisów.** Jest ostrzeżenie o stopniu, który przysługuje z mocy prawa mimo wniosku. Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG rozpatrujący sprzeciw, jest niemożliwe, dopóki w aplikacji nie ma roli DG.
-- **Pobieranie archiwum teczek pracownika**: jest route handler `GET /api/pracownicy/[id]/archiwum`, nie ma jeszcze przycisku w ekranie kadr.
+- **Pobieranie archiwum teczek pracownika**: route handler `GET /api/pracownicy/[id]/archiwum` i przycisk pobrania w działaniach kadr na karcie pracownika (`hr-actions.tsx`).
 - **Udostępnianie oceny ocenianemu**: poza zakresem.
 
 ## Użytkownicy i role
@@ -193,6 +193,7 @@ Plik powstaje na żądanie w procesie aplikacji z danych w bazie (bez Storage i 
 - Skrzynka powiadomień w aplikacji działa zawsze, także bez SMTP. W demo maile widać w Mailpit z lokalnego Supabase.
 - Przypomnienia domyślnie 14 i 3 dni przed terminem (admin zmienia w `OfficeSettings.reminderLeadDays`: 1 do 5 wartości z zakresu 1 do 90). Po terminie eskalacja do kadr.
 - Admin ustawia też domyślną miejscowość (`defaultPlace`) i adresata sprzeciwu na arkuszu A (`objectionAddresseeSheetA`). Gdy adresat jest pusty, obowiązuje tekst z `rules.json`. `EvaluationView.objectionAddressee` podaje adresata obowiązującego dla arkusza: dla A nadpisanie urzędu albo tekst z reguł, dla B i C tekst z reguł.
+- Dane do deklaracji dostępności (art. 10 ust. 4 pkt 4, 6 i 7 ustawy o dostępności cyfrowej) są w `OfficeSettings.accessibility`: `officeAddress`, `contactName` (osoba albo komórka), `contactEmail`, `contactPhone`, `architecture` (link http albo https do opisu albo tekst) i `signLanguage`. Wszystkie opcjonalne, czyta je każde członkostwo, zmienia admin (kolumny `accessibility_*`). Deklaracja `/deklaracja-dostepnosci` pokazuje je zalogowanym, a przy pustym polu i dla gościa zostaje ogólny tekst.
 - Ustawienia SMTP są w `office_settings`. Hasło zapisuje wyłącznie funkcja `set_smtp_password` (admin, Supabase Vault), klient widzi tylko `passwordSet`. Hasło czyta tylko worker wysyłki przez `office_smtp_settings` (klient serwisowy).
 - Kadry dostają zadania: stopień z mocy prawa (30 dni), 14 dni DG na sprzeciw, oceny po terminie.
 - Implementacja (B4): `public.collect_notifications(p_today)` uruchamia pg_cron codziennie o 5:00 UTC (`notifications-daily`), a ręcznie `pnpm notifications:collect`. Zbieracz nie liczy terminów od nowa, tylko czyta zapisane sloty `evaluation_deadlines`. Serwis ocen zapisuje też slot `gradeByLawGrant` z sygnału stopnia z mocy prawa.
@@ -244,13 +245,13 @@ Każde przejście to zdarzenie w dzienniku z datą faktyczną. Przejścia sprawd
 
 ## Scenariusz demo
 
-Dane demo ładuje `pnpm db:reset` (seed SQL plus `pnpm db:seed:demo`), opis kont i danych jest w README. Urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej” ma konta admina, kadr i oceniającego. Pracownicy Marek, Ewa i Stefan mają otwarte oceny w stanach `okres`, `rozmowa` (bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia) i `sprzeciw` (z oceną archiwalną i sygnałem stopnia z mocy prawa). Do tego trzy notatki Marka z wersjonowaną edycją, dwa przebiegi AI (szkic arkusza z edytowanym fragmentem i sygnały HR), cztery zamknięte oceny do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu oraz przyznanie stopnia), były pracownik z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu. Scenariusz ekranów ustalimy przy frontendzie.
+Dane demo ładuje `pnpm db:reset` (seed SQL plus `pnpm db:seed:demo`), opis kont i danych jest w README. Urząd „Urząd Ministerstwa Testowego w Kropce Wielkopolskiej” ma konta admina, kadr i oceniającego. Pracownicy Marek, Ewa i Stefan mają otwarte oceny w stanach `okres`, `rozmowa` (bez wniosków IPRZ, żeby pokazać bramkę zatwierdzenia) i `sprzeciw` (z oceną archiwalną i sygnałem stopnia z mocy prawa). Do tego trzy notatki Marka z wersjonowaną edycją, cztery przebiegi AI (szkic arkusza z edytowanym fragmentem, sygnały HR, momenty docenienia Ewy i odpowiedź asystenta procedury z cytatami z art. 83 ustawy i § 12 rozporządzenia), dane urzędu do deklaracji dostępności, cztery zamknięte oceny do statystyk (w tym negatywna ze sprzeciwem i odwołaniem do sądu oraz przyznanie stopnia), były pracownik z okresem retencji kończącym się 31.12.2026 i szkic przepisów urzędu. Scenariusz ekranów ustalimy przy frontendzie.
 
 ## Usługi AI (pełna lista)
 
 Wszystkie działają tylko przy włączonym przełączniku AI urzędu, a każde wywołanie trafia do dziennika użycia AI. Prosi oceniający albo kadry (admin nie).
 
-Wszystkie wywołania idą przez kolejkę (ADR 0008): serwis `ai` zbiera migawkę wejścia w kontekście użytkownika (RLS), zapisuje przebieg `queued`, trigger wysyła zadanie `ai.run`, worker woła model i zapisuje wynik, a front odpytuje `ai.get(id)`. Notatki w migawce mieszczą się w 6000 znaków, najnowsze zostają, pominięte są wymienione w `inputRefs.droppedNoteIds`. Przebieg czekający w kolejce, gdy admin wyłączył AI, kończy się porażką `disabled`.
+Wszystkie wywołania idą przez kolejkę (ADR 0008): serwis `ai` zbiera migawkę wejścia w kontekście użytkownika (RLS), zapisuje przebieg `queued`, trigger wysyła zadanie `ai.run`, worker woła model i zapisuje wynik, a front odpytuje `ai.get(id)`. Przebieg `procedure_question` niesie treść pytania w `AiRun.question` (z migawki wejścia), więc ekran pomocy nie przenosi jej w adresie. Pole jest `null` dla innych usług i po usunięciu treści przez retencję. Notatki w migawce mieszczą się w 6000 znaków, najnowsze zostają, pominięte są wymienione w `inputRefs.droppedNoteIds`. Przebieg czekający w kolejce, gdy admin wyłączył AI, kończy się porażką `disabled`.
 
 Nazwy kodowe usług (`AiRunKind`): `sheet_draft`, `quality_check`, `sensitive_data`, `conversation_prep`, `criteria_proposals`, `appreciation_moments`, `hr_signals`, `procedure_question`.
 

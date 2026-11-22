@@ -22,6 +22,37 @@ const evaluatorFlagsPatchSchema = z.strictObject({
   leniencyPoints: z.number().min(0.1).max(4).optional(),
 });
 
+const optionalText = (max: number) => z.string().trim().min(1).max(max).nullable().optional();
+
+/** Digits, spaces, brackets and hyphens with an optional leading plus, e.g. `+48 22 123 45 67`. */
+export const PHONE_PATTERN = /^\+?[0-9][0-9 ()-]{4,28}[0-9]$/;
+
+/**
+ * Office data the accessibility statement needs (art. 10 ust. 4 pkt 4, 6 and 7 of the digital
+ * accessibility act). Every field is optional, the statement falls back to its generic text.
+ */
+const accessibilityPatchSchema = z.strictObject({
+  officeAddress: optionalText(500),
+  /** Person or unit to contact about accessibility. */
+  contactName: optionalText(200),
+  contactEmail: z.email().max(254).nullable().optional(),
+  contactPhone: z.string().trim().regex(PHONE_PATTERN).nullable().optional(),
+  /** A link (http or https) or a text about the architectural accessibility of the buildings. */
+  architecture: optionalText(4000),
+  /** Sign language interpreter information. */
+  signLanguage: optionalText(2000),
+});
+
+/** Office data of the accessibility statement, `null` where the admin left a field empty. */
+export interface OfficeAccessibility {
+  officeAddress: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  architecture: string | null;
+  signLanguage: string | null;
+}
+
 /** Thresholds of the evaluator flags in the statistics, stored in the office settings. */
 export interface EvaluatorFlagThresholds {
   /** Evaluations of one evaluator in a year needed before any flag applies. */
@@ -51,6 +82,7 @@ export const officeSettingsPatchSchema = z.strictObject({
   /** Days without an appreciation after which the evaluator gets the overdue signal (B7). */
   appreciationGapDays: z.number().int().min(1).max(365).optional(),
   smtp: smtpPatchSchema.optional(),
+  accessibility: accessibilityPatchSchema.optional(),
 });
 export type OfficeSettingsPatchInput = z.input<typeof officeSettingsPatchSchema>;
 export type OfficeSettingsPatch = z.output<typeof officeSettingsPatchSchema>;

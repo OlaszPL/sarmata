@@ -34,6 +34,11 @@ interface AiRunBase {
   readonly employeeId: string | null;
   readonly evaluationId: string | null;
   readonly inputRefs: AiInputRefs;
+  /**
+   * The question of a `procedure_question` run, read from its input snapshot. Null for the other kinds
+   * and after retention removed the content.
+   */
+  readonly question: string | null;
   readonly promptVersion: string | null;
   /** Model(s) that produced the result, e.g. `bielik-4.5b-v3.0-instruct`. Null before the result. */
   readonly model: string | null;
@@ -129,7 +134,7 @@ export interface AiRunRepository {
   }): Promise<AiRun>;
   /** `null` for a run that does not exist or is not visible. */
   get(id: string): Promise<AiRun | null>;
-  /** Newest first, at most 50, without the input snapshot. */
+  /** Newest first, at most 50, without the input snapshot (only the `question` of a procedure question). */
   list(filter: AiRunFilter): Promise<AiRun[]>;
   /** `false` when access rules do not allow it (not a done run, or not a reader with a writing role). */
   addDecisions(runId: string, decisions: readonly NewAiFragmentDecision[]): Promise<boolean>;
@@ -182,7 +187,7 @@ const DECISION_COLUMNS =
   'fragment, decision, final_text, content_deleted_at, decided_by, decided_at';
 
 const COLUMNS =
-  `id, office_id, kind, status, requested_by, employee_id, evaluation_id, input_refs, output, prompt_version, model, failure_reason, failure_message, requested_at, started_at, finished_at, content_deleted_at, partial_text, partial_output, output_tokens, progress_updated_at, ai_fragment_decisions(${DECISION_COLUMNS})` as const;
+  `id, office_id, kind, status, requested_by, employee_id, evaluation_id, input_refs, question:input->>question, output, prompt_version, model, failure_reason, failure_message, requested_at, started_at, finished_at, content_deleted_at, partial_text, partial_output, output_tokens, progress_updated_at, ai_fragment_decisions(${DECISION_COLUMNS})` as const;
 
 interface DecisionRow {
   fragment: string;
@@ -202,6 +207,7 @@ interface RunRow {
   employee_id: string | null;
   evaluation_id: string | null;
   input_refs: unknown;
+  question: string | null;
   output: unknown;
   prompt_version: string | null;
   model: string | null;
@@ -312,6 +318,8 @@ function toRun(row: RunRow): AiRun {
     employeeId: row.employee_id,
     evaluationId: row.evaluation_id,
     inputRefs: aiInputRefsSchema.parse(row.input_refs) as AiInputRefs,
+    question:
+      row.kind === 'procedure_question' && row.content_deleted_at === null ? row.question : null,
     output,
     promptVersion: row.prompt_version,
     model: row.model,

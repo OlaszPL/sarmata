@@ -55,6 +55,25 @@ test.describe('admin changes', () => {
     await expect(page.getByLabel('Domyślna miejscowość')).toHaveValue('Kropka');
   });
 
+  test('an invalid accessibility phone is reported at its field and nothing is saved', async ({
+    page,
+  }) => {
+    await page.goto('/ustawienia');
+    const phone = page.getByLabel('Telefon w sprawie dostępności');
+    const before = await phone.inputValue();
+    await phone.fill('zadzwoń');
+    await page.getByRole('button', { name: 'Zapisz ustawienia urzędu' }).click();
+
+    const summary = errorSummary(page, 'Popraw ustawienia urzędu');
+    await expect(summary).toBeFocused();
+    await expect(
+      summary.getByRole('link', { name: /Wpisz numer telefonu z cyframi/ }),
+    ).toHaveAttribute('href', '#accessibilityContactPhone');
+    await expect(phone).toHaveValue('zadzwoń');
+    await page.goto('/ustawienia');
+    await expect(phone).toHaveValue(before);
+  });
+
   test('an invitation shows its pending status', async ({ page }) => {
     await page.goto('/ustawienia/konta');
     await page.getByLabel('Imię', { exact: true }).fill('Tadeusz');

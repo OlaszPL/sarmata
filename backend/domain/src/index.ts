@@ -130,6 +130,7 @@ export {
 } from './notes/sensitive-data';
 export {
   type EvaluationVisibility,
+  type OfficeAccessibility,
   type OfficeSettingsPatch,
   type OfficeSettingsPatchInput,
   evaluationVisibilitySchema,

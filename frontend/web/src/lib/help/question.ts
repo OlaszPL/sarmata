@@ -101,17 +101,13 @@ export const questionSchema = z.object({
 });
 
 /**
- * Link back to the assistant with the answer in view. The run does not carry the question text, so
- * it travels in `tresc`. `ocena` keeps the evaluation the question is about.
+ * Link back to the assistant with the answer in view. The question text comes from the run
+ * (`AiRun.question`), so it stays out of the URL. `ocena` keeps the evaluation the question is about.
  */
-export function questionHref(
-  runId: string,
-  question: string,
-  extra?: { blad?: '1'; ocena?: string | null },
-): string {
+export function questionHref(runId: string, extra?: { blad?: '1'; ocena?: string | null }): string {
   const evaluation = extra?.ocena ? `&ocena=${extra.ocena}` : '';
   const error = extra?.blad === undefined ? '' : `&blad=${extra.blad}`;
-  return `${routes.help}?pytanie=${runId}&tresc=${encodeURIComponent(question)}${evaluation}${error}#odpowiedz`;
+  return `${routes.help}?pytanie=${runId}${evaluation}${error}#odpowiedz`;
 }
 
 /** The evaluation id of `?ocena=` or a posted field, null when it is missing or not a uuid. */
@@ -125,15 +121,16 @@ export type AskedQuestion =
   | {
       kind: 'found';
       runId: string;
+      /** The question stored with the run, empty after retention removed the content. */
       question: string;
       state: QuestionState;
       /** The evaluation the question was asked about, null for a general question. */
       evaluationId: string | null;
     };
 
-/** Reads `?pytanie=` and `?tresc=` of the page. A foreign or unknown id is `missing`, never an error. */
+/** Reads `?pytanie=` of the page. A foreign or unknown id is `missing`, never an error. */
 export async function questionFromParams(
-  params: { pytanie: string; tresc: string },
+  params: { pytanie: string },
   get: (id: string) => Promise<AiRun>,
   now: Date,
 ): Promise<AskedQuestion> {
@@ -148,7 +145,7 @@ export async function questionFromParams(
   return {
     kind: 'found',
     runId: run.id,
-    question: params.tresc.slice(0, QUESTION_MAX),
+    question: (run.question ?? '').slice(0, QUESTION_MAX),
     state: questionState(run, now),
     evaluationId: run.evaluationId,
   };

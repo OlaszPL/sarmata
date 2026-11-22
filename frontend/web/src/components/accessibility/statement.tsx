@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import type { OfficeAccessibility } from '@sarmata/services';
 import { PageHero, Section } from '@sarmata/ui';
 
 const linkClasses = 'font-heading text-link leading-[normal] font-medium underline';
@@ -37,11 +38,105 @@ function BulletList({ children }: { children: ReactNode }) {
   return <ul className="mt-2 mb-4 max-w-[70ch] list-disc space-y-2 pl-6 last:mb-0">{children}</ul>;
 }
 
+/** True for a value the admin typed as a link to the office page. */
+function isLink(value: string): boolean {
+  return /^https?:\/\/\S+$/.test(value);
+}
+
+/** `tel:` link target: digits and the leading plus only. */
+function telHref(phone: string): string {
+  return `tel:${phone.replace(/[^+\d]/g, '')}`;
+}
+
+/** Office contact about accessibility (art. 10 ust. 4 pkt 4), or the generic text when none is set. */
+function Contact({ data }: { data: OfficeAccessibility | null }) {
+  const name = data?.contactName ?? null;
+  const email = data?.contactEmail ?? null;
+  const phone = data?.contactPhone ?? null;
+  if (name === null && email === null && phone === null) {
+    return (
+      <Prose>
+        Jeśli napotkasz barierę, napisz do osoby, która koordynuje sprawy dostępności w twoim
+        urzędzie. Jej dane kontaktowe są w deklaracji dostępności urzędu, opublikowanej w jego BIP.
+      </Prose>
+    );
+  }
+  return (
+    <>
+      <Prose>
+        Jeśli napotkasz barierę, skontaktuj się z osobą lub komórką, która w urzędzie odpowiada za
+        dostępność.
+      </Prose>
+      <BulletList>
+        {name ? (
+          <li>
+            Kontakt: <span id="a11y-osoba">{name}</span>
+          </li>
+        ) : null}
+        {email ? (
+          <li>
+            E-mail:{' '}
+            <a id="a11y-email" href={`mailto:${email}`} className={linkClasses}>
+              {email}
+            </a>
+          </li>
+        ) : null}
+        {phone ? (
+          <li>
+            Telefon:{' '}
+            <a id="a11y-telefon" href={telHref(phone)} className={linkClasses}>
+              {phone}
+            </a>
+          </li>
+        ) : null}
+      </BulletList>
+    </>
+  );
+}
+
+/** Architectural accessibility (art. 10 ust. 4 pkt 6): a link, a text, or the generic text. */
+function Architecture({ data }: { data: OfficeAccessibility | null }) {
+  const address = data?.officeAddress ?? null;
+  const architecture = data?.architecture ?? null;
+  return (
+    <>
+      {address ? (
+        <Prose>
+          Adres urzędu: <span className="whitespace-pre-line">{address}</span>
+        </Prose>
+      ) : null}
+      {architecture === null ? (
+        <Prose>
+          Aplikacja działa w sieci urzędu. Opis dostępności architektonicznej budynków jest w
+          deklaracji dostępności urzędu.
+        </Prose>
+      ) : isLink(architecture) ? (
+        <Prose>
+          Opis dostępności architektonicznej budynków urzędu jest na stronie{' '}
+          <a href={architecture} className={`${linkClasses} break-all`}>
+            {architecture}
+          </a>
+          .
+        </Prose>
+      ) : (
+        <p className="max-w-[70ch] whitespace-pre-line">{architecture}</p>
+      )}
+    </>
+  );
+}
+
 /**
  * Accessibility statement after the Ministry of Digital Affairs template (art. 10 of the digital
  * accessibility act), with the `a11y-*` ids of the technical conditions v2.0.
  */
-export function Statement({ officeName }: { officeName: string | null }) {
+export function Statement({
+  officeName,
+  accessibility = null,
+}: {
+  officeName: string | null;
+  /** Office data from the settings (members only), `null` gives the generic texts. */
+  accessibility?: OfficeAccessibility | null;
+}) {
   return (
     <div className="flex flex-1 flex-col">
       <PageHero title="Deklaracja dostępności" />
@@ -127,11 +222,7 @@ export function Statement({ officeName }: { officeName: string | null }) {
           title={<span id="a11y-kontakt">Informacje zwrotne i dane kontaktowe</span>}
           id="kontakt"
         >
-          <Prose>
-            Jeśli napotkasz barierę, napisz do osoby, która koordynuje sprawy dostępności w twoim
-            urzędzie. Jej dane kontaktowe są w deklaracji dostępności urzędu, opublikowanej w jego
-            BIP.
-          </Prose>
+          <Contact data={accessibility} />
           <Prose>
             Masz prawo zgłosić brak dostępności cyfrowej aplikacji lub jej elementu. Sposób
             postępowania opisuje następna sekcja.
@@ -187,20 +278,21 @@ export function Statement({ officeName }: { officeName: string | null }) {
           title={<span id="a11y-architektura">Dostępność architektoniczna</span>}
           id="architektura"
         >
-          <Prose>
-            Aplikacja działa w sieci urzędu. Opis dostępności architektonicznej budynków jest w
-            deklaracji dostępności urzędu.
-          </Prose>
+          <Architecture data={accessibility} />
         </Section>
 
         <Section
           title={<span id="a11y-komunikacja">Tłumacz języka migowego</span>}
           id="komunikacja"
         >
-          <Prose>
-            Aplikacja nie ma tłumacza języka migowego online. Informację o tłumaczu przy kontakcie z
-            urzędem podaje deklaracja urzędu.
-          </Prose>
+          {accessibility?.signLanguage ? (
+            <p className="max-w-[70ch] whitespace-pre-line">{accessibility.signLanguage}</p>
+          ) : (
+            <Prose>
+              Aplikacja nie ma tłumacza języka migowego online. Informację o tłumaczu przy kontakcie
+              z urzędem podaje deklaracja urzędu.
+            </Prose>
+          )}
         </Section>
 
         <Section title="Aplikacje mobilne">

@@ -7,7 +7,7 @@ import { Answer } from '@/components/help/answer';
 import { Guide } from '@/components/help/guide';
 import { requireMember } from '@/lib/account';
 import { guidesFor } from '@/lib/help/guides';
-import { QUESTION_MAX, evaluationIdOf, questionFromParams } from '@/lib/help/question';
+import { evaluationIdOf, questionFromParams } from '@/lib/help/question';
 import { regulationForEvaluation } from '@/lib/regulation';
 import { routes } from '@/lib/routes';
 import { type SearchParams, single } from '@/lib/search-params';
@@ -55,12 +55,11 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
     }
   }
   const aiOff = settings?.aiEnabled === false;
-  const tresc = single(params.tresc).slice(0, QUESTION_MAX);
 
   const asked = isAdmin
     ? ({ kind: 'none' } as const)
     : await questionFromParams(
-        { pytanie: single(params.pytanie), tresc },
+        { pytanie: single(params.pytanie) },
         (id) => services.ai.get(id),
         new Date(),
       );
@@ -113,7 +112,7 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
             </Notice>
           ) : (
             <AskForm
-              defaultQuestion={tresc}
+              defaultQuestion={asked.kind === 'found' ? asked.question : ''}
               evaluationId={context.kind === 'found' ? context.id : null}
             />
           )}

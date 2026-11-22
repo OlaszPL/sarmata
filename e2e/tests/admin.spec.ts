@@ -62,6 +62,13 @@ test.describe('admin screens as the admin', () => {
     await page.goto('/ustawienia');
     await expect(page.getByLabel('Serwer')).toHaveValue('127.0.0.1');
     await expect(page.getByLabel('Port')).toHaveValue('55425');
+    await expect(page.getByLabel('E-mail w sprawie dostępności')).toHaveValue(
+      'dostepnosc@kropka.test',
+    );
+    await expect(page.getByLabel('Telefon w sprawie dostępności')).toHaveValue('+48 61 000 00 00');
+    await expect(page.getByLabel('Adres urzędu')).toHaveValue(
+      'ul. Testowa 1, 62-000 Kropka Wielkopolska',
+    );
     await expect(page.getByRole('button', { name: 'Zapisz ustawienia urzędu' })).toBeVisible();
   });
 

@@ -105,6 +105,14 @@ describe('hr register service', () => {
       objectionAddresseeSheetA: null,
       appreciationGapDays: 30,
       evaluatorFlags: { minEvaluations: 3, centralShare: 0.75, leniencyPoints: 1.5 },
+      accessibility: {
+        officeAddress: null,
+        contactName: null,
+        contactEmail: null,
+        contactPhone: null,
+        architecture: null,
+        signLanguage: null,
+      },
       smtp: { host: null, port: null, user: null, from: null, passwordSet: false },
     };
     const settings: OfficeSettingsRepository = {

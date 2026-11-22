@@ -96,6 +96,7 @@ export type {
   NotePatch,
   NoteSign,
   OfficeSettingsPatchInput,
+  OfficeAccessibility,
   GradeBasis,
   GradeGrantInput,
   LabourCourtAppealInput,
