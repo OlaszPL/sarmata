@@ -92,12 +92,24 @@ test.describe('admin screens as the admin', () => {
     await expect(page).toHaveURL(/wersja=/);
     await expect(page.getByRole('table', { name: 'Wyniki przypadków testowych' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Powiązania przepisów' })).toBeVisible();
-    // The official version has no errors: no deadline slot group is expanded.
-    await expect(page.locator('details > summary').first()).toBeVisible();
-    await expect(page.locator('details[open]')).toHaveCount(0);
     await expectNoViolations(page);
     await page.setViewportSize({ width: 400, height: 900 });
     await expectNoSidewaysScroll(page);
+  });
+
+  test('a draft shows its deadline slots as closed groups', async ({ page }) => {
+    await page.goto('/ustawienia/przepisy');
+    await page
+      .getByRole('table', { name: 'Wersje przepisów' })
+      .getByRole('link', { name: 'Przepisy urzędu, szkic demo' })
+      .click();
+    await expect(page.getByRole('button', { name: 'Zapisz i uruchom testy' })).toBeVisible();
+    // A saved draft has no errors: every slot group is there and none is expanded.
+    await expect(
+      page.locator('details > summary', { hasText: 'Termin na sprzeciw' }),
+    ).toBeVisible();
+    await expect(page.locator('details[open]')).toHaveCount(0);
+    await expectNoViolations(page);
   });
 
   test('the AI log is honestly empty for the admin', async ({ page }) => {
