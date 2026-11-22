@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { servicesFor } from '@sarmata/services';
 import { Notice, Section } from '@sarmata/ui';
+import { ReadOnlyNotice } from '@/components/sheet/read-only-notice';
 import { SheetSummary } from '@/components/sheet/sheet-summary';
 import { AiDraftPanel } from './_sheet/ai-draft-panel';
 import { draftProposals, sheetDraftState } from '@/lib/evaluations/sheet-draft';
@@ -11,7 +12,6 @@ import { gateLinks } from '@/lib/evaluations/sheet-gates';
 import { formatDate } from '@/lib/format';
 import { criterionName } from '@/lib/regulation';
 import { routes } from '@/lib/routes';
-import { serviceErrorMessage } from '@/lib/service-errors';
 import { createSupabase } from '@/lib/supabase';
 import { caseTitle, loadCase } from '../loader';
 import { InterviewForm } from './_sheet/interview-form';
@@ -61,11 +61,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     return (
       <Section title="Część II. Ocena okresowa">
         <div className="flex flex-col gap-6">
-          <Notice tone="info">
-            <p>Arkusz jest tylko do odczytu.</p>
-            {data.isAdmin ? <p>{serviceErrorMessage('forbidden')}</p> : null}
-            {data.isHr ? <p>Arkusz wypełnia osoba, która prowadzi ocenę.</p> : null}
-          </Notice>
+          <ReadOnlyNotice data={data} />
           <SheetSummary data={data} editable={false} parts={['two']} />
         </div>
       </Section>
@@ -86,12 +82,17 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     view,
     now: new Date(),
   });
-  const proposals = draftState.kind === 'done' ? draftProposals(draftState.run) : null;
+  const caseCriteria = regulation.criteria.map((criterion) => criterion.id);
+  const proposals =
+    draftState.kind === 'done' ? draftProposals(draftState.run, caseCriteria) : null;
   const noteDates = Object.fromEntries(
     (notes ?? []).map((note) => [note.id, formatDate(note.occurredOn)]),
   );
-  const issues = gateLinks(id, data.approval.issues, (criterionId) =>
-    criterionName(regulation, criterionId),
+  const issues = gateLinks(
+    id,
+    data.approval.issues,
+    (criterionId) => criterionName(regulation, criterionId),
+    'czesc-2',
   );
 
   return (

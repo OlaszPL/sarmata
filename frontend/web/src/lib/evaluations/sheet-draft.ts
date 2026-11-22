@@ -27,25 +27,21 @@ function newest(runs: SheetDraftRun[]): SheetDraftRun | null {
 }
 
 /**
- * The newest run of this evaluation, otherwise the newest run without an evaluation requested since
- * the cycle start (seed data has no evaluation id).
+ * The newest run of this evaluation, otherwise the newest run of the employee without an evaluation.
+ * Runs started through `ai.start` always carry the evaluation id, only seeded runs have none, so a
+ * run without one counts whatever its date (the seed predates the cycle start set at reset).
  */
-function pickRun(
-  runs: readonly AiRun[],
-  view: Pick<EvaluationView, 'id' | 'cycleStart'>,
-): SheetDraftRun | null {
+function pickRun(runs: readonly AiRun[], view: Pick<EvaluationView, 'id'>): SheetDraftRun | null {
   const drafts = runs.filter(isSheetDraft);
   const own = newest(drafts.filter((run) => run.evaluationId === view.id));
   if (own !== null) return own;
-  return newest(
-    drafts.filter((run) => run.evaluationId === null && run.requestedAt >= view.cycleStart),
-  );
+  return newest(drafts.filter((run) => run.evaluationId === null));
 }
 
 export function sheetDraftState(input: {
   aiEnabled: boolean;
   runs: readonly AiRun[];
-  view: Pick<EvaluationView, 'id' | 'cycleStart'>;
+  view: Pick<EvaluationView, 'id'>;
   now: Date;
 }): SheetDraftState {
   const run = pickRun(input.runs, input.view);
@@ -93,8 +89,14 @@ export interface SentenceProposal {
   decided: Decided;
 }
 
-/** Proposals of a done run with the latest decision of each fragment. */
-export function draftProposals(run: SheetDraftRun): {
+/**
+ * Proposals of a done run with the latest decision of each fragment. Rating proposals for criteria
+ * outside `criteria` (the criteria of the case) are left out, so they neither show nor count.
+ */
+export function draftProposals(
+  run: SheetDraftRun,
+  criteria: readonly string[],
+): {
   ratings: RatingProposal[];
   sentences: SentenceProposal[];
   questions: string[];
@@ -112,16 +114,19 @@ export function draftProposals(run: SheetDraftRun): {
     return latest?.decision ?? null;
   };
 
-  const ratings = output.ratings.map<RatingProposal>((rating) => {
-    const fragment = `rating.${rating.criterionId}`;
-    return {
-      fragment,
-      criterionId: rating.criterionId,
-      points: rating.points,
-      noteIds: [...new Set(rating.sentences.flatMap((sentence) => sentence.noteIds))],
-      decided: decisionOf(fragment),
-    };
-  });
+  const caseCriteria = new Set(criteria);
+  const ratings = output.ratings
+    .filter((rating) => caseCriteria.has(rating.criterionId))
+    .map<RatingProposal>((rating) => {
+      const fragment = `rating.${rating.criterionId}`;
+      return {
+        fragment,
+        criterionId: rating.criterionId,
+        points: rating.points,
+        noteIds: [...new Set(rating.sentences.flatMap((sentence) => sentence.noteIds))],
+        decided: decisionOf(fragment),
+      };
+    });
   const sentences = (['justification', 'developmentConclusions'] as const).flatMap((target) =>
     output[target].map<SentenceProposal>((sentence, index) => {
       const fragment = `${target}.${index}`;

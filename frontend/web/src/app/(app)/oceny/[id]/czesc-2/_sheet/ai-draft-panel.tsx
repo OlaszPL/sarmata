@@ -53,7 +53,7 @@ export function AiDraftPanel({
 }: {
   id: string;
   state: SheetDraftState;
-  /** Criterion id to its name, for the progress line. */
+  /** Criterion id to its name for the criteria of the case: the progress line and the open count. */
   criterionNames: Record<string, string>;
 }) {
   switch (state.kind) {
@@ -130,7 +130,7 @@ export function AiDraftPanel({
         </Band>
       );
     case 'done': {
-      const { open, questions } = draftProposals(state.run);
+      const { open, questions } = draftProposals(state.run, Object.keys(criterionNames));
       return (
         <Band>
           <PanelTitle>

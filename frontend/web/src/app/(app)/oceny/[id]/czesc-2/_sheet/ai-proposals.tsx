@@ -33,6 +33,27 @@ function sourcesText(noteIds: string[], noteDates: Record<string, string>): stri
 
 const open = { 'data-ai-suggestion': '', 'data-open': 'true', tabIndex: -1 } as const;
 
+const DECIDE_FAILED = 'Nie udało się zapisać decyzji. Spróbuj ponownie.';
+
+/**
+ * Runs a decision with a busy flag. A thrown error (network, an unexpected failure of the service)
+ * becomes the same message as a refused decision, and the buttons are free again in every case.
+ */
+async function runDecision(
+  setBusy: (busy: boolean) => void,
+  setError: (error: string | null) => void,
+  decide: () => Promise<string | null>,
+): Promise<void> {
+  setBusy(true);
+  try {
+    setError(await decide());
+  } catch {
+    setError(DECIDE_FAILED);
+  } finally {
+    setBusy(false);
+  }
+}
+
 /** Rating proposal of one criterion: accept the points or keep the current rating. */
 export function RatingSuggestion({
   proposal,
@@ -53,11 +74,8 @@ export function RatingSuggestion({
   const level = scale.find((entry) => entry.value === proposal.points)?.name;
   const count = proposal.noteIds.length;
 
-  const decide = async (decision: Decision) => {
-    setBusy(true);
-    setError(await onDecide(proposal.fragment, decision));
-    setBusy(false);
-  };
+  const decide = (decision: Decision) =>
+    runDecision(setBusy, setError, () => onDecide(proposal.fragment, decision));
 
   return (
     <div {...open} className="outline-offset-2">
@@ -71,6 +89,7 @@ export function RatingSuggestion({
         actions={
           <>
             <Button
+              variant="secondary"
               aria-disabled={busy}
               onClick={() => {
                 if (!busy) void decide('accepted');
@@ -119,11 +138,8 @@ export function SentenceSuggestion({
     proposal.target === 'justification' ? 'Wstaw do uzasadnienia' : 'Wstaw do wniosków';
   const fieldId = `ai-edit-${proposal.fragment.replace('.', '-')}`;
 
-  const decide = async (decision: Decision, finalText?: string) => {
-    setBusy(true);
-    setError(await onDecide(proposal.fragment, decision, finalText));
-    setBusy(false);
-  };
+  const decide = (decision: Decision, finalText?: string) =>
+    runDecision(setBusy, setError, () => onDecide(proposal.fragment, decision, finalText));
 
   return (
     <div {...open} className="outline-offset-2">
@@ -133,6 +149,7 @@ export function SentenceSuggestion({
           editing ? (
             <>
               <Button
+                variant="secondary"
                 aria-disabled={busy}
                 onClick={() => {
                   if (!busy) void decide('edited', text.trim());
@@ -152,6 +169,7 @@ export function SentenceSuggestion({
           ) : (
             <>
               <Button
+                variant="secondary"
                 aria-disabled={busy}
                 onClick={() => {
                   if (!busy) void decide('accepted');

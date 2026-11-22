@@ -1,29 +1,50 @@
 'use client';
 
-import { type ReactNode, useActionState, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type SubmitEvent,
+  type ReactNode,
+  startTransition,
+  useActionState,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LoaderCircle, CircleCheck, TriangleAlert } from 'lucide-react';
+import { ArrowRight, CircleCheck, LoaderCircle, TriangleAlert } from 'lucide-react';
 import {
   Button,
+  type ButtonSize,
+  type ButtonVariant,
   DateInput,
   ErrorSummary,
   Field,
   FieldError,
+  Notice,
   ScaleChoice,
   Section,
-  SubmitButton,
   Textarea,
 } from '@sarmata/ui';
-import { LinkedErrorSummary } from '@/components/sheet/linked-error-summary';
 import { useErrorTitle } from '@/components/use-error-title';
-import { appendSentence } from '@/lib/evaluations/sheet-draft';
+import { createAutosave } from '@/lib/evaluations/sheet-autosave';
+import {
+  type RatingProposal,
+  type SentenceProposal,
+  appendSentence,
+} from '@/lib/evaluations/sheet-draft';
 import { type PartTwoPatch } from '@/lib/evaluations/sheet-form';
-import { type RatingProposal, type SentenceProposal } from '@/lib/evaluations/sheet-draft';
-import { type GateLink, gateTitle } from '@/lib/evaluations/sheet-gates';
-import { type FormState } from '@/lib/form-action';
+import { type GateLink, fieldErrorLinks, gateTitle } from '@/lib/evaluations/sheet-gates';
 import { routes } from '@/lib/routes';
-import { type SaveResult, decideFragment, saveSheet, saveSheetAndCheck } from '../actions';
+import {
+  type SaveResult,
+  type SheetFormState,
+  decideFragment,
+  saveSheet,
+  saveSheetAndCheck,
+} from '../actions';
 import { AI_PANEL_TITLE_ID } from './ai-draft-panel';
 import {
   DecidedLine,
@@ -37,7 +58,11 @@ import { DevelopmentHints, type DevelopmentRecommendation } from './development-
 /** Pause after the last change before the sheet is saved. */
 const AUTOSAVE_DELAY_MS = 1500;
 
+/** Id of the sheet form. The date inputs sit above the AI band, outside the form element. */
+const FORM_ID = 'sheet-form';
+
 const CONCLUSIONS_FIELD_ERROR = 'Wpisz wnioski do IPRZ. Bez nich nie zatwierdzisz oceny.';
+const SAVE_FAILED = 'Nie udało się zapisać. Spróbuj ponownie.';
 
 interface Criterion {
   id: string;
@@ -64,7 +89,10 @@ export interface SheetEditorProps {
   negativePoints: number | null;
   /** Content above the form inside the section, e.g. the interview form. */
   before?: ReactNode;
-  /** Content between the dates and the criteria, the place of the AI draft panel. */
+  /**
+   * Content between the dates and the criteria, the place of the AI draft panel. It has a form of
+   * its own, so it renders outside the sheet form.
+   */
   aiPanel?: ReactNode;
 }
 
@@ -73,12 +101,6 @@ type SaveStatus =
   | { kind: 'saving' }
   | { kind: 'saved'; at: string }
   | { kind: 'error'; message: string };
-
-/** Field id a link of the banner points to when it lives on this page, otherwise null. */
-function localFieldId(href: string, pagePath: string): string | null {
-  const [path, hash] = href.split('#');
-  return path === pagePath && hash ? hash : null;
-}
 
 function SaveStatusLine({ status, onRetry }: { status: SaveStatus; onRetry: () => void }) {
   return (
@@ -110,6 +132,45 @@ function SaveStatusLine({ status, onRetry }: { status: SaveStatus; onRetry: () =
   );
 }
 
+/**
+ * Submit button of the sheet form. The form dispatches its action itself (see `onSubmit`), so the
+ * pending state comes from `useActionState`, not from `useFormStatus`.
+ */
+function SheetSubmit({
+  pending,
+  pendingLabel,
+  variant,
+  size,
+  className,
+  children,
+}: {
+  pending: boolean;
+  pendingLabel: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Button
+      type="submit"
+      variant={variant}
+      size={size}
+      aria-disabled={pending}
+      className={className}
+    >
+      {pending ? (
+        <>
+          <LoaderCircle className="animate-spin" aria-hidden />
+          {pendingLabel}
+        </>
+      ) : (
+        children
+      )}
+    </Button>
+  );
+}
+
 export function SheetEditor({
   id,
   criteria,
@@ -125,26 +186,49 @@ export function SheetEditor({
   aiPanel,
 }: SheetEditorProps) {
   const router = useRouter();
-  const pagePath = routes.evaluationPart2(id);
   const formRef = useRef<HTMLFormElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlight = useRef(false);
   const queued = useRef(false);
 
   const [ratings, setRatings] = useState<Record<string, number>>(initial.ratings);
   const [justification, setJustification] = useState(initial.justification);
   const [conclusions, setConclusions] = useState(initial.developmentConclusions);
-  const [issues, setIssues] = useState(initialIssues);
   const [status, setStatus] = useState<SaveStatus>({ kind: 'idle' });
 
-  const [state, formAction] = useActionState<FormState, FormData>(
+  // The banner follows the last save, and the server's view whenever the page brings new gates
+  // (e.g. after the interview is recorded, the editor stays mounted with the gates of `interview`).
+  const [issues, setIssues] = useState(initialIssues);
+  const [issuesProp, setIssuesProp] = useState(initialIssues);
+  if (initialIssues !== issuesProp) {
+    setIssuesProp(initialIssues);
+    setIssues(initialIssues);
+  }
+
+  // The interview form unmounts with its focused button when it succeeds: say so and take focus.
+  const [modeProp, setModeProp] = useState(mode);
+  const [interviewRecorded, setInterviewRecorded] = useState(false);
+  if (mode !== modeProp) {
+    setModeProp(mode);
+    setInterviewRecorded(modeProp === 'period' && mode === 'edit');
+  }
+  const recordedRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (interviewRecorded) recordedRef.current?.focus();
+  }, [interviewRecorded]);
+
+  const [state, formAction, submitting] = useActionState<SheetFormState, FormData>(
     saveSheetAndCheck.bind(null, id),
     { values: {}, fieldErrors: {} },
   );
-  const submitErrors = Object.entries(state.fieldErrors).flatMap(([fieldId, message]) =>
-    message === undefined ? [] : [{ fieldId, message }],
-  );
+  const submitErrors = fieldErrorLinks(id, state.fieldErrors, 'czesc-2');
   useErrorTitle(submitErrors.length > 0 || state.formError !== undefined);
+
+  // "Zapisz szkic" saved: the status line shows the time as after an autosave.
+  const [seenState, setSeenState] = useState(state);
+  if (state !== seenState) {
+    setSeenState(state);
+    if (state.savedAt !== undefined) setStatus({ kind: 'saved', at: state.savedAt });
+  }
 
   const run = useCallback(async () => {
     const form = formRef.current;
@@ -170,50 +254,62 @@ export function SheetEditor({
         setIssues(result.issues);
         router.refresh();
       } else {
-        setStatus({
-          kind: 'error',
-          message: result.formError ?? 'Nie udało się zapisać. Spróbuj ponownie.',
-        });
+        setStatus({ kind: 'error', message: result.formError ?? SAVE_FAILED });
       }
     } catch {
-      setStatus({ kind: 'error', message: 'Nie udało się zapisać. Spróbuj ponownie.' });
+      setStatus({ kind: 'error', message: SAVE_FAILED });
     } finally {
       inFlight.current = false;
     }
   }, [id, router]);
 
-  const schedule = useCallback(() => {
-    if (timer.current !== null) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      timer.current = null;
-      void run();
-    }, AUTOSAVE_DELAY_MS);
+  const runRef = useRef(run);
+  useEffect(() => {
+    runRef.current = run;
   }, [run]);
-
-  const saveNow = useCallback(() => {
-    if (timer.current !== null) clearTimeout(timer.current);
-    timer.current = null;
-    void run();
-  }, [run]);
-
-  useEffect(
-    () => () => {
-      if (timer.current !== null) clearTimeout(timer.current);
-    },
-    [],
+  const [autosave] = useState(() =>
+    createAutosave(() => {
+      void runRef.current();
+    }, AUTOSAVE_DELAY_MS),
   );
+  const schedule = useCallback(() => {
+    autosave.schedule();
+  }, [autosave]);
 
-  const gateErrors: Record<string, string> = {};
-  if (mode === 'edit') {
-    for (const item of issues) {
-      const fieldId = localFieldId(item.href, pagePath);
-      if (fieldId !== null) {
-        gateErrors[fieldId] =
-          fieldId === 'developmentConclusions' ? CONCLUSIONS_FIELD_ERROR : item.message;
-      }
-    }
-  }
-  const submitError = (fieldId: string) => state.fieldErrors[fieldId] ?? gateErrors[fieldId];
+  // Leaving the page (a tab, the sidebar, the back link) must not drop a change that waits for the
+  // pause. A layout cleanup runs before React removes the form, so it still reads every field.
+  useLayoutEffect(() => {
+    const form = formRef.current;
+    return () => {
+      if (form !== null && autosave.takePending()) void saveSheet(id, new FormData(form));
+    };
+  }, [autosave, id]);
+
+  /**
+   * React resets a form after its action. That unchecks the controlled rating tiles (their
+   * `defaultChecked` is the value at mount) while the state keeps the new ratings, so the next
+   * autosave would drop them. Dispatching the action here skips the reset. Without JavaScript the
+   * form still posts through `action`.
+   */
+  const onSubmit = (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (submitting) return;
+    // The submit saves the same fields as the scheduled autosave.
+    autosave.takePending();
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
+
+  // On load only the conclusions field repeats its gate (mockup), the others stay in the banner.
+  // After a submit the submitted errors show at their fields.
+  const conclusionsGate =
+    mode === 'edit' &&
+    issues.some((item) => item.href === undefined && item.fieldId === 'developmentConclusions');
+  const submitError = (fieldId: string): string | undefined =>
+    state.fieldErrors[fieldId] ??
+    (fieldId === 'developmentConclusions' && conclusionsGate ? CONCLUSIONS_FIELD_ERROR : undefined);
 
   const negative =
     negativePoints !== null && Object.values(ratings).some((points) => points === negativePoints);
@@ -246,17 +342,21 @@ export function SheetEditor({
     if (decision !== 'rejected') {
       const rating = aiRatings.find((proposal) => proposal.fragment === fragment);
       const sentence = aiSentences.find((proposal) => proposal.fragment === fragment);
-      if (rating) {
-        setRatings((current) => ({ ...current, [rating.criterionId]: rating.points }));
-      } else if (sentence) {
-        const added = finalText ?? sentence.text;
-        if (sentence.target === 'justification') {
-          setJustification((current) => appendSentence(current, added));
-        } else {
-          setConclusions((current) => appendSentence(current, added));
+      // The fields render the accepted content first, then the sheet is saved at once, so a
+      // reload never shows the decision without its rating or sentence.
+      flushSync(() => {
+        if (rating) {
+          setRatings((current) => ({ ...current, [rating.criterionId]: rating.points }));
+        } else if (sentence) {
+          const added = finalText ?? sentence.text;
+          if (sentence.target === 'justification') {
+            setJustification((current) => appendSentence(current, added));
+          } else {
+            setConclusions((current) => appendSentence(current, added));
+          }
         }
-      }
-      schedule();
+      });
+      autosave.saveNow();
     }
     needsFocus.current = true;
     setDecisions((current) => ({ ...current, [fragment]: decision }));
@@ -311,51 +411,66 @@ export function SheetEditor({
   return (
     <>
       {mode === 'edit' && issues.length > 0 ? (
-        <LinkedErrorSummary title={gateTitle(issues.length)} items={issues} />
+        <ErrorSummary title={gateTitle(issues.length)} errors={issues} autoFocus={false} />
       ) : null}
       <Section
         title="Część II. Ocena okresowa"
         flush
         id="part-two"
-        actions={<SaveStatusLine status={status} onRetry={saveNow} />}
+        actions={<SaveStatusLine status={status} onRetry={autosave.saveNow} />}
       >
+        {interviewRecorded ? (
+          <div
+            ref={recordedRef}
+            tabIndex={-1}
+            className="border-rule border-b px-6 py-4 outline-offset-2 sm:px-8"
+          >
+            <Notice tone="success" role="status">
+              <p>Rozmowę odnotowano. Możesz wypełnić i zatwierdzić część II.</p>
+            </Notice>
+          </div>
+        ) : null}
         {before}
+        {submitErrors.length > 0 || state.formError !== undefined ? (
+          <div className="border-rule border-b px-6 py-4 sm:px-8">
+            <ErrorSummary title="Nie udało się zapisać arkusza" errors={submitErrors}>
+              {state.formError}
+            </ErrorSummary>
+          </div>
+        ) : null}
+
+        {/* The dates belong to the sheet form through the `form` attribute: the AI band below has a
+            form of its own and must not sit inside the sheet form. */}
+        <div className="border-rule grid border-b md:grid-cols-3" onChange={schedule}>
+          {(
+            [
+              ['interviewOn', 'Data rozmowy oceniającej'],
+              ['periodFrom', 'Okres oceny od'],
+              ['periodTo', 'Okres oceny do'],
+            ] as const
+          ).map(([name, label]) => (
+            <div
+              key={name}
+              className="border-rule border-b px-6 py-4 last:border-b-0 sm:px-8 md:border-r md:border-b-0 md:px-5 md:last:border-r-0"
+            >
+              <Field id={name} label={label} error={submitError(name)}>
+                <DateInput name={name} form={FORM_ID} defaultValue={dateDefault(name)} />
+              </Field>
+            </div>
+          ))}
+        </div>
+
+        {aiPanel}
+
         <form
+          id={FORM_ID}
           ref={formRef}
           action={formAction}
+          onSubmit={onSubmit}
           noValidate
           onChange={schedule}
           className="flex flex-col"
         >
-          {submitErrors.length > 0 || state.formError !== undefined ? (
-            <div className="border-rule border-b px-6 py-4 sm:px-8">
-              <ErrorSummary title="Nie udało się zapisać arkusza" errors={submitErrors}>
-                {state.formError}
-              </ErrorSummary>
-            </div>
-          ) : null}
-
-          <div className="border-rule grid border-b md:grid-cols-3">
-            {(
-              [
-                ['interviewOn', 'Data rozmowy oceniającej'],
-                ['periodFrom', 'Okres oceny od'],
-                ['periodTo', 'Okres oceny do'],
-              ] as const
-            ).map(([name, label]) => (
-              <div
-                key={name}
-                className="border-rule border-b px-6 py-4 last:border-b-0 sm:px-8 md:border-r md:border-b-0 md:last:border-r-0"
-              >
-                <Field id={name} label={label} error={submitError(name)}>
-                  <DateInput name={name} defaultValue={dateDefault(name)} />
-                </Field>
-              </div>
-            ))}
-          </div>
-
-          {aiPanel}
-
           {criteria.map((criterion) => {
             const titleId = `criterion-${criterion.id}-title`;
             const fieldId = `rating-${criterion.id}`;
@@ -367,23 +482,23 @@ export function SheetEditor({
                 key={criterion.id}
                 id={proposal && proposal === firstOpenRating ? anchorId : undefined}
                 aria-labelledby={titleId}
-                className="border-rule flex scroll-mt-4 flex-col gap-3 border-b px-6 py-5 sm:px-8"
+                className="border-rule flex scroll-mt-4 flex-col gap-3 border-b px-6 py-[1.125rem] sm:px-8"
               >
                 <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
-                  <div className="flex min-w-[12rem] flex-col">
-                    <p className="text-ink-muted text-[0.9375rem] leading-[normal]">
+                  <div className="flex min-w-[12rem] flex-col gap-0.5">
+                    <p className="text-ink-muted text-sm leading-[normal]">
                       {criterion.mandatory ? 'Kryterium obowiązkowe' : 'Kryterium dodatkowe'}
                     </p>
                     <h3
                       id={titleId}
-                      className="font-heading text-ink text-xl leading-[normal] font-semibold"
+                      className="font-heading text-ink text-[1.1875rem] leading-[normal] font-semibold"
                     >
                       {criterion.name}
                     </h3>
                   </div>
                   {criterion.indicators.length > 0 ? (
                     <details className="max-w-full">
-                      <summary className="font-heading text-link cursor-pointer text-[0.9375rem] font-medium underline">
+                      <summary className="font-heading text-link cursor-pointer text-[0.9375rem] leading-[normal] font-medium underline">
                         Wskaźniki zachowań
                       </summary>
                       <ul className="mt-2 flex max-w-[70ch] list-disc flex-col gap-1 pl-5">
@@ -471,17 +586,29 @@ export function SheetEditor({
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-6 py-6 sm:px-8">
             {mode === 'edit' ? (
               <>
-                <SubmitButton size="lg" pendingLabel="Zapisuję">
+                <SheetSubmit
+                  pending={submitting}
+                  pendingLabel="Zapisuję"
+                  size="lg"
+                  className="gap-[0.625rem] [&_svg]:size-[1.125rem]"
+                >
                   Sprawdź i zatwierdź ocenę
-                </SubmitButton>
-                <Link href={routes.home} className="font-heading text-link font-medium underline">
+                  <ArrowRight aria-hidden />
+                </SheetSubmit>
+                <Link
+                  href={routes.home}
+                  onClick={() => {
+                    autosave.flush();
+                  }}
+                  className="font-heading text-link font-medium underline"
+                >
                   Wróć do pulpitu, zmiany są zapisane
                 </Link>
               </>
             ) : (
-              <SubmitButton variant="secondary" pendingLabel="Zapisuję">
+              <SheetSubmit pending={submitting} pendingLabel="Zapisuję" variant="secondary">
                 Zapisz szkic
-              </SubmitButton>
+              </SheetSubmit>
             )}
           </div>
         </form>

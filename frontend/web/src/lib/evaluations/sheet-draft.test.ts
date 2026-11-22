@@ -122,15 +122,28 @@ describe('sheetDraftState', () => {
       expect(state([other, own])).toMatchObject({ run: { id: 'own' } });
     });
 
-    it('falls back to a run without evaluation after the cycle start', () => {
+    it('falls back to a run without evaluation', () => {
       expect(state([run({ id: 'null', evaluationId: null })])).toMatchObject({
         run: { id: 'null' },
       });
     });
 
-    it('ignores a run without evaluation from before the cycle start', () => {
-      const old = run({ evaluationId: null, requestedAt: '2025-11-30T10:00:00Z' });
-      expect(state([old])).toEqual({ kind: 'none' });
+    it('accepts a null-evaluation run older than cycleStart', () => {
+      // The seed: the run is from 2026-11-02, the cycle starts on the day of the reset.
+      const seeded = run({ id: 'seed', evaluationId: null, requestedAt: '2026-11-02T08:00:00Z' });
+      const later = sheetDraftState({
+        aiEnabled: true,
+        runs: [seeded],
+        view: { id: 'e1', cycleStart: '2026-11-22' } as never,
+        now,
+      });
+      expect(later).toMatchObject({ kind: 'done', run: { id: 'seed' } });
+    });
+
+    it('picks the newest run without evaluation', () => {
+      const older = run({ id: 'old', evaluationId: null, requestedAt: '2026-11-01T10:00:00Z' });
+      const newer = run({ id: 'new', evaluationId: null, requestedAt: '2026-11-02T10:00:00Z' });
+      expect(state([newer, older])).toMatchObject({ run: { id: 'new' } });
     });
 
     it('ignores runs of other evaluations and kinds', () => {
@@ -164,7 +177,7 @@ describe('draftProposals', () => {
         },
       ],
     }) as SheetDraftRun;
-    const result = draftProposals(decided);
+    const result = draftProposals(decided, ['reliability', 'communication', 'focus']);
     expect(result.ratings).toHaveLength(3);
     expect(result.ratings.find((r) => r.criterionId === 'communication')).toMatchObject({
       fragment: 'rating.communication',
@@ -195,7 +208,13 @@ describe('draftProposals', () => {
     const noPoints = run({
       output: { ...output, ratings: [{ criterionId: 'a', points: null, sentences: [] }] },
     }) as SheetDraftRun;
-    expect(draftProposals(noPoints).open).toBe(2);
+    expect(draftProposals(noPoints, ['a']).open).toBe(2);
+  });
+
+  it('leaves out rating proposals for criteria outside the case', () => {
+    const result = draftProposals(run() as SheetDraftRun, ['reliability']);
+    expect(result.ratings.map((r) => r.criterionId)).toEqual(['reliability']);
+    expect(result.open).toBe(3);
   });
 });
 
