@@ -24,13 +24,18 @@ export function DeleteDraftForm({ versionId }: { versionId: string }) {
   useErrorTitle(hasErrors);
 
   return (
-    <div className="grid gap-8">
+    <div className="grid grid-cols-1 gap-8">
       {hasErrors ? (
         <ErrorSummary title="Nie udało się usunąć szkicu" errors={errors}>
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-6">
+      <form
+        key={version}
+        action={formAction}
+        noValidate
+        className="grid grid-cols-1 max-w-[40rem] gap-6"
+      >
         <input type="hidden" name="versionId" value={versionId} />
         <p className="max-w-[70ch]">
           Usunięcie kasuje szkic razem z jego parametrami. Opublikowane wersje zostają bez zmian.

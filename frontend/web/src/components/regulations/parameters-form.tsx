@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { type MouseEvent, useActionState, useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import {
   Checkbox,
   ErrorSummary,
@@ -40,6 +41,15 @@ function summaryItems(
   return items;
 }
 
+/** Opens the closed deadline group of a field before an error summary link focuses it. */
+function openGroupOfErrorLink(event: MouseEvent<HTMLElement>): void {
+  if (!(event.target instanceof Element)) return;
+  const href = event.target.closest('a')?.getAttribute('href');
+  if (!href?.startsWith('#') || href.length < 2) return;
+  const details = document.getElementById(decodeURIComponent(href.slice(1)))?.closest('details');
+  if (details) details.open = true;
+}
+
 /** The parameters of a draft (`/ustawienia/przepisy?wersja=`). Saving runs the worked examples. */
 export function ParametersForm({
   versionId,
@@ -67,13 +77,13 @@ export function ParametersForm({
   useErrorTitle(hasErrors);
 
   return (
-    <div className="grid gap-8">
+    <div className="grid grid-cols-1 gap-8" onClickCapture={openGroupOfErrorLink}>
       {hasErrors ? (
         <ErrorSummary title="Popraw parametry wersji" errors={errors}>
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid gap-10">
+      <form key={version} action={formAction} noValidate className="grid grid-cols-1 gap-10">
         <input type="hidden" name="versionId" value={versionId} />
         <ParameterGroups groups={groups} state={state} />
         <div>
@@ -121,49 +131,108 @@ function ParameterGroups({
     <>
       {groups.map((group) => {
         const hasBasisField = group.fields.some((field) => field.kind === 'text');
-        return (
-          <div key={group.title} className="border-rule border-t pt-6">
-            <fieldset className="min-w-0 max-w-[40rem]">
-              <legend className="font-heading text-ink mb-2 text-[1.375rem] leading-[normal] font-semibold">
-                {group.title}
-              </legend>
-              {group.basis && !hasBasisField ? (
-                <p className="text-ink-muted mb-6 max-w-[70ch]">Podstawa prawna: {group.basis}</p>
-              ) : null}
-              <div className="mt-4 grid gap-6">
-                {group.fields.map((field) => {
-                  const visible =
-                    !field.strategyOf ||
-                    field.strategyOf.strategies.includes(
-                      strategies[field.strategyOf.slotField] ?? '',
-                    );
-                  const onStrategyChange = group.fields.some(
-                    (other) => other.strategyOf?.slotField === field.id,
-                  )
-                    ? (value: string) => {
-                        setStrategies((current) => ({ ...current, [field.id]: value }));
-                      }
-                    : undefined;
-                  return (
-                    <div key={field.id} hidden={!visible}>
-                      <FieldControl
-                        field={field}
-                        value={text(field)}
-                        checked={checkedOf(field, visible)}
-                        error={state.fieldErrors[field.id]}
-                        disabled={!visible}
-                        onStrategyChange={onStrategyChange}
-                      />
-                    </div>
+        const isSlot = group.fields.some((field) => field.id.startsWith('deadlines.'));
+        const hasError = group.fields.some((field) => state.fieldErrors[field.id]);
+        const body = (
+          <fieldset className="min-w-0 max-w-[40rem]">
+            <legend
+              className={
+                isSlot
+                  ? 'sr-only'
+                  : 'font-heading text-ink mb-2 text-[1.375rem] leading-[normal] font-semibold'
+              }
+            >
+              {group.title}
+            </legend>
+            {group.basis && !hasBasisField ? (
+              <p className="text-ink-muted mb-6 max-w-[70ch]">Podstawa prawna: {group.basis}</p>
+            ) : null}
+            <div className="mt-4 grid gap-6">
+              {group.fields.map((field) => {
+                const visible =
+                  !field.strategyOf ||
+                  field.strategyOf.strategies.includes(
+                    strategies[field.strategyOf.slotField] ?? '',
                   );
-                })}
-              </div>
-            </fieldset>
-          </div>
+                const onStrategyChange = group.fields.some(
+                  (other) => other.strategyOf?.slotField === field.id,
+                )
+                  ? (value: string) => {
+                      setStrategies((current) => ({ ...current, [field.id]: value }));
+                    }
+                  : undefined;
+                return (
+                  <div key={field.id} hidden={!visible}>
+                    <FieldControl
+                      field={field}
+                      value={text(field)}
+                      checked={checkedOf(field, visible)}
+                      error={state.fieldErrors[field.id]}
+                      disabled={!visible}
+                      onStrategyChange={onStrategyChange}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </fieldset>
+        );
+        if (!isSlot) {
+          return (
+            <div key={group.title} className="border-rule border-t pt-6">
+              {body}
+            </div>
+          );
+        }
+        return (
+          <details key={group.title} open={hasError} className="group border-rule border-t pt-6">
+            <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] focus-visible:outline-solid [&::-webkit-details-marker]:hidden">
+              <ChevronRight
+                aria-hidden
+                className="text-ink size-5 shrink-0 self-center transition-transform group-open:rotate-90"
+              />
+              <span className="font-heading text-ink text-[1.375rem] leading-[normal] font-semibold">
+                {group.title}
+              </span>
+              <span className="text-ink-muted">{slotSummary(group, text)}</span>
+            </summary>
+            <div className="mt-4">{body}</div>
+          </details>
         );
       })}
     </>
   );
+}
+
+/** A short current value of a deadline slot, e.g. `Dni od zdarzenia, 7, od: Zapoznanie z oceną`. */
+function slotSummary(
+  group: RegulationFieldGroup,
+  text: (field: RegulationField) => string,
+): string {
+  const byId = (suffix: string) => group.fields.find((field) => field.id.endsWith(suffix));
+  const optionLabel = (field: RegulationField | undefined): string => {
+    if (!field) return '';
+    const value = text(field);
+    return field.options?.find((option) => option.value === value)?.label ?? value;
+  };
+  const strategyField = byId('.strategy');
+  const strategy = strategyField ? text(strategyField) : '';
+  const numberOf = (suffix: string): string => {
+    const field = byId(suffix);
+    return field ? text(field).trim() : '';
+  };
+  const amount =
+    strategy === 'monthsFromEvent'
+      ? numberOf('.months')
+      : strategy === 'daysFromEvent'
+        ? numberOf('.days')
+        : strategy === 'windowAroundEvent'
+          ? `${numberOf('.daysBefore')} przed, ${numberOf('.daysAfter')} po`
+          : '';
+  const event = optionLabel(byId('.event'));
+  return [optionLabel(strategyField), amount, event ? `od: ${event}` : '']
+    .filter((part) => part !== '')
+    .join(', ');
 }
 
 function valueOf(

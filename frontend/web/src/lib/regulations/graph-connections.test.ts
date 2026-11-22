@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RegulationGraph } from './labels';
-import { graphConnections } from './graph-connections';
+import { graphConnections, groupConnections } from './graph-connections';
 
 const graph: RegulationGraph = {
   nodes: [
@@ -49,5 +49,48 @@ describe('graphConnections', () => {
     expect(graphConnections(odd)).toEqual([
       { from: 'newSlot', relation: 'korzysta ze strategii', to: 'newStrategy', basis: null },
     ]);
+  });
+});
+
+describe('groupConnections', () => {
+  it('merges the relations of one slot and keeps references on their own lines', () => {
+    const grouped = groupConnections([
+      ...graphConnections(graph),
+      {
+        from: 'Wynik oceny',
+        relation: 'odwołuje się do',
+        to: 'Skala ocen cząstkowych',
+        basis: '§ 11 ust. 1 pkt 3',
+      },
+    ]);
+    expect(grouped).toEqual([
+      {
+        from: 'Termin na sprzeciw',
+        parts: [
+          { relation: 'liczony od', to: 'Zapoznanie z oceną' },
+          { relation: 'korzysta ze strategii', to: 'Dni od zdarzenia' },
+        ],
+        basis: 'art. 83 ust. 1 ustawy',
+      },
+      {
+        from: 'Wynik oceny',
+        parts: [{ relation: 'odwołuje się do', to: 'Skala ocen cząstkowych' }],
+        basis: '§ 11 ust. 1 pkt 3',
+      },
+      {
+        from: 'Wynik oceny',
+        parts: [{ relation: 'odwołuje się do', to: 'Skala ocen cząstkowych' }],
+        basis: '§ 11 ust. 1 pkt 3',
+      },
+    ]);
+  });
+
+  it('does not merge neighbours with another subject or basis', () => {
+    const grouped = groupConnections([
+      { from: 'A', relation: 'liczony od', to: 'x', basis: 'p1' },
+      { from: 'A', relation: 'korzysta ze strategii', to: 'y', basis: 'p2' },
+      { from: 'B', relation: 'liczony od', to: 'x', basis: 'p2' },
+    ]);
+    expect(grouped).toHaveLength(3);
   });
 });

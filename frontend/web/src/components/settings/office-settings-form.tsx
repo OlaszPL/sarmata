@@ -7,12 +7,12 @@ import {
   Field,
   Notice,
   RadioGroup,
-  Section,
   SubmitButton,
   Textarea,
   TextInput,
 } from '@sarmata/ui';
 import { type OfficeSettingsState, saveOfficeSettings } from '@/app/(app)/ustawienia/actions';
+import { FormGroup } from '@/components/settings/form-group';
 import { useErrorTitle } from '@/components/use-error-title';
 import { pluralPl } from '@/lib/format';
 import type { FormValues } from '@/lib/form-action';
@@ -96,14 +96,19 @@ export function OfficeSettingsForm({
   const retention = state.retention;
 
   return (
-    <div className="grid gap-8">
+    <div className="grid grid-cols-1 gap-8">
       {hasErrors ? (
         <ErrorSummary title="Popraw ustawienia urzędu" errors={errors}>
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-10">
-        <Section title="Sztuczna inteligencja" titleLevel={2} flush>
+      <form
+        key={version}
+        action={formAction}
+        noValidate
+        className="grid grid-cols-1 max-w-[40rem] gap-10"
+      >
+        <FormGroup title="Sztuczna inteligencja">
           <RadioGroup
             name="aiEnabled"
             legend="Sugestie AI w urzędzie"
@@ -112,10 +117,10 @@ export function OfficeSettingsForm({
             defaultValue={text('aiEnabled') || '1'}
             error={fieldErrors.aiEnabled}
           />
-        </Section>
+        </FormGroup>
 
-        <Section title="Przechowywanie notatek" titleLevel={2} flush>
-          <div className="grid gap-6">
+        <FormGroup title="Przechowywanie notatek">
+          <div className="grid grid-cols-1 gap-6">
             <Field
               id="notesRetentionMonths"
               label="Okres przechowywania notatek w miesiącach"
@@ -150,9 +155,9 @@ export function OfficeSettingsForm({
               </Notice>
             ) : null}
           </div>
-        </Section>
+        </FormGroup>
 
-        <Section title="Przypomnienia" titleLevel={2} flush>
+        <FormGroup title="Przypomnienia">
           <Field
             id="reminderLeadDays"
             label="Dni przed terminem"
@@ -165,9 +170,9 @@ export function OfficeSettingsForm({
               defaultValue={text('reminderLeadDays')}
             />
           </Field>
-        </Section>
+        </FormGroup>
 
-        <Section title="Widoczność ocen" titleLevel={2} flush>
+        <FormGroup title="Widoczność ocen">
           <RadioGroup
             name="evaluationVisibility"
             legend="Kto widzi oceny"
@@ -175,10 +180,10 @@ export function OfficeSettingsForm({
             defaultValue={text('evaluationVisibility') || 'office'}
             error={fieldErrors.evaluationVisibility}
           />
-        </Section>
+        </FormGroup>
 
-        <Section title="Dokumenty" titleLevel={2} flush>
-          <div className="grid gap-6">
+        <FormGroup title="Dokumenty">
+          <div className="grid grid-cols-1 gap-6">
             <Field
               id="defaultPlace"
               label="Domyślna miejscowość"
@@ -201,10 +206,10 @@ export function OfficeSettingsForm({
               />
             </Field>
           </div>
-        </Section>
+        </FormGroup>
 
-        <Section title="Flagi oceniających w statystykach" titleLevel={2} flush>
-          <div className="grid gap-6">
+        <FormGroup title="Flagi oceniających w statystykach">
+          <div className="grid grid-cols-1 gap-6">
             <Field
               id="minEvaluations"
               label="Najmniej ocen oceniającego w roku"
@@ -262,10 +267,10 @@ export function OfficeSettingsForm({
               />
             </Field>
           </div>
-        </Section>
+        </FormGroup>
 
-        <Section title="Poczta SMTP" titleLevel={2} flush>
-          <div className="grid gap-6">
+        <FormGroup title="Poczta SMTP">
+          <div className="grid grid-cols-1 gap-6">
             <Field id="smtpHost" label="Serwer" optional error={fieldErrors.smtpHost}>
               <TextInput
                 name="smtpHost"
@@ -307,7 +312,7 @@ export function OfficeSettingsForm({
               />
             </Field>
           </div>
-        </Section>
+        </FormGroup>
 
         <div>
           <SubmitButton pendingLabel="Zapisywanie">Zapisz ustawienia urzędu</SubmitButton>

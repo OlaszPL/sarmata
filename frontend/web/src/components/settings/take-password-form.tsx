@@ -15,7 +15,7 @@ export function TakePasswordForm({ invitationId }: { invitationId: string }) {
 
   if (state.password) {
     return (
-      <div className="grid max-w-[40rem] gap-4">
+      <div className="grid grid-cols-1 max-w-[40rem] gap-4">
         <p
           data-testid="temporary-password"
           className="font-heading text-ink border-rule border bg-white px-5 py-4 text-[2rem] leading-[normal] font-semibold break-all select-all"
@@ -37,7 +37,7 @@ export function TakePasswordForm({ invitationId }: { invitationId: string }) {
   }
 
   return (
-    <form action={formAction} className="grid max-w-[40rem] gap-4">
+    <form action={formAction} className="grid grid-cols-1 max-w-[40rem] gap-4">
       <input type="hidden" name="invitationId" value={invitationId} />
       {state.formError ? (
         <Notice tone="error" role="alert">

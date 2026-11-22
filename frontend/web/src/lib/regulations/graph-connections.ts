@@ -57,3 +57,39 @@ export function graphConnections(graph: RegulationGraph): GraphConnection[] {
   }
   return connections;
 }
+
+/** Connections of one subject merged into one sentence, the legal basis stated once. */
+export interface ConnectionGroup {
+  from: string;
+  parts: { relation: string; to: string }[];
+  basis: string | null;
+}
+
+const REFERENCE_RELATION = 'odwołuje się do';
+
+/**
+ * Merges consecutive connections that share `from` and `basis`, so a slot reads as one line. A
+ * reference stays on its own line.
+ */
+export function groupConnections(connections: readonly GraphConnection[]): ConnectionGroup[] {
+  const groups: ConnectionGroup[] = [];
+  let mergeable = false;
+  for (const connection of connections) {
+    const part = { relation: connection.relation, to: connection.to };
+    const last = groups.at(-1);
+    const isReference = connection.relation === REFERENCE_RELATION;
+    if (
+      last &&
+      mergeable &&
+      !isReference &&
+      last.from === connection.from &&
+      last.basis === connection.basis
+    ) {
+      last.parts.push(part);
+    } else {
+      groups.push({ from: connection.from, parts: [part], basis: connection.basis });
+    }
+    mergeable = !isReference;
+  }
+  return groups;
+}

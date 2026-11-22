@@ -50,7 +50,7 @@ function Confirmation({ saved, open }: { saved: string; open: number }) {
   }
   if (saved !== 'dostep') return null;
   return (
-    <div className="grid max-w-[40rem] gap-4">
+    <div className="grid grid-cols-1 max-w-[40rem] gap-4">
       <Notice tone="success" role="status">
         Zakończono dostęp.
       </Notice>
@@ -78,7 +78,7 @@ export default async function AccountsPage({
     return (
       <div className="flex flex-1 flex-col">
         <SettingsHero title="Konta" current="accounts" meta={heroMeta} />
-        <div className="grid gap-8 px-6 py-8 sm:px-10">
+        <div className="grid grid-cols-1 gap-8 px-6 py-8 sm:px-10">
           <AdminOnlyNotice what="Konta urzędu" />
         </div>
       </div>
@@ -126,9 +126,10 @@ export default async function AccountsPage({
         row.active ? (
           <Link
             href={`${routes.settingsAccounts}?konto=${row.accountId}#konto`}
+            aria-label={`Zmień, ${row.name}`}
             className={linkClasses}
           >
-            Zmień<span className="sr-only">, {row.name}</span>
+            Zmień
           </Link>
         ) : null,
     },
@@ -137,10 +138,15 @@ export default async function AccountsPage({
   return (
     <div className="flex flex-1 flex-col">
       <SettingsHero title="Konta" current="accounts" meta={heroMeta} />
-      <div className="grid gap-8 px-6 py-8 sm:px-10">
+      <div className="px-6 pt-8 empty:hidden sm:px-10">
         <Confirmation saved={single(params.zapisano)} open={Number.isNaN(open) ? 0 : open} />
-        {invitationId ? <InvitationPanel id={invitationId} services={services} /> : null}
-
+      </div>
+      {invitationId ? (
+        <div className="px-6 pt-8 sm:px-10">
+          <InvitationPanel id={invitationId} services={services} />
+        </div>
+      ) : null}
+      <div className="grid grid-cols-1">
         <Section title="Zaproś konto" flush={false}>
           <InviteForm />
         </Section>

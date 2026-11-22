@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { servicesFor } from '@sarmata/services';
-import { DataTable, type DataTableColumn, EmptyState, PageHero, Section, Tag } from '@sarmata/ui';
+import { DataTable, type DataTableColumn, EmptyState, PageHero, Tag } from '@sarmata/ui';
 import { AiLogFilters } from '@/components/ai-log/ai-log-filters';
 import { RunDecisions } from '@/components/ai-log/run-decisions';
 import { officeEmployees, requireMember } from '@/lib/account';
 import { type AiLogRow, aiLogRows, parseAiLogFilter } from '@/lib/ai-log/ai-log';
+import { todayInWarsaw } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { type SearchParams, single } from '@/lib/search-params';
 import { createSupabase } from '@/lib/supabase';
@@ -44,6 +45,19 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
     .map((employee) => ({ id: employee.id, name: `${employee.firstName} ${employee.lastName}` }))
     .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
 
+  const criterionNames = new Map<string, string>();
+  if (selectedId !== '') {
+    try {
+      const document = await services.regulations.inForceOn(todayInWarsaw());
+      for (const criterion of document.criteria.catalog) {
+        criterionNames.set(criterion.id, criterion.name);
+      }
+    } catch {
+      // Without the regulation the log shows the criterion ids.
+    }
+  }
+  const criterionName = (id: string) => criterionNames.get(id) ?? id;
+
   const rows = aiLogRows(runs, people);
   const selected = runs.find((run) => run.id === selectedId) ?? null;
   const filtered = filter.employeeId !== undefined || filter.kind !== undefined;
@@ -73,13 +87,10 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
             ...(filter.kind ? { rodzaj: filter.kind } : {}),
             [RUN_ANCHOR]: row.id,
           }).toString()}#${RUN_ANCHOR}`}
+          aria-label={`Pokaż decyzje, ${row.kind}, ${row.requestedAt}`}
           className="font-heading text-link font-medium underline"
         >
           Pokaż
-          <span className="sr-only">
-            {' '}
-            decyzje, {row.kind}, {row.requestedAt}
-          </span>
         </Link>
       ),
     },
@@ -105,12 +116,18 @@ export default async function AiLogPage({ searchParams }: { searchParams: Promis
             <p className="max-w-[70ch]">{emptyText(account.role, filtered)}</p>
           </EmptyState>
         )}
+        {selected ? (
+          <section id={RUN_ANCHOR} aria-labelledby={`${RUN_ANCHOR}-heading`} className="mt-4">
+            <h2
+              id={`${RUN_ANCHOR}-heading`}
+              className="font-heading text-ink mb-6 text-[1.875rem] leading-[normal] font-semibold tracking-[-0.0133em]"
+            >
+              Decyzje o fragmentach
+            </h2>
+            <RunDecisions run={selected} people={people} criterionName={criterionName} />
+          </section>
+        ) : null}
       </div>
-      {selected ? (
-        <Section title="Decyzje o fragmentach" id={RUN_ANCHOR}>
-          <RunDecisions run={selected} people={people} />
-        </Section>
-      ) : null}
     </div>
   );
 }

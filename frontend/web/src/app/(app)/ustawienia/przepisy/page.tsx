@@ -69,7 +69,7 @@ export default async function RegulationVersionsPage({
     return (
       <div className="flex flex-1 flex-col">
         <SettingsHero title={TITLE} current="rules" />
-        <div className="grid gap-8 px-6 py-8 sm:px-10">
+        <div className="grid grid-cols-1 gap-8 px-6 py-8 sm:px-10">
           <AdminOnlyNotice what={TITLE} />
         </div>
       </div>
@@ -82,7 +82,7 @@ export default async function RegulationVersionsPage({
   const notices = confirmations.filter(({ param }) => single(params[param]) === '1');
   const noticeBlock =
     notices.length > 0 ? (
-      <div className="grid gap-4 px-6 pt-8 sm:px-10">
+      <div className="grid grid-cols-1 gap-4 px-6 pt-8 sm:px-10">
         {notices.map((notice) => (
           <Notice key={notice.param} tone="success" role="status" className="max-w-[40rem]">
             {notice.text}
@@ -154,7 +154,7 @@ function VersionList({ versions }: { versions: RegulationVersionSummary[] }) {
   return (
     <>
       <Section title="Wersje przepisów urzędu">
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <p className="max-w-[70ch]">
             Wersje urzędowe pochodzą z ustawy o służbie cywilnej i rozporządzenia w sprawie ocen
             okresowych. Na ich podstawie urząd może przygotować własną wersję. Nowa wersja działa
@@ -238,9 +238,9 @@ function VersionDetail({
       ) : (
         <>
           <Section title="Parametry">
-            <div className="grid gap-8">
+            <div className="grid grid-cols-1 gap-8">
               {groups.map((group) => (
-                <div key={group.title} className="grid gap-3">
+                <div key={group.title} className="grid grid-cols-1 gap-3">
                   <h3 className="text-[1.375rem] leading-[normal] font-semibold">{group.title}</h3>
                   {group.basis ? (
                     <p className="text-ink-muted max-w-[70ch]">Podstawa prawna: {group.basis}</p>

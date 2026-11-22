@@ -43,13 +43,18 @@ export function CloneForm({
   };
 
   return (
-    <div className="grid gap-8">
+    <div className="grid grid-cols-1 gap-8">
       {hasErrors ? (
         <ErrorSummary title="Popraw dane nowego szkicu" errors={errors}>
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-6">
+      <form
+        key={version}
+        action={formAction}
+        noValidate
+        className="grid grid-cols-1 max-w-[40rem] gap-6"
+      >
         {fixedSource ? (
           <>
             <input type="hidden" name="sourceId" value={fixedSource.id} />

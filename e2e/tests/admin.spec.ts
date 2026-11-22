@@ -92,6 +92,9 @@ test.describe('admin screens as the admin', () => {
     await expect(page).toHaveURL(/wersja=/);
     await expect(page.getByRole('table', { name: 'Wyniki przypadków testowych' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Powiązania przepisów' })).toBeVisible();
+    // The official version has no errors: no deadline slot group is expanded.
+    await expect(page.locator('details > summary').first()).toBeVisible();
+    await expect(page.locator('details[open]')).toHaveCount(0);
     await expectNoViolations(page);
     await page.setViewportSize({ width: 400, height: 900 });
     await expectNoSidewaysScroll(page);
@@ -99,7 +102,7 @@ test.describe('admin screens as the admin', () => {
 
   test('the AI log is honestly empty for the admin', async ({ page }) => {
     await page.goto('/dziennik-ai');
-    await expect(page.getByRole('heading', { name: 'Brak przebiegów do pokazania' })).toBeVisible();
+    await expect(page.getByText('Brak przebiegów do pokazania', { exact: true })).toBeVisible();
   });
 });
 
@@ -127,6 +130,17 @@ test.describe('admin screens for other roles', () => {
     await expect(
       page.getByRole('table', { name: 'Decyzje o fragmentach przebiegu' }).getByRole('row'),
     ).not.toHaveCount(1);
+    const decisions = page.getByRole('table', { name: 'Decyzje o fragmentach przebiegu' });
+    await expect(decisions).not.toContainText('communication');
+    await expect(decisions).toContainText('Komunikacja');
+  });
+
+  test('hr sees the AI log without sideways scroll at 400 px', async ({ page }) => {
+    await signIn(page, demoAccount('hr'));
+    await page.setViewportSize({ width: 400, height: 900 });
+    await page.goto('/dziennik-ai');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expectNoSidewaysScroll(page);
   });
 
   test('hr filters the AI log by kind', async ({ page }) => {

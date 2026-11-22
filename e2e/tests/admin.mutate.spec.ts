@@ -95,6 +95,23 @@ test.describe('admin changes', () => {
     await expect(page.getByText('Zapisano parametry. Wyniki testów są poniżej.')).toBeVisible();
     await expect(max).toHaveValue('2');
 
+    // A deadline slot is a closed group: an error inside it opens the group and the summary link
+    // reaches the field.
+    const objection = page.locator('details', {
+      has: page.locator('summary', { hasText: 'Termin na sprzeciw' }),
+    });
+    await expect(objection).not.toHaveAttribute('open');
+    await objection.locator('summary').click();
+    await objection.getByLabel('Liczba dni').fill('abc');
+    await page.getByRole('button', { name: 'Zapisz i uruchom testy' }).click();
+    await expect(errorSummary(page, 'Popraw parametry wersji')).toBeFocused();
+    await expect(objection).toHaveAttribute('open');
+    await errorSummary(page, 'Popraw parametry wersji').getByRole('link').first().click();
+    await expect(objection.getByLabel('Liczba dni')).toBeFocused();
+    await objection.getByLabel('Liczba dni').fill('7');
+    await page.getByRole('button', { name: 'Zapisz i uruchom testy' }).click();
+    await expect(page.getByText('Zapisano parametry. Wyniki testów są poniżej.')).toBeVisible();
+
     await page
       .getByRole('checkbox', { name: 'Rozumiem, że usunięcia szkicu nie da się cofnąć' })
       .check();

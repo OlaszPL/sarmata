@@ -117,6 +117,15 @@ describe('fragmentLabel', () => {
     expect(fragmentLabel('answer')).toBe('Odpowiedź');
   });
 
+  it('shows the criterion name when a lookup is given', () => {
+    const name = (id: string) => (id === 'communication' ? 'Komunikacja' : id);
+    expect(fragmentLabel('rating.communication', name)).toBe('Ocena, kryterium Komunikacja');
+    expect(fragmentLabel('question.communication.1', name)).toBe(
+      'Pytanie 2, kryterium Komunikacja',
+    );
+    expect(fragmentLabel('rating.other', name)).toBe('Ocena, kryterium other');
+  });
+
   it('falls back to the fragment with dots replaced by spaces', () => {
     expect(fragmentLabel('weird.path.here')).toBe('weird path here');
   });

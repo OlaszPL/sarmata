@@ -11,13 +11,21 @@ const decisionLabels: Record<AiFragmentDecision['decision'], string> = {
 };
 
 /** Decisions of one run, fragment by fragment, with who decided and when. */
-export function RunDecisions({ run, people }: { run: AiRun; people: ReadonlyMap<string, string> }) {
+export function RunDecisions({
+  run,
+  people,
+  criterionName,
+}: {
+  run: AiRun;
+  people: ReadonlyMap<string, string>;
+  criterionName?: ((id: string) => string) | undefined;
+}) {
   const columns: DataTableColumn<AiFragmentDecision>[] = [
     {
       key: 'fragment',
       header: 'Fragment',
       rowHeader: true,
-      cell: (row) => fragmentLabel(row.fragment),
+      cell: (row) => fragmentLabel(row.fragment, criterionName),
     },
     { key: 'decision', header: 'Decyzja', cell: (row) => decisionLabels[row.decision] },
     {

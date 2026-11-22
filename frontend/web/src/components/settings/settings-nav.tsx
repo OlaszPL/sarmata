@@ -15,11 +15,14 @@ const items: readonly { section: SettingsSection; label: string; href: string }[
 export function SettingsNav({ current }: { current: SettingsSection }) {
   return (
     <nav aria-label="Ustawienia">
-      <ul className="border-rule flex w-fit flex-wrap border">
+      <ul className="border-rule flex flex-col border sm:w-fit sm:flex-row">
         {items.map((item) => {
           const isCurrent = item.section === current;
           return (
-            <li key={item.section} className="border-rule border-l first:border-l-0">
+            <li
+              key={item.section}
+              className="border-rule border-t first:border-t-0 sm:border-t-0 sm:border-l sm:first:border-l-0"
+            >
               <Link
                 href={item.href}
                 aria-current={isCurrent ? 'page' : undefined}

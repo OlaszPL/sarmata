@@ -60,13 +60,18 @@ export function InviteForm() {
   };
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {hasErrors ? (
         <ErrorSummary title="Popraw dane zaproszenia" errors={errors}>
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-6">
+      <form
+        key={version}
+        action={formAction}
+        noValidate
+        className="grid grid-cols-1 max-w-[40rem] gap-6"
+      >
         <Field id="firstName" label="Imię" error={state.fieldErrors.firstName}>
           <TextInput name="firstName" autoComplete="off" defaultValue={text('firstName')} />
         </Field>

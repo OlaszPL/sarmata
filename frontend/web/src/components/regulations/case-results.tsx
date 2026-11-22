@@ -59,7 +59,7 @@ export function CaseResults({
   const passed = cases.filter((item) => item.status === 'passed').length;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {acceptedFailingCases && acceptedFailingCases.length > 0 ? (
         <Notice tone="warning">
           <p className="max-w-[70ch]">

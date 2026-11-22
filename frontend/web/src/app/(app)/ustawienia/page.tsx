@@ -30,7 +30,7 @@ export default async function OfficeSettingsPage({
         current="office"
         meta="Zmiany obowiązują cały urząd od zapisu."
       />
-      <div className="grid gap-8 px-6 py-8 sm:px-10">
+      <div className="grid grid-cols-1 gap-8 px-6 py-8 sm:px-10">
         {single(params.zapisano) === '1' ? (
           <Notice tone="success" role="status" className="max-w-[40rem]">
             Zapisano ustawienia urzędu.

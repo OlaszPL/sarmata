@@ -133,8 +133,12 @@ const criterionPartLabels: Record<string, string> = {
   justification: 'uzasadnienie',
 };
 
-/** A readable name of an output fragment path, the path itself for an unknown one. */
-export function fragmentLabel(fragment: string): string {
+/** A readable name of an output fragment path, the path itself for an unknown one. `criterionName`
+ * turns a criterion id into its name. */
+export function fragmentLabel(
+  fragment: string,
+  criterionName: (id: string) => string = (id) => id,
+): string {
   const fixed = fixedLabels[fragment];
   if (fixed) return fixed;
   const parts = fragment.split('.');
@@ -146,15 +150,15 @@ export function fragmentLabel(fragment: string): string {
     return part ? `Kryterium ${index}, ${part}` : `Kryterium ${index}`;
   }
   if (parts.length === 2 && second !== '') {
-    if (head === 'rating') return `Ocena, kryterium ${second}`;
-    if (head === 'criterion') return `Dodatkowe kryterium ${second}`;
-    if (head === 'expectations') return `Oczekiwane zachowania, kryterium ${second}`;
+    if (head === 'rating') return `Ocena, kryterium ${criterionName(second)}`;
+    if (head === 'criterion') return `Dodatkowe kryterium ${criterionName(second)}`;
+    if (head === 'expectations') return `Oczekiwane zachowania, kryterium ${criterionName(second)}`;
     if (head === 'signal') return `Sygnał, ${signalLabels[second] ?? second}`;
     const indexed = indexedLabels[head];
     if (indexed && index !== null) return `${indexed} ${index}`;
   }
   if (head === 'question' && parts.length === 3 && third !== undefined && /^\d+$/.test(third)) {
-    return `Pytanie ${Number(third) + 1}, kryterium ${second}`;
+    return `Pytanie ${Number(third) + 1}, kryterium ${criterionName(second)}`;
   }
   return parts.join(' ');
 }

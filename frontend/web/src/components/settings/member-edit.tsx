@@ -31,7 +31,7 @@ function RoleForm({ accountId, currentRole }: { accountId: string; currentRole: 
   const chosen = state.values.role;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {hasErrors ? (
         <ErrorSummary
           title="Nie udało się zmienić roli"
@@ -40,7 +40,12 @@ function RoleForm({ accountId, currentRole }: { accountId: string; currentRole: 
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-6">
+      <form
+        key={version}
+        action={formAction}
+        noValidate
+        className="grid grid-cols-1 max-w-[40rem] gap-6"
+      >
         <input type="hidden" name="accountId" value={accountId} />
         <RadioGroup
           name="role"
@@ -66,7 +71,7 @@ function EndForm({ accountId }: { accountId: string }) {
   useErrorTitle(hasErrors);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {hasErrors ? (
         <ErrorSummary
           title="Nie udało się zakończyć dostępu"
@@ -75,7 +80,12 @@ function EndForm({ accountId }: { accountId: string }) {
           {state.formError}
         </ErrorSummary>
       ) : null}
-      <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-6">
+      <form
+        key={version}
+        action={formAction}
+        noValidate
+        className="grid grid-cols-1 max-w-[40rem] gap-6"
+      >
         <input type="hidden" name="accountId" value={accountId} />
         <Checkbox
           id="confirmEnd"
@@ -108,8 +118,8 @@ export function MemberEdit({
   isMe: boolean;
 }) {
   return (
-    <div className="grid gap-10">
-      <div className="grid gap-2">
+    <div className="grid grid-cols-1 gap-10">
+      <div className="grid grid-cols-1 gap-2">
         <p className="font-heading text-ink text-xl font-semibold">{name}</p>
         {isMe ? <p>To twoje konto.</p> : null}
       </div>
