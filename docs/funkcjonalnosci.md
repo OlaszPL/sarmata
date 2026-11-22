@@ -43,6 +43,7 @@ Backend jest zaimplementowany w zakresie planów B1 do B10: dostęp i role (RLS,
   - `proposeMapping(csv)`: propozycja kolumn z nagłówków (polskie i angielskie nazwy). Przełożony nigdy nie jest proponowany. Kadry mogą zmapować go jawnie (kolumna z identyfikatorem pracownika), inaczej import nie rusza drzewa przełożonych.
   - `dryRun(csv, mapping)`: wiersze z wartościami po konwersji (daty `RRRR-MM-DD` i `DD.MM.RRRR`, stopień arabski albo rzymski, polskie nazwy statusu, stosunku i rodzaju stanowiska), błędami walidacji i dopasowaniem: ten sam e-mail oznacza aktualizację, podobne imię i nazwisko (`find_similar_employees`) oznacza `needs_decision`, brak dopasowania oznacza utworzenie. Nic nie zapisuje.
   - `commit(csv, mapping, decisions)`: każdy wiersz zapisuje osobno (bez „wszystko albo nic”), błędne wiersze trafiają do `failed`. Wiersze z podobnymi nazwiskami czekają na decyzję kadr (`create`, `skip` albo `{ updateEmployeeId }`), bez decyzji trafiają do `undecided`. Aktualizacja nadpisuje tylko zmapowane, niepuste komórki.
+  - Błędy wiersza to `errors[]` z `field`, stabilnym `code` i angielskim `message`, w podglądzie (`dryRun`) i w `failed[]` z `commit`. Kody: `missing_field`, `invalid_date`, `unknown_value`, `not_a_number`, `out_of_range`, `civil_servant_only`, `invalid_format`, `duplicate_email`, `unknown_supervisor`, `invalid_supervisor`, `write_failed` (odmowa zapisu bez związku z przełożonym, `field: null`) i `invalid_value`. Nieznany przełożony (poprawny uuid spoza urzędu) widać już w podglądzie.
   - XLSX nie jest obsługiwany.
 
 ## Zdarzenia oceny
@@ -52,7 +53,7 @@ Backend jest zaimplementowany w zakresie planów B1 do B10: dostęp i role (RLS,
 - Silnik terminów liczy kolejne kroki od dat faktycznych.
 - Podpis to zatwierdzenie w systemie (potwierdzone przez mentorów KPRM 21.11.2026). Zatwierdza oceniający: zalogowane konto, znacznik czasu i wpis w dzienniku. Potwierdzenie ocenianego (podpis części I, zapoznanie, odmowa) oceniający odnotowuje z datą, bo oceniany nie ma konta. Wydruk PDF zostaje jako opcja dla urzędu.
 
-- Do zdarzeń oceny wchodzą pola z wzorów arkuszy KPRM, zapisane w payloadzie zdarzenia. `record_acquaintance` przyjmuje opcjonalne `refusalNote` i `witnesses`, a przy odmowie podpisu notatka domyślnie brzmi „oceniany odmówił podpisania zapoznania się z oceną”. `approve_part_one`, `approve_sheet` i `record_acquaintance` przyjmują opcjonalne `place` (miejscowość), domyślnie z `OfficeSettings.defaultPlace`.
+- Do zdarzeń oceny wchodzą pola z wzorów arkuszy KPRM, zapisane w payloadzie zdarzenia. `record_acquaintance` przyjmuje opcjonalne `refusalNote` i `witnesses`, a przy odmowie podpisu notatka domyślnie brzmi „osoba oceniana odmówiła podpisania zapoznania się z oceną”. `approve_part_one`, `approve_sheet` i `record_acquaintance` przyjmują opcjonalne `place` (miejscowość), domyślnie z `OfficeSettings.defaultPlace`.
 
 ## Notatki
 
@@ -83,7 +84,8 @@ Backend jest zaimplementowany w zakresie planów B1 do B10: dostęp i role (RLS,
 - Każde zdanie szkicu wskazuje notatkę źródłową. Bez notatek usługa zwraca „za mało danych” i pytania do rozmowy.
 - Kontrola jakości tekstu: przykład z datą, brak opisu osobowości i sfery prywatnej, zgodność z kryterium.
 - Każde wywołanie AI i każda sugestia trafiają do dziennika użycia AI (fragment, czy zmieniony, kto zatwierdził). Fragmenty z AI są oznaczone.
-- Dziennik to tabela `ai_runs` (przebieg AI): rodzaj usługi, kto i kiedy prosił, migawka wejścia, wynik, wersja promptu, porażka. Decyzje o fragmentach (`accepted`, `edited`, `rejected`, tekst po edycji) leżą w `ai_fragment_decisions`, ostatnia decyzja o fragmencie wygrywa. Fragmenty mają ścieżki, np. `rating.communication`, `justification.0`, `question.1`.
+- Dziennik to tabela `ai_runs` (przebieg AI): rodzaj usługi, kto i kiedy prosił, migawka wejścia, wynik, wersja promptu, porażka. Decyzje o fragmentach (`accepted`, `edited`, `rejected`, tekst po edycji) leżą w `ai_fragment_decisions`, ostatnia decyzja o fragmencie wygrywa. Fragmenty mają ścieżki, np. `rating.communication`, `justification.0`, `question.1`. Kolumna `model` mówi, jakie modele były dostępne zadaniu w chwili przebiegu (model tekstowy, dla sygnałów HR z Bielik-One także model decyzji).
+- `services.ai.usageLog({ limit? })` (tylko rola `admin`, inne dostają `forbidden`) to dziennik użycia AI urzędu bez treści. Zwraca od najnowszego (domyślnie 100, `limit` to liczba całkowita, baza ogranicza ją do 1..500) wiersze `{ id, kind, status, requestedBy, requesterName, employeeId, evaluationId, model, promptVersion, outputTokens, failureReason, requestedAt, startedAt, finishedAt, contentDeletedAt, decisions }`. `decisions` to ostatnia decyzja per fragment (`fragment`, `decision`, `decidedBy`, `decidedAt`), nigdy tekst po edycji. Wejścia, wyniku ani tekstu częściowego nie ma. SQL `ai_usage_log`.
 - Szkic: propozycja poziomu kryterium bez żadnego zdania z notatką źródłową nie powstaje (`points: null`). Zdanie, które wskazuje notatkę spoza migawki wejścia, odpada.
 
 ## Moduł HR partnera
@@ -99,6 +101,7 @@ Backend jest zaimplementowany w zakresie planów B1 do B10: dostęp i role (RLS,
 Liczone w widokach SQL albo funkcjach RPC (ADR 0004). Raporty urzędu czytają kadry i admin, rozkład per oceniający tylko kadry. Inne role dostają `forbidden`.
 
 - Rok raportu to rok sporządzenia oceny, czyli data ostatniego zdarzenia `sheet_approved`. Sprzeciwy liczymy od ocen sporządzonych w tym roku (pytanie 13 formularza).
+- Raport za rok sprzed pierwszej wersji przepisów (`regulations.forReportYear`) bierze najwcześniejszą wersję i jest pusty: suma 0, pięć poziomów z zerami, bez komórek i oceniających. `no_regulation_in_force` wraca tylko wtedy, gdy nie ma żadnej wersji.
 - Poziom i wynik oceny liczy kalkulator w `@sarmata/domain`, więc SQL nie ma po czym grupować. Serwis statystyk przelicza projekcję wyników (`evaluation_results`) przy odczycie raportu i zapisuje ją przez RPC. Po korekcie arkusza stary wiersz projekcji się nie liczy, bo RPC łączą po numerze wersji arkusza.
 - Harmonogram i terminowość: kto do oceny i kiedy, oceny w toku, po terminie (bez zawieszonych), bez zarejestrowanej rozmowy oceniającej, nadchodzące terminy rozmowy rozpoczynającej. Domyślny horyzont to 30 dni.
 - Sprawozdanie DSC-OCK, pytania 4 do 17 działu 1: liczby na 5 poziomach (osobno urzędnicy SC), oceny negatywne, drugie kolejne negatywne, sprzeciwy według wyniku, odwołania do sądu, wnioski i stopnie z art. 89. Pytania 1 do 3 (pierwsza ocena) poza zakresem. Eksport CSV dla Excela: UTF-8 z BOM i średnik jako separator.
@@ -268,11 +271,12 @@ Retencja: treść przebiegów AI (wejście, wynik, komunikat porażki, tekst po 
 
 ## Konta i logowanie
 
-- Supabase Auth, e-mail i hasło. Admin zaprasza konto e-mailem i nadaje rolę (`services.accounts`, tylko rola `admin`):
+- Supabase Auth, e-mail i hasło. Admin zaprasza konto e-mailem i nadaje rolę (`services.accounts`, zapraszanie i zmiana ról tylko dla roli `admin`):
   - `invite({ email, role, firstName, lastName })` (JWT admina) dopisuje wiersz do `account_invitations` i zwraca jego id. Wstawienie uruchamia trigger, który wysyła do kolejki `jobs` zadanie `accounts.invite` (sam identyfikator, bez adresu e-mail). Worker (`createSystemServices(db).accounts`, klucz serwisowy) wysyła zaproszenie Supabase Auth. Gdy zaproszenia nie da się wysłać (brak SMTP), zakłada konto z hasłem tymczasowym. Potem `access.add_membership` dodaje członkostwo i łączy rekord pracownika o tym samym e-mailu albo zakłada nowy. Ta sama funkcja stoi w `access.create_account` (kreator i seed). Gdy członkostwo się nie uda, świeżo założone konto jest usuwane. Osoba z kontem bez urzędu dostaje członkostwo bez wysyłki (`existing_account`). Lokalnie wiadomość z zaproszeniem widać w Mailpit.
   - `invitation(id)` zwraca stan żądania do odpytywania: `status` (`pending`, `sent`, `failed`), `mode` (`invitation`, `temporary_password`, `existing_account`) i przy błędzie `errorCode` (np. `account_exists`) z komunikatem. Błąd zaproszenia jest wynikiem, nie ponowieniem: admin wysyła żądanie jeszcze raz. Drugie dostarczenie tego samego zadania nic nie zmienia.
   - `takeInvitationPassword(id)` oddaje hasło tymczasowe dokładnie raz (SQL `take_invitation_password`) i je usuwa. Kolumna `temporary_password` nie jest czytelna przez API, wiersz niesie tylko flagę `temporaryPasswordWaiting`. Admin przekazuje hasło osobie.
   - Dostęp do `account_invitations` przechodzi przez `access.can(..., 'account_invitation', ...)`: odczyt i utworzenie tylko dla admina własnego urzędu, kolumny wyniku zapisuje wyłącznie worker.
+  - `directory()` (rola `hr` i `admin`, inne role dostają `forbidden`) zwraca aktywne konta urzędu (członkostwo bez `endedOn` albo z datą w przyszłości) jako `{ accountId, role, firstName, lastName }`, posortowane po nazwisku i imieniu. Służy do wyboru oceniającego, bez e-maili.
   - `changeRole(accountId, role)` i `endMembership(accountId)` (SQL `change_member_role`, `end_membership`, z JWT admina): rola trafia do tokena przy najbliższym odświeżeniu, koniec członkostwa to `ended_on` z dzisiejszą datą, a wiersz zostaje. Serwis zwraca liczbę otwartych ocen, które konto prowadzi, bo zmianę oceniającego robią kadry. Jedyny aktywny admin urzędu nie może zostać zdegradowany ani zakończony (`last_admin`). Ponowne zaproszenie zakończonego konta przywraca członkostwo.
 - Pierwsze konto admina tworzy kreator instalacji.
 - AD/LDAP i SSO to dalszy krok, poza MVP.
@@ -285,6 +289,7 @@ Retencja: treść przebiegów AI (wejście, wynik, komunikat porażki, tekst po 
 - Typ stosunku: czas nieokreślony, mianowanie, czas określony. Przy czasie określonym backend nie otwiera oceny i podaje powód.
 - Data nawiązania stosunku.
 - Dla urzędnika: rok mianowania, stopień I do IX, data jego przyznania.
+- Przełożony (`supervisorEmployeeId`): `employees.create` i `update` zwracają `ServiceError` z kodem `invalid_supervisor` i `details.reason`: `cycle` (pętla w drzewie), `self` (własny przełożony), `other_office` (pracownik spoza urzędu albo nieznany) albo `not_allowed` (zmianę robi tylko rola `hr` lub `admin`).
 
 ## Usuwanie danych pracownika
 
@@ -308,4 +313,4 @@ Te funkcje wynikają wprost z prawa i materiałów KPRM, więc wchodzą bez dysk
 - Część III (wniosek o stopień) tylko dla urzędnika przy ocenie pozytywnej, z umotywowaniem. Przy IX stopniu wniosek zablokowany (bramka `grade_request_max_grade`), wniosek tylko o stopień o jeden wyższy. Ostrzeżenie `grade_due_by_law` w `EvaluationView.warnings`, gdy arkusz zawiera wniosek, a stopień i tak przysługuje z mocy prawa (art. 89 ust. 2). Drugi kod, `second_consecutive_negative`, powtarza sygnał z art. 71. Ostrzeżenia nic nie blokują.
 - Sygnał dla kadr o drugiej kolejnej ocenie negatywnej (art. 71).
 - Ostrzeżenie o konflikcie ról, gdy oceniającym jest DG, który rozpatruje sprzeciw. Niemożliwe bez roli DG w aplikacji, więc nie zaimplementowane.
-- Odmowa podpisu przy zapoznaniu jest zdarzeniem z datą i adnotacją na arkuszu („oceniany odmówił podpisania”), uruchamia te same terminy co zapoznanie.
+- Odmowa podpisu przy zapoznaniu jest zdarzeniem z datą i adnotacją na arkuszu („osoba oceniana odmówiła podpisania”), uruchamia te same terminy co zapoznanie.

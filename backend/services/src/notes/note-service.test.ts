@@ -66,6 +66,7 @@ function sensitiveRun(overrides: Partial<SensitiveRun> = {}): AiRun {
     evaluationId: null,
     inputRefs: { noteIds: [], droppedNoteIds: [] },
     promptVersion: null,
+    model: null,
     failure: null,
     requestedAt: '2026-03-01T10:00:00Z',
     startedAt: null,

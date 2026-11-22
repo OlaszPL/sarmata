@@ -72,6 +72,8 @@ interface Stack {
   readonly compose: readonly string[];
   readonly docker: readonly string[];
   readonly local: boolean;
+  /** CA bundle of a TLS-inspecting proxy, as the engine host sees it, null when not set. */
+  readonly buildCaFile: string | null;
 }
 
 function stack(env: Environment, config: InstallConfig, dockerPrefix: readonly string[]): Stack {
@@ -89,11 +91,15 @@ function stack(env: Environment, config: InstallConfig, dockerPrefix: readonly s
     ],
     docker: [...dockerPrefix, 'docker'],
     local: config.supabase.mode === 'local',
+    buildCaFile: env.buildCaFile === null ? null : toEnginePath(env, env.buildCaFile),
   };
 }
 
+// auth (GoTrue) creates auth.jwt() with its own migrations on start, and our policies call it.
 const upDatabase = (s: Stack): Step[] =>
-  s.local ? [engineRun('Uruchamianie bazy danych', [...s.compose, 'up', '-d', ...WAIT, 'db'])] : [];
+  s.local
+    ? [engineRun('Uruchamianie bazy danych', [...s.compose, 'up', '-d', ...WAIT, 'db', 'auth'])]
+    : [];
 const migrate = (s: Stack): Step =>
   engineRun('Nakładanie migracji bazy', [...s.compose, ...TOOLS, 'migrate']);
 const dumpStep = (s: Stack, title: string, file: string, undo: readonly Step[] = []): Step =>
@@ -122,6 +128,7 @@ function buildImage(
         image.target,
         '--tag',
         `${image.repository}:${tag}`,
+        ...(s.buildCaFile === null ? [] : ['--secret', `id=ca,src=${s.buildCaFile}`]),
         context,
       ],
       { interactive: true },

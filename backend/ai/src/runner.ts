@@ -34,6 +34,12 @@ export interface ExecuteOptions {
 export interface AiRunResult {
   readonly output: AiOutput<AiRunKind>;
   readonly promptVersion: string;
+  /**
+   * Model(s) available to the task when it ran: the text model, plus ` + <decision model>` for hr_signals
+   * when Bielik-One is configured, or the decision model alone without a text model. It names the
+   * configured models, not the ones that were actually called.
+   */
+  readonly model: string | null;
 }
 
 /** Runs one AI service on the input snapshot of a run. Prompts, model schemas and checks live inside. */
@@ -53,26 +59,55 @@ interface TaskEntry<K extends AiRunKind> {
   readonly run: Task<K>;
   /** The model writes long text: the call gets `AiConfig.longTimeoutMs`. */
   readonly long: boolean;
+  /** Set only on tasks that call `ai.decide` (Bielik-One, or the text model in its place). */
+  readonly usesDecision?: true;
 }
 
 const TASKS: { readonly [K in AiRunKind]: TaskEntry<K> } = {
   sheet_draft: { prompt: 'sheet-draft', run: sheetDraft, long: true },
   quality_check: { prompt: 'quality-check', run: qualityCheck, long: false },
-  sensitive_data: { prompt: 'sensitive-data', run: sensitiveData, long: false },
-  conversation_prep: { prompt: 'conversation-prep', run: conversationPrep, long: true },
+  sensitive_data: {
+    prompt: 'sensitive-data',
+    run: sensitiveData,
+    long: false,
+  },
+  conversation_prep: {
+    prompt: 'conversation-prep',
+    run: conversationPrep,
+    long: true,
+  },
   // Expectations for every criterion of the sheet: about 120 s on a 16 GB Mac, past the short limit.
-  criteria_proposals: { prompt: 'criteria-proposals', run: criteriaProposals, long: true },
-  appreciation_moments: { prompt: 'appreciation-moments', run: appreciationMoments, long: false },
-  hr_signals: { prompt: 'hr-signals', run: hrSignals, long: true },
-  procedure_question: { prompt: 'procedure-question', run: procedureQuestion, long: false },
+  criteria_proposals: {
+    prompt: 'criteria-proposals',
+    run: criteriaProposals,
+    long: true,
+  },
+  appreciation_moments: {
+    prompt: 'appreciation-moments',
+    run: appreciationMoments,
+    long: false,
+  },
+  hr_signals: { prompt: 'hr-signals', run: hrSignals, long: true, usesDecision: true },
+  procedure_question: {
+    prompt: 'procedure-question',
+    run: procedureQuestion,
+    long: false,
+  },
 };
+
+/** The model label of a run, see `AiRunResult.model`. */
+function modelLabel(models: Ai['models'], usesDecision: boolean): string | null {
+  const decision = usesDecision ? models.decision : null;
+  if (models.text === null) return decision;
+  return decision === null ? models.text : `${models.text} + ${decision}`;
+}
 
 export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRunner {
   async function executeKind<K extends AiRunKind>(
     kind: K,
     raw: unknown,
     { signal, onProgress }: ExecuteOptions,
-  ): Promise<AiResult<{ output: AiOutput<K>; promptVersion: string }>> {
+  ): Promise<AiResult<{ output: AiOutput<K>; promptVersion: string; model: string | null }>> {
     const entry = TASKS[kind];
     const input = aiInputSchemas[kind].safeParse(raw);
     if (!input.success) {
@@ -97,7 +132,14 @@ export function createAiRunner(deps: { ai: Ai; legalSearch: LegalSearch }): AiRu
         `Invalid ${kind} output: ${z.prettifyError(output.error)}`,
       );
     }
-    return { ok: true, value: { output: output.data as AiOutput<K>, promptVersion: prompt.id } };
+    return {
+      ok: true,
+      value: {
+        output: output.data as AiOutput<K>,
+        promptVersion: prompt.id,
+        model: modelLabel(deps.ai.models, entry.usesDecision === true),
+      },
+    };
   }
 
   return {

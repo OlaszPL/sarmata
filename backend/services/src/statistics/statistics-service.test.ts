@@ -141,7 +141,7 @@ function serviceWith(
     repository: fake.repository,
     settings: { get: () => Promise.resolve(settings) },
     history: options.history ?? (() => Promise.resolve([])),
-    regulationInForceOn: () => Promise.resolve(regulation),
+    regulationForYear: () => Promise.resolve(regulation),
   });
 }
 
@@ -362,6 +362,24 @@ describe('office report', () => {
     await expect(service.evaluatorReport(2026)).rejects.toMatchObject({ code: 'forbidden' });
   });
 
+  it('officeReport of a year before the first regulation returns an empty report', async () => {
+    const requested: number[] = [];
+    const service = createStatisticsService({
+      repository: fakeRepository().repository,
+      settings: { get: () => Promise.resolve(baseSettings) },
+      history: () => Promise.resolve([]),
+      regulationForYear: (year) => {
+        requested.push(year);
+        return Promise.resolve(regulation);
+      },
+    });
+    const report = await service.officeReport(2010);
+    expect(requested).toEqual([2010]);
+    expect(report.total).toBe(0);
+    expect(report.levels.map((level) => level.count)).toEqual([0, 0, 0, 0, 0]);
+    expect(report.byUnit).toEqual([]);
+  });
+
   it('year 1999 throws ZodError', async () => {
     await expect(serviceWith(fakeRepository()).officeReport(1999)).rejects.toBeInstanceOf(ZodError);
   });
@@ -381,6 +399,17 @@ describe('evaluator report', () => {
     evaluations,
     pointsSum,
     ratings,
+  });
+
+  it('evaluatorReport of a year before the first regulation returns an empty report', async () => {
+    const service = createStatisticsService({
+      repository: fakeRepository().repository,
+      settings: { get: () => Promise.resolve(baseSettings) },
+      history: () => Promise.resolve([]),
+      regulationForYear: () => Promise.resolve(regulation),
+    });
+    const report = await service.evaluatorReport(2010);
+    expect(report.evaluators).toEqual([]);
   });
 
   it('evaluator report flags central tendency', async () => {

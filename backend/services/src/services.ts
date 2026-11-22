@@ -8,7 +8,9 @@ import {
   computeDeadline,
   employeePatchSchema,
   newEmployeeSchema,
+  calendarDate,
   officeVersionInForce,
+  versionForReportDay,
 } from '@sarmata/domain';
 import {
   type Db,
@@ -37,6 +39,7 @@ import {
   createEmployeeImportService,
 } from './employee-import/employee-import-service';
 import { ServiceError } from './errors';
+import { supervisorError } from './employees/supervisor-error';
 import { type EmploymentService, createEmploymentService } from './employment/employment-service';
 import { type HrRegisterService, createHrRegisterService } from './hr-register/hr-register-service';
 import { type StatisticsService, createStatisticsService } from './statistics/statistics-service';
@@ -82,13 +85,16 @@ export interface Services {
   readonly employees: {
     list(): Promise<Employee[]>;
     get(id: string): Promise<Employee | null>;
-    /** Throws `ZodError` for invalid input. */
+    /** `invalid_supervisor` with `details.reason` (`cycle`, `self`, `other_office`, `not_allowed`) when the supervisor breaks a rule. Throws `ZodError` for invalid input. */
     create(input: NewEmployeeInput): Promise<Employee>;
+    /** `invalid_supervisor` with `details.reason` (`cycle`, `self`, `other_office`, `not_allowed`) when the supervisor breaks a rule. Throws `ZodError` for invalid input. */
     update(id: string, patch: Partial<NewEmployeeInput>): Promise<Employee>;
     findSimilar(search: string): Promise<SimilarEmployee[]>;
   };
   readonly regulations: {
     inForceOn(on: CalendarDate): Promise<RegulationDocument>;
+    /** The version in force on 31 December of the year, or the earliest version for a year before it: reports of such a year are empty but keep the level names. `no_regulation_in_force` only when no version exists. */
+    forReportYear(year: number): Promise<RegulationDocument>;
     /** The regulation version the evaluation is pinned to. `not_found` for an evaluation the account cannot see, `unknown_regulation` for a missing version. */
     forEvaluation(evaluationId: string): Promise<RegulationDocument>;
   };
@@ -111,21 +117,31 @@ export function createServices(dependencies: ServiceDependencies): Services {
     ...(officeSettings === undefined ? {} : { officeSettings }),
   });
 
+  async function candidatesWithDates() {
+    const candidates = await repositories.regulationVersions.listInForceCandidates();
+    return candidates.map((candidate) => ({
+      ...candidate,
+      effectiveFrom: candidate.document.effectiveFrom,
+    }));
+  }
+
   const regulations: Services['regulations'] = {
     async inForceOn(on) {
-      const candidates = await repositories.regulationVersions.listInForceCandidates();
-      const version = officeVersionInForce(
-        candidates.map((candidate) => ({
-          ...candidate,
-          effectiveFrom: candidate.document.effectiveFrom,
-        })),
-        on,
-      );
+      const version = officeVersionInForce(await candidatesWithDates(), on);
       if (version === null) {
         throw new ServiceError(
           'no_regulation_in_force',
           `No regulation version is in force on ${on}`,
         );
+      }
+      return version.document;
+    },
+
+    async forReportYear(year) {
+      const on = calendarDate(`${String(year)}-12-31`);
+      const version = versionForReportDay(await candidatesWithDates(), on);
+      if (version === null) {
+        throw new ServiceError('no_regulation_in_force', 'No regulation version exists');
       }
       return version.document;
     },
@@ -137,9 +153,22 @@ export function createServices(dependencies: ServiceDependencies): Services {
     employees: {
       list: () => repositories.employees.list(),
       get: (id) => repositories.employees.get(id),
-      create: async (input) => repositories.employees.create(newEmployeeSchema.parse(input)),
-      update: async (id, patch) =>
-        repositories.employees.update(id, employeePatchSchema.parse(patch)),
+      create: async (input) => {
+        const parsed = newEmployeeSchema.parse(input);
+        try {
+          return await repositories.employees.create(parsed);
+        } catch (error) {
+          throw supervisorError(error);
+        }
+      },
+      update: async (id, patch) => {
+        const parsed = employeePatchSchema.parse(patch);
+        try {
+          return await repositories.employees.update(id, parsed);
+        } catch (error) {
+          throw supervisorError(error);
+        }
+      },
       findSimilar: (search) => repositories.employees.findSimilar(search),
     },
     regulations,
@@ -223,7 +252,7 @@ export const servicesFor = (db: Db): AppServices => {
       repository: createStatisticsRepository(db),
       settings: officeSettings,
       history: (employeeId) => repositories.evaluations.history(employeeId),
-      regulationInForceOn: (on) => services.regulations.inForceOn(on),
+      regulationForYear: (year) => services.regulations.forReportYear(year),
     }),
     ai,
     regulationEditor: createRegulationEditorService({
@@ -240,6 +269,7 @@ export const servicesFor = (db: Db): AppServices => {
     }),
     accounts: createAccountsService({
       repository: createAccountRepository(db),
+      today: todayUtc,
       current: async () => {
         const account = await getCurrentAccount(db);
         return account.status === 'member'

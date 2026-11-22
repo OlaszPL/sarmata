@@ -107,6 +107,7 @@ describe('employees', () => {
       'Kadrowy',
       'Merytoryczny',
       'Oceniająca',
+      'Odwoławczy',
       'Sprzeciwny',
     ]);
     expect(new Set(employees.map((employee) => employee.officeId))).toEqual(

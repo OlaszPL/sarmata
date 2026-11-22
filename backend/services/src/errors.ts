@@ -30,7 +30,8 @@ export type ServiceErrorCode =
   | 'invalid_csv'
   | 'account_exists'
   | 'last_admin'
-  | 'invalid_account';
+  | 'invalid_account'
+  | 'invalid_supervisor';
 
 /** An expected failure of a service. The frontend maps `code` to a message for the user. */
 export class ServiceError extends Error {

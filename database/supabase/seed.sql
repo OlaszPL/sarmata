@@ -86,7 +86,7 @@ update public.employees
 -- AI runs of Olga Oceniająca about Marek (ADR 0008). Inserted with their results, so the trigger
 -- enqueues nothing. The sheet draft cites the notes above and has one edited fragment.
 insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, input, input_refs, status, output,
-                            prompt_version, requested_at, started_at, finished_at) values
+                            prompt_version, model, requested_at, started_at, finished_at) values
   ('44444444-4444-4444-8444-000000000001', '11111111-1111-4111-8111-111111111111', 'sheet_draft',
    '22222222-2222-4222-8222-000000000003',
    (select id from public.employees where email = 'marek.merytoryczny@kropka.test'),
@@ -99,8 +99,8 @@ insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, inpu
       {"criterionId":"reliability","points":7,"sentences":[{"text":"Od 20.10.2026 przejął obsługę dwóch dodatkowych spraw na czas urlopu współpracownika.","noteIds":["33333333-3333-4333-8333-000000000003"]}]}],
     "justification":[{"text":"Pracownik rzetelnie przekazuje ustalenia i przejmuje dodatkowe zadania, co potwierdzają notatki z września i października 2026.","noteIds":["33333333-3333-4333-8333-000000000001","33333333-3333-4333-8333-000000000003"]}],
     "developmentConclusions":[{"text":"Warto rozwijać planowanie pracy przy zwiększonym obciążeniu zadaniami.","noteIds":["33333333-3333-4333-8333-000000000003"]}],
-    "questions":["Jak ocenia Pan obciążenie po przejęciu dodatkowych spraw?"]}',
-   'sheet-draft.v1', '2026-11-02 09:00:00+01', '2026-11-02 09:00:05+01', '2026-11-02 09:02:40+01'),
+    "questions":["Jak wygląda obciążenie po przejęciu dodatkowych spraw?"]}',
+   'sheet-draft.v1', 'bielik-4.5b-v3.0-instruct', '2026-11-02 09:00:00+01', '2026-11-02 09:00:05+01', '2026-11-02 09:02:40+01'),
   ('44444444-4444-4444-8444-000000000002', '11111111-1111-4111-8111-111111111111', 'hr_signals',
    '22222222-2222-4222-8222-000000000003',
    (select id from public.employees where email = 'marek.merytoryczny@kropka.test'),
@@ -114,12 +114,12 @@ insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, inpu
       {"signal":"burnout_risk","present":false,"probability":0.2,"fragments":[]}],
     "questions":["Które z przejętych spraw można przekazać dalej po powrocie współpracownika?"],
     "actions":[{"framework":"jd_r","signal":"overload","text":"Przegląd priorytetów i terminów spraw przejętych na czas urlopu."}]}',
-   'hr-signals.v1', '2026-11-03 10:00:00+01', '2026-11-03 10:00:02+01', '2026-11-03 10:01:10+01');
+   'hr-signals.v1', 'bielik-4.5b-v3.0-instruct', '2026-11-03 10:00:00+01', '2026-11-03 10:00:02+01', '2026-11-03 10:01:10+01');
 
 -- Appreciation moments for Ewa (done, so nothing is enqueued). The last appreciation was 8 days before the demo
 -- day 2026-11-22, the office threshold is 30 days, so the gap is not overdue.
 insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, input, input_refs, status, output,
-                            prompt_version, requested_at, started_at, finished_at) values
+                            prompt_version, model, requested_at, started_at, finished_at) values
   ('44444444-4444-4444-8444-000000000003', '11111111-1111-4111-8111-111111111111', 'appreciation_moments',
    '22222222-2222-4222-8222-000000000003',
    (select id from public.employees where email = 'ewa.ewidencyjna@kropka.test'),
@@ -132,7 +132,7 @@ insert into public.ai_runs (id, office_id, kind, requested_by, employee_id, inpu
       "sbi":{"situation":"14.11.2026 w wydziale zaczął działać nowy rejestr pism.",
              "behaviour":"Pracownica wdrożyła rejestr bez przestojów w pracy wydziału.",
              "impact":"Wydział pracował bez przerwy, a pisma były rejestrowane na bieżąco."}}]}',
-   'appreciation-moments.v2', '2026-11-22 08:30:00+01', '2026-11-22 08:30:02+01', '2026-11-22 08:30:20+01');
+   'appreciation-moments.v2', 'bielik-4.5b-v3.0-instruct', '2026-11-22 08:30:00+01', '2026-11-22 08:30:02+01', '2026-11-22 08:30:20+01');
 
 insert into public.ai_fragment_decisions (run_id, office_id, fragment, decision, final_text, decided_by, decided_at) values
   ('44444444-4444-4444-8444-000000000001', '11111111-1111-4111-8111-111111111111', 'rating.communication',
