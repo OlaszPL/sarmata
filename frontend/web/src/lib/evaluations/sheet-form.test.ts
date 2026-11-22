@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   NO_GRADE_MESSAGE,
   partTwoDefaults,
+  partTwoDrift,
   sheetFromGradeRequestForm,
   sheetFromPartTwoForm,
 } from './sheet-form';
@@ -158,6 +159,55 @@ describe('sheet form', () => {
         justification: 'saved',
       });
       expect('gradeRequest' in defaults).toBe(false);
+    });
+  });
+
+  describe('partTwoDrift', () => {
+    const expected = {
+      interviewOn: '2026-11-20',
+      periodFrom: '2025-12-01',
+      periodTo: null,
+      ratings: { reliability: 5 },
+      justification: 'Uzasadnienie',
+      developmentConclusions: '',
+    } as unknown as Parameters<typeof partTwoDrift>[2];
+    const matching = {
+      interviewOn: '2026-11-20',
+      periodFrom: '2025-12-01',
+      periodTo: '',
+      'rating-reliability': '5',
+      justification: 'Uzasadnienie',
+      developmentConclusions: '',
+    };
+
+    it('is null when every control matches the state', () => {
+      expect(partTwoDrift(form(matching), ['reliability', 'focus'], expected)).toBeNull();
+    });
+
+    it('takes over texts typed before hydration as they are', () => {
+      expect(
+        partTwoDrift(
+          form({ ...matching, developmentConclusions: 'Rozwijać rejestry ' }),
+          ['reliability'],
+          expected,
+        ),
+      ).toEqual({ dates: false, developmentConclusions: 'Rozwijać rejestry ' });
+    });
+
+    it('takes over a tile chosen before hydration and keeps the other ratings', () => {
+      expect(
+        partTwoDrift(
+          form({ ...matching, 'rating-focus': '9' }),
+          ['reliability', 'focus'],
+          expected,
+        ),
+      ).toEqual({ dates: false, ratings: { reliability: 5, focus: 9 } });
+    });
+
+    it('marks a changed date for a save', () => {
+      expect(
+        partTwoDrift(form({ ...matching, periodTo: '2026-11-21' }), ['reliability'], expected),
+      ).toEqual({ dates: true });
     });
   });
 });

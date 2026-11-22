@@ -35,7 +35,7 @@ import {
   type SentenceProposal,
   appendSentence,
 } from '@/lib/evaluations/sheet-draft';
-import { type PartTwoPatch } from '@/lib/evaluations/sheet-form';
+import { type PartTwoPatch, partTwoDrift } from '@/lib/evaluations/sheet-form';
 import { type GateLink, fieldErrorLinks, gateTitle } from '@/lib/evaluations/sheet-gates';
 import { routes } from '@/lib/routes';
 import {
@@ -275,6 +275,29 @@ export function SheetEditor({
   const schedule = useCallback(() => {
     autosave.schedule();
   }, [autosave]);
+
+  // A fast typist on a slow machine can fill the controls before React hydrates them, and React
+  // then may never see a change. Once hydrated, take over what the controls hold and save it, so the
+  // state (and the next render) does not fall back to the server values.
+  const hydrationChecked = useRef(false);
+  useEffect(() => {
+    if (hydrationChecked.current) return;
+    hydrationChecked.current = true;
+    const form = formRef.current;
+    if (form === null) return;
+    const drift = partTwoDrift(
+      new FormData(form),
+      criteria.map((criterion) => criterion.id),
+      initial,
+    );
+    if (drift === null) return;
+    const { ratings: typedRatings, justification: typedJustification } = drift;
+    const typedConclusions = drift.developmentConclusions;
+    if (typedRatings !== undefined) setRatings(typedRatings);
+    if (typedJustification !== undefined) setJustification(typedJustification);
+    if (typedConclusions !== undefined) setConclusions(typedConclusions);
+    autosave.schedule();
+  }, [autosave, criteria, initial]);
 
   // Leaving the page (a tab, the sidebar, the back link) must not drop a change that waits for the
   // pause. A layout cleanup runs before React removes the form, so it still reads every field.

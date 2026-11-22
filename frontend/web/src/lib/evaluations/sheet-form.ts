@@ -92,3 +92,52 @@ export function partTwoDefaults(view: EvaluationView): PartTwoPatch {
     developmentConclusions,
   };
 }
+
+/** Controls of part II whose values differ from what the editor state holds, see `partTwoDrift`. */
+export interface PartTwoDrift {
+  /** The ratings the tiles show, when they differ. */
+  ratings?: Record<string, number>;
+  justification?: string;
+  developmentConclusions?: string;
+  /** A date input differs from its default. Dates are uncontrolled, so only a save is due. */
+  dates: boolean;
+}
+
+/**
+ * What a user put into the part II controls before React hydrated them. React may never see such a
+ * change, so the controlled state would keep the server values (and put them back on the next
+ * render). Compares the posted form with `expected`, texts as typed, and answers `null` when every
+ * control matches.
+ */
+export function partTwoDrift(
+  formData: FormData,
+  criteria: readonly string[],
+  expected: PartTwoPatch,
+): PartTwoDrift | null {
+  const raw = (name: string): string => {
+    const value = formData.get(name);
+    return typeof value === 'string' ? value : '';
+  };
+  const ratings: Record<string, number> = {};
+  for (const id of criteria) {
+    const value = raw(`rating-${id}`);
+    const points = Number(value);
+    if (value !== '' && Number.isFinite(points)) ratings[id] = points;
+  }
+  const ratingsDiffer = criteria.some((id) => ratings[id] !== expected.ratings[id]);
+  const dates = (['interviewOn', 'periodFrom', 'periodTo'] as const).some(
+    (name) => raw(name) !== (expected[name] ?? ''),
+  );
+  const drift: PartTwoDrift = { dates };
+  if (ratingsDiffer) drift.ratings = { ...expected.ratings, ...ratings };
+  if (raw('justification') !== expected.justification) drift.justification = raw('justification');
+  if (raw('developmentConclusions') !== expected.developmentConclusions) {
+    drift.developmentConclusions = raw('developmentConclusions');
+  }
+  const changed =
+    dates ||
+    drift.ratings !== undefined ||
+    drift.justification !== undefined ||
+    drift.developmentConclusions !== undefined;
+  return changed ? drift : null;
+}
