@@ -109,19 +109,34 @@ const optionalPastDate = (invalid: string, future: string) =>
     .transform((value) => (value === '' ? null : value))
     .pipe(pastDate(invalid, future).nullable());
 
-const archivedSchema = z.object({
-  employeeId: z.uuid(FALLBACK_ERROR),
-  draftedOn: pastDate(
-    'Wpisz datę sporządzenia oceny',
-    'Data sporządzenia nie może być w przyszłości',
-  ),
-  acquaintedOn: optionalPastDate(
-    'Wpisz poprawną datę zapoznania',
-    'Data zapoznania nie może być w przyszłości',
-  ),
-  levelCode: z.string().trim().min(1, 'Wybierz poziom oceny'),
-  outcome: z.enum(['positive', 'negative'], { error: 'Wybierz wynik oceny' }),
-});
+const archivedSchema = z
+  .object({
+    employeeId: z.uuid(FALLBACK_ERROR),
+    draftedOn: pastDate(
+      'Wpisz datę sporządzenia oceny',
+      'Data sporządzenia nie może być w przyszłości',
+    ),
+    acquaintedOn: optionalPastDate(
+      'Wpisz poprawną datę zapoznania',
+      'Data zapoznania nie może być w przyszłości',
+    ),
+    levelCode: z.string().trim().min(1, 'Wybierz poziom oceny'),
+    outcome: z.enum(['positive', 'negative'], { error: 'Wybierz wynik oceny' }),
+  })
+  .superRefine((value, context) => {
+    // Runs next to the field errors (zod 4 refines a partly invalid object), so check both dates.
+    if (
+      typeof value.draftedOn === 'string' &&
+      typeof value.acquaintedOn === 'string' &&
+      value.acquaintedOn < value.draftedOn
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['acquaintedOn'],
+        message: 'Data zapoznania nie może być wcześniejsza niż data sporządzenia',
+      });
+    }
+  });
 
 const RATING_PREFIX = 'rating-';
 
@@ -201,12 +216,20 @@ export async function endEmployment(
   const { employeeId, endedOn, reason } = parsed.data;
 
   const services = servicesFor(await createSupabase());
-  const ended = await runService(
-    () => services.employment.end({ employeeId, endedOn, reason }),
-    undefined,
-    values,
-  );
-  if (!ended.ok) return ended.state;
+  let result: EndEmploymentResult;
+  try {
+    const ended = await runService(
+      () => services.employment.end({ employeeId, endedOn, reason }),
+      undefined,
+      values,
+    );
+    if (!ended.ok) return ended.state;
+    result = ended.value;
+  } catch (error) {
+    // The repository reports a refused update as a plain error, not a service code.
+    console.error('employee card: end of employment failed', error);
+    return { values, fieldErrors: {}, formError: FALLBACK_ERROR };
+  }
   revalidatePath(routes.employee(employeeId));
-  return { values: {}, fieldErrors: {}, ok: true, result: ended.value };
+  return { values: {}, fieldErrors: {}, ok: true, result };
 }

@@ -20,7 +20,7 @@ import {
 } from '@/app/(app)/pracownicy/[id]/actions';
 import { useErrorTitle } from '@/components/use-error-title';
 import { pluralPl } from '@/lib/format';
-import { type FormState } from '@/lib/form-action';
+import type { FormState } from '@/lib/form-action';
 import { routes } from '@/lib/routes';
 
 export interface HrActionsProps {
@@ -94,12 +94,13 @@ function ArchivedEvaluationForm({ employeeId, today, levels, scale, criteria }: 
 
   return (
     <div className="grid gap-6">
-      <h3 className={subheading}>Wpisz ocenę archiwalną</h3>
+      {/* The summary is an H2, so it leads the subsection instead of sitting under its H3. */}
       {hasErrors ? (
         <ErrorSummary title="Popraw ocenę archiwalną" errors={errors}>
           {state.formError}
         </ErrorSummary>
       ) : null}
+      <h3 className={subheading}>Wpisz ocenę archiwalną</h3>
       {state.ok ? (
         <Notice tone="success" role="status">
           <p>Zapisano ocenę archiwalną.</p>
@@ -201,7 +202,7 @@ function EndEmploymentResultNotice({
       </p>
       {led > 0 ? (
         <p className="mt-2 max-w-[70ch]">
-          Ta osoba prowadzi {evaluations(led)}. Zmień oceniającego w{' '}
+          Ta osoba prowadzi {evaluations(led)}. Zmień osobę oceniającą w{' '}
           {led === 1 ? 'tej sprawie' : 'tych sprawach'}.
         </p>
       ) : null}
@@ -219,6 +220,11 @@ function EndEmploymentForm({ employeeId, today, employmentEndedOn }: HrActionsPr
 
   return (
     <div className="grid gap-6">
+      {hasErrors ? (
+        <ErrorSummary title="Popraw dane ustania zatrudnienia" errors={errors}>
+          {state.formError}
+        </ErrorSummary>
+      ) : null}
       <h3 className={subheading}>Ustanie zatrudnienia</h3>
       {state.result ? <EndEmploymentResultNotice result={state.result} /> : null}
       {employmentEndedOn !== null ? (
@@ -238,35 +244,28 @@ function EndEmploymentForm({ employeeId, today, employmentEndedOn }: HrActionsPr
           </p>
         </div>
       ) : state.result ? null : (
-        <>
-          {hasErrors ? (
-            <ErrorSummary title="Popraw dane ustania zatrudnienia" errors={errors}>
-              {state.formError}
-            </ErrorSummary>
-          ) : null}
-          <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-6">
-            <input type="hidden" name="employeeId" value={employeeId} />
-            <Field id="endedOn" label="Data ustania zatrudnienia" error={fieldErrors.endedOn}>
-              <DateInput name="endedOn" max={today} defaultValue={text(state, 'endedOn')} />
-            </Field>
-            <Field id="reason" label="Przyczyna" error={fieldErrors.reason}>
-              <TextInput name="reason" autoComplete="off" defaultValue={text(state, 'reason')} />
-            </Field>
-            <Checkbox
-              id="confirm"
-              name="confirm"
-              value="1"
-              defaultChecked={text(state, 'confirm') === '1'}
-              label="Rozumiem, że otwarte oceny tej osoby zostaną przerwane, a konto straci dostęp."
-              error={fieldErrors.confirm}
-            />
-            <div>
-              <SubmitButton pendingLabel="Kończę zatrudnienie" variant="danger">
-                Zakończ zatrudnienie
-              </SubmitButton>
-            </div>
-          </form>
-        </>
+        <form key={version} action={formAction} noValidate className="grid max-w-[40rem] gap-6">
+          <input type="hidden" name="employeeId" value={employeeId} />
+          <Field id="endedOn" label="Data ustania zatrudnienia" error={fieldErrors.endedOn}>
+            <DateInput name="endedOn" max={today} defaultValue={text(state, 'endedOn')} />
+          </Field>
+          <Field id="reason" label="Przyczyna" error={fieldErrors.reason}>
+            <TextInput name="reason" autoComplete="off" defaultValue={text(state, 'reason')} />
+          </Field>
+          <Checkbox
+            id="confirm"
+            name="confirm"
+            value="1"
+            defaultChecked={text(state, 'confirm') === '1'}
+            label="Rozumiem, że otwarte oceny tej osoby zostaną przerwane, a konto straci dostęp."
+            error={fieldErrors.confirm}
+          />
+          <div>
+            <SubmitButton pendingLabel="Kończę zatrudnienie" variant="danger">
+              Zakończ zatrudnienie
+            </SubmitButton>
+          </div>
+        </form>
       )}
     </div>
   );

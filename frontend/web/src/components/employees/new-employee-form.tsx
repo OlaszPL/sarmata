@@ -183,13 +183,13 @@ export function NewEmployeeForm({ choices }: { choices: NewEmployeeChoices }) {
         {choices.supervisors ? (
           <Field
             id="supervisorEmployeeId"
-            label="Bezpośredni przełożony"
-            hint="Przełożony z kontem w Sarmacie domyślnie prowadzi ocenę okresową."
+            label="Osoba przełożona"
+            hint="Osoba przełożona z kontem w Sarmacie domyślnie prowadzi ocenę okresową."
             optional
             error={fieldErrors.supervisorEmployeeId}
           >
             <Select name="supervisorEmployeeId" defaultValue={text(state, 'supervisorEmployeeId')}>
-              <option value="">Brak przełożonego</option>
+              <option value="">Brak osoby przełożonej</option>
               {choices.supervisors.map((supervisor) => (
                 <option key={supervisor.value} value={supervisor.value}>
                   {supervisor.label}
@@ -222,6 +222,7 @@ export function NewEmployeeForm({ choices }: { choices: NewEmployeeChoices }) {
               name="confirmDistinct"
               value="1"
               label="To inna osoba, dodaj nowy rekord"
+              defaultChecked={state.values.confirmDistinct === '1'}
               error={fieldErrors.confirmDistinct}
               className="mt-4"
             />

@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { servicesFor } from '@sarmata/services';
-import { requireMember } from '@/lib/account';
+import { officeEmployees, requireMember } from '@/lib/account';
 import { type FormState, formValues, parseForm, runService } from '@/lib/form-action';
 import { routes } from '@/lib/routes';
 import { createSupabase } from '@/lib/supabase';
@@ -69,7 +69,7 @@ const newEmployeeFormSchema = z
         .nullable(),
     ),
     gradeGrantedOn: optionalDate('Wpisz poprawną datę nadania stopnia'),
-    supervisorEmployeeId: optionalText.pipe(z.uuid('Wybierz przełożonego z listy').nullable()),
+    supervisorEmployeeId: optionalText.pipe(z.uuid('Wybierz osobę przełożoną z listy').nullable()),
     confirmDistinct: z.string(),
   })
   .superRefine((value, context) => {
@@ -97,13 +97,26 @@ export async function createEmployee(
   }
 
   const parsed = parseForm(newEmployeeFormSchema, formData);
-  if ('state' in parsed) return parsed.state;
+  // The similar people stay on screen with the tick of "To inna osoba" while other fields are fixed.
+  if ('state' in parsed) {
+    return previous.similar ? { ...parsed.state, similar: previous.similar } : parsed.state;
+  }
   const { confirmDistinct, supervisorEmployeeId, ...profile } = parsed.data;
   const services = servicesFor(await createSupabase());
 
   if (confirmDistinct !== '1') {
     const found = await runService(
-      () => services.employees.findSimilar(`${profile.firstName} ${profile.lastName}`),
+      async () => {
+        const [similar, employees] = await Promise.all([
+          services.employees.findSimilar(`${profile.firstName} ${profile.lastName}`),
+          officeEmployees(),
+        ]);
+        // Anonymized records keep only the id, the list hides them and so does this check.
+        const visible = new Set(
+          employees.filter((person) => person.anonymizedAt === null).map((person) => person.id),
+        );
+        return similar.filter((person) => visible.has(person.id));
+      },
       undefined,
       values,
     );
