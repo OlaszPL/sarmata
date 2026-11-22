@@ -118,6 +118,11 @@ describe('golden path of the demo', () => {
       partTwo: started.sheet.content.partTwo,
     });
     await evaluator.evaluations.saveDraft(evaluationId, partOne);
+    // The stored content round-trips through JSON into the same gate as the real approval.
+    expect(await evaluator.evaluations.approvalIssues(evaluationId)).toEqual({
+      stage: 'part_one',
+      issues: [],
+    });
     await evaluator.evaluations.transition(evaluationId, {
       type: 'approve_part_one',
       startingInterviewOn: today,
@@ -393,5 +398,17 @@ describe('golden path of the demo', () => {
     expect(saved.body).toBe(body);
     const listed = await evaluator.notes.listForEmployee(employee.id);
     expect(listed.map((note) => note.id)).toEqual([saved.id]);
+
+    // 7. The author's own list holds the note, the hr list (hr reads all notes) does not.
+    expect((await evaluator.notes.listMine()).map((note) => note.id)).toContain(saved.id);
+    expect((await hr.notes.listMine()).map((note) => note.id)).not.toContain(saved.id);
+
+    // 8. The pinned regulation document and the approval preview of a closed evaluation.
+    const pinned = await evaluator.regulations.forEvaluation(evaluationId);
+    expect(pinned.id).toBe(started.regulationId);
+    expect(await evaluator.evaluations.approvalIssues(evaluationId)).toEqual({
+      stage: null,
+      issues: [],
+    });
   });
 });

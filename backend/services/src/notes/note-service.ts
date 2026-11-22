@@ -72,6 +72,8 @@ export interface NoteService {
   /** Only the author edits: anybody else gets `forbidden`. The guard runs only when the body changes. */
   update(id: string, patch: NotePatch, options?: NoteWriteOptions): Promise<Note>;
   listForEmployee(employeeId: string): Promise<Note[]>;
+  /** Notes the signed-in account wrote, newest `occurredOn` first (ties: newest `createdAt`). */
+  listMine(): Promise<Note[]>;
   /** Earlier versions and the current one. `not_found` for a note the account cannot see. */
   history(id: string): Promise<NoteVersion[]>;
   /**
@@ -158,6 +160,8 @@ export function createNoteService(deps: NoteServiceDependencies): NoteService {
     },
 
     listForEmployee: (employeeId) => notes.listForEmployee(employeeId),
+
+    listMine: () => notes.listMine(),
 
     async history(id) {
       const versions = await notes.versions(id);

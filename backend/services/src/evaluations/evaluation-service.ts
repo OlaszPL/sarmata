@@ -23,6 +23,7 @@ import {
   termChangePayloadSchema,
   emptySheetContent,
   evaluationEligibility,
+  evaluationTransitions,
   partOneIssues,
   planTransition,
   proposeSheet,
@@ -98,6 +99,14 @@ export function warningsOf(
   return warnings;
 }
 
+export type ApprovalStage = 'part_one' | 'sheet';
+
+export interface ApprovalPreview {
+  /** Which approval the current status leads to, null when no approval is next. */
+  readonly stage: ApprovalStage | null;
+  readonly issues: readonly ApprovalIssue[];
+}
+
 export interface AbsenceInput {
   /** Pass the id of an earlier entry to complete it, e.g. with the return date. */
   readonly absenceId?: string;
@@ -141,6 +150,16 @@ export interface EvaluationService {
   get(id: string): Promise<EvaluationView | null>;
   list(filter?: EvaluationFilter): Promise<Evaluation[]>;
   saveDraft(id: string, content: SheetContent): Promise<EvaluationView>;
+  /**
+   * The gates of the next approval without running it. `part_one` issues are the `details` of
+   * `criteria_invalid`, `sheet` issues the `details` of `approval_blocked`. `content` checks unsaved edits,
+   * but `transition` gates the saved content, so the frontend saves before approving. In the `sheet` stage
+   * part one is always the saved one (it is locked after approval). Throws `ZodError` for invalid
+   * `content` (parsed before the lookup, so it wins over `not_found`) and `not_found` for an unknown id.
+   */
+  approvalIssues(id: string, content?: SheetContent): Promise<ApprovalPreview>;
+  /** The regulation version the evaluation is pinned to. `not_found` for an evaluation the account cannot see, `unknown_regulation` for a missing version. */
+  pinnedRegulation(id: string): Promise<RegulationDocument>;
   /** Filing an objection (`file_objection`) and interrupting (`interrupt`) are commands here too. */
   transition(id: string, command: EvaluationCommand): Promise<EvaluationView>;
   recordAbsence(id: string, input: AbsenceInput): Promise<EvaluationView>;
@@ -179,6 +198,35 @@ export function createEvaluationService(
       );
     }
     return stored.document;
+  }
+
+  /** The gates of an approval, shared by the real transition and the preview so they never differ. */
+  function gateIssues(
+    stage: ApprovalStage,
+    detail: EvaluationDetail,
+    regulation: RegulationDocument,
+    content: SheetContent,
+  ): ApprovalIssue[] {
+    if (stage === 'sheet') {
+      return sheetApprovalIssues({
+        regulation,
+        sheetId: detail.sheetId,
+        content,
+        evaluated: detail.snapshot,
+      });
+    }
+    const computed =
+      computeEvaluationDeadlines(
+        {
+          ...detail,
+          sheet: {
+            ...detail.sheet,
+            content: { ...content, partOne: { ...content.partOne, dueOn: null } },
+          },
+        },
+        regulation,
+      ).find((slot) => slot.slot === 'evaluationDeadline')?.dueOn ?? null;
+    return partOneIssues(regulation, detail.sheetId, content, computed);
   }
 
   async function load(id: string): Promise<EvaluationDetail> {
@@ -458,6 +506,31 @@ export function createEvaluationService(
       return refreshDeadlines(id);
     },
 
+    async approvalIssues(id, content) {
+      const checked = content === undefined ? undefined : sheetContentSchema.parse(content);
+      const detail = await load(id);
+      const approval = evaluationTransitions.find(
+        (row) =>
+          row.from === detail.status &&
+          (row.eventKind === 'part_one_approved' || row.eventKind === 'sheet_approved'),
+      );
+      if (approval === undefined) return { stage: null, issues: [] };
+      const stage: ApprovalStage =
+        approval.eventKind === 'part_one_approved' ? 'part_one' : 'sheet';
+      const regulation = await regulationOf(detail);
+      const gated =
+        checked === undefined
+          ? detail.sheet.content
+          : stage === 'sheet'
+            ? { ...checked, partOne: detail.sheet.content.partOne }
+            : checked;
+      return { stage, issues: gateIssues(stage, detail, regulation, gated) };
+    },
+
+    async pinnedRegulation(id) {
+      return regulationOf(await load(id));
+    },
+
     async transition(id, command) {
       const detail = await load(id);
       let plan;
@@ -473,29 +546,13 @@ export function createEvaluationService(
       const { content } = detail.sheet;
 
       if (command.type === 'approve_part_one') {
-        const computed =
-          computeEvaluationDeadlines(
-            {
-              ...detail,
-              sheet: {
-                ...detail.sheet,
-                content: { ...content, partOne: { ...content.partOne, dueOn: null } },
-              },
-            },
-            regulation,
-          ).find((slot) => slot.slot === 'evaluationDeadline')?.dueOn ?? null;
-        const issues = partOneIssues(regulation, detail.sheetId, content, computed);
+        const issues = gateIssues('part_one', detail, regulation, content);
         if (issues.length > 0) {
           throw new ServiceError('criteria_invalid', 'Part one is not valid', issues);
         }
       }
       if (command.type === 'approve_sheet') {
-        const issues: ApprovalIssue[] = sheetApprovalIssues({
-          regulation,
-          sheetId: detail.sheetId,
-          content,
-          evaluated: detail.snapshot,
-        });
+        const issues = gateIssues('sheet', detail, regulation, content);
         if (issues.length > 0) {
           throw new ServiceError('approval_blocked', 'The sheet cannot be approved', issues);
         }

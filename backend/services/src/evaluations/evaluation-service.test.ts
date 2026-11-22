@@ -17,6 +17,7 @@ import {
   RepositoryError,
 } from '@sarmata/repositories';
 import { describe, expect, it } from 'vitest';
+import { ZodError } from 'zod';
 import { ServiceError, createServices } from '../index';
 
 const [regulation] = officialRegulations;
@@ -1219,5 +1220,146 @@ describe('office regulation versions', () => {
     const detail = await services.evaluations.get(started.id);
     expect(detail?.regulationId).toBe('regulation-2016-local-1');
     expect(detail?.objectionAddressee).toBe('Dyrektor lokalny');
+  });
+});
+
+describe('approval preview and pinned regulation', () => {
+  const toInterview = async (services: ReturnType<typeof setup>['services']) => {
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    await services.evaluations.transition(started.id, {
+      type: 'approve_part_one',
+      startingInterviewOn: date('2024-09-20'),
+    });
+    await services.evaluations.transition(started.id, {
+      type: 'record_part_one_signature',
+      signedOn: date('2024-09-21'),
+    });
+    await services.evaluations.transition(started.id, {
+      type: 'record_evaluation_interview',
+      heldOn: date('2026-05-20'),
+    });
+    return started.id;
+  };
+
+  it('approval issues match the blocked transition for a sheet', async () => {
+    const { services } = setup([employee()]);
+    const id = await toInterview(services);
+    const content = completeContent('C', points('meets'));
+    content.partTwo.developmentConclusions = '';
+    await services.evaluations.saveDraft(id, content);
+
+    const preview = await services.evaluations.approvalIssues(id);
+    expect(preview.stage).toBe('sheet');
+    expect(preview.issues.map((issue) => issue.code)).toContain('development_conclusions_missing');
+
+    const blocked = await services.evaluations
+      .transition(id, { type: 'approve_sheet', draftedOn: date('2026-05-25') })
+      .catch((error: unknown) => error);
+    expect(blocked).toMatchObject({ code: 'approval_blocked' });
+    expect((blocked as ServiceError).details).toEqual(preview.issues);
+  });
+
+  it('approval issues for part one', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    const mandatory = criteriaOf('C')[0] ?? '';
+    await services.evaluations.saveDraft(
+      started.id,
+      sheetContentSchema.parse({
+        partOne: { additionalCriteria: [mandatory], dueOn: null },
+        partTwo: started.sheet.content.partTwo,
+      }),
+    );
+    const preview = await services.evaluations.approvalIssues(started.id);
+    expect(preview.stage).toBe('part_one');
+    expect(preview.issues.map((issue) => issue.code)).toContain('mandatory_as_additional');
+
+    const blocked = await services.evaluations
+      .transition(started.id, {
+        type: 'approve_part_one',
+        startingInterviewOn: date('2024-09-20'),
+      })
+      .catch((error: unknown) => error);
+    expect(blocked).toMatchObject({ code: 'criteria_invalid' });
+    expect((blocked as ServiceError).details).toEqual(preview.issues);
+  });
+
+  it('approval issues use unsaved content', async () => {
+    const { services } = setup([employee()]);
+    const id = await toInterview(services);
+    const incomplete = completeContent('C', points('meets'));
+    incomplete.partTwo.developmentConclusions = '';
+    await services.evaluations.saveDraft(id, incomplete);
+
+    const before = await services.evaluations.approvalIssues(id);
+    expect(before.issues.map((issue) => issue.code)).toContain('development_conclusions_missing');
+    const after = await services.evaluations.approvalIssues(
+      id,
+      completeContent('C', points('meets')),
+    );
+    expect(after.issues).toEqual([]);
+    const stored = await services.evaluations.get(id);
+    expect(stored?.sheet.content).toEqual(incomplete);
+  });
+
+  it('approval issues in the sheet stage ignore an edited part one', async () => {
+    const { services } = setup([employee()]);
+    const id = await toInterview(services);
+    const saved = completeContent('C', points('meets'));
+    await services.evaluations.saveDraft(id, saved);
+    const edited = completeContent('C', points('meets'));
+    edited.partOne.additionalCriteria = ['creativity'];
+    const preview = await services.evaluations.approvalIssues(id, edited);
+    expect(preview).toEqual(await services.evaluations.approvalIssues(id));
+  });
+
+  it('approval issues reject invalid unsaved content', async () => {
+    const { services } = setup([employee()]);
+    const id = await toInterview(services);
+    await expect(
+      services.evaluations.approvalIssues(id, { nonsense: true } as never),
+    ).rejects.toBeInstanceOf(ZodError);
+  });
+
+  it('approval issues for a status without approval', async () => {
+    const { services } = setup([employee()]);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    await services.evaluations.transition(started.id, {
+      type: 'approve_part_one',
+      startingInterviewOn: date('2024-09-20'),
+    });
+    await services.evaluations.transition(started.id, {
+      type: 'record_part_one_signature',
+      signedOn: date('2024-09-21'),
+    });
+    const preview = await services.evaluations.approvalIssues(started.id);
+    expect(preview).toEqual({ stage: null, issues: [] });
+  });
+
+  it('approval issues for an unknown evaluation is not found', async () => {
+    const { services } = setup([employee()]);
+    await expectCode(services.evaluations.approvalIssues('missing'), 'not_found');
+  });
+
+  it('regulations for evaluation returns the pinned version, not the one in force', async () => {
+    const official: StoredRegulationVersion = {
+      rowId: 'row-1',
+      code: reg.id,
+      isOfficial: true,
+      document: reg,
+    };
+    const versions = [official];
+    const { services } = setup([employee()], [], [], {}, undefined, versions);
+    const started = await services.evaluations.start({ employeeId: 'emp1', today });
+    versions.push({
+      rowId: 'row-office',
+      code: 'regulation-2016-local-1',
+      isOfficial: false,
+      document: { ...reg, id: 'regulation-2016-local-1', effectiveFrom: date('2026-11-01') },
+    });
+    expect((await services.regulations.inForceOn(today)).id).toBe('regulation-2016-local-1');
+    const document = await services.regulations.forEvaluation(started.id);
+    expect(document).toEqual(reg);
+    await expectCode(services.regulations.forEvaluation('missing'), 'not_found');
   });
 });

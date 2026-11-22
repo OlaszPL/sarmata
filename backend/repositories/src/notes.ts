@@ -7,6 +7,7 @@ import {
   calendarDate,
 } from '@sarmata/domain';
 import { type Db } from './db';
+import { readAccountClaims } from './auth';
 import { RepositoryError } from './errors';
 
 /** Notatka: an observation, conversation, appreciation or workload fact about an employee. */
@@ -41,6 +42,8 @@ export interface NoteRepository {
   get(id: string): Promise<Note | null>;
   /** Newest occurrence first, then newest entry first. */
   listForEmployee(employeeId: string): Promise<Note[]>;
+  /** Notes the signed-in account wrote (hr reads all notes, this keeps only the account's own). */
+  listMine(): Promise<Note[]>;
   /** Earlier versions and the current one, oldest first. Empty for a note that is not visible. */
   versions(id: string): Promise<NoteVersion[]>;
 }
@@ -152,6 +155,20 @@ export function createNoteRepository(db: Db): NoteRepository {
         .order('occurred_on', { ascending: false })
         .order('created_at', { ascending: false });
       if (error) throw new RepositoryError('notes.listForEmployee', error);
+      return data.map(toNote);
+    },
+
+    async listMine() {
+      const claims = await readAccountClaims(db);
+      const accountId = claims?.sub;
+      if (typeof accountId !== 'string') return [];
+      const { data, error } = await db
+        .from('notes')
+        .select(COLUMNS)
+        .eq('author_account_id', accountId)
+        .order('occurred_on', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw new RepositoryError('notes.listMine', error);
       return data.map(toNote);
     },
 
