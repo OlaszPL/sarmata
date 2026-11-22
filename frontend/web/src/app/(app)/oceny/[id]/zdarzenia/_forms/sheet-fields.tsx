@@ -64,7 +64,7 @@ export function SheetFields({ idPrefix, criteria, scale, values, fieldErrors }: 
         );
       })}
       <Field
-        id="justification"
+        id={`${idPrefix}-justification`}
         label="Uzasadnienie oceny"
         optional
         error={fieldErrors.justification}
