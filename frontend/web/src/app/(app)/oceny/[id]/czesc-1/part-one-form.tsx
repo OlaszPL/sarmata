@@ -13,7 +13,7 @@ import {
   TextInput,
   describedBy,
 } from '@sarmata/ui';
-import { ErrorTitle } from '@/components/evaluations/error-title';
+import { useErrorTitle } from '@/components/use-error-title';
 import { type FormState, type FormValues } from '@/lib/form-action';
 
 type FormAction = (previous: FormState, formData: FormData) => Promise<FormState>;
@@ -83,6 +83,7 @@ export function PartOneForm({
   const [state, formAction] = useActionState(action, initial);
   const items = errorItems(state);
   const hasErrors = items.length > 0 || state.formError !== undefined;
+  useErrorTitle(hasErrors);
   const chosen = new Set(listValue(state.values, 'additionalCriteria'));
   const criteriaError = state.fieldErrors.additionalCriteria;
   const criteriaHint = `Wybierz od ${additionalMin} do ${additionalMax} z katalogu.`;
@@ -90,7 +91,6 @@ export function PartOneForm({
 
   return (
     <div className="flex flex-col gap-8">
-      <ErrorTitle active={hasErrors} />
       {hasErrors ? (
         <ErrorSummary title="Popraw część I" errors={items}>
           {state.formError}

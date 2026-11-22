@@ -13,7 +13,6 @@ import {
   SummaryList,
   TextInput,
 } from '@sarmata/ui';
-import { ErrorTitle } from '@/components/evaluations/error-title';
 import { officeEmployees, requireMember } from '@/lib/account';
 import { runService } from '@/lib/form-action';
 import { pluralPl, todayInWarsaw } from '@/lib/format';
@@ -150,7 +149,6 @@ async function StepOne({
   return (
     <Section title="Wybierz pracownika">
       <div className="grid gap-8">
-        <ErrorTitle active={choiceError !== undefined} />
         {choiceError ? (
           <ErrorSummary
             title="Nie można przejść dalej"
