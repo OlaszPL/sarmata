@@ -8,6 +8,7 @@ import {
   type AiFragmentDecisionKind,
   type AiRun,
   type AiRunRepository,
+  type AiUsageLogEntry,
   type NoteRepository,
   type OfficeSettingsRepository,
   type RegulationVersionRepository,
@@ -34,7 +35,8 @@ export interface AiRunListFilter {
 /**
  * The AI services for evaluators and hr. `start` stores a queued run with the input snapshot, the
  * worker runs it, the frontend polls `get`. Every result is a suggestion the user decides about
- * fragment by fragment (`decide`), the run with its decisions is the AI usage log.
+ * fragment by fragment (`decide`), the run with its decisions is the AI usage log. The admin reads
+ * that log through `usageLog`: metadata and decisions, never the content.
  */
 export interface AiService {
   /** Throws `ZodError` for an invalid request, `ai_disabled` when the office switched AI off. */
@@ -53,7 +55,14 @@ export interface AiService {
    * (details: the unknown fragments), `forbidden` when access rules reject the decision.
    */
   decide(runId: string, decisions: readonly AiDecisionInput[]): Promise<AiRun>;
+  /**
+   * Admin only (`forbidden` otherwise): metadata of the office's AI runs and the decisions, no
+   * content. Newest first, default `limit` 100, the database clamps it to 1..500.
+   */
+  usageLog(options?: { readonly limit?: number }): Promise<AiUsageLogEntry[]>;
 }
+
+const DEFAULT_USAGE_LOG_LIMIT = 100;
 
 export interface AiServiceDependencies {
   readonly runs: AiRunRepository;
@@ -137,6 +146,17 @@ export function createAiService(deps: AiServiceDependencies): AiService {
       );
       if (!saved) throw new ServiceError('forbidden', 'This account cannot decide about this run');
       return get(runId);
+    },
+
+    async usageLog(options = {}) {
+      try {
+        return await deps.runs.usageLog(options.limit ?? DEFAULT_USAGE_LOG_LIMIT);
+      } catch (error) {
+        if (error instanceof RepositoryError && error.code === '42501') {
+          throw new ServiceError('forbidden', 'Only the office admin reads the AI usage log');
+        }
+        throw error;
+      }
     },
   };
 }

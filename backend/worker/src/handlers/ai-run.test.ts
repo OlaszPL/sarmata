@@ -137,6 +137,15 @@ describe('ai.run handler', () => {
     });
   });
 
+  it('stores the model that produced the result', async () => {
+    const store = new InMemoryStore('sheet_draft', draftInput);
+    const finish = vi.spyOn(store, 'finish');
+    const runner = await fakeRunner({ objects: draftReply });
+    const handler = createAiRunHandler(() => ({ store, runner }));
+    expect(await handler.run({ runId: RUN }, context())).toEqual({ status: 'done' });
+    expect(finish).toHaveBeenCalledWith(RUN, expect.objectContaining({ model: 'bielik-test' }));
+  });
+
   it('writes throttled progress while the model streams and keeps the token count', async () => {
     const store = new InMemoryStore('sheet_draft', draftInput);
     // About 60 pieces 10 ms apart: a run of over half a second, written at most every 200 ms.

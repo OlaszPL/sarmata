@@ -99,12 +99,14 @@ export function createAiRunHandler(deps: () => AiRunHandlerDeps) {
         await store.finish(runId, {
           output: result.value.output,
           promptVersion: result.value.promptVersion,
+          model: result.value.model,
           outputTokens,
         });
         logger.info('ai run done', {
           runId,
           kind: run.kind,
           prompt: result.value.promptVersion,
+          model: result.value.model,
           outputTokens,
         });
       } else {

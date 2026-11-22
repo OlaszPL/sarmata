@@ -100,6 +100,7 @@ export {
   type AiRunProgressUpdate,
   type AiRunQueueStore,
   type AiRunRepository,
+  type AiUsageLogEntry,
   type NewAiFragmentDecision,
   createAiRunQueueStore,
   createAiRunRepository,

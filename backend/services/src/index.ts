@@ -159,7 +159,7 @@ export {
   type AiServiceDependencies,
   createAiService,
 } from './ai/ai-service';
-export type { AiFragmentDecision, AiRun } from '@sarmata/repositories';
+export type { AiFragmentDecision, AiRun, AiUsageLogEntry } from '@sarmata/repositories';
 export type {
   AiInputRefs,
   AiOutput,
