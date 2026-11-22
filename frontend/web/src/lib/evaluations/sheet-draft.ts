@@ -87,6 +87,8 @@ export interface SentenceProposal {
   text: string;
   noteIds: string[];
   decided: Decided;
+  /** The text inserted with an `edited` decision, null otherwise or after retention. */
+  finalText: string | null;
 }
 
 /**
@@ -105,14 +107,15 @@ export function draftProposals(
   const output = run.output;
   if (output === null) return { ratings: [], sentences: [], questions: [], open: 0 };
 
-  const decisionOf = (fragment: string): Decided => {
+  const latestOf = (fragment: string): SheetDraftRun['decisions'][number] | null => {
     let latest: SheetDraftRun['decisions'][number] | null = null;
     for (const decision of run.decisions) {
       if (decision.fragment !== fragment) continue;
       if (latest === null || decision.decidedAt >= latest.decidedAt) latest = decision;
     }
-    return latest?.decision ?? null;
+    return latest;
   };
+  const decisionOf = (fragment: string): Decided => latestOf(fragment)?.decision ?? null;
 
   const caseCriteria = new Set(criteria);
   const ratings = output.ratings
@@ -136,6 +139,7 @@ export function draftProposals(
         text: sentence.text,
         noteIds: sentence.noteIds,
         decided: decisionOf(fragment),
+        finalText: latestOf(fragment)?.finalText ?? null,
       };
     }),
   );
@@ -147,4 +151,29 @@ export function draftProposals(
 
 export function appendSentence(text: string, sentence: string): string {
   return text === '' ? sentence : `${text.trimEnd()}\n${sentence}`;
+}
+
+/** What a decided proposal was: the points and level of a rating, or the text of a sentence. */
+export type DecidedSubject =
+  { kind: 'rating'; points: number; level: string | null } | { kind: 'sentence'; text: string };
+
+/**
+ * The line that replaces a decided proposal and names what was decided, e.g.
+ * "Propozycję AI (7, powyżej oczekiwań) przyjęto." or "Propozycję AI przyjęto: „Zdanie.”". For an
+ * edited sentence `text` is the inserted, corrected one.
+ */
+export function decidedText(
+  decided: 'accepted' | 'edited' | 'rejected',
+  subject: DecidedSubject,
+): string {
+  if (subject.kind === 'rating') {
+    const what = subject.level ? `${subject.points}, ${subject.level}` : `${subject.points}`;
+    return `Propozycję AI (${what}) ${decided === 'rejected' ? 'odrzucono' : 'przyjęto'}.`;
+  }
+  const verb = {
+    accepted: 'przyjęto',
+    edited: 'przyjęto z poprawkami',
+    rejected: 'odrzucono',
+  }[decided];
+  return `Propozycję AI ${verb}: „${subject.text}”`;
 }

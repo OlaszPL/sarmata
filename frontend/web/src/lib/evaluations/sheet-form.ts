@@ -13,8 +13,9 @@ function date(formData: FormData, name: string): CalendarDate | null {
 }
 
 /**
- * Saved content with the part II fields of a posted form. Empty date -> null, unknown or empty
- * `rating-<id>` -> left out, texts trimmed at the ends. Part I and gradeRequest stay as saved.
+ * Saved content with the part II fields of a posted form. Empty date -> null, a date the form does
+ * not post (the interview date in the period) -> kept as saved, unknown or empty `rating-<id>` ->
+ * left out, texts trimmed at the ends. Part I and gradeRequest stay as saved.
  */
 export function sheetFromPartTwoForm(
   content: SheetContent,
@@ -32,9 +33,13 @@ export function sheetFromPartTwoForm(
     ...content,
     partTwo: {
       ...content.partTwo,
-      interviewOn: date(formData, 'interviewOn'),
-      periodFrom: date(formData, 'periodFrom'),
-      periodTo: date(formData, 'periodTo'),
+      interviewOn: formData.has('interviewOn')
+        ? date(formData, 'interviewOn')
+        : content.partTwo.interviewOn,
+      periodFrom: formData.has('periodFrom')
+        ? date(formData, 'periodFrom')
+        : content.partTwo.periodFrom,
+      periodTo: formData.has('periodTo') ? date(formData, 'periodTo') : content.partTwo.periodTo,
       ratings,
       justification: text(formData, 'justification'),
       developmentConclusions: text(formData, 'developmentConclusions'),
@@ -126,7 +131,7 @@ export function partTwoDrift(
   }
   const ratingsDiffer = criteria.some((id) => ratings[id] !== expected.ratings[id]);
   const dates = (['interviewOn', 'periodFrom', 'periodTo'] as const).some(
-    (name) => raw(name) !== (expected[name] ?? ''),
+    (name) => formData.has(name) && raw(name) !== (expected[name] ?? ''),
   );
   const drift: PartTwoDrift = { dates };
   if (ratingsDiffer) drift.ratings = { ...expected.ratings, ...ratings };

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DRAFT_TIMEOUT_MS,
   appendSentence,
+  decidedText,
   draftProposals,
   sheetDraftState,
   type SheetDraftRun,
@@ -191,6 +192,7 @@ describe('draftProposals', () => {
         text: 'Uzasadnienie.',
         noteIds: ['n1'],
         decided: null,
+        finalText: null,
       },
       {
         fragment: 'developmentConclusions.0',
@@ -198,6 +200,7 @@ describe('draftProposals', () => {
         text: 'Szkolenie.',
         noteIds: [],
         decided: null,
+        finalText: null,
       },
     ]);
     expect(result.questions).toEqual(['Co poszło dobrze?']);
@@ -215,6 +218,36 @@ describe('draftProposals', () => {
     const result = draftProposals(run() as SheetDraftRun, ['reliability']);
     expect(result.ratings.map((r) => r.criterionId)).toEqual(['reliability']);
     expect(result.open).toBe(3);
+  });
+});
+
+describe('decided proposals', () => {
+  it('keeps the corrected text of an edited sentence', () => {
+    const edited = run({
+      decisions: [
+        {
+          fragment: 'justification.0',
+          decision: 'edited',
+          finalText: 'Poprawione.',
+          decidedAt: '2026-11-22T11:00:00Z',
+        },
+      ],
+    }) as SheetDraftRun;
+    const sentences = draftProposals(edited, []).sentences;
+    expect(sentences[0]).toMatchObject({ decided: 'edited', finalText: 'Poprawione.' });
+  });
+
+  it('names the rating and the sentence that were decided', () => {
+    const rating = { kind: 'rating', points: 7, level: 'powyżej oczekiwań' } as const;
+    expect(decidedText('accepted', rating)).toBe('Propozycję AI (7, powyżej oczekiwań) przyjęto.');
+    expect(decidedText('rejected', rating)).toBe('Propozycję AI (7, powyżej oczekiwań) odrzucono.');
+    expect(decidedText('accepted', { kind: 'rating', points: 5, level: null })).toBe(
+      'Propozycję AI (5) przyjęto.',
+    );
+    const sentence = { kind: 'sentence', text: 'Zdanie.' } as const;
+    expect(decidedText('accepted', sentence)).toBe('Propozycję AI przyjęto: „Zdanie.”');
+    expect(decidedText('edited', sentence)).toBe('Propozycję AI przyjęto z poprawkami: „Zdanie.”');
+    expect(decidedText('rejected', sentence)).toBe('Propozycję AI odrzucono: „Zdanie.”');
   });
 });
 

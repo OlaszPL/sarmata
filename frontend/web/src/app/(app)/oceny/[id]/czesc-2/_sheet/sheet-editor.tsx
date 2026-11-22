@@ -32,6 +32,7 @@ import {
   type RatingProposal,
   type SentenceProposal,
   appendSentence,
+  decidedText,
 } from '@/lib/evaluations/sheet-draft';
 import { type PartTwoPatch, partTwoDrift } from '@/lib/evaluations/sheet-form';
 import { type GateLink, fieldErrorLinks, gateTitle } from '@/lib/evaluations/sheet-gates';
@@ -346,6 +347,16 @@ export function SheetEditor({
     return initial[name] ?? '';
   };
 
+  // In the period the interview form above sets the interview date, so the sheet does not ask for
+  // it twice. Without the field the save keeps the saved date (`sheetFromPartTwoForm`).
+  const dateFields = (
+    [
+      ['interviewOn', 'Data rozmowy oceniającej'],
+      ['periodFrom', 'Okres oceny od'],
+      ['periodTo', 'Okres oceny do'],
+    ] as const
+  ).filter(([name]) => mode === 'edit' || name !== 'interviewOn');
+
   const insertConclusions = (next: string) => {
     setConclusions(next);
     schedule();
@@ -353,6 +364,8 @@ export function SheetEditor({
 
   // Decisions recorded in this session, until the refreshed page brings them with the run.
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
+  // Corrected texts of sentences edited in this session, for the decided line.
+  const [editedTexts, setEditedTexts] = useState<Record<string, string>>({});
   const needsFocus = useRef(false);
   const decidedOf = (fragment: string, fromRun: Decision | null): Decision | null =>
     decisions[fragment] ?? fromRun;
@@ -387,6 +400,9 @@ export function SheetEditor({
     }
     needsFocus.current = true;
     setDecisions((current) => ({ ...current, [fragment]: decision }));
+    if (decision === 'edited' && finalText !== undefined) {
+      setEditedTexts((current) => ({ ...current, [fragment]: finalText }));
+    }
     router.refresh();
     return null;
   };
@@ -428,7 +444,16 @@ export function SheetEditor({
               onDecide={onDecide}
             />
           ) : (
-            <DecidedLine key={proposal.fragment} decided={decided} />
+            <DecidedLine
+              key={proposal.fragment}
+              text={decidedText(decided, {
+                kind: 'sentence',
+                text:
+                  decided === 'edited'
+                    ? (editedTexts[proposal.fragment] ?? proposal.finalText ?? proposal.text)
+                    : proposal.text,
+              })}
+            />
           );
         })}
       </div>
@@ -470,14 +495,12 @@ export function SheetEditor({
             form of its own and must not sit inside the sheet form. */}
         {/* Keyed by mode: after the interview is recorded the inputs start again from the saved
             dates, which now hold the interview date the action set. */}
-        <div key={mode} className="border-rule grid border-b md:grid-cols-3" onChange={schedule}>
-          {(
-            [
-              ['interviewOn', 'Data rozmowy oceniającej'],
-              ['periodFrom', 'Okres oceny od'],
-              ['periodTo', 'Okres oceny do'],
-            ] as const
-          ).map(([name, label]) => (
+        <div
+          key={mode}
+          className={`border-rule grid border-b ${mode === 'period' ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}
+          onChange={schedule}
+        >
+          {dateFields.map(([name, label]) => (
             <div
               key={name}
               className="border-rule border-b px-6 py-4 last:border-b-0 sm:px-8 md:border-r md:border-b-0 md:px-5 md:last:border-r-0"
@@ -561,7 +584,15 @@ export function SheetEditor({
                     onDecide={onDecide}
                   />
                 ) : null}
-                {proposal && decided !== null ? <DecidedLine decided={decided} /> : null}
+                {proposal && decided !== null ? (
+                  <DecidedLine
+                    text={decidedText(decided, {
+                      kind: 'rating',
+                      points: proposal.points,
+                      level: scale.find((level) => level.value === proposal.points)?.name ?? null,
+                    })}
+                  />
+                ) : null}
               </section>
             );
           })}

@@ -44,6 +44,32 @@ describe('sheet form', () => {
   describe('sheetFromPartTwoForm', () => {
     const criteria = ['reliability', 'cooperation'];
 
+    it('keeps a saved date the form does not post, and clears one posted empty', () => {
+      const saved = content({ interviewOn: '2026-11-20', periodFrom: '2025-12-01' } as never);
+      const period = sheetFromPartTwoForm(saved, criteria, form({ periodFrom: '2025-12-02' }));
+      expect(period.partTwo).toMatchObject({
+        interviewOn: '2026-11-20',
+        periodFrom: '2025-12-02',
+        periodTo: null,
+      });
+      const cleared = sheetFromPartTwoForm(saved, criteria, form({ interviewOn: '' }));
+      expect(cleared.partTwo.interviewOn).toBeNull();
+    });
+
+    it('sees no date drift for a field the form does not have', () => {
+      const expected = {
+        interviewOn: '2026-11-20',
+        periodFrom: null,
+        periodTo: null,
+        ratings: {},
+        justification: '',
+        developmentConclusions: '',
+      } as unknown as Parameters<typeof partTwoDrift>[2];
+      expect(
+        partTwoDrift(form({ justification: '', developmentConclusions: '' }), [], expected),
+      ).toBeNull();
+    });
+
     it('keeps known ratings and drops unknown or empty ones', () => {
       const result = sheetFromPartTwoForm(
         content(),

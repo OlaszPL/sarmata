@@ -14,14 +14,9 @@ export type DecideFn = (
   finalText?: string,
 ) => Promise<string | null>;
 
-const DECIDED_TEXT: Record<Decision, string> = {
-  accepted: 'Propozycję AI przyjęto',
-  edited: 'Propozycję AI przyjęto z poprawkami',
-  rejected: 'Propozycję AI odrzucono',
-};
-
-export function DecidedLine({ decided }: { decided: Decision }) {
-  return <p className="text-ink-muted text-[0.9375rem]">{DECIDED_TEXT[decided]}</p>;
+/** The line in place of a decided proposal, its text from `decidedText`. */
+export function DecidedLine({ text }: { text: string }) {
+  return <p className="text-ink-muted max-w-[70ch] text-[0.9375rem]">{text}</p>;
 }
 
 /** Dates of the source notes, without repeats. A note the account cannot read is named as such. */
