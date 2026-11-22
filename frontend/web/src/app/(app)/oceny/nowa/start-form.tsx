@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { ErrorSummary, RadioGroup, SubmitButton } from '@sarmata/ui';
-import { ErrorTitle } from '@/components/evaluations/error-title';
+import { useErrorTitle } from '@/components/use-error-title';
 import { type FormState } from '@/lib/form-action';
 import { startEvaluation } from './actions';
 import { type SheetOption } from './start-options';
@@ -32,13 +32,13 @@ export function StartForm({
   );
   const formErrors = [...(state.formError ? [state.formError] : []), ...otherErrors];
   const failed = errors.length > 0 || formErrors.length > 0;
+  useErrorTitle(failed);
 
   const proposed = options.find((option) => option.proposed)?.id ?? null;
   const chosen = typeof state.values.sheetId === 'string' ? state.values.sheetId : proposed;
 
   return (
     <form action={formAction} noValidate className="grid max-w-[46rem] gap-8">
-      <ErrorTitle active={failed} />
       {failed ? (
         <ErrorSummary title="Nie udało się rozpocząć oceny" errors={errors}>
           {formErrors.length > 0 ? (

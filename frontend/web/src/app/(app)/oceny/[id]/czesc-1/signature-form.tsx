@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { DateInput, ErrorSummary, Field, SubmitButton } from '@sarmata/ui';
-import { ErrorTitle } from '@/components/evaluations/error-title';
+import { useErrorTitle } from '@/components/use-error-title';
 import { type FormState } from '@/lib/form-action';
 import { errorItems, textValue } from './part-one-form';
 
@@ -16,10 +16,10 @@ export function SignatureForm({ action, initial }: SignatureFormProps) {
   const [state, formAction] = useActionState(action, initial);
   const items = errorItems(state);
   const hasErrors = items.length > 0 || state.formError !== undefined;
+  useErrorTitle(hasErrors);
 
   return (
     <div className="flex flex-col gap-8">
-      <ErrorTitle active={hasErrors} />
       {hasErrors ? (
         <ErrorSummary title="Popraw część I" errors={items}>
           {state.formError}
