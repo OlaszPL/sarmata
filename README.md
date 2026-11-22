@@ -173,7 +173,7 @@ Oceny:
 - `/oceny/[id]/czesc-2`: część II, ocena (zaślepka zakładki)
 - `/oceny/[id]/czesc-3`: część III, wniosek o stopień (zaślepka zakładki)
 - `/oceny/[id]/sprawdz`: sprawdzenie i zatwierdzenie arkusza (zaślepka zakładki)
-- `/oceny/[id]/zdarzenia`: zapoznanie, sprzeciw, zdarzenia boczne (zaślepka zakładki)
+- `/oceny/[id]/zdarzenia`: zapoznanie albo odmowa podpisu, czas na sprzeciw i zamknięcie, sprzeciw i jego wynik (kadry), przerwanie (kadry), zdarzenia boczne: nieobecność, zmiana terminu z zawiadomieniem PDF, zmiana stanowiska, zmiana oceniającego (kadry), korekta arkusza (administrator)
 - `/oceny/[id]/dziennik`: dziennik zdarzeń z datą faktyczną, autorem wpisu i czasem wpisania
 
 Pracownicy i notatki:
