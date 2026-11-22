@@ -79,5 +79,13 @@ Opis profilu server („Bielik-One na vLLM”) czytaj z zastrzeżeniem z ADR 000
 - Budowa obrazów poleceniem kreatora (`docker build --file infra/deploy/docker/app.Dockerfile --target web|worker`) na linux/arm64: `sarmata/web` 362 MB w 115 s, `sarmata/worker` 329 MB w 78 s (zimny cache pnpm, pierwsza budowa łącznie).
 - Obraz web: standalone zawiera czcionki Open Sans (`backend/exports/fonts`) i natywny moduł Typst `linux-arm64-musl`. Zalogowany eksport arkusza PDF oceny demo zwraca 200 i poprawny PDF z osadzoną czcionką, `/logowanie` zwraca 200.
 - Obraz worker: `uv` 0.8.0 i teksty prawne w `/legal/backend/regulations`, proces startuje jako użytkownik `node`, synchronizuje przepisy i przetwarza zadanie `system.ping`.
-- Nie sprawdzono: budowy na linux/amd64 (obraz nie powstał), pełnego stosu z `docker compose` i kreatora.
+- Nie sprawdzono: budowy na linux/amd64. Pod emulacją QEMU na Macu `next build` (Turbopack) kończy się segfaultem, więc to wymaga prawdziwej maszyny x64.
 - Zmiana 22.11.2026: obrazy przeszły z Alpine (musl) na `node:24.19.0-bookworm-slim` (glibc), bo `semble-grammars` ma wheele tylko `manylinux`, a z systemowym Pythonem na Alpine resolver `uv` odrzuca `semble-grammars==0.1.2`. Worker ma semble i model embeddingów wbudowane w obraz (`uv tool install` i jedno rozgrzewające wyszukiwanie przy budowaniu), więc przepisy przeszukuje bez sieci od pierwszego zapytania (`HF_HUB_OFFLINE=1`). Natywne moduły Typst i Next SWC budują się w wariantach `-gnu`. Dla sieci z proxy podmieniającym certyfikaty budowanie przyjmuje opcjonalny sekret BuildKit `ca`, instalator podaje go ze zmiennej hosta `SARMATA_BUILD_CA_FILE`.
+
+## Sprawdzone 22.11.2026 (czysta maszyna: Ubuntu 24.04 arm64 w Lima, 4 vCPU, 6 GB RAM)
+
+- Kreator `install --answers` z paczki wydania, profil light, lokalne Supabase, bez AI. Kreator instaluje Docker Engine z repozytorium Dockera, buduje oba obrazy, uruchamia bazę, nakłada migracje, zakłada konto administratora i startuje stos. Całość z instalacją silnika około 7 minut.
+- Znaleziony błąd: migracje padały na `function auth.jwt() does not exist`, bo na świeżym self-hosted Supabase tę funkcję tworzy usługa `auth` swoimi migracjami. Kreator uruchamia teraz przed migracjami `db` razem z `auth`. Po poprawce ponowne uruchomienie kreatora dokończyło instalację z tymi samymi hasłami.
+- Po instalacji: usługi `db`, `auth`, `kong`, `rest`, `web`, `worker` działają, `/logowanie` zwraca 200, worker synchronizuje przepisy, semble w kontenerze workera zwraca art. 83 ustawy, administrator loguje się, a JWT zawiera `office_id` i `office_role` z hooka Custom Access Token.
+- Uwaga: kreator pyta „Rozpocząć instalację?” także przy `--answers`, więc instalacja bez terminala wymaga pseudoterminala.
+
