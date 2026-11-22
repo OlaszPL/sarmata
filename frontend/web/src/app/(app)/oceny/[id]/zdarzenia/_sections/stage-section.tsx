@@ -30,9 +30,10 @@ function slotDue(view: EvaluationView, slot: string): CalendarDate | null {
   return view.deadlines.find((deadline) => deadline.slot === slot)?.dueOn ?? null;
 }
 
-function AcquaintanceSummary({ view }: { view: EvaluationView }) {
+/** Rows of the recorded acquaintance, empty before it. */
+function acquaintanceRows(view: EvaluationView): SummaryRow[] {
   const event = lastEventOf(view, ['acquainted', 'signature_refused']);
-  if (event === null) return null;
+  if (event === null) return [];
   const refused = event.kind === 'signature_refused';
   const witnesses = Array.isArray(event.payload.witnesses)
     ? event.payload.witnesses.filter((item): item is string => typeof item === 'string')
@@ -60,7 +61,12 @@ function AcquaintanceSummary({ view }: { view: EvaluationView }) {
   }
   const place = textOf(event.payload.place);
   if (place !== '') rows.push({ key: 'Miejscowość', value: place });
-  return <SummaryList rows={rows} />;
+  return rows;
+}
+
+function AcquaintanceSummary({ view }: { view: EvaluationView }) {
+  const rows = acquaintanceRows(view);
+  return rows.length > 0 ? <SummaryList rows={rows} /> : null;
 }
 
 function Delivered({ data, panels }: Omit<StageProps, 'defaultPlace'>) {
@@ -108,7 +114,7 @@ function Delivered({ data, panels }: Omit<StageProps, 'defaultPlace'>) {
 function Objection({ data, panels }: Omit<StageProps, 'defaultPlace'>) {
   const { view, regulation, today } = data;
   const filed = lastEventOf(view, ['objection_filed']);
-  const rows: SummaryRow[] = [];
+  const rows: SummaryRow[] = acquaintanceRows(view);
   if (filed) rows.push({ key: 'Sprzeciw wniesiony', value: formatDate(filed.occurredOn) });
   const decisionDue = slotDue(view, 'objectionDecision');
   if (decisionDue) rows.push({ key: 'Termin rozpatrzenia', value: formatDate(decisionDue) });
@@ -132,7 +138,8 @@ function Objection({ data, panels }: Omit<StageProps, 'defaultPlace'>) {
 
 function Closed({ view }: { view: EvaluationView }) {
   const event = lastEventOf(view, ['objection_outcome', 'closed']);
-  const rows: SummaryRow[] = [];
+  // One list, so the acquaintance and the closing read as one record without a double rule.
+  const rows: SummaryRow[] = acquaintanceRows(view);
   if (event?.kind === 'objection_outcome') {
     const outcome = textOf(event.payload.outcome);
     rows.push({ key: 'Sprzeciw rozpatrzono', value: formatDate(event.occurredOn) });
@@ -149,12 +156,7 @@ function Closed({ view }: { view: EvaluationView }) {
   if (appealDue) {
     rows.push({ key: 'Odwołanie do sądu pracy', value: `do ${formatDate(appealDue)}` });
   }
-  return (
-    <>
-      <AcquaintanceSummary view={view} />
-      <SummaryList rows={rows} />
-    </>
-  );
+  return <SummaryList rows={rows} />;
 }
 
 function Interrupted({ view }: { view: EvaluationView }) {
