@@ -170,9 +170,9 @@ Oceny:
 - `/oceny/nowa`: nowa ocena (zaślepka)
 - `/oceny/[id]`: sprawa oceny, przegląd (szkielet: nagłówek, etapy, zakładki, panel boczny)
 - `/oceny/[id]/czesc-1`: część I, kryteria i termin (zaślepka zakładki)
-- `/oceny/[id]/czesc-2`: część II, ocena (zaślepka zakładki)
-- `/oceny/[id]/czesc-3`: część III, wniosek o stopień (zaślepka zakładki)
-- `/oceny/[id]/sprawdz`: sprawdzenie i zatwierdzenie arkusza (zaślepka zakładki)
+- `/oceny/[id]/czesc-2`: część II, oceny cząstkowe, uzasadnienie, wnioski IPRZ, autozapis, szkic AI, odnotowanie rozmowy oceniającej
+- `/oceny/[id]/czesc-3`: część III, wniosek o stopień
+- `/oceny/[id]/sprawdz`: sprawdzenie całego arkusza, bramki i zatwierdzenie do zapoznania
 - `/oceny/[id]/zdarzenia`: zapoznanie, sprzeciw, zdarzenia boczne (zaślepka zakładki)
 - `/oceny/[id]/dziennik`: dziennik zdarzeń (zaślepka zakładki)
 
