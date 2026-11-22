@@ -1,6 +1,6 @@
 import { employeePatchSchema, newEmployeeSchema } from '@sarmata/domain';
 import type { Employee, EmployeeRepository, SimilarEmployee } from '@sarmata/repositories';
-import type { ZodError, ZodIssue } from 'zod';
+import type { ZodError, core } from 'zod';
 import { ServiceError } from '../errors';
 import { supervisorError } from '../employees/supervisor-error';
 import { type CsvDelimiter, parseCsv } from './csv';
@@ -248,7 +248,7 @@ function convert(
 }
 
 /** Maps a zod issue of the employee schemas to a stable code. */
-function rowErrorCode(issue: ZodIssue): ImportRowErrorCode {
+function rowErrorCode(issue: core.$ZodIssue): ImportRowErrorCode {
   switch (issue.code) {
     case 'invalid_type':
       return issue.input === undefined ? 'missing_field' : 'invalid_value';

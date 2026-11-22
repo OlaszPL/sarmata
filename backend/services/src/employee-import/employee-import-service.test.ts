@@ -40,7 +40,7 @@ function setup(
   existing: Employee[],
   similar: SimilarEmployee[] = [],
   role: string | null = 'hr',
-  createError?: unknown,
+  createError?: Error,
 ) {
   const created: NewEmployee[] = [];
   const updated: { id: string; patch: unknown }[] = [];
@@ -300,7 +300,11 @@ describe('employee import row error codes', () => {
     const { service } = setup([], [], 'hr', refusal);
     const report = await service.commit(`${header}\n${row({})}`, cols);
     expect(report.failed[0]?.errors).toEqual([
-      { field: 'supervisorEmployeeId', code: 'unknown_supervisor', message: expect.any(String) },
+      {
+        field: 'supervisorEmployeeId',
+        code: 'unknown_supervisor',
+        message: expect.any(String) as string,
+      },
     ]);
   });
 
@@ -312,7 +316,11 @@ describe('employee import row error codes', () => {
     const a = setup([], [], 'hr', cycle);
     const reportA = await a.service.commit(`${header}\n${row({})}`, cols);
     expect(reportA.failed[0]?.errors).toEqual([
-      { field: 'supervisorEmployeeId', code: 'invalid_supervisor', message: expect.any(String) },
+      {
+        field: 'supervisorEmployeeId',
+        code: 'invalid_supervisor',
+        message: expect.any(String) as string,
+      },
     ]);
     const b = setup([], [], 'hr', new Error('boom'));
     const reportB = await b.service.commit(`${header}\n${row({})}`, cols);
