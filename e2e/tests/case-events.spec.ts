@@ -1,21 +1,7 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { demoAccount } from '../src/demo-accounts';
+import { expectNoSidewaysScroll, expectNoViolations } from '../src/page-checks';
 import { signIn } from '../src/session';
-
-const WCAG_21_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
-
-async function expectNoViolations(page: Page): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA).analyze();
-  expect(results.violations).toEqual([]);
-}
-
-async function expectNoSidewaysScroll(page: Page): Promise<void> {
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  expect(overflow).toBeLessThanOrEqual(0);
-}
 
 /** Opens the events tab of an employee's case from the evaluations list. */
 async function openEvents(page: Page, name: string): Promise<void> {
@@ -35,7 +21,7 @@ test.describe('events tab of the objection case of Stefan', () => {
     await signIn(page, demoAccount('evaluator'));
     await openEvents(page, 'Stefan Sprzeciwny');
     const main = page.getByRole('main');
-    await expect(main.getByText('Sprzeciw rozpatrzują kadry')).toBeVisible();
+    await expect(main.getByText('Sprzeciw rozpatrują kadry')).toBeVisible();
     await expect(main.getByRole('button', { name: 'Zapisz wynik sprzeciwu' })).toHaveCount(0);
     await expect(main.getByRole('heading', { level: 2, name: 'Przerwanie oceny' })).toHaveCount(0);
     await expectNoViolations(page);

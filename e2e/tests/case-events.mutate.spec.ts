@@ -1,14 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { draftedEvaluationOf, isoDaysFromToday } from '../src/case-state';
 import { demoAccount } from '../src/demo-accounts';
+import { errorSummary } from '../src/page-checks';
 import { signIn } from '../src/session';
-
-/** The GOV.UK error summary: a focusable block led by its H2 title. */
-function errorSummary(page: Page, title: string) {
-  return page.locator('div[tabindex="-1"][aria-labelledby]', {
-    has: page.getByRole('heading', { level: 2, name: title }),
-  });
-}
 
 /** `2026-11-22` as `22.11.2026`. */
 function polishDate(iso: string): string {
