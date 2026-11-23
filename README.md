@@ -73,3 +73,16 @@ Kreator prowadzi krok po kroku przez instalację w jednym z trzech profili (ligh
    - Mac z 16 GB i laptopy: [Gemma 4 E4B](https://huggingface.co/google/gemma-4-E4B-it) w kwantyzacji QAT od Google
    - serwer urzędu: [Gemma 4 26B-A4B](https://huggingface.co/google/gemma-4-26B-A4B-it), model MoE z 4 mld aktywnych parametrów, albo [Gemma 4 12B](https://huggingface.co/google/gemma-4-12B-it)
    - polski model rozwijany dla administracji: [PLLuM](https://huggingface.co/CYFRAGOVPL) 4B i 12B, do porównania z Bielikiem na tych samych promptach
+
+## Ocena na HackNation
+
+Sarmata powstał na hackathonie HackNation w odpowiedzi na wyzwanie Kancelarii Prezesa Rady Ministrów „Cyfrowy Asystent Ocen Okresowych” i konkurował w finale. Oceny jury:
+
+| Kryterium | Ocena |
+| --- | --- |
+| Związek z wyzwaniem (odwzorowanie czynności i procedur ocen okresowych, zgodność z przepisami) | 7,67 |
+| Oryginalność pomysłu | 7,83 |
+| Kompletność projektu | 7,33 |
+| Potencjał wdrożeniowy (wdrożenie w większości urzędów, aktualizacje i naprawa błędów) | 8,00 |
+| **Średnia Sarmaty** | **7,73** |
+| Średnia wszystkich zespołów | 5,03 |
